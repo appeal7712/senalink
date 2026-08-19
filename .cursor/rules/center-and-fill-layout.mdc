@@ -1,0 +1,9 @@
+---
+description: Center cards; never let the skill timeline list grow the modal
+alwaysApply: true
+---
+
+# Layout: center cards, lock the editor timeline
+
+- Two-column cards (덱 + 타임라인): stretch the row, **center** the deck/세팅 확인. Do not top-align.
+- **덱 수정 모달**의 「현재 등록된 스킬 순서」리스트는 높이를 px로 고정한다. `flex: 1` / `flex-basis: auto`로 단계를 따라 칸이 커지면 안 된다. 단계는 `.skill-timeline-scroller` **안에서만** 스크롤.

@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function memberDoc(hubId) {
+      return get(/databases/$(database)/documents/hubs/$(hubId)/members/$(request.auth.uid));
+    }
+
+    function isHubMember(hubId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/hubs/$(hubId)/members/$(request.auth.uid));
+    }
+
+    function hubRole(hubId) {
+      return memberDoc(hubId).data.role;
+    }
+
+    function isMaster(hubId) {
+      return isHubMember(hubId) && hubRole(hubId) == 'master';
+    }
+
+    function isAdmin(hubId) {
+      return isHubMember(hubId) && (hubRole(hubId) == 'master' || hubRole(hubId) == 'admin');
+    }
+
+    // 허브 메타: 멤버만 읽기. 생성은 인증 사용자, 민감필드(passwordHash)는 클라이언트 노출 금지 권장(Cloud Function 조인).
+    match /hubs/{hubId} {
+      allow read: if isHubMember(hubId);
+      allow create: if signedIn()
+        && request.resource.data.masterId == request.auth.uid
+        && request.resource.data.keys().hasAll(['name', 'affiliation', 'tags', 'masterId', 'inviteCode']);
+      allow update, delete: if isMaster(hubId);
+
+      match /members/{uid} {
+        allow read: if isHubMember(hubId);
+        allow write: if isAdmin(hubId) || (signedIn() && uid == request.auth.uid);
+      }
+
+      // 공략/공지/게시글/히스토리: 같은 hubId 하위만, 타 허브 문서는 경로상 접근 불가
+      match /builds/{buildId} {
+        allow read: if isHubMember(hubId);
+        allow create, update, delete: if isHubMember(hubId);
+      }
+
+      match /notices/{noticeId} {
+        allow read: if isHubMember(hubId);
+        allow create: if isAdmin(hubId);
+        allow update, delete: if isAdmin(hubId)
+          || (isHubMember(hubId) && resource.data.authorId == request.auth.uid);
+      }
+
+      match /posts/{postId} {
+        allow read: if isHubMember(hubId);
+        allow create: if isHubMember(hubId);
+        allow update, delete: if isAdmin(hubId)
+          || (isHubMember(hubId) && resource.data.authorId == request.auth.uid);
+      }
+
+      match /history/{eventId} {
+        allow read: if isHubMember(hubId);
+        allow create: if isHubMember(hubId);
+        allow update, delete: if false;
+      }
+    }
+
+    // 초대 코드 → hubId 매핑은 Cloud Function + App Check로 처리 권장.
+    // 공개 컬렉션에 password를 두지 말 것.
+  }
+}

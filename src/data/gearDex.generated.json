@@ -1,0 +1,434 @@
+{
+  "pieces": [
+    {
+      "id": "piece_빛나는 드래곤 슬레이어_physical",
+      "name": "빛나는 드래곤 슬레이어",
+      "slot": "physical",
+      "slotLabel": "물리공격",
+      "sets": [
+        "선봉장",
+        "추적자",
+        "성기사"
+      ],
+      "iconUrl": "/images/equipment/pieces/빛나는 드래곤 슬레이어_물리공격_선봉장,추적자, 성기사.png"
+    },
+    {
+      "id": "piece_빛나는 드래곤의 보주_magic",
+      "name": "빛나는 드래곤의 보주",
+      "slot": "magic",
+      "slotLabel": "마법공격",
+      "sets": [
+        "선봉장",
+        "추적자",
+        "성기사"
+      ],
+      "iconUrl": "/images/equipment/pieces/빛나는 드래곤의 보주_마법공격_선봉장,추적자, 성기사.png"
+    },
+    {
+      "id": "piece_빛나는 드래곤의 비늘 갑옷_armor",
+      "name": "빛나는 드래곤의 비늘 갑옷",
+      "slot": "armor",
+      "slotLabel": "방어구",
+      "sets": [
+        "선봉장",
+        "추적자",
+        "성기사"
+      ],
+      "iconUrl": "/images/equipment/pieces/빛나는 드래곤의 비늘 갑옷_방어구_선봉장, 추적자, 성기사.png"
+    },
+    {
+      "id": "piece_빛나는 우마왕의 갑옷_armor",
+      "name": "빛나는 우마왕의 갑옷",
+      "slot": "armor",
+      "slotLabel": "방어구",
+      "sets": [
+        "수호자",
+        "수문장",
+        "암살자"
+      ],
+      "iconUrl": "/images/equipment/pieces/빛나는 우마왕의 갑옷_방어구_수호자,수문장, 암살자.png"
+    },
+    {
+      "id": "piece_빛나는 우마왕의 경전_magic",
+      "name": "빛나는 우마왕의 경전",
+      "slot": "magic",
+      "slotLabel": "마법공격",
+      "sets": [
+        "암살자",
+        "수호자",
+        "수문장"
+      ],
+      "iconUrl": "/images/equipment/pieces/빛나는 우마왕의 경전_마법공격_암살자, 수호자, 수문장.png"
+    },
+    {
+      "id": "piece_빛나는 우마왕의 철퇴_physical",
+      "name": "빛나는 우마왕의 철퇴",
+      "slot": "physical",
+      "slotLabel": "물리공격",
+      "sets": [
+        "암살자",
+        "수호자",
+        "수문장"
+      ],
+      "iconUrl": "/images/equipment/pieces/빛나는 우마왕의 철퇴_물리공격_,암살자, 수호자, 수문장.png"
+    },
+    {
+      "id": "piece_빛나는 히드라의 갑옷_armor",
+      "name": "빛나는 히드라의 갑옷",
+      "slot": "armor",
+      "slotLabel": "방어구",
+      "sets": [
+        "복수자",
+        "주술사",
+        "조율자"
+      ],
+      "iconUrl": "/images/equipment/pieces/빛나는 히드라의 갑옷_방어구_복수자, 주술사, 조율자.png"
+    },
+    {
+      "id": "piece_빛나는 히드라의 검_physical",
+      "name": "빛나는 히드라의 검",
+      "slot": "physical",
+      "slotLabel": "물리공격",
+      "sets": [
+        "복수자",
+        "주술사",
+        "조율자"
+      ],
+      "iconUrl": "/images/equipment/pieces/빛나는 히드라의 검_물리공격_복수자, 주술사, 조율자.png"
+    },
+    {
+      "id": "piece_빛나는 히드라의 지팡이_magic",
+      "name": "빛나는 히드라의 지팡이",
+      "slot": "magic",
+      "slotLabel": "마법공격",
+      "sets": [
+        "복수자",
+        "주술사",
+        "조율자"
+      ],
+      "iconUrl": "/images/equipment/pieces/빛나는 히드라의 지팡이_마법공격_복수자, 주술사, 조율자.png"
+    }
+  ],
+  "accessories": [
+    {
+      "id": "acc_가시 반지",
+      "name": "고급 가시 반지",
+      "shortLabel": "가시",
+      "type": "장신구",
+      "rarity": "advanced",
+      "iconUrl": "/images/accessories/고급 가시 반지.png",
+      "effect": "기본 공격 시 15% 확률로 2턴간 출혈 효과를 부여",
+      "description": ""
+    },
+    {
+      "id": "acc_건강의 반지",
+      "name": "고급 건강의 반지",
+      "shortLabel": "건강",
+      "type": "장신구",
+      "rarity": "rare",
+      "iconUrl": "/images/accessories/고급 건강의 반지.png",
+      "effect": "전투 시작 시 시전자 최대 생명력 18% 보호막 [2턴 지속] (라운드당 1회 발동, 영웅의 패시브와 중복 적용 불가)",
+      "description": ""
+    },
+    {
+      "id": "acc_공성의 반지",
+      "name": "고급 공성의 반지",
+      "shortLabel": "공성",
+      "type": "장신구",
+      "rarity": "normal",
+      "iconUrl": "/images/accessories/고급 공성의 반지.png",
+      "effect": "전투 시작 시 1~3인 공격기 피해량 10% 상승",
+      "description": ""
+    },
+    {
+      "id": "acc_공포의 반지",
+      "name": "고급 공포의 반지",
+      "shortLabel": "공포",
+      "type": "장신구",
+      "rarity": "advanced",
+      "iconUrl": "/images/accessories/고급 공포의 반지.png",
+      "effect": "기본 공격 시 12% 확률로 1턴간 실명 효과를 부여",
+      "description": ""
+    },
+    {
+      "id": "acc_권능의 반지",
+      "name": "고급 권능의 반지",
+      "shortLabel": "권능",
+      "type": "장신구",
+      "rarity": "rare",
+      "iconUrl": "/images/accessories/고급 권능의 반지.png",
+      "effect": "권능, 권능 발동 후 공격력 150% 보호막 4턴 [해제불가] (영웅의 패시브와 중복 적용 불가)",
+      "description": ""
+    },
+    {
+      "id": "acc_근성의 반지",
+      "name": "고급 근성의 반지",
+      "shortLabel": "근성",
+      "type": "장신구",
+      "rarity": "normal",
+      "iconUrl": "/images/accessories/고급 근성의 반지.png",
+      "effect": "자신의 생명력이 50%이하가 되면 시전자 최대 생명력의 18% 회복 (전투당 1회 발동, 장신구 우선 발동)",
+      "description": ""
+    },
+    {
+      "id": "acc_기합의 반지",
+      "name": "고급 기합의 반지",
+      "shortLabel": "기합",
+      "type": "장신구",
+      "rarity": "rare",
+      "iconUrl": "/images/accessories/고급 기합의 반지.png",
+      "effect": "전투 시작 시 시전자 공격력의 90% 보호막 [2턴 지속] (라운드당 1회 발동, 영웅의 패시브와 중복 적용 불가)",
+      "description": ""
+    },
+    {
+      "id": "acc_기회의 반지",
+      "name": "고급 기회의 반지",
+      "shortLabel": "기회",
+      "type": "장신구",
+      "rarity": "normal",
+      "iconUrl": "/images/accessories/고급 기회의 반지.png",
+      "effect": "기본 공격 시 10% 확률로 1턴간 기절 효과를 부여",
+      "description": ""
+    },
+    {
+      "id": "acc_꿈의 반지",
+      "name": "고급 꿈의 반지",
+      "shortLabel": "꿈",
+      "type": "장신구",
+      "rarity": "normal",
+      "iconUrl": "/images/accessories/고급 꿈의 반지.png",
+      "effect": "기본 공격 시 12% 확률로 1턴간 수면 효과를 부여",
+      "description": ""
+    },
+    {
+      "id": "acc_독사 반지",
+      "name": "고급 독사 반지",
+      "shortLabel": "독사",
+      "type": "장신구",
+      "rarity": "advanced",
+      "iconUrl": "/images/accessories/고급 독사 반지.png",
+      "effect": "기본 공격 시 15% 확률로 2턴간 중독 효과를 부여",
+      "description": ""
+    },
+    {
+      "id": "acc_마법의 반지",
+      "name": "고급 마법의 반지",
+      "shortLabel": "마법",
+      "type": "장신구",
+      "rarity": "normal",
+      "iconUrl": "/images/accessories/고급 마법의 반지.png",
+      "effect": "기본 공격 시 12% 확률로 버프 제거 1개",
+      "description": ""
+    },
+    {
+      "id": "acc_메두사의 반지",
+      "name": "고급 메두사의 반지",
+      "shortLabel": "메두사",
+      "type": "장신구",
+      "rarity": "advanced",
+      "iconUrl": "/images/accessories/고급 메두사의 반지.png",
+      "effect": "기본 공격 시 10% 확률로 1턴간 석화 효과를 부여",
+      "description": ""
+    },
+    {
+      "id": "acc_번뜩이는 반지",
+      "name": "고급 번뜩이는 반지",
+      "shortLabel": "번뜩이는",
+      "type": "장신구",
+      "rarity": "normal",
+      "iconUrl": "/images/accessories/고급 번뜩이는 반지.png",
+      "effect": "기본 공격 시 10% 확률로 1턴간 감전 효과를 부여",
+      "description": ""
+    },
+    {
+      "id": "acc_보호의 반지",
+      "name": "고급 보호의 반지",
+      "shortLabel": "보호",
+      "type": "장신구",
+      "rarity": "rare",
+      "iconUrl": "/images/accessories/고급 보호의 반지.png",
+      "effect": "전투 시작 시 방어력 10% 상승",
+      "description": ""
+    },
+    {
+      "id": "acc_복수의 반지",
+      "name": "고급 복수의 반지",
+      "shortLabel": "복수",
+      "type": "장신구",
+      "rarity": "normal",
+      "iconUrl": "/images/accessories/고급 복수의 반지.png",
+      "effect": "전투 시작 시 피해량 6% 상승",
+      "description": ""
+    },
+    {
+      "id": "acc_부활의 반지",
+      "name": "고급 부활의 반지",
+      "shortLabel": "부활",
+      "type": "장신구",
+      "rarity": "advanced",
+      "iconUrl": "/images/accessories/고급 부활의 반지.png",
+      "effect": "사망 시 생명력 100%로 1회 부활 (영웅의 패시브와 중복 적용 불가)",
+      "description": ""
+    },
+    {
+      "id": "acc_불사의 반지",
+      "name": "고급 불사의 반지",
+      "shortLabel": "불사",
+      "type": "장신구",
+      "rarity": "advanced",
+      "iconUrl": "/images/accessories/고급 불사의 반지.png",
+      "effect": "사망 시 불사 3턴 (영웅의 패시브와 중복 적용 불가)",
+      "description": ""
+    },
+    {
+      "id": "acc_샐리맨더의 반지",
+      "name": "고급 샐리맨더의 반지",
+      "shortLabel": "샐리맨더",
+      "type": "장신구",
+      "rarity": "normal",
+      "iconUrl": "/images/accessories/고급 샐리맨더의 반지.png",
+      "effect": "기본 공격 시 15% 확률로 2턴간 화상 효과를 부여",
+      "description": ""
+    },
+    {
+      "id": "acc_설원의 반지",
+      "name": "고급 설원의 반지",
+      "shortLabel": "설원",
+      "type": "장신구",
+      "rarity": "advanced",
+      "iconUrl": "/images/accessories/고급 설원의 반지.png",
+      "effect": "기본 공격 시 12% 확률로 1턴간 빙결 효과를 부여",
+      "description": ""
+    },
+    {
+      "id": "acc_섬멸의 반지",
+      "name": "고급 섬멸의 반지",
+      "shortLabel": "섬멸",
+      "type": "장신구",
+      "rarity": "normal",
+      "iconUrl": "/images/accessories/고급 섬멸의 반지.png",
+      "effect": "전투 시작 시 4~5인 공격기 피해량 10% 상승",
+      "description": ""
+    },
+    {
+      "id": "acc_수호의 반지",
+      "name": "고급 수호의 반지",
+      "shortLabel": "수호",
+      "type": "장신구",
+      "rarity": "advanced",
+      "iconUrl": "/images/accessories/고급 수호의 반지.png",
+      "effect": "전투 시작 시 막기 확률 10% 상승",
+      "description": ""
+    },
+    {
+      "id": "acc_시간의 반지",
+      "name": "고급 시간의 반지",
+      "shortLabel": "시간",
+      "type": "장신구",
+      "rarity": "advanced",
+      "iconUrl": "/images/accessories/고급 시간의 반지.png",
+      "effect": "기본 공격 시 12% 확률로 턴제 버프 1턴 감소",
+      "description": ""
+    },
+    {
+      "id": "acc_자연의 반지",
+      "name": "고급 자연의 반지",
+      "shortLabel": "자연",
+      "type": "장신구",
+      "rarity": "advanced",
+      "iconUrl": "/images/accessories/고급 자연의 반지.png",
+      "effect": "전투 시작 시 생명력 10% 상승",
+      "description": ""
+    },
+    {
+      "id": "acc_재앙의 반지",
+      "name": "고급 재앙의 반지",
+      "shortLabel": "재앙",
+      "type": "장신구",
+      "rarity": "advanced",
+      "iconUrl": "/images/accessories/고급 재앙의 반지.png",
+      "effect": "기본 공격 시 10% 확률로 1턴간 마비 효과를 부여",
+      "description": ""
+    },
+    {
+      "id": "acc_저주의 반지",
+      "name": "고급 저주의 반지",
+      "shortLabel": "저주",
+      "type": "장신구",
+      "rarity": "advanced",
+      "iconUrl": "/images/accessories/고급 저주의 반지.png",
+      "effect": "기본 공격 시 12% 확률로 1턴간 침묵 효과를 부여",
+      "description": ""
+    },
+    {
+      "id": "acc_저항의 반지",
+      "name": "고급 저항의 반지",
+      "shortLabel": "저항",
+      "type": "장신구",
+      "rarity": "advanced",
+      "iconUrl": "/images/accessories/고급 저항의 반지.png",
+      "effect": "전투 시작 시 효과 저항 15% 상승",
+      "description": ""
+    },
+    {
+      "id": "acc_적중의 반지",
+      "name": "고급 적중의 반지",
+      "shortLabel": "적중",
+      "type": "장신구",
+      "rarity": "legendary",
+      "iconUrl": "/images/accessories/고급 적중의 반지.png",
+      "effect": "전투 시작 시 효과 적중 15% 상승",
+      "description": ""
+    },
+    {
+      "id": "acc_죽음의 반지",
+      "name": "고급 죽음의 반지",
+      "shortLabel": "죽음",
+      "type": "장신구",
+      "rarity": "advanced",
+      "iconUrl": "/images/accessories/고급 죽음의 반지.png",
+      "effect": "기본 공격 시 6% 확률로 3턴간 즉사 효과를 부여",
+      "description": ""
+    },
+    {
+      "id": "acc_집중의 반지",
+      "name": "고급 집중의 반지",
+      "shortLabel": "집중",
+      "type": "장신구",
+      "rarity": "advanced",
+      "iconUrl": "/images/accessories/고급 집중의 반지.png",
+      "effect": "전투 시작 시 약점 공격 확률 12% 상승",
+      "description": ""
+    },
+    {
+      "id": "acc_철벽의 반지",
+      "name": "고급 철벽의 반지",
+      "shortLabel": "철벽",
+      "type": "장신구",
+      "rarity": "advanced",
+      "iconUrl": "/images/accessories/고급 철벽의 반지.png",
+      "effect": "전투 시작 시 시전자 방어력의 100% 보호막 [2턴 지속] (라운드당 1회 발동, 영웅의 패시브와 중복 적용 불가)",
+      "description": ""
+    },
+    {
+      "id": "acc_토벌의 반지",
+      "name": "고급 토벌의 반지",
+      "shortLabel": "토벌",
+      "type": "장신구",
+      "rarity": "legendary",
+      "iconUrl": "/images/accessories/고급 토벌의 반지.png",
+      "effect": "전투 시작 시 보스 대상으로 피해량 12% 상승",
+      "description": ""
+    },
+    {
+      "id": "acc_행운의 반지",
+      "name": "고급 행운의 반지",
+      "shortLabel": "행운",
+      "type": "장신구",
+      "rarity": "legendary",
+      "iconUrl": "/images/accessories/고급 행운의 반지.png",
+      "effect": "전투 시작 시 치명타 확률 10% 상승",
+      "description": ""
+    }
+  ]
+}

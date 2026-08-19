@@ -1,0 +1,20 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /userAvatars/{uid}/avatar.jpg {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 500 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png)');
+    }
+
+    match /hubEmblems/{hubId}/mark.jpg {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.resource.size < 300 * 1024
+        && request.resource.contentType == 'image/jpeg'
+        && firestore.get(/databases/(default)/documents/hubs/$(hubId)/members/$(request.auth.uid)).data.role in ['master', 'admin'];
+    }
+  }
+}

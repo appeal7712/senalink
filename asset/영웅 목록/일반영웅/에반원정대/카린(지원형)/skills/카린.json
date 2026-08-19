@@ -1,0 +1,79 @@
+{
+  "hero_name": "카린",
+  "skills": [
+    {
+      "name": "기본 공격",
+      "type": "Normal",
+      "effects": [
+        {
+          "target": "단일 적군",
+          "details": [
+            "마법 공격력의 100%만큼 1회 피해"
+          ]
+        }
+      ],
+      "skill_enhance": [
+        "피해량 상승 : 마법 공격력의 120%"
+      ]
+    },
+    {
+      "name": "회복",
+      "type": "Active1",
+      "cooldown": 83,
+      "effects": [
+        {
+          "target": "단일 아군",
+          "details": [
+            "시전자 마법 공격력의 200% 만큼 생명력 회복",
+            "디버프 해제 2개"
+          ]
+        }
+      ],
+      "skill_enhance": [
+        "회복량 상승 : 생명력 회복량이 마법 공격력의 230%",
+        "효과 상승 : 디버프 해제 3개"
+      ],
+      "transcendence_effects": {
+        "2초월": "쿨타임 감소 : 스킬 쿨타임 61초"
+      }
+    },
+    {
+      "name": "소생",
+      "type": "Active2",
+      "cooldown": 90,
+      "effects": [
+        {
+          "target": "단일 아군",
+          "details": [
+            "사망한 대상을 생명력 50%로 부활"
+          ]
+        }
+      ],
+      "skill_enhance": [
+        "효과 상승 : 부활 시 생명력 70%"
+      ],
+      "transcendence_effects": {
+        "6초월": "대상 수 변경 : 아군 2명"
+      }
+    },
+    {
+      "name": "축복의 소생",
+      "type": "Passive",
+      "effects": [
+        {
+          "target": "자신",
+          "details": [
+            "사망 시 생명력 65%로 부활 [전투당 1회 발동]"
+          ]
+        }
+      ],
+      "skill_enhance": [
+        "효과 상승 : 부활 시 생명력 80%"
+      ]
+    }
+  ],
+  "tooltips": {
+    "디버프 해제": "적용 순서대로 디버프를 해제합니다.",
+    "부활": "사망한 대상이 부활합니다."
+  }
+}

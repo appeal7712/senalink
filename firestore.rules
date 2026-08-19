@@ -1,0 +1,171 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'super';
+    }
+
+    function memberDoc(hubId) {
+      return get(/databases/$(database)/documents/hubs/$(hubId)/members/$(request.auth.uid));
+    }
+
+    function isHubMember(hubId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/hubs/$(hubId)/members/$(request.auth.uid));
+    }
+
+    function hubRole(hubId) {
+      return memberDoc(hubId).data.role;
+    }
+
+    function isMaster(hubId) {
+      return isHubMember(hubId) && hubRole(hubId) == 'master';
+    }
+
+    function isHubAdmin(hubId) {
+      return isHubMember(hubId) && (hubRole(hubId) == 'master' || hubRole(hubId) == 'admin');
+    }
+
+    function canRunHub(hubId) {
+      return isHubAdmin(hubId) || isSuperAdmin();
+    }
+
+    match /admins/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    match /site/{docId} {
+      allow read: if true;
+      allow create, update: if isSuperAdmin()
+        && docId == 'main'
+        && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+
+    function validUserFields() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['nickname', 'photoURL', 'totalwarTier', 'destructionScore', 'hubId', 'updatedAt'])
+        && ((!('nickname' in d)) || (d.nickname is string && d.nickname.size() >= 2 && d.nickname.size() <= 12))
+        && ((!('totalwarTier' in d)) || d.totalwarTier in ['normal', 'advanced', 'rare', 'legend', 'legend_plus'])
+        && ((!('destructionScore' in d)) || (d.destructionScore is int && d.destructionScore >= 0))
+        && ((!('photoURL' in d)) || d.photoURL == null || d.photoURL is string);
+    }
+
+    match /users/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list: if false;
+      allow create, update: if signedIn() && request.auth.uid == uid && validUserFields();
+      allow delete: if false;
+    }
+
+    match /inviteIndex/{code} {
+      allow get: if signedIn();
+      allow list: if isSuperAdmin();
+      allow create, update: if signedIn()
+        && request.resource.data.keys().hasOnly(['hubId'])
+        && request.resource.data.hubId is string;
+      allow delete: if signedIn() && (isMaster(resource.data.hubId) || isSuperAdmin());
+    }
+
+    match /publicGuilds/{hubId} {
+      allow read: if true;
+      allow create, update: if canRunHub(hubId)
+        || (signedIn()
+          && exists(/databases/$(database)/documents/hubs/$(hubId))
+          && get(/databases/$(database)/documents/hubs/$(hubId)).data.masterId == request.auth.uid);
+      allow delete: if isMaster(hubId) || isSuperAdmin();
+    }
+
+    match /hubs/{hubId} {
+      allow read: if isHubMember(hubId) || isSuperAdmin();
+      allow create: if signedIn()
+        && request.resource.data.masterId == request.auth.uid
+        && request.resource.data.keys().hasAll(['name', 'affiliation', 'tags', 'masterId', 'inviteCode']);
+      allow update: if canRunHub(hubId);
+      allow delete: if isMaster(hubId) || isSuperAdmin();
+
+      match /members/{uid} {
+        allow get: if signedIn() && (uid == request.auth.uid || isHubMember(hubId) || isSuperAdmin());
+        allow list: if signedIn();
+        allow create: if signedIn()
+          && uid == request.auth.uid
+          && request.resource.data.role in ['member', 'master']
+          && (
+            request.resource.data.role == 'member'
+            || get(/databases/$(database)/documents/hubs/$(hubId)).data.masterId == request.auth.uid
+          );
+        allow update: if isSuperAdmin()
+          || isHubAdmin(hubId)
+          || (signedIn() && uid == request.auth.uid
+              && request.resource.data.role == resource.data.role);
+        allow delete: if canRunHub(hubId)
+          || (signedIn() && uid == request.auth.uid);
+      }
+
+      match /builds/{buildId} {
+        allow read: if isHubMember(hubId) || isSuperAdmin();
+        allow create, update: if isHubMember(hubId) || isSuperAdmin();
+        allow delete: if isHubAdmin(hubId) || isSuperAdmin();
+      }
+
+      match /notices/{noticeId} {
+        allow read: if isHubMember(hubId) || isSuperAdmin();
+        allow create: if canRunHub(hubId)
+          && request.resource.data.title is string
+          && request.resource.data.title.size() <= 50
+          && request.resource.data.body is string
+          && request.resource.data.body.size() <= 2000;
+        allow update: if (canRunHub(hubId)
+          || (isHubMember(hubId) && resource.data.authorId == request.auth.uid))
+          ;
+        allow delete: if canRunHub(hubId)
+          || (isHubMember(hubId) && resource.data.authorId == request.auth.uid);
+      }
+
+      match /posts/{postId} {
+        allow read: if isHubMember(hubId) || isSuperAdmin();
+        allow create: if (isHubMember(hubId) || isSuperAdmin())
+          && request.resource.data.title is string
+          && request.resource.data.title.size() <= 50
+          && request.resource.data.body is string
+          && request.resource.data.body.size() <= 2000;
+        allow update: if (canRunHub(hubId)
+          || (isHubMember(hubId) && resource.data.authorId == request.auth.uid))
+          ;
+        allow delete: if canRunHub(hubId)
+          || (isHubMember(hubId) && resource.data.authorId == request.auth.uid);
+      }
+
+      match /history/{eventId} {
+        allow read: if isHubMember(hubId) || isSuperAdmin();
+        allow create: if (isHubMember(hubId) || isSuperAdmin())
+          && request.resource.data.keys().hasOnly(['actor', 'action', 'target', 'detail', 'createdAt'])
+          && request.resource.data.actor is string
+          && request.resource.data.actor.size() <= 30
+          && request.resource.data.action is string
+          && request.resource.data.action.size() <= 30
+          && request.resource.data.target is string
+          && request.resource.data.target.size() <= 120
+          && request.resource.data.detail is string
+          && request.resource.data.detail.size() <= 300
+          && request.resource.data.createdAt is string
+          && request.resource.data.createdAt.size() <= 50;
+        allow update, delete: if false;
+      }
+
+      match /scores/{memberId} {
+        allow read: if isHubMember(hubId) || isSuperAdmin();
+        allow write: if canRunHub(hubId);
+      }
+    }
+  }
+}
