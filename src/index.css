@@ -3409,7 +3409,19 @@ h1, h2, h3 {
     align-items: center;
   }
 
+  /* 모바일: 제목 → 덱(가운데) → 스킬예약/타임라인 순 */
+  .build-panel-body {
+    display: contents;
+  }
+
+  .build-title-strip {
+    order: 1;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   .build-panel-deck {
+    order: 2;
     width: 100%;
     max-width: 276px;
     align-self: center;
@@ -3423,9 +3435,11 @@ h1, h2, h3 {
     margin: 0 auto;
   }
 
-  .build-panel-body {
-    min-width: 0;
+  .build-panel-playbook,
+  .build-panel-timeline {
+    order: 3;
     width: 100%;
+    box-sizing: border-box;
   }
 
   .build-panel-playbook {
