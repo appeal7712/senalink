@@ -59,8 +59,8 @@ export default function TotalWarPanel({
       )}
 
       {builds.map(b => (
-        <div key={b.id} className="luxury-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        <div key={b.id} className="luxury-panel totalwar-build-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="totalwar-build-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             <div>
               <div style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>{b.title}</div>
               <div className="build-title-meta">{b.author} · {b.updatedAt}</div>

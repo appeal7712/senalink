@@ -1133,7 +1133,7 @@ export default function GuildLounge() {
     };
 
     return (
-      <div key={build.id} className="luxury-panel expedition-tint" style={{
+      <div key={build.id} className="luxury-panel expedition-tint expedition-build-panel" style={{
         padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px',
       }}>
         <div className="build-title-strip" style={{
@@ -1536,11 +1536,11 @@ export default function GuildLounge() {
       {/* ── 8. 덱 생성/수정 대시보드 모달 (isEditMode 전달 + 영웅 서랍 168px 하단 공백 100% 제거) ── */}
       {editingBuild && (
         <ModalScrim style={{ zIndex: 3500, padding: '16px' }}>
-          <div className="luxury-panel glass-modal" style={{ width: '94vw', maxWidth: '1520px', maxHeight: '88vh', padding: '0', display: 'flex', flexDirection: 'column', borderRadius: '28px', minHeight: 0 }}>
+          <div className="luxury-panel glass-modal editing-build-modal" style={{ width: '94vw', maxWidth: '1520px', maxHeight: '88vh', padding: '0', display: 'flex', flexDirection: 'column', borderRadius: '28px', minHeight: 0 }}>
             
             {/* 1. 모달 헤더 */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.10)', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, flexWrap: 'wrap' }}>
+            <div className="editing-build-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.10)', flexShrink: 0 }}>
+              <div className="editing-build-modal-header-main" style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, flexWrap: 'wrap' }}>
                 <h3 className="editing-build-title" style={{ fontSize: '17px', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', margin: 0 }}>
                   {isNewCreateMode ? '신규 공략 생성' : '공략 덱 & 영웅 장비 세팅 수정'}
                 </h3>
@@ -1637,13 +1637,13 @@ export default function GuildLounge() {
             </div>
 
             {/* 2. 바디 2열 대시보드 */}
-            <div className="editing-build-grid" style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px 20px', display: 'grid', gridTemplateColumns: (CONTENT_META[editingCategory] || CONTENT_META.siege).mode === 'pvp' ? '1fr' : '1.45fr 1fr', gridTemplateRows: 'minmax(0, 1fr)', gap: '20px', alignItems: 'stretch', boxSizing: 'border-box' }}>
+            <div className="editing-build-grid editing-build-modal-body" style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px 20px', display: 'grid', gridTemplateColumns: (CONTENT_META[editingCategory] || CONTENT_META.siege).mode === 'pvp' ? '1fr' : '1.45fr 1fr', gridTemplateRows: 'minmax(0, 1fr)', gap: '20px', alignItems: 'stretch', boxSizing: 'border-box' }}>
               
               {/* ─── 좌측: (덱 무대 & 장비 세팅 패널 세로 높이 동기화) + (하단 공백 꽉 채운 영웅 서랍) ─── */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', minHeight: 0, overflow: 'auto' }}>
+              <div className="editing-build-main-col" style={{ display: 'flex', flexDirection: 'column', gap: '14px', minHeight: 0, overflow: 'auto' }}>
                 
                 {/* 덱(고정) + 장비 세팅(왼쪽 높이 맞춤 스트레치) */}
-                <div style={{ display: 'flex', gap: '14px', alignItems: 'stretch' }}>
+                <div className="editing-build-top-row" style={{ display: 'flex', gap: '14px', alignItems: 'stretch' }}>
                   <div className="editing-build-left-col" style={{ display: 'flex', flexDirection: 'column', gap: '10px', flexShrink: 0, width: '300px', alignSelf: 'stretch' }}>
                     <InGameDeckCard
                       teamName={
@@ -1727,7 +1727,7 @@ export default function GuildLounge() {
                     </div>
 
                     {/* 세트 3줄 → flex 3 */}
-                    <div style={{ flex: 3, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                    <div className="editing-build-gear-section editing-build-gear-section--sets" style={{ flex: 3, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                       <div style={{ fontSize: '11px', color: 'var(--accent-cyan)', marginBottom: '6px', fontWeight: 800, flexShrink: 0 }}>1. 장비 세트 선택</div>
                       <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(3, 1fr)', gap: '6px' }}>
                         {['선봉장', '추적자', '성기사', '수문장', '수호자', '암살자', '복수자', '주술사', '조율자'].map(setName => {
@@ -1752,7 +1752,7 @@ export default function GuildLounge() {
                     </div>
 
                     {/* 무기/방어구 2줄 → flex 2 */}
-                    <div style={{ flex: 2, minHeight: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div className="editing-build-gear-section editing-build-gear-section--weapons" style={{ flex: 2, minHeight: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: '8px' }}>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                           <div style={{ fontSize: '11px', color: '#fff', marginBottom: '4px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}><Icon name="swords" size={11} /> 무기 1</div>
@@ -1803,7 +1803,7 @@ export default function GuildLounge() {
                     </div>
 
                     {/* 장신구 2줄 → flex 2 */}
-                    <div style={{ flex: 2, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                    <div className="editing-build-gear-section editing-build-gear-section--accessories" style={{ flex: 2, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                       <div style={{ fontSize: '11px', color: '#c084fc', marginBottom: '6px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}><Icon name="ring" size={11} /> 장신구 선택</div>
                       <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', gap: '6px' }}>
                         {accessories.map(acc => {
@@ -1858,7 +1858,7 @@ export default function GuildLounge() {
                   </div>
 
                   {/* 영웅 그리드 (세로 높이 168px로 살짝 확장하여 공백 제로 마감) */}
-                  <div style={{ height: '168px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(58px, 1fr))', gap: '6px', overflowY: 'auto', paddingRight: '4px' }}>
+                  <div className="editing-build-hero-grid" style={{ height: '168px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(58px, 1fr))', gap: '6px', overflowY: 'auto', paddingRight: '4px' }}>
                     {filteredHeroesByRole.map(h => {
                       const cleanName = h.name.replace('(각성)', '');
                       return (

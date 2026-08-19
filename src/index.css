@@ -3418,6 +3418,63 @@ h1, h2, h3 {
     order: 1;
     width: 100%;
     box-sizing: border-box;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .build-title-name {
+    font-size: 16px;
+    line-height: 1.35;
+    word-break: keep-all;
+  }
+
+  .build-title-meta {
+    font-size: 11px;
+    line-height: 1.45;
+    word-break: keep-all;
+  }
+
+  .build-title-strip .btn-edit {
+    align-self: flex-end;
+  }
+
+  .expedition-build-panel {
+    padding: 14px !important;
+    gap: 12px !important;
+  }
+
+  .expedition-build-panel > .build-title-strip {
+    order: 0;
+  }
+
+  .expedition-round-block {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .expedition-round-row {
+    display: contents;
+  }
+
+  .expedition-round-title {
+    order: 1;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .expedition-round-deck {
+    order: 2;
+    width: 100%;
+    max-width: 276px;
+    align-self: center;
+  }
+
+  .expedition-round-guide {
+    order: 3;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .build-panel-deck {
@@ -3521,19 +3578,118 @@ h1, h2, h3 {
     max-height: min(92dvh, 92vh) !important;
   }
 
-  /* 덱 수정(공략 생성/수정) 편집 모달은 모바일에서 2열을 1열로 접어서
-     패널이 화면 밖으로 밀리며 일그러지는 현상을 방지합니다. */
+  /* 덱 수정(공략 생성/수정) 편집 모달 — 모바일: 내부 스크롤 제거, 단일 세로 흐름 */
+  .editing-build-modal.glass-modal {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .editing-build-modal-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+  }
+
+  .editing-build-modal-header-main {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
   .editing-build-grid {
     grid-template-columns: 1fr !important;
+    overflow: visible !important;
+    flex: none !important;
+    min-height: 0 !important;
+    padding: 12px 14px !important;
+    gap: 12px !important;
   }
+
+  .editing-build-main-col {
+    overflow: visible !important;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0 !important;
+  }
+
+  .editing-build-top-row,
   .editing-build-left-col {
-    width: 100% !important;
-    max-width: 100% !important;
-    align-items: center !important;
+    display: contents;
   }
+
+  .editing-build-main-col > .ingame-deck-card,
+  .editing-build-left-col .ingame-deck-card {
+    order: 1;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 100% !important;
+    max-width: 276px !important;
+  }
+
+  .editing-build-hero-picker {
+    order: 2;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .editing-build-detail-panel {
+    order: 3;
+    flex: 0 0 auto !important;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   .editing-build-right-panel {
+    order: 4;
     min-width: 0 !important;
-    gap: 6px !important;
+    width: 100% !important;
+    gap: 8px !important;
+    box-sizing: border-box;
+  }
+
+  .editing-build-gear-section {
+    flex: 0 0 auto !important;
+    min-height: auto !important;
+  }
+
+  .editing-build-gear-section > div:last-child {
+    min-height: auto !important;
+    height: auto !important;
+  }
+
+  .totalwar-build-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .totalwar-build-head > div:last-child {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .totalwar-deck-row {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .totalwar-deck-row > * {
+    flex: 0 0 min(160px, 46vw) !important;
+    width: min(160px, 46vw) !important;
+    min-width: min(160px, 46vw) !important;
+  }
+
+  .editing-build-hero-grid {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding-right: 0 !important;
   }
 
   .editing-build-left-col .ingame-deck-card {
@@ -3548,15 +3704,15 @@ h1, h2, h3 {
     word-break: keep-all;
     flex: 1 1 100% !important;
     width: 100% !important;
+    font-size: 15px !important;
   }
 
   .editing-build-title-input-row {
     max-width: none !important;
     width: 100% !important;
     flex: 1 1 100% !important;
+    flex-wrap: wrap;
   }
-
-  /* hero picker 순서는 레이아웃/스크롤이 꼬이는 부작용이 있어 모바일에서는 재배치하지 않습니다. */
 
   .editing-build-arena-toggles {
     flex-direction: column !important;
@@ -3567,24 +3723,25 @@ h1, h2, h3 {
     width: 100% !important;
   }
 
-  .editing-build-detail-panel {
-    flex: 0 0 auto !important;
-  }
   .editing-build-detail-textarea {
     flex: 0 0 auto !important;
-    min-height: 60px !important;
-    height: 60px !important;
+    min-height: 72px !important;
+    height: auto !important;
   }
 
   .editing-build-author-row {
     flex-wrap: wrap !important;
     gap: 8px !important;
+    width: 100%;
+    justify-content: space-between;
   }
 
-  /* 모바일: 내부 스코롤(.skill-timeline-scroller) 제거 -> 모달 전체 스크롤로 통일 */
-  .editing-build-grid {
-    overflow: visible !important;
+  .editing-build-author-row span {
+    flex: 1 1 100%;
+    line-height: 1.45;
+    word-break: keep-all;
   }
+
   .skill-timeline-scroller {
     flex: 1 1 auto !important;
     height: auto !important;
