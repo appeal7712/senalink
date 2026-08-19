@@ -70,14 +70,14 @@ export default function HeroGearPanel({
 
   if (filled.length === 0) {
     return (
-      <div style={{ flex: 1, minWidth: '320px', background: 'rgba(255,255,255,0.07)', border: '1.5px solid var(--border-gold)', borderRadius: '12px', padding: '16px', color: '#64748b', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="hero-gear-panel hero-gear-panel--empty" style={{ flex: 1, minWidth: '320px', background: 'rgba(255,255,255,0.07)', border: '1.5px solid var(--border-gold)', borderRadius: '12px', padding: '16px', color: '#64748b', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         영웅을 배치하면 장비 세팅이 활성화됩니다.
       </div>
     );
   }
 
   return (
-    <div style={{ flex: 1, minWidth: '360px', background: 'rgba(255,255,255,0.07)', border: '1.5px solid var(--border-gold)', borderRadius: '12px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div className="hero-gear-panel" style={{ flex: 1, minWidth: '360px', background: 'rgba(255,255,255,0.07)', border: '1.5px solid var(--border-gold)', borderRadius: '12px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
       <div style={{ fontSize: '13px', fontWeight: 900, color: 'var(--gold-primary)', display: 'flex', alignItems: 'center', gap: '5px' }}>
         <Icon name="swords" size={13} /> 장비 세팅
       </div>
@@ -98,7 +98,7 @@ export default function HeroGearPanel({
 
       <div>
         <div style={{ fontSize: '11px', color: 'var(--accent-cyan)', marginBottom: '6px', fontWeight: 800 }}>장비 세트</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+        <div className="hero-gear-panel-set-grid">
           {SET_NAMES.map(setName => {
             const isCur = (cfg.setName || '복수자') === setName;
             return (
@@ -152,7 +152,7 @@ export default function HeroGearPanel({
 
       <div>
         <div style={{ fontSize: '11px', color: '#c084fc', marginBottom: '6px', fontWeight: 800 }}>장신구</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(2, auto)', gap: '6px' }}>
+        <div className="hero-gear-panel-accessory-grid">
           {accessories.map(acc => {
             const isCur = (cfg.accessory || '불사의 반지') === acc.name;
             return (

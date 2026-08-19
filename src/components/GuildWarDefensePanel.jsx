@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
 import HeroGridPicker from './HeroGridPicker';
@@ -8,6 +8,7 @@ import StrategyActionBar from './StrategyActionBar';
 import PvpModeToggle, { PvpModeBadge, PVP_MODE_COLOR } from './PvpModeToggle';
 import { pets } from '../data/pets';
 import { backdropDismissProps } from '../utils/backdropDismiss';
+import { closeOverlayFromUI, collapseOverlayHistory, pushOverlay } from '../utils/overlayHistory';
 import ModalScrim from './ModalScrim';
 
 const emptyHeroSlot = () => ({ primaryName: '', altText: '' });
@@ -170,7 +171,7 @@ function DefenseDeckEditor({
       <div style={{ fontSize: '12px', color: 'var(--accent-cyan)', fontWeight: 800 }}>
         배치 {filledCount}/3 · 드래그로 배치/교체 · 펫/진형은 덱 카드에서 변경
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px', alignItems: 'center' }}>
+      <div className="pvp-deck-editor-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px', alignItems: 'center' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center', justifySelf: 'center', width: '100%', maxWidth: '300px' }}>
           <InGameDeckCard
             teamName=""
@@ -208,6 +209,13 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
   const [expandedId, setExpandedId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState(null);
+
+  const closeDefenseModal = () => closeOverlayFromUI(() => setIsModalOpen(false));
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+    pushOverlay(() => setIsModalOpen(false));
+  }, [isModalOpen]);
 
   const openCreate = () => {
     setForm({
@@ -290,6 +298,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
       onBuildHistory?.('create_build', payload.title, '길드전 방어');
     }
     setIsModalOpen(false);
+    collapseOverlayHistory();
   };
 
   const remove = (id) => {
@@ -350,23 +359,25 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                     })}
                   </div>
                   <span className="gw-defense-rule">|</span>
+                  <div className="gw-defense-mode-tier">
+                    <PvpModeBadge mode={mode} size="sm" />
+                    <TierStars tier={d.tier} readOnly />
+                  </div>
                 </>
               )}
 
-              <div className="gw-defense-meta">
-                {isExpanded && (
-                  <>
-                    <div className="gw-defense-title">{d.title || '이름 없는 방어 덱'}</div>
-                    <span className="gw-defense-rule">|</span>
-                  </>
-                )}
-                <div style={{ flexShrink: 0 }}>
-                  <TierStars tier={d.tier} readOnly />
+              {isExpanded && (
+                <div className="gw-defense-meta">
+                  <div className="gw-defense-title">{d.title || '이름 없는 방어 덱'}</div>
+                  <span className="gw-defense-rule">|</span>
+                  <div style={{ flexShrink: 0 }}>
+                    <TierStars tier={d.tier} readOnly />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="gw-defense-actions">
-                <PvpModeBadge mode={mode} size="sm" />
+                {isExpanded && <PvpModeBadge mode={mode} size="sm" />}
                 <button type="button" className="btn-edit" onClick={e => { e.stopPropagation(); openEdit(raw); }}>
                   <Icon name="edit" size={13} /> 수정
                 </button>
@@ -427,11 +438,25 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
 
       {isModalOpen && form && (
         <ModalScrim style={{ zIndex: 3600, padding: '16px' }}
-          {...backdropDismissProps(() => setIsModalOpen(false))}>
+          {...backdropDismissProps(closeDefenseModal)}>
           <div onClick={e => e.stopPropagation()} className="glass-modal" style={{ width: 'min(1100px, 96vw)', maxHeight: '90vh', overflowY: 'auto', padding: '24px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            <h3 style={{ fontSize: '19px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Icon name="shield" size={18} color="var(--gold-primary)" /> {form.id ? '방어 세팅 수정' : '방어 세팅 추가'}
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+              <h3 style={{ fontSize: '19px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                <Icon name="shield" size={18} color="var(--gold-primary)" /> {form.id ? '방어 세팅 수정' : '방어 세팅 추가'}
+              </h3>
+              <button
+                type="button"
+                onClick={closeDefenseModal}
+                style={{
+                  background: 'rgba(239,68,68,0.2)', border: '1px solid var(--accent-red)', color: '#fff',
+                  width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                }}
+                title="모달 닫기"
+              >
+                <Icon name="close" size={14} />
+              </button>
+            </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: '12px', alignItems: 'end' }}>
               <div>

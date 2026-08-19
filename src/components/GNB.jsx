@@ -12,6 +12,11 @@ function ToolsFlyout({ isActive, onOpenTools }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState(null);
 
+  useEffect(() => {
+    // 탭 전환(도구 페이지 이동) 시에도 드롭다운이 남아있는 문제 방지
+    if (isActive) setOpen(false);
+  }, [isActive]);
+
   const place = () => {
     const el = wrapRef.current;
     if (!el) return;
@@ -43,6 +48,7 @@ function ToolsFlyout({ isActive, onOpenTools }) {
         className={`gnb-link${isActive ? ' active' : ''}`}
         onClick={() => {
           onOpenTools();
+          setOpen(false);
           if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
         }}
       >

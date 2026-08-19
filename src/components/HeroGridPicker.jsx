@@ -61,7 +61,7 @@ export default function HeroGridPicker({ heroes, selectedNames = [], onPick, hei
         />
       )}
 
-      <div style={{ height: `${height}px`, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(68px, 1fr))', gap: '8px', overflowY: 'auto', paddingRight: '4px' }}>
+      <div className="hero-grid-picker-grid" style={{ height: `${height}px`, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(68px, 1fr))', gap: '8px', overflowY: 'auto', paddingRight: '4px' }}>
         {filtered.map(h => {
           const cleanName = h.name.replace('(각성)', '');
           const isCurrent = cleanName === currentSlotName;

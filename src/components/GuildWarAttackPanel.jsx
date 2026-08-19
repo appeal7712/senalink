@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
 import InGameDeckCard from './InGameDeckCard';
@@ -6,6 +6,7 @@ import HeroGridPicker from './HeroGridPicker';
 import HeroGearPanel, { emptyGearConfig } from './HeroGearPanel';
 import { pets } from '../data/pets';
 import { backdropDismissProps } from '../utils/backdropDismiss';
+import { closeOverlayFromUI, collapseOverlayHistory, pushOverlay } from '../utils/overlayHistory';
 import ModalScrim from './ModalScrim';
 
 const emptyNames5 = () => ['', '', '', '', ''];
@@ -106,7 +107,7 @@ function GwTrioDeckEditor({
       <div style={{ fontSize: '12px', color: 'var(--accent-cyan)', fontWeight: 800 }}>
         배치 {filledCount}/3 · 드래그로 배치/교체 · 펫/진형은 덱 카드에서 변경
       </div>
-      <div style={{
+      <div className="pvp-deck-editor-row" style={{
         display: 'grid',
         gridTemplateColumns: showGear ? 'repeat(auto-fit, minmax(280px, 1fr))' : '1fr',
         gap: '14px',
@@ -161,6 +162,20 @@ export default function GuildWarAttackPanel({
   const [isCounterModalOpen, setIsCounterModalOpen] = useState(false);
   const [counterForm, setCounterForm] = useState({ id: null, title: '', heroNames: emptyNames5(), reservedSkills: [], gearNote: '', formationId: 'protect', petId: pets[0]?.id, heroGearConfigs: emptyGear5() });
 
+  const closeTargetModal = () => closeOverlayFromUI(() => setIsTargetModalOpen(false));
+  const closeCounterModal = () => closeOverlayFromUI(() => setIsCounterModalOpen(false));
+  const closeInspectModal = () => closeOverlayFromUI(() => setInspectingCounter(null));
+
+  useEffect(() => {
+    if (!isTargetModalOpen) return;
+    pushOverlay(() => setIsTargetModalOpen(false));
+  }, [isTargetModalOpen]);
+
+  useEffect(() => {
+    if (!isCounterModalOpen) return;
+    pushOverlay(() => setIsCounterModalOpen(false));
+  }, [isCounterModalOpen]);
+
   const openCreateTarget = () => {
     setTargetForm({ id: null, title: '', heroNames: emptyNames5(), note: '', formationId: 'protect', petId: pets[0]?.id });
     setIsTargetModalOpen(true);
@@ -199,6 +214,7 @@ export default function GuildWarAttackPanel({
       onBuildHistory?.('create_build', targetForm.title, '길드전 공격 상대덱');
     }
     setIsTargetModalOpen(false);
+    collapseOverlayHistory();
   };
   const deleteTarget = (id) => {
     if (!confirm('이 상대 덱과 등록된 모든 카운터 덱을 삭제할까요?')) return;
@@ -258,6 +274,7 @@ export default function GuildWarAttackPanel({
       return { ...t, counters: [...list, { id: 'gwac_' + Date.now(), ...payload }] };
     }));
     setIsCounterModalOpen(false);
+    collapseOverlayHistory();
   };
   const deleteCounter = (counterId) => {
     if (!confirm('이 카운터 덱을 삭제할까요?')) return;
@@ -379,9 +396,23 @@ export default function GuildWarAttackPanel({
 
       {isTargetModalOpen && (
         <ModalScrim style={{ zIndex: 3600, padding: '16px' }}
-          {...backdropDismissProps(() => setIsTargetModalOpen(false))}>
+          {...backdropDismissProps(closeTargetModal)}>
           <div onClick={e => e.stopPropagation()} className="glass-modal" style={{ width: 'min(720px, 96vw)', maxHeight: '90vh', overflowY: 'auto', padding: '24px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h3 style={{ fontSize: '19px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}><Icon name="guildwar" size={18} color="var(--gold-primary)" /> {targetForm.id ? '상대 덱 수정' : '상대 덱 추가'}</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+              <h3 style={{ fontSize: '19px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}><Icon name="guildwar" size={18} color="var(--gold-primary)" /> {targetForm.id ? '상대 덱 수정' : '상대 덱 추가'}</h3>
+              <button
+                type="button"
+                onClick={closeTargetModal}
+                style={{
+                  background: 'rgba(239,68,68,0.2)', border: '1px solid var(--accent-red)', color: '#fff',
+                  width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                }}
+                title="모달 닫기"
+              >
+                <Icon name="close" size={14} />
+              </button>
+            </div>
             <div>
               <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '5px', fontWeight: 800 }}>제목</div>
               <input value={targetForm.title} onChange={e => setTargetForm({ ...targetForm, title: e.target.value })} placeholder="예: vs 트겔미"
@@ -408,9 +439,23 @@ export default function GuildWarAttackPanel({
 
       {isCounterModalOpen && (
         <ModalScrim style={{ zIndex: 3600, padding: '16px' }}
-          {...backdropDismissProps(() => setIsCounterModalOpen(false))}>
+          {...backdropDismissProps(closeCounterModal)}>
           <div onClick={e => e.stopPropagation()} className="glass-modal" style={{ width: 'min(1100px, 96vw)', maxHeight: '90vh', overflowY: 'auto', padding: '24px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h3 style={{ fontSize: '19px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}><Icon name="swords" size={17} color="var(--accent-cyan)" /> {counterForm.id ? '카운터 덱 수정' : '카운터 덱 추가'}</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+              <h3 style={{ fontSize: '19px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}><Icon name="swords" size={17} color="var(--accent-cyan)" /> {counterForm.id ? '카운터 덱 수정' : '카운터 덱 추가'}</h3>
+              <button
+                type="button"
+                onClick={closeCounterModal}
+                style={{
+                  background: 'rgba(239,68,68,0.2)', border: '1px solid var(--accent-red)', color: '#fff',
+                  width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                }}
+                title="모달 닫기"
+              >
+                <Icon name="close" size={14} />
+              </button>
+            </div>
             <div>
               <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '5px', fontWeight: 800 }}>제목</div>
               <input value={counterForm.title} onChange={e => setCounterForm({ ...counterForm, title: e.target.value })} placeholder="예: 마덱 카운터 덱"
@@ -443,7 +488,7 @@ export default function GuildWarAttackPanel({
 
       {inspectingCounter && (
         <ModalScrim className="gw-inspect-scrim" style={{ zIndex: 3700, padding: '16px' }}
-          {...backdropDismissProps(() => setInspectingCounter(null))}>
+          {...backdropDismissProps(closeInspectModal)}>
           <div onClick={e => e.stopPropagation()} className="glass-modal gw-inspect-modal" style={{
             maxHeight: '90vh', overflowY: 'auto', padding: '16px', borderRadius: '18px',
             display: 'flex', flexDirection: 'column', gap: '12px', boxSizing: 'border-box'
@@ -453,7 +498,7 @@ export default function GuildWarAttackPanel({
                 fontSize: '17px', fontWeight: 900, display: 'flex', alignItems: 'flex-start', gap: '7px',
                 margin: 0, minWidth: 0, lineHeight: 1.35, overflowWrap: 'anywhere'
               }}><Icon name="swords" size={16} color="var(--accent-cyan)" /> {inspectingCounter.title}</h3>
-              <button onClick={() => setInspectingCounter(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', flexShrink: 0, padding: 0 }}><Icon name="close" size={18} /></button>
+              <button onClick={closeInspectModal} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', flexShrink: 0, padding: 0 }}><Icon name="close" size={18} /></button>
             </div>
             <div className="build-title-meta" style={{ width: '100%' }}>등록: <strong>{inspectingCounter.author}</strong> ({inspectingCounter.updatedAt})</div>
 

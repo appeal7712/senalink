@@ -23,6 +23,7 @@ import StrategyActionBar from './StrategyActionBar';
 import DeckLikeButton, { likedByList, toggleLikedBy } from './DeckLikeButton';
 import SkillReservationBoard from './SkillReservationBoard';
 import { backdropDismissProps } from '../utils/backdropDismiss';
+import { closeOverlayFromUI, collapseOverlayHistory, pushHubTab, pushOverlay } from '../utils/overlayHistory';
 import { parseInviteCode } from '../lib/invite';
 import ModalScrim from './ModalScrim';
 
@@ -61,7 +62,7 @@ function SkillDirBadge({ dir }) {
         : null;
   if (!meta) return null;
   return (
-    <span className="kind-pill kind-pill--sm" style={{ background: meta.bg, marginLeft: '6px' }}>
+    <span className="kind-pill kind-pill--sm" style={{ background: meta.bg }}>
       {meta.label}
     </span>
   );
@@ -629,7 +630,10 @@ export default function GuildLounge() {
     setEditingTotalwarTeam(teamIdx);
   };
 
-  const returnToTotalwarTeamPick = () => {
+  const editingCategoryRef = useRef(editingCategory);
+  editingCategoryRef.current = editingCategory;
+
+  const returnToTotalwarTeamPickInternal = () => {
     const next = [...editingTotalwarDecks];
     next[editingTotalwarTeam] = captureCurrentTotalwarDeck();
     setEditingTotalwarDecks(next);
@@ -637,12 +641,68 @@ export default function GuildLounge() {
     setShowTotalwarTeamPick(true);
   };
 
+  const closeTotalwarTeamPick = () => {
+    closeOverlayFromUI(() => {
+      setShowTotalwarTeamPick(false);
+      setEditingBuild(null);
+    });
+  };
+
+  const returnToTotalwarTeamPick = () => {
+    closeOverlayFromUI(returnToTotalwarTeamPickInternal);
+  };
+
   const closeEditorModal = () => {
-    if (editingCategory === 'totalwar') {
-      returnToTotalwarTeamPick();
-      return;
-    }
-    setEditingBuild(null);
+    closeOverlayFromUI(() => {
+      if (editingCategoryRef.current === 'totalwar') {
+        returnToTotalwarTeamPickInternal();
+        return;
+      }
+      setEditingBuild(null);
+    });
+  };
+
+  useEffect(() => {
+    const onHubTabPop = (e) => {
+      setActiveTab(e.detail?.tab || 'home');
+    };
+    window.addEventListener('app:hub-tab-pop', onHubTabPop);
+    return () => window.removeEventListener('app:hub-tab-pop', onHubTabPop);
+  }, []);
+
+  useEffect(() => {
+    if (!showTotalwarTeamPick) return;
+    pushOverlay(() => {
+      setShowTotalwarTeamPick(false);
+      setEditingBuild(null);
+    });
+  }, [showTotalwarTeamPick]);
+
+  useEffect(() => {
+    if (!editingBuild) return;
+    pushOverlay(() => {
+      if (editingCategoryRef.current === 'totalwar') {
+        returnToTotalwarTeamPickInternal();
+        return;
+      }
+      setEditingBuild(null);
+    });
+  }, [editingBuild]);
+
+  useEffect(() => {
+    if (!assignModalBoss) return;
+    pushOverlay(() => setAssignModalBoss(null));
+  }, [assignModalBoss]);
+
+  useEffect(() => {
+    if (!inspectingCounter) return;
+    pushOverlay(() => setInspectingCounter(null));
+  }, [inspectingCounter]);
+
+  const navigateHubTab = (tabId) => {
+    if (tabId === activeTab) return;
+    pushHubTab(tabId);
+    setActiveTab(tabId);
   };
 
   const persistTotalwarBuild = (decks) => {
@@ -676,6 +736,7 @@ export default function GuildLounge() {
     );
     setShowTotalwarTeamPick(false);
     setEditingBuild(null);
+    collapseOverlayHistory();
     alert(`'${guildRoom.myNickname}' 닉네임으로 공략이 저장 고정되었습니다!`);
     return true;
   };
@@ -929,6 +990,7 @@ export default function GuildLounge() {
     );
 
     setEditingBuild(null);
+    collapseOverlayHistory();
     alert(`'${guildRoom.myNickname}' 닉네임으로 공략이 저장 고정되었습니다!`);
   };
 
@@ -1027,7 +1089,6 @@ export default function GuildLounge() {
                 resolveHeroByName={resolveHeroByName}
                 value={build.skillSequence || build.reservedSkills || []}
                 readOnly
-                compact
               />
             </div>
           ) : (
@@ -1045,15 +1106,18 @@ export default function GuildLounge() {
                   const dirLabel = seq.dir === 'upper' ? '위 스킬' : seq.dir === 'down' ? '아래 스킬' : (seq.dir === 'awaken' ? '각성' : '');
                   return (
                     <Fragment key={sIdx}>
-                      <div className="timeline-step">
-                        <RoundMark round={seq.round} />
-                        <div className="timeline-step-face">
-                          <SafeImg src={heroData?.portraitUrl} alt={heroData?.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <div className={`timeline-step${seq.text?.trim() ? '' : ' timeline-step--no-note'}`}>
+                        <div className="timeline-step-body">
+                          <div className="timeline-step-face">
+                            <SafeImg src={heroData?.portraitUrl} alt={heroData?.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          </div>
+                          <div className="timeline-step-round">
+                            <RoundMark round={seq.round} />
+                          </div>
+                          <div className="timeline-step-name">{seq.heroName}</div>
+                          {dirLabel ? <div className="timeline-step-dir"><SkillDirBadge dir={seq.dir} /></div> : null}
                         </div>
-                        <div className="timeline-step-name">
-                          {seq.heroName}{dirLabel ? <SkillDirBadge dir={seq.dir} /> : null}
-                        </div>
-                        {seq.text && <span className="timeline-step-note">- {seq.text}</span>}
+                        {seq.text?.trim() ? <span className="timeline-step-note">{seq.text}</span> : null}
                       </div>
                       {sIdx < build.skillSequence.length - 1 && <Icon name="arrowRight" size={13} className="timeline-arrow" color="var(--gold-primary)" style={{ filter: 'drop-shadow(0 0 6px var(--gold-primary))' }} />}
                     </Fragment>
@@ -1103,15 +1167,18 @@ export default function GuildLounge() {
             const dirLabel = step.dir === 'upper' ? '위 스킬' : step.dir === 'down' ? '아래 스킬' : (step.dir === 'awaken' ? '각성' : '');
             return (
               <Fragment key={`${roundNo}_${idx}`}>
-                <div className="timeline-step">
-                  <RoundMark round={step.round} />
-                  <div className="timeline-step-face" style={{ borderColor: expTheme.border }}>
-                    <SafeImg src={heroData?.portraitUrl} alt={step.heroName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div className={`timeline-step${step.text?.trim() ? '' : ' timeline-step--no-note'}`}>
+                  <div className="timeline-step-body">
+                    <div className="timeline-step-face" style={{ borderColor: expTheme.border }}>
+                      <SafeImg src={heroData?.portraitUrl} alt={step.heroName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                    <div className="timeline-step-round">
+                      <RoundMark round={step.round} />
+                    </div>
+                    <div className="timeline-step-name">{step.heroName}</div>
+                    {dirLabel ? <div className="timeline-step-dir"><SkillDirBadge dir={step.dir} /></div> : null}
                   </div>
-                  <div className="timeline-step-name">
-                    {step.heroName}{dirLabel ? <SkillDirBadge dir={step.dir} /> : null}
-                  </div>
-                  {step.text && <span className="timeline-step-note">- {step.text}</span>}
+                  {step.text?.trim() ? <span className="timeline-step-note">{step.text}</span> : null}
                 </div>
                 {idx < seq.length - 1 && <Icon name="arrowRight" size={16} className="timeline-arrow" color={expTheme.text} style={{ filter: `drop-shadow(0 0 6px ${expTheme.text})` }} />}
               </Fragment>
@@ -1209,7 +1276,7 @@ export default function GuildLounge() {
         <div className="tab-bar" style={{ flex: 1 }}>
           <button
             className={`nav-tab-btn ${activeTab === 'home' ? 'active' : ''}`}
-            onClick={() => setActiveTab('home')}
+            onClick={() => navigateHubTab('home')}
             style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <GuildMark
               emblem={activeLounge.emblem || 'fortress'}
@@ -1232,7 +1299,7 @@ export default function GuildLounge() {
             return (
               <button key={tab.id}
                 className={`nav-tab-btn ${isActive ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => navigateHubTab(tab.id)}
                 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Icon name={tab.icon} size={16} color={isActive ? '#161616' : 'var(--text-muted)'} />
                 <span className="tab-label-full">{tab.label}</span>
@@ -1460,8 +1527,8 @@ export default function GuildLounge() {
       {/* ── 총력전 팀 선택 (세팅 창 전 단계) ── */}
       {showTotalwarTeamPick && (
         <ModalScrim style={{ zIndex: 3490, padding: '16px' }}
-          {...backdropDismissProps(() => { setShowTotalwarTeamPick(false); setEditingBuild(null); })}>
-          <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} className="glass-modal" style={{
+          {...backdropDismissProps(closeTotalwarTeamPick)}>
+          <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} className="glass-modal totalwar-team-pick-modal" style={{
             width: 'min(920px, 96vw)', padding: '24px', borderRadius: '18px',
             display: 'flex', flexDirection: 'column', gap: '18px'
           }}>
@@ -1470,7 +1537,7 @@ export default function GuildLounge() {
                 <Icon name="totalwar" size={18} color="var(--gold-primary)" />
                 총력전 팀 선택 · {(TOTALWAR_TIERS.find(t => t.id === editingTotalwarTier) || {}).label || ''} 등급
               </h3>
-              <button type="button" onClick={() => { setShowTotalwarTeamPick(false); setEditingBuild(null); }}
+              <button type="button" onClick={closeTotalwarTeamPick}
                 style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid var(--accent-red)', color: '#fff', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Icon name="close" size={14} />
               </button>
@@ -1481,9 +1548,10 @@ export default function GuildLounge() {
                 style={{ width: '100%', padding: '9px 12px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '7px', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
             <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>세팅할 팀을 고르세요. 장비 · 펫 · 스킬 예약은 결투장과 같은 창에서 설정합니다.</div>
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(editingTotalwarDeckCount, 5)}, minmax(0, 1fr))`, gap: '10px' }}>
+            <div className="totalwar-team-pick-grid" style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(editingTotalwarDeckCount, 5)}, minmax(0, 1fr))`, gap: '10px' }}>
               {editingTotalwarDecks.map((deck, i) => {
                 const filled = (deck.heroNames || []).filter(Boolean);
+                const leadHero = filled[0] ? resolveHeroByName(filled[0]) : null;
                 return (
                   <div
                     key={i}
@@ -1495,19 +1563,14 @@ export default function GuildLounge() {
                     }}
                   >
                     <div style={{ fontSize: '14px', fontWeight: 900, color: 'var(--gold-light)' }}>{i + 1}팀</div>
-                    <div style={{ display: 'flex' }}>
-                      {[0, 1, 2, 3, 4].map(slot => {
-                        const h = filled[slot] ? resolveHeroByName(filled[slot]) : null;
-                        return (
-                          <div key={slot} style={{
-                            width: '36px', height: '36px', borderRadius: '8px', overflow: 'hidden',
-                            border: '1.5px solid var(--border-gold)', marginLeft: slot === 0 ? 0 : '-8px',
-                            background: '#0a0d14', flexShrink: 0, zIndex: 5 - slot
-                          }}>
-                            {h ? <SafeImg src={h.portraitUrl} alt={h.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} /> : null}
-                          </div>
-                        );
-                      })}
+                    <div className="totalwar-team-lead-face" style={{
+                      width: '48px', height: '48px', borderRadius: '10px', overflow: 'hidden',
+                      border: '1.5px solid var(--border-gold)', background: '#0a0d14', flexShrink: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                      {leadHero
+                        ? <SafeImg src={leadHero.portraitUrl} alt={leadHero.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+                        : <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 800 }}>빈 덱</span>}
                     </div>
                     <button
                       type="button"
@@ -1535,15 +1598,29 @@ export default function GuildLounge() {
 
       {/* ── 8. 덱 생성/수정 대시보드 모달 (isEditMode 전달 + 영웅 서랍 168px 하단 공백 100% 제거) ── */}
       {editingBuild && (
-        <ModalScrim style={{ zIndex: 3500, padding: '16px' }}>
-          <div className="luxury-panel glass-modal editing-build-modal" style={{ width: '94vw', maxWidth: '1520px', maxHeight: '88vh', padding: '0', display: 'flex', flexDirection: 'column', borderRadius: '28px', minHeight: 0 }}>
-            
+        <ModalScrim style={{ zIndex: 3500, padding: '16px', overflow: 'hidden' }}>
+          <div
+            className="luxury-panel glass-modal editing-build-modal"
+            onClick={e => e.stopPropagation()}
+            onMouseDown={e => e.stopPropagation()}
+            style={{ width: '94vw', maxWidth: '1520px', maxHeight: '88vh', padding: '0', display: 'flex', flexDirection: 'column', borderRadius: '28px', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}
+          >
             {/* 1. 모달 헤더 */}
             <div className="editing-build-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.10)', flexShrink: 0 }}>
               <div className="editing-build-modal-header-main" style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, flexWrap: 'wrap' }}>
-                <h3 className="editing-build-title" style={{ fontSize: '17px', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', margin: 0 }}>
-                  {isNewCreateMode ? '신규 공략 생성' : '공략 덱 & 영웅 장비 세팅 수정'}
-                </h3>
+                <div className="editing-build-modal-title-row">
+                  <h3 className="editing-build-title" style={{ fontSize: '17px', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', margin: 0 }}>
+                    {isNewCreateMode ? '신규 공략 생성' : '공략 덱 & 영웅 장비 세팅 수정'}
+                  </h3>
+                  <button
+                    type="button"
+                    className="editing-build-modal-close editing-build-modal-close--mobile"
+                    onClick={closeEditorModal}
+                    title="모달 닫기"
+                  >
+                    <Icon name="close" size={14} />
+                  </button>
+                </div>
                 <div className="editing-build-title-input-row" style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, maxWidth: '540px' }}>
                   <span style={{ fontSize: '12px', color: '#fff', fontWeight: 800, whiteSpace: 'nowrap' }}>제목:</span>
                   <input type="text" value={buildTitle} onChange={e => setBuildTitle(e.target.value)} placeholder="예: 월요일 마법 공성 (루디) - 600만 극딜 전술" style={{ width: '100%', padding: '6px 12px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '6px', fontSize: '12px', fontWeight: 800, boxSizing: 'border-box' }} />
@@ -1627,24 +1704,23 @@ export default function GuildLounge() {
                   작성자: <strong style={{ color: 'var(--accent-cyan)' }}>{guildRoom.myNickname}</strong>
                   {' '}({ROLE_LABEL[myRole] || myRole})
                 </span>
-                <button onClick={closeEditorModal}
-                  style={{
-                    background: 'rgba(239,68,68,0.2)', border: '1px solid var(--accent-red)', color: '#fff',
-                    width: '30px', height: '30px', borderRadius: '50%', fontSize: '15px', fontWeight: 900,
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                  }} title="모달 닫기"><Icon name="close" size={14} /></button>
+                <button
+                  type="button"
+                  className="editing-build-modal-close editing-build-modal-close--desktop"
+                  onClick={closeEditorModal}
+                  title="모달 닫기"
+                >
+                  <Icon name="close" size={14} />
+                </button>
               </div>
             </div>
 
-            {/* 2. 바디 2열 대시보드 */}
-            <div className="editing-build-grid editing-build-modal-body" style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px 20px', display: 'grid', gridTemplateColumns: (CONTENT_META[editingCategory] || CONTENT_META.siege).mode === 'pvp' ? '1fr' : '1.45fr 1fr', gridTemplateRows: 'minmax(0, 1fr)', gap: '20px', alignItems: 'stretch', boxSizing: 'border-box' }}>
-              
-              {/* ─── 좌측: (덱 무대 & 장비 세팅 패널 세로 높이 동기화) + (하단 공백 꽉 채운 영웅 서랍) ─── */}
-              <div className="editing-build-main-col" style={{ display: 'flex', flexDirection: 'column', gap: '14px', minHeight: 0, overflow: 'auto' }}>
-                
-                {/* 덱(고정) + 장비 세팅(왼쪽 높이 맞춤 스트레치) */}
-                <div className="editing-build-top-row" style={{ display: 'flex', gap: '14px', alignItems: 'stretch' }}>
-                  <div className="editing-build-left-col" style={{ display: 'flex', flexDirection: 'column', gap: '10px', flexShrink: 0, width: '300px', alignSelf: 'stretch' }}>
+            {/* 2. 바디 — PC: PvE 3열(덱·장비·타임라인) / PvP 2열+영웅목록 */}
+            <div
+              className={`editing-build-grid editing-build-modal-body ${(CONTENT_META[editingCategory] || CONTENT_META.siege).mode === 'pvp' ? 'is-pvp' : 'is-pve'}`}
+              style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px 20px', gap: '20px', alignItems: 'stretch', boxSizing: 'border-box' }}
+            >
+              <div className="editing-build-deck-slot" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <InGameDeckCard
                       teamName={
                         editingCategory === 'expedition' ? `${editingExpeditionRound}라운드`
@@ -1678,30 +1754,27 @@ export default function GuildLounge() {
                       }}
                       accentColor={editingCategory === 'expedition' ? expTheme.text : null}
                     />
+              </div>
 
-                    <div className="glass-inset editing-build-detail-panel" style={{
-                      padding: '12px 14px', width: '100%', boxSizing: 'border-box', flex: 1,
-                      display: 'flex', flexDirection: 'column', minHeight: 0
-                    }}>
-                      <div style={{ fontSize: '12px', color: '#fff', marginBottom: '6px', fontWeight: 800, flexShrink: 0 }}>
-                        세팅 디테일 · {editingHeroNames[selectedHeroGearIdx] || '영웅 선택'}
-                      </div>
-                      <textarea
-                        className="editing-build-detail-textarea"
-                        value={heroGearConfigs[selectedHeroGearIdx]?.detailNote || ''}
-                        onChange={e => handleUpdateSelectedHeroGear('detailNote', e.target.value)}
-                        placeholder={'예:\n치확 67%에 가깝게\n약공 46%에 가깝게\n치피 최대한 땡기기'}
-                        style={{
-                          width: '100%', flex: 1, minHeight: '96px', padding: '10px 12px', background: '#07090e', border: '1px solid var(--border-gold)',
-                          color: '#e2e8f0', borderRadius: '7px', fontSize: '14px', fontWeight: 700, lineHeight: 1.5,
-                          boxSizing: 'border-box', resize: 'none', fontFamily: 'inherit'
-                        }}
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* 장비 세팅 — 왼쪽 높이 맞춤, 세트/무기/장신구 비율대로 같이 키움 */}
-                  <div className="glass-inset editing-build-right-panel" style={{
+              <div className="glass-inset editing-build-detail-panel" style={{ padding: '12px 14px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: 800 }}>
+                  세팅 디테일{editingHeroNames[selectedHeroGearIdx] ? ` · ${editingHeroNames[selectedHeroGearIdx]}` : ''}
+                </div>
+                <textarea
+                  className="editing-build-detail-textarea"
+                  value={heroGearConfigs[selectedHeroGearIdx]?.detailNote || ''}
+                  onChange={e => handleUpdateSelectedHeroGear('detailNote', e.target.value)}
+                  placeholder={'예:\n치확 67%에 가깝게\n약공 46%에 가깝게\n치피 최대한 땡기기'}
+                  style={{
+                    width: '100%', padding: '10px 12px', background: '#07090e', border: '1px solid var(--border-gold)',
+                    color: '#e2e8f0', borderRadius: '7px', fontSize: '14px', fontWeight: 700, lineHeight: 1.5,
+                    boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', minHeight: '110px', flex: 1
+                  }}
+                />
+              </div>
+
+              {/* 장비 세팅 */}
+              <div className="glass-inset editing-build-gear-panel editing-build-right-panel" style={{
                     flex: 1, minWidth: 0, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px',
                     alignSelf: 'stretch', minHeight: 0, boxSizing: 'border-box'
                   }}>
@@ -1824,17 +1897,14 @@ export default function GuildLounge() {
                         })}
                       </div>
                     </div>
-                  </div>
-                </div>
+              </div>
 
-                {/* 영웅 목록 */}
-                <div className="glass-inset editing-build-hero-picker" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div className="glass-inset editing-build-hero-picker" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap', flexShrink: 0 }}>
                     <div style={{ fontSize: '14px', fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Icon name="user" size={14} /> 영웅 목록
                     </div>
 
-                    {/* 필터 버튼 */}
                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                       {[
                         { id: 'all',       label: '전체', icon: null },
@@ -1857,7 +1927,6 @@ export default function GuildLounge() {
                     </div>
                   </div>
 
-                  {/* 영웅 그리드 (세로 높이 168px로 살짝 확장하여 공백 제로 마감) */}
                   <div className="editing-build-hero-grid" style={{ height: '168px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(58px, 1fr))', gap: '6px', overflowY: 'auto', paddingRight: '4px' }}>
                     {filteredHeroesByRole.map(h => {
                       const cleanName = h.name.replace('(각성)', '');
@@ -1879,13 +1948,11 @@ export default function GuildLounge() {
                       );
                     })}
                   </div>
-                </div>
-
               </div>
 
-              {/* ─── 우측: PvE 스킬 시전 순서 (PvP는 덱 카드 위 스킬 예약 버튼) ─── */}
+              {/* ─── PvE 우측: 스킬 시전 순서 (PvP는 덱 카드 위 스킬 예약) ─── */}
               {(CONTENT_META[editingCategory] || CONTENT_META.siege).mode !== 'pvp' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', minHeight: 0 }}>
+                <div className="editing-build-timeline-col" style={{ display: 'flex', flexDirection: 'column', gap: '12px', minHeight: 0 }}>
                   <h4 style={{ fontSize: '14px', fontWeight: 700, color: editingCategory === 'expedition' ? expTheme.text : '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                     <Icon name="clock" size={13} color={editingCategory === 'expedition' ? expTheme.text : undefined} /> {editingCategory === 'expedition' ? `${editingExpeditionRound}라운드 스킬 시전 순서` : '스킬 시전 순서'}
                   </h4>

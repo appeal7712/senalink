@@ -4,6 +4,7 @@ import PublicMainPage from './pages/main/PublicMainPage';
 import HubPage from './pages/hub/HubPage';
 import ToastContainer from './components/Toast';
 import { PAGE, navigateTo, pathToPage } from './config/routes';
+import { handleOverlayPopState, readHubTabFromState } from './utils/overlayHistory';
 import { useSuperAdmin } from './context/SuperAdminContext';
 import { usingEmulators } from './lib/firebase';
 
@@ -17,7 +18,12 @@ export default function App() {
   const [activeTab, setActiveTab] = useState(() => pathToPage(window.location.pathname));
 
   useEffect(() => {
-    const sync = () => setActiveTab(pathToPage(window.location.pathname));
+    const sync = () => {
+      if (handleOverlayPopState()) return;
+      setActiveTab(pathToPage(window.location.pathname));
+      const hubTab = readHubTabFromState(window.history.state);
+      window.dispatchEvent(new CustomEvent('app:hub-tab-pop', { detail: { tab: hubTab } }));
+    };
     window.addEventListener('popstate', sync);
     window.addEventListener('app:navigate', sync);
     return () => {

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import SafeImg from './icons/SafeImg';
 
 /** 영웅에서 예약 가능한 스킬 목록 — 각성기 / 스킬1 / 스킬2 (도감과 동일: upper=스킬1, down=스킬2) */
@@ -151,6 +152,20 @@ export default function SkillReservationBoard({
   const names = (heroNames || []).filter(Boolean).slice(0, maxHeroes || undefined);
   const reserved = (value || []).filter(Boolean);
 
+  const [isMobileBoard, setIsMobileBoard] = useState(() => (
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 980px)').matches
+  ));
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 980px)');
+    const sync = () => setIsMobileBoard(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  const useCompact = compact || (readOnly && isMobileBoard);
+  const useBoard = readOnly && !isMobileBoard && !compact;
+
   const findOrder = (heroName, skillKey) => {
     const idx = reserved.findIndex(
       v => v.heroName === heroName && reservationSkillKey(v) === skillKey
@@ -158,9 +173,9 @@ export default function SkillReservationBoard({
     return idx === -1 ? null : idx + 1;
   };
 
-  const portraitSize = compact ? 58 : 78;
-  const iconSize = compact ? 46 : 56;
-  const badgeFont = compact ? '12px' : '13px';
+  const portraitSize = useCompact ? 58 : useBoard ? 68 : 78;
+  const iconSize = useCompact ? 46 : useBoard ? 50 : 56;
+  const badgeFont = useCompact ? '12px' : useBoard ? '12px' : '13px';
 
   return (
     <div className="skill-reserve is-row">
@@ -176,9 +191,13 @@ export default function SkillReservationBoard({
 
       {names.length > 0 && (
         <div className="skill-reserve-row" style={{
-          gridTemplateColumns: `repeat(${names.length}, max-content)`,
-          padding: compact ? '8px 10px 14px' : '12px 12px 18px',
-          gap: compact ? '10px' : '14px',
+          gridTemplateColumns: useBoard
+            ? `repeat(${names.length}, minmax(0, 1fr))`
+            : `repeat(${names.length}, max-content)`,
+          width: useBoard ? '100%' : undefined,
+          maxWidth: useBoard ? '100%' : undefined,
+          padding: useCompact ? '8px 10px 14px' : useBoard ? '10px 12px 16px' : '12px 12px 18px',
+          gap: useCompact ? '10px' : useBoard ? '12px' : '14px',
         }}>
           {names.map((name, i) => {
             const hero = resolveHeroByName ? resolveHeroByName(name) : null;
@@ -213,7 +232,7 @@ export default function SkillReservationBoard({
                     )}
                   </div>
                   <div style={{
-                    fontSize: compact ? '12px' : '13px',
+                    fontSize: useCompact ? '12px' : '13px',
                     color: '#e2e8f0',
                     fontWeight: 900,
                     maxWidth: `${portraitSize + 10}px`,
