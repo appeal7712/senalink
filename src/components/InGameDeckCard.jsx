@@ -290,24 +290,33 @@ export default function InGameDeckCard({
   const [isGearOverviewOpen, setIsGearOverviewOpen] = useState(false);
   const subModalOpen = isFormationModalOpen || isSpeedModalOpen || isReservationModalOpen || isPetModalOpen || isGearOverviewOpen;
 
-  const openGearOverview = () => {
-    // 1) 아래 덱 모달을 같은 동기 구간에서 먼저 숨기고
-    // 2) flushSync로 세팅 확인까지 커밋 → 브라우저가 한 번에 그림
+  /** 편집/펫/진형/속공/예약 — 아래 ModalScrim을 같은 틱에 숨기고 연다 */
+  const openStackedSubModal = (setOpen) => {
     if (typeof onUnderlyingCover === 'function') {
       flushSync(() => onUnderlyingCover(true));
     } else {
       coverUnderlyingScrims();
     }
-    flushSync(() => setIsGearOverviewOpen(true));
+    flushSync(() => setOpen(true));
   };
-  const closeGearOverview = () => {
-    flushSync(() => setIsGearOverviewOpen(false));
+  const closeStackedSubModal = (setOpen) => {
+    flushSync(() => setOpen(false));
     if (typeof onUnderlyingCover === 'function') {
       flushSync(() => onUnderlyingCover(false));
     } else {
       uncoverUnderlyingScrims();
     }
   };
+  const openGearOverview = () => openStackedSubModal(setIsGearOverviewOpen);
+  const closeGearOverview = () => closeStackedSubModal(setIsGearOverviewOpen);
+  const openPetModal = () => openStackedSubModal(setIsPetModalOpen);
+  const closePetModal = () => closeStackedSubModal(setIsPetModalOpen);
+  const openFormationModal = () => openStackedSubModal(setIsFormationModalOpen);
+  const closeFormationModal = () => closeStackedSubModal(setIsFormationModalOpen);
+  const openSpeedModal = () => openStackedSubModal(setIsSpeedModalOpen);
+  const closeSpeedModal = () => closeStackedSubModal(setIsSpeedModalOpen);
+  const openReservationModal = () => openStackedSubModal(setIsReservationModalOpen);
+  const closeReservationModal = () => closeStackedSubModal(setIsReservationModalOpen);
 
   useEffect(() => {
     if (!subModalOpen) return;
@@ -669,13 +678,13 @@ export default function InGameDeckCard({
   const handleSelectFormation = (fId) => {
     setCurrentFormationId(fId);
     if (onFormationChange) onFormationChange(fId);
-    setIsFormationModalOpen(false);
+    closeFormationModal();
   };
 
   const handleSelectPet = (p) => {
     setSelectedPet(p);
     if (onPetChange) onPetChange(p);
-    setIsPetModalOpen(false);
+    closePetModal();
   };
 
   const canEditPetOrFormation = !!(onSlotClick || onPetChange || onFormationChange || isEditMode);
@@ -699,7 +708,7 @@ export default function InGameDeckCard({
 
   const commitSpeedConfig = () => {
     emitSpeedConfig(speedOrderList, speedIgnoredSet);
-    setIsSpeedModalOpen(false);
+    closeSpeedModal();
   };
 
   return (
@@ -746,7 +755,7 @@ export default function InGameDeckCard({
         {((!isInspectView && !isPvp) || (!isInspectView && isPvp && !hideReservationBtn) || onEditClick) && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {!isInspectView && !isPvp && (
-              <button type="button" onClick={() => setIsSpeedModalOpen(true)}
+              <button type="button" onClick={() => openSpeedModal()}
                 style={{
                   width: '100%', padding: '12px 14px', fontSize: '14px', fontWeight: 900,
                   borderRadius: '10px', cursor: 'pointer',
@@ -758,7 +767,7 @@ export default function InGameDeckCard({
               </button>
             )}
             {!isInspectView && isPvp && !hideReservationBtn && (
-              <button type="button" onClick={() => setIsReservationModalOpen(true)}
+              <button type="button" onClick={() => openReservationModal()}
                 style={{
                   width: '100%', padding: '12px 14px', fontSize: '14px', fontWeight: 900,
                   borderRadius: '10px', cursor: 'pointer',
@@ -801,7 +810,7 @@ export default function InGameDeckCard({
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: compact ? '8px' : '10px', width: compact ? '44px' : '56px', flexShrink: 0 }}>
 
           {!hidePet && (
-            <div onClick={() => canEditPetOrFormation && setIsPetModalOpen(true)}
+            <div onClick={() => canEditPetOrFormation && openPetModal()}
               style={{
                 position: 'relative',
                 width: compact ? '44px' : '56px',
@@ -822,7 +831,7 @@ export default function InGameDeckCard({
             </div>
           )}
 
-          <div onClick={(e) => { e.stopPropagation(); if (canEditPetOrFormation) setIsFormationModalOpen(true); }}
+          <div onClick={(e) => { e.stopPropagation(); if (canEditPetOrFormation) openFormationModal(); }}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: canEditPetOrFormation ? 'pointer' : 'default', flexShrink: 0
@@ -855,7 +864,7 @@ export default function InGameDeckCard({
       <>
       {/* 펫 도감 선택 모달 (위아래 삐져나감 방지 콤팩트 핏팅) */}
       {isPetModalOpen && (
-        <div className="modal-scrim" style={{ zIndex: 5800, padding: '20px' }} {...backdropDismissProps(() => dismissSubModal(() => setIsPetModalOpen(false)))}>
+        <div className="modal-scrim" style={{ zIndex: 5800, padding: '20px' }} {...backdropDismissProps(() => dismissSubModal(closePetModal))}>
           <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} className="glass-modal" style={{
             width: '540px', maxHeight: '75vh', padding: '20px', borderRadius: '18px',
             display: 'flex', flexDirection: 'column', gap: '14px', boxSizing: 'border-box', minHeight: 0
@@ -864,7 +873,7 @@ export default function InGameDeckCard({
               <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--gold-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Icon name="paw" size={17} /> 펫 도감 장착 선택 ({pets.length}종)
               </h3>
-              <button onClick={() => dismissSubModal(() => setIsPetModalOpen(false))} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="close" size={18} /></button>
+              <button onClick={() => dismissSubModal(closePetModal)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="close" size={18} /></button>
             </div>
 
             {/* 펫 그리드 내부 스크롤 처리 */}
@@ -891,7 +900,7 @@ export default function InGameDeckCard({
               ))}
             </div>
 
-            <button onClick={() => dismissSubModal(() => setIsPetModalOpen(false))} className="btn-ops" style={{ padding: '10px', justifyContent: 'center', flexShrink: 0 }}>
+            <button onClick={() => dismissSubModal(closePetModal)} className="btn-ops" style={{ padding: '10px', justifyContent: 'center', flexShrink: 0 }}>
               펫 장착 완료
             </button>
           </div>
@@ -909,7 +918,7 @@ export default function InGameDeckCard({
           return rankCursor;
         });
         return (
-        <div className="modal-scrim" style={{ zIndex: 5800, padding: '12px' }} {...backdropDismissProps(() => dismissSubModal(() => (isEditMode ? commitSpeedConfig() : setIsSpeedModalOpen(false))))}>
+        <div className="modal-scrim" style={{ zIndex: 5800, padding: '12px' }} {...backdropDismissProps(() => dismissSubModal(() => (isEditMode ? commitSpeedConfig() : closeSpeedModal())))}>
           <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} className="glass-modal" style={{
             display: 'flex', flexDirection: 'column', alignItems: 'stretch',
             width: 'max-content', maxWidth: '96vw',
@@ -1016,7 +1025,7 @@ export default function InGameDeckCard({
               })}
             </div>
 
-            <button onClick={() => dismissSubModal(() => (isEditMode ? commitSpeedConfig() : setIsSpeedModalOpen(false)))} className="btn-ops" style={{
+            <button onClick={() => dismissSubModal(() => (isEditMode ? commitSpeedConfig() : closeSpeedModal()))} className="btn-ops" style={{
               padding: '10px 0', justifyContent: 'center'
             }}>
               {isEditMode ? '확인 및 속공 순서 저장' : '닫기'}
@@ -1028,7 +1037,7 @@ export default function InGameDeckCard({
 
       {/* 스킬 예약 가로 보드 (PvP 전용, 최대 3개) */}
       {isReservationModalOpen && (
-        <div className="modal-scrim" style={{ zIndex: 4800, padding: '16px' }} {...backdropDismissProps(() => dismissSubModal(() => setIsReservationModalOpen(false)))}>
+        <div className="modal-scrim" style={{ zIndex: 4800, padding: '16px' }} {...backdropDismissProps(() => dismissSubModal(closeReservationModal))}>
           <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} className="glass-modal" style={{
             width: 'fit-content', minWidth: 'min(520px, 96vw)', maxWidth: '96vw', maxHeight: '90vh', minHeight: 0, padding: '14px 16px',
             borderRadius: '18px', position: 'relative', display: 'flex', flexDirection: 'column', boxSizing: 'border-box'
@@ -1051,7 +1060,7 @@ export default function InGameDeckCard({
             />
             </div>
 
-            <button onClick={() => dismissSubModal(() => setIsReservationModalOpen(false))} className="btn-ops" style={{
+            <button onClick={() => dismissSubModal(closeReservationModal)} className="btn-ops" style={{
               width: '100%', padding: '12px 0', marginTop: '18px', justifyContent: 'center', flexShrink: 0
             }}>
               {onReservationChange ? '예약 확인' : '닫기'}
@@ -1062,7 +1071,7 @@ export default function InGameDeckCard({
 
       {/* 진형 선택 모달 */}
       {isFormationModalOpen && (
-        <div className="modal-scrim" style={{ zIndex: 5800 }} {...backdropDismissProps(() => dismissSubModal(() => setIsFormationModalOpen(false)))}>
+        <div className="modal-scrim" style={{ zIndex: 5800 }} {...backdropDismissProps(() => dismissSubModal(closeFormationModal))}>
           <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} className="glass-modal" style={{
             width: '680px', padding: '28px', borderRadius: '20px',
             display: 'flex', flexDirection: 'column', gap: '20px'
@@ -1071,7 +1080,7 @@ export default function InGameDeckCard({
               <h3 style={{ fontSize: '22px', fontWeight: 900, color: 'var(--gold-primary)', display: 'flex', alignItems: 'center', gap: '9px' }}>
                 <Icon name="shield" size={20} /> 진형 선택
               </h3>
-              <button onClick={() => dismissSubModal(() => setIsFormationModalOpen(false))} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="close" size={20} /></button>
+              <button onClick={() => dismissSubModal(closeFormationModal)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="close" size={20} /></button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -1107,7 +1116,7 @@ export default function InGameDeckCard({
               })}
             </div>
 
-            <button onClick={() => dismissSubModal(() => setIsFormationModalOpen(false))} className="btn-ops" style={{
+            <button onClick={() => dismissSubModal(closeFormationModal)} className="btn-ops" style={{
               width: '100%', padding: '12px 0', justifyContent: 'center'
             }}>
               진형 선택 완료
