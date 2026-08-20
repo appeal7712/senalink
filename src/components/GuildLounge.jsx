@@ -62,7 +62,7 @@ function SkillDirBadge({ dir }) {
         : null;
   if (!meta) return null;
   return (
-    <span className="kind-pill kind-pill--sm" style={{ background: meta.bg }}>
+    <span className="kind-pill kind-pill--xs skill-dir-badge" style={{ background: meta.bg }}>
       {meta.label}
     </span>
   );
@@ -1603,7 +1603,7 @@ export default function GuildLounge() {
             className="luxury-panel glass-modal editing-build-modal"
             onClick={e => e.stopPropagation()}
             onMouseDown={e => e.stopPropagation()}
-            style={{ width: '94vw', maxWidth: '1520px', maxHeight: '88vh', padding: '0', display: 'flex', flexDirection: 'column', borderRadius: '28px', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}
+            style={{ width: '94vw', maxWidth: '1520px', maxHeight: '88vh', padding: '0', display: 'flex', flexDirection: 'column', borderRadius: '28px', minHeight: 0, overflow: 'hidden' }}
           >
             {/* 1. 모달 헤더 */}
             <div className="editing-build-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.10)', flexShrink: 0 }}>
@@ -1953,14 +1953,24 @@ export default function GuildLounge() {
               {/* ─── PvE 우측: 스킬 시전 순서 (PvP는 덱 카드 위 스킬 예약) ─── */}
               {(CONTENT_META[editingCategory] || CONTENT_META.siege).mode !== 'pvp' && (
                 <div className="editing-build-timeline-col" style={{ display: 'flex', flexDirection: 'column', gap: '12px', minHeight: 0 }}>
-                  <h4 style={{ fontSize: '14px', fontWeight: 700, color: editingCategory === 'expedition' ? expTheme.text : '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                    <Icon name="clock" size={13} color={editingCategory === 'expedition' ? expTheme.text : undefined} /> {editingCategory === 'expedition' ? `${editingExpeditionRound}라운드 스킬 시전 순서` : '스킬 시전 순서'}
-                  </h4>
-
-                  {/* 높이 고정. 단계 추가해도 커지지 않고, 안쪽에서만 스크롤 */}
-                  <div className="glass-inset" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', flex: '0 0 auto' }}>
-                    <div style={{ fontSize: '11px', fontWeight: 800, color: '#fff', marginBottom: '4px', flexShrink: 0 }}>
-                      현재 등록된 스킬 순서 ({editingSkillTimeline.length}개 / 마우스 휠 스크롤)
+                  {/* 등록 목록 — 제목을 같은 줄에 넣어 세로 공간 절약 */}
+                  <div className="glass-inset editing-build-timeline-list" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', flex: '0 0 auto' }}>
+                    <div className="editing-build-timeline-list-head" style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
+                      marginBottom: '4px', flexShrink: 0, flexWrap: 'wrap'
+                    }}>
+                      <div style={{
+                        fontSize: '13px', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '6px',
+                        color: editingCategory === 'expedition' ? expTheme.text : '#fff', minWidth: 0
+                      }}>
+                        <Icon name="clock" size={13} color={editingCategory === 'expedition' ? expTheme.text : undefined} />
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {editingCategory === 'expedition' ? `${editingExpeditionRound}라운드 스킬 시전 순서` : '스킬 시전 순서'}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                        등록 {editingSkillTimeline.length}개 · 휠 스크롤
+                      </div>
                     </div>
 
                     <div className="skill-timeline-scroller">
@@ -1976,8 +1986,9 @@ export default function GuildLounge() {
                         }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' }}>
                             <RoundMark round={step.round} />
-                            <strong style={{ color: '#fff', display: 'inline-flex', alignItems: 'center' }}>
-                              {step.heroName}<SkillDirBadge dir={step.dir} />
+                            <strong style={{ color: '#fff', display: 'inline-flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{step.heroName}</span>
+                              <SkillDirBadge dir={step.dir} />
                             </strong>
                             {step.text && <span style={{ color: '#fff', fontSize: '11px', fontWeight: 700 }}>- {step.text}</span>}
                           </div>
@@ -1989,7 +2000,7 @@ export default function GuildLounge() {
                   </div>
 
                   {/* 스킬 추가 입력 폼 */}
-                  <div className="glass-inset" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
+                  <div className="glass-inset editing-build-timeline-add" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
                     <div style={{ fontSize: '12px', fontWeight: 800, color: '#fff' }}>+ 스킬 시전 순서 추가</div>
 
                     {/* 라운드 선택 버튼 */}
@@ -2047,14 +2058,15 @@ export default function GuildLounge() {
                     <div>
                       <div style={{ fontSize: '13px', color: '#fff', marginBottom: '5px', fontWeight: 800 }}>메모 (선택)</div>
                       <textarea
+                        className="editing-build-timeline-memo"
                         placeholder="예: 여기서 도트가 걸려있어야함"
                         value={newSkillText}
                         onChange={e => setNewSkillText(e.target.value)}
-                        rows={3}
+                        rows={2}
                         style={{
-                          width: '100%', padding: '12px 14px', background: '#07090e', border: '1.5px solid var(--border-gold)',
-                          color: '#fff', borderRadius: '8px', fontSize: '15px', fontWeight: 700, lineHeight: 1.45,
-                          boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', minHeight: '84px'
+                          width: '100%', padding: '8px 12px', background: '#07090e', border: '1.5px solid var(--border-gold)',
+                          color: '#fff', borderRadius: '8px', fontSize: '14px', fontWeight: 700, lineHeight: 1.4,
+                          boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', minHeight: '52px'
                         }}
                       />
                     </div>

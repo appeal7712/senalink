@@ -632,8 +632,17 @@ h1, h2, h3 {
   white-space: nowrap;
   line-height: 1.2;
 }
+.kind-pill--xs { font-size: 10px; padding: 2px 7px; line-height: 1.15; }
 .kind-pill--sm { font-size: 12px; padding: 7px 12px; }
 .kind-pill--md { font-size: 13px; padding: 8px 14px; }
+
+/* 타임라인·스킬 목록용 — 이름 옆에 붙는 작은 배지 */
+.skill-dir-badge {
+  flex-shrink: 0;
+  font-size: 10px !important;
+  padding: 2px 7px !important;
+  line-height: 1.15 !important;
+}
 
 .kind-toggle {
   display: flex;
@@ -3346,73 +3355,94 @@ h1, h2, h3 {
 }
 
 /* 폰·좁은 미리보기: PC(1180 레이아웃)는 그대로. 980 이하만 접음 */
-/* PC 덱 수정 모달 — PvE 3열 / PvP 2열+영웅 하단 */
+/* PC 덱 수정 모달 — 뷰포트 높이에 맞춰 칸 안에서 스크롤 (겹침 방지) */
 @media (min-width: 981px) {
+  .editing-build-modal.glass-modal {
+    max-height: min(88vh, 900px) !important;
+    height: min(88vh, 900px);
+    overflow: hidden !important;
+  }
+
+  .editing-build-grid.is-pve,
+  .editing-build-grid.is-pvp {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: 100%;
+    overflow: hidden !important;
+  }
+
   .editing-build-grid.is-pve {
     display: grid !important;
-    grid-template-columns: 276px minmax(300px, 1.1fr) minmax(320px, 1fr);
-    grid-template-rows: auto auto minmax(100px, auto);
+    grid-template-columns: minmax(240px, 276px) minmax(260px, 1.1fr) minmax(280px, 1fr);
+    grid-template-rows: minmax(0, auto) minmax(0, auto) minmax(96px, 1fr);
     grid-template-areas:
       "deck gear timeline"
       "detail gear timeline"
       "heroes heroes timeline";
-    align-items: start;
-    min-height: 0;
-    overflow: hidden;
+    align-items: stretch;
   }
 
   .editing-build-grid.is-pvp {
     display: grid !important;
-    grid-template-columns: 276px minmax(0, 1fr);
-    grid-template-rows: auto auto minmax(168px, auto);
+    grid-template-columns: minmax(240px, 276px) minmax(0, 1fr);
+    grid-template-rows: minmax(0, auto) minmax(0, auto) minmax(120px, 1fr);
     grid-template-areas:
       "deck gear"
       "detail gear"
       "heroes heroes";
     align-items: stretch;
-    min-height: 0;
-    overflow: hidden;
   }
 
   .editing-build-deck-slot {
     grid-area: deck;
     align-self: center;
     justify-self: center;
-    width: 276px;
+    width: min(276px, 100%);
+    min-width: 0;
   }
 
   .editing-build-deck-slot .ingame-deck-card {
-    width: 276px !important;
+    width: min(276px, 100%) !important;
   }
 
   .editing-build-detail-panel {
     grid-area: detail;
     min-height: 0;
+    overflow: auto;
+  }
+
+  .editing-build-detail-panel .editing-build-detail-textarea {
+    min-height: 72px !important;
+    max-height: 120px;
   }
 
   .editing-build-gear-panel {
     grid-area: gear;
     grid-row: 1 / 3;
     align-self: stretch;
+    /* 내용이 칸보다 커도 행을 키우지 않고 패널 안에서만 스크롤 */
     min-height: 0;
     min-width: 0;
-    max-height: none;
-    overflow: visible;
+    height: 100%;
+    max-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     display: flex;
     flex-direction: column;
   }
 
   .editing-build-gear-panel .editing-build-gear-section {
-    flex: 0 0 auto !important;
-    min-height: auto !important;
+    flex: 0 1 auto !important;
+    min-height: 0 !important;
   }
 
   .editing-build-gear-panel .editing-build-gear-section--sets {
-    flex: 1.2 1 auto !important;
+    flex: 1.1 1 auto !important;
   }
 
   .editing-build-gear-panel .editing-build-gear-section--weapons {
-    flex: 0.9 1 auto !important;
+    flex: 0.85 1 auto !important;
   }
 
   .editing-build-gear-panel .editing-build-gear-section--accessories {
@@ -3429,29 +3459,32 @@ h1, h2, h3 {
   }
 
   .editing-build-gear-panel .editing-build-gear-section--sets > div:nth-child(2) button {
-    min-height: 42px !important;
-    padding-top: 7px !important;
-    padding-bottom: 7px !important;
+    min-height: 34px !important;
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
   }
 
   .editing-build-gear-panel .editing-build-gear-section--accessories > div:nth-child(2) button {
-    min-height: 46px !important;
-    padding-top: 8px !important;
-    padding-bottom: 8px !important;
+    min-height: 36px !important;
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
   }
 
   .editing-build-gear-panel .editing-build-gear-section--weapons select {
-    min-height: 40px !important;
-    padding-top: 6px !important;
-    padding-bottom: 6px !important;
+    min-height: 34px !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
   }
 
   .editing-build-hero-picker {
     grid-area: heroes;
     grid-column: 1 / 3;
     min-height: 0;
+    max-height: 100%;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    z-index: 1;
   }
 
   .editing-build-timeline-col {
@@ -3461,22 +3494,116 @@ h1, h2, h3 {
     align-self: stretch;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* 등록 목록: 남는 세로 공간은 채우되, 스킬 개수로는 안 늘어남(안쪽 휠 스크롤) */
+  .editing-build-timeline-list {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
     overflow: hidden;
   }
 
-  .editing-build-timeline-col .skill-timeline-scroller {
-    flex: 1 1 auto;
-    min-height: 120px;
-    max-height: none;
+  .editing-build-timeline-list .skill-timeline-scroller {
+    flex: 1 1 auto !important;
+    min-height: 140px !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+
+  .editing-build-timeline-add {
+    flex: 0 0 auto !important;
+    gap: 6px !important;
+  }
+
+  .editing-build-timeline-add textarea,
+  .editing-build-timeline-add .editing-build-timeline-memo {
+    min-height: 52px !important;
+    max-height: 72px !important;
+    padding: 7px 10px !important;
+    font-size: 13px !important;
+  }
+
+  /* 큰 모니터(최대화): 목록·메모를 조금 더 키워 왼쪽과 맞춤 */
+  @media (min-height: 900px) {
+    .editing-build-timeline-list .skill-timeline-scroller {
+      min-height: 200px !important;
+    }
+
+    .editing-build-timeline-add textarea,
+    .editing-build-timeline-add .editing-build-timeline-memo {
+      min-height: 64px !important;
+      max-height: 88px !important;
+    }
   }
 
   .editing-build-hero-grid {
-    flex: 0 0 auto !important;
+    flex: 1 1 auto !important;
     height: auto !important;
-    min-height: 72px;
-    max-height: 132px;
-    grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)) !important;
+    min-height: 64px;
+    max-height: none;
+    grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)) !important;
     overflow-y: auto;
+  }
+
+  /* 짧은 모니터: 패딩·버튼 더 압축 */
+  @media (max-height: 860px) {
+    .editing-build-modal.glass-modal {
+      max-height: 92vh !important;
+      height: 92vh;
+    }
+
+    .editing-build-grid.is-pve,
+    .editing-build-grid.is-pvp {
+      padding: 10px 14px !important;
+      gap: 12px !important;
+    }
+
+    .editing-build-detail-panel .editing-build-detail-textarea {
+      min-height: 56px !important;
+      max-height: 88px;
+    }
+
+    .editing-build-gear-panel .editing-build-gear-section--sets > div:nth-child(2) button,
+    .editing-build-gear-panel .editing-build-gear-section--accessories > div:nth-child(2) button {
+      min-height: 30px !important;
+      padding-top: 3px !important;
+      padding-bottom: 3px !important;
+      font-size: 11px !important;
+    }
+
+    .editing-build-gear-panel .editing-build-gear-section--weapons select {
+      min-height: 30px !important;
+      font-size: 12px !important;
+    }
+
+    .editing-build-timeline-add {
+      gap: 6px !important;
+      padding: 8px 10px !important;
+    }
+
+    .editing-build-timeline-list .skill-timeline-scroller {
+      min-height: 100px !important;
+    }
+
+    .editing-build-timeline-add textarea,
+    .editing-build-timeline-add .editing-build-timeline-memo {
+      min-height: 40px !important;
+      max-height: 52px !important;
+      padding: 6px 8px !important;
+      font-size: 12px !important;
+    }
+
+    .editing-build-timeline-add select {
+      padding: 7px 8px !important;
+      font-size: 12px !important;
+    }
   }
 
   .build-panel-playbook .skill-reserve-row {
