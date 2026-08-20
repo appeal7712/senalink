@@ -366,7 +366,25 @@ option {
 .badge-support   { background: rgba(250, 204, 21, 0.15); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.4); }
 .badge-universal { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); }
 
-/* Purple Awaken Badge */
+/* 각성 아이콘 — 초상화 왼쪽 위 */
+.awaken-mark {
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+  flex-shrink: 0;
+  filter:
+    drop-shadow(0 0 3px rgba(192, 132, 252, 0.85))
+    drop-shadow(0 0 7px rgba(168, 85, 247, 0.55))
+    drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
+}
+.awaken-mark--corner {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  z-index: 6;
+}
+
+/* 구버전 텍스트 배지 (인라인 이름 옆 등에서 아이콘으로 대체됨) */
 .awaken-badge {
   background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
   color: #ffffff;
@@ -1570,10 +1588,23 @@ h1, h2, h3 {
   align-items: center;
   gap: 8px;
 }
+.guild-board-name-text {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 auto;
+}
 .guild-board-name .rank-member-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.guild-board-aff {
+  flex-shrink: 0;
+  margin-top: 0 !important;
 }
 .guild-board .rank-pts span {
   display: inline;

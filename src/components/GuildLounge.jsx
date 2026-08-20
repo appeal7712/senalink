@@ -10,6 +10,7 @@ import { EQUIPMENT_SET_ICONS, accessories } from '../data/equipments';
 import { pets } from '../data/pets';
 import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
+import AwakenMark from './AwakenMark';
 import { setDeckDragData } from '../utils/deckDrag';
 import { useLounge } from '../context/LoungeContext';
 import { auth, db } from '../lib/firebase';
@@ -1940,6 +1941,7 @@ export default function GuildLounge() {
                         >
                           <div style={{ position: 'relative', width: '54px', height: '60px', background: CARD_BG[h.cardTier || 'normal'], borderRadius: '7px', border: (editingHeroNames[targetSlotIdx] || '') === cleanName ? '2px solid var(--accent-cyan)' : '1px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
                             <SafeImg src={h.portraitUrl} alt={h.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', pointerEvents: 'none' }} />
+                            {h.isAwakened && <AwakenMark size={20} />}
                           </div>
                           <div style={{ width: '54px', marginTop: '2px', background: '#000', borderRadius: '3px', padding: '1px 0', textAlign: 'center', fontSize: '8px', color: '#fff', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {cleanName}

@@ -95,9 +95,9 @@ export default function GuildRankBoard() {
         ) : (
           <div className="rank-list">
             <div className="rank-head">
-              <span>Rank</span>
-              <span>Guild</span>
-              <span>{board === 'guildwar' ? 'League' : 'Place'}</span>
+              <span>순위</span>
+              <span>길드 마크 · 이름 · 소속</span>
+              <span>{board === 'guildwar' ? '리그' : '순위'}</span>
             </div>
             <div className="guild-board-scroller">
               {rows.map(g => {
@@ -110,13 +110,11 @@ export default function GuildRankBoard() {
                       <span className="glass-avatar" style={{ width: 28, height: 28, boxShadow: 'none' }}>
                         <GuildMark emblem={g.emblem || 'fortress'} emblemUrl={g.emblemUrl} size={14} />
                       </span>
-                      <div style={{ minWidth: 0 }}>
+                      <div className="guild-board-name-text">
                         <div className="rank-member-name">{g.name}</div>
-                        {affiliation === 'all' && (
-                          <span className="kind-pill kind-pill--sm" style={{ background: aff.color, marginTop: 4 }}>
-                            {aff.label.replace(' 길드', '')}
-                          </span>
-                        )}
+                        <span className="kind-pill kind-pill--sm guild-board-aff" style={{ background: aff.color }}>
+                          {aff.label.replace(' 길드', '')}
+                        </span>
                       </div>
                     </div>
                     <div className="rank-pts" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>

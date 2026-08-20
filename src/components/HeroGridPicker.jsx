@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import SafeImg from './icons/SafeImg';
+import AwakenMark from './AwakenMark';
 import { ROLE_ICONS } from '../data/roleIcons';
 import { setDeckDragData } from '../utils/deckDrag';
 
@@ -79,6 +80,7 @@ export default function HeroGridPicker({ heroes, selectedNames = [], onPick, hei
                 overflow: 'hidden', boxShadow: isCurrent ? '0 0 10px rgba(56,189,248,0.55)' : 'none', transition: 'all 0.15s ease'
               }}>
                 <SafeImg src={h.portraitUrl} alt={h.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', pointerEvents: 'none' }} />
+                {h.isAwakened && <AwakenMark size={23} />}
               </div>
               <div style={{ width: '62px', marginTop: '4px', textAlign: 'center', fontSize: '12px', color: '#fff', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {cleanName}

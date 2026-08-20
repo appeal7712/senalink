@@ -26,7 +26,7 @@ const inputStyle = {
 export default function LoungeHubHeader() {
   const {
     activeLounge, me, myRole, isMaster, isAdmin, isSuperAdmin, canManageMembers, canAppointAdmin,
-    leaveLounge, updateHubSettings, regenerateInviteCode, updateMyNickname,
+    leaveLounge, updateHubSettings, regenerateInviteCode,
     kickMember, appointAdmin, revokeAdmin, transferMaster, maxMembers, maxAdmins,
   } = useLounge();
 
@@ -108,10 +108,8 @@ export default function LoungeHubHeader() {
           lounge={activeLounge}
           isMaster={isMaster || isSuperAdmin}
           isAdmin={isAdmin}
-          me={me}
           updateHubSettings={updateHubSettings}
           regenerateInviteCode={regenerateInviteCode}
-          updateMyNickname={updateMyNickname}
         />
       )}
       {membersOpen && (
@@ -174,14 +172,13 @@ function ActionBtn({ icon, label, onClick, tone = 'gold' }) {
   );
 }
 
-function HubSettingsModal({ onClose, lounge, isMaster, isAdmin, me, updateHubSettings, regenerateInviteCode, updateMyNickname }) {
+function HubSettingsModal({ onClose, lounge, isMaster, isAdmin, updateHubSettings, regenerateInviteCode }) {
   const [name, setName] = useState(lounge.name || '');
   const [affiliation, setAffiliation] = useState(lounge.affiliation || 'lounge');
   const [tags, setTags] = useState([...(lounge.tags || [])]);
   const [emblem, setEmblem] = useState(lounge.emblem || 'fortress');
   const [emblemUrl, setEmblemUrl] = useState(lounge.emblemUrl || '');
   const [description, setDescription] = useState(lounge.description || '');
-  const [myNick, setMyNick] = useState(me?.nickname || '');
   const [error, setError] = useState('');
   const [markBusy, setMarkBusy] = useState(false);
 
@@ -202,9 +199,6 @@ function HubSettingsModal({ onClose, lounge, isMaster, isAdmin, me, updateHubSet
   const save = async () => {
     try {
       setError('');
-      if (myNick.trim() && myNick.trim() !== me?.nickname && !me?.isSuperAdminObserver) {
-        await updateMyNickname(myNick.trim());
-      }
       if (isAdmin) {
         const patch = { name, affiliation, tags, emblem, emblemUrl: emblemUrl || null, description };
         await updateHubSettings(patch);
@@ -244,13 +238,7 @@ function HubSettingsModal({ onClose, lounge, isMaster, isAdmin, me, updateHubSet
   };
 
   return (
-    <ModalShell title={isAdmin ? '허브 설정' : '내 닉네임'} onClose={onClose} wide={isAdmin}>
-      {!me?.isSuperAdminObserver && (
-      <Field label="내 닉네임">
-        <input value={myNick} onChange={e => setMyNick(e.target.value)} placeholder="허브에서 보이는 이름" style={inputStyle} />
-      </Field>
-      )}
-
+    <ModalShell title="허브 설정" onClose={onClose} wide={isAdmin}>
       {isAdmin && (
         <>
           <Field label="길드 마크">

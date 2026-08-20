@@ -15,6 +15,7 @@ import { backdropDismissProps } from '../utils/backdropDismiss';
 import { closeOverlayFromUI, pushOverlay } from '../utils/overlayHistory';
 import CopyNotice from './lounge/CopyNotice';
 import { copyNodePng } from '../lib/copyNodeImage';
+import AwakenMark from './AwakenMark';
 
 const CARD_BG = {
   old_seven:    'linear-gradient(180deg, #fde047 0%, #ca8a04 100%)',
@@ -568,7 +569,7 @@ export default function InGameDeckCard({
           }}
         >
           {h.isAwakened && (
-            <span className="awaken-badge" style={{ position: 'absolute', top: '1px', left: '1px', fontSize: '7px', padding: '0 3px', zIndex: 6 }}>각성</span>
+            <AwakenMark size={23} />
           )}
           <SafeImg src={h.portraitUrl} alt={h.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', pointerEvents: 'none' }} />
 
@@ -616,7 +617,7 @@ export default function InGameDeckCard({
           }}
         >
           {h.isAwakened && (
-            <span className="awaken-badge" style={{ position: 'absolute', top: '1px', left: '1px', fontSize: '7px', padding: '0 3px', zIndex: 6 }}>각성</span>
+            <AwakenMark size={23} />
           )}
           <SafeImg src={h.portraitUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
           {ROLE_ICON[role] && (

@@ -3,6 +3,7 @@ import { heroes } from '../data/heroes';
 import { skillKeywords, EFFECT_KEYWORDS } from '../data/keywords';
 import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
+import AwakenMark from './AwakenMark';
 
 const ROLE_ICON = {
   offensive: '/images/common/공격형 아이콘.png',
@@ -257,7 +258,7 @@ export default function HeroDB() {
                     background: CARD_BG[tier], overflow: 'hidden',
                   }}>
                     {h.isAwakened && (
-                      <span className="awaken-badge" style={{ position: 'absolute', top: '4px', left: '4px', fontSize: '8px', padding: '1px 4px', zIndex: 6 }}>각성</span>
+                      <AwakenMark size={23} style={{ top: 3, left: 3 }} />
                     )}
                     <SafeImg src={h.portraitUrl} alt={h.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }} />
                     {CORNER_BORDER[tier] && <img src={CORNER_BORDER[tier]} alt="" style={{ position: 'absolute', top: 0, right: 0, width: '40px', height: '40px', pointerEvents: 'none' }} />}
@@ -295,7 +296,7 @@ export default function HeroDB() {
                   <div style={{ fontSize: '12px', color: 'var(--gold-primary)', fontWeight: 800 }}>{selectedHero.group}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '2px 0' }}>
                     <h3 style={{ fontSize: '24px', fontWeight: 900, color: '#fff' }}>{selectedHero.name.replace('(각성)', '')}</h3>
-                    {selectedHero.isAwakened && <span className="awaken-badge" style={{ fontSize: '11px', padding: '2px 8px' }}>각성</span>}
+                    {selectedHero.isAwakened && <AwakenMark size={26} corner={false} />}
                   </div>
                 </div>
               </div>
