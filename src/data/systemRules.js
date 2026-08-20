@@ -74,7 +74,8 @@ export const systemRulesData = {
       { name: "수면", category: "행동 제어", description: "행동 불가, 피격 시 확정 치명타 피해 (최대 생명력 7% 이상 피해 시 즉시 해제)" },
       { name: "석화", category: "행동 제어", description: "행동 불가, 해제/만료 시 시전자 공격력 120% 피해" },
       { name: "실명", category: "행동 제어", description: "기본 공격, 반격, 협공 확정 빗나감" },
-      { name: "공포", category: "행동 제어", description: "행동 불가 및 효과 저항 0% 고정" }
+      { name: "공포", category: "행동 제어", description: "행동 불가 및 효과 저항 0% 고정" },
+      { name: "오라", category: "행동 제어", description: "행동 불가, 피격 시 시전자 공격력 15% 추가 고정 피해" }
     ],
     dot_effects: [
       { name: "즉사", category: "지속 피해", description: "매 턴 현재 생명력 20% 피해, 만료/2중첩 시 즉시 사망" },

@@ -108,7 +108,7 @@ export default function GuildRankBoard() {
                     <span className={`rank-num${g.rank <= 3 ? ' gold' : ''}`}>{g.rank}</span>
                     <div className="guild-board-name">
                       <span className="glass-avatar" style={{ width: 28, height: 28, boxShadow: 'none' }}>
-                        <GuildMark emblem={g.emblem || 'fortress'} emblemUrl={g.emblemUrl} size={14} />
+                        <GuildMark emblem={g.emblem || 'fortress'} emblemUrl={g.emblemUrl} size={14} fill />
                       </span>
                       <div className="guild-board-name-text">
                         <div className="rank-member-name">{g.name}</div>

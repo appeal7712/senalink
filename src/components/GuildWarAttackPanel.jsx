@@ -161,10 +161,14 @@ export default function GuildWarAttackPanel({
 
   const [isCounterModalOpen, setIsCounterModalOpen] = useState(false);
   const [counterForm, setCounterForm] = useState({ id: null, title: '', heroNames: emptyNames5(), reservedSkills: [], gearNote: '', formationId: 'protect', petId: pets[0]?.id, heroGearConfigs: emptyGear5() });
+  const [suppressInspectPaint, setSuppressInspectPaint] = useState(false);
 
   const closeTargetModal = () => closeOverlayFromUI(() => setIsTargetModalOpen(false));
   const closeCounterModal = () => closeOverlayFromUI(() => setIsCounterModalOpen(false));
-  const closeInspectModal = () => closeOverlayFromUI(() => setInspectingCounter(null));
+  const closeInspectModal = () => closeOverlayFromUI(() => {
+    setSuppressInspectPaint(false);
+    setInspectingCounter(null);
+  });
 
   useEffect(() => {
     if (!isTargetModalOpen) return;
@@ -487,7 +491,13 @@ export default function GuildWarAttackPanel({
       )}
 
       {inspectingCounter && (
-        <ModalScrim className="gw-inspect-scrim" style={{ zIndex: 3700, padding: '16px' }}
+        <ModalScrim
+          className={`gw-inspect-scrim${suppressInspectPaint ? ' modal-scrim--covered' : ''}`}
+          style={{
+            zIndex: 3700,
+            padding: '16px',
+            ...(suppressInspectPaint ? { display: 'none' } : {}),
+          }}
           {...backdropDismissProps(closeInspectModal)}>
           <div onClick={e => e.stopPropagation()} className="glass-modal gw-inspect-modal" style={{
             maxHeight: '90vh', overflowY: 'auto', padding: '16px', borderRadius: '18px',
@@ -516,6 +526,7 @@ export default function GuildWarAttackPanel({
                 contentMode="pvp"
                 reservedSkills={inspectingCounter.reservedSkills}
                 overviewNotes={inspectingCounter.gearNote ? [{ text: inspectingCounter.gearNote }] : []}
+                onUnderlyingCover={setSuppressInspectPaint}
               />
             </div>
 

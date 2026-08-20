@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '../icons/Icon';
 import {
   HUB_EMBLEMS,
@@ -58,7 +58,7 @@ export default function LoungeHubHeader() {
         <div className="hub-header-main">
           <div className="hub-header-identity">
             <div className="glass-avatar">
-              <GuildMark emblem={emblemId} emblemUrl={activeLounge.emblemUrl} size={28} />
+              <GuildMark emblem={emblemId} emblemUrl={activeLounge.emblemUrl} size={28} fill />
             </div>
             <div className="hub-header-copy">
               <div className="hub-header-name-row">
@@ -178,9 +178,15 @@ function HubSettingsModal({ onClose, lounge, isMaster, isAdmin, updateHubSetting
   const [tags, setTags] = useState([...(lounge.tags || [])]);
   const [emblem, setEmblem] = useState(lounge.emblem || 'fortress');
   const [emblemUrl, setEmblemUrl] = useState(lounge.emblemUrl || '');
+  const [pendingMark, setPendingMark] = useState(null);
   const [description, setDescription] = useState(lounge.description || '');
   const [error, setError] = useState('');
   const [markBusy, setMarkBusy] = useState(false);
+  const markPreviewRef = useRef(null);
+
+  useEffect(() => () => {
+    if (markPreviewRef.current) URL.revokeObjectURL(markPreviewRef.current);
+  }, []);
 
   const groupedTags = useMemo(() => ({
     content: LOUNGE_TAGS.filter(t => t.group === 'content'),
@@ -196,16 +202,46 @@ function HubSettingsModal({ onClose, lounge, isMaster, isAdmin, updateHubSetting
     });
   };
 
+  const clearPendingMarkPreview = () => {
+    if (markPreviewRef.current) {
+      URL.revokeObjectURL(markPreviewRef.current);
+      markPreviewRef.current = null;
+    }
+    setPendingMark(null);
+  };
+
   const save = async () => {
     try {
       setError('');
       if (isAdmin) {
-        const patch = { name, affiliation, tags, emblem, emblemUrl: emblemUrl || null, description };
+        let nextEmblemUrl = emblemUrl || null;
+        let nextEmblem = emblem;
+        if (pendingMark) {
+          setMarkBusy(true);
+          nextEmblemUrl = await uploadHubEmblem(lounge.id, pendingMark);
+          nextEmblem = 'custom';
+          clearPendingMarkPreview();
+          setEmblemUrl(nextEmblemUrl);
+          setEmblem(nextEmblem);
+        }
+        if (nextEmblemUrl?.startsWith('blob:')) {
+          throw new Error('길드 마크 업로드가 끝나지 않았습니다. 다시 올려 주세요.');
+        }
+        const patch = {
+          name,
+          affiliation,
+          tags,
+          emblem: nextEmblem,
+          emblemUrl: nextEmblemUrl || null,
+          description,
+        };
         await updateHubSettings(patch);
       }
       onClose();
     } catch (e) {
       setError(e.message || '저장에 실패했습니다.');
+    } finally {
+      setMarkBusy(false);
     }
   };
 
@@ -227,8 +263,11 @@ function HubSettingsModal({ onClose, lounge, isMaster, isAdmin, updateHubSetting
       setError('');
       setMarkBusy(true);
       const blob = await compressEmblemFile(file);
-      const url = await uploadHubEmblem(lounge.id, blob);
-      setEmblemUrl(url);
+      if (markPreviewRef.current) URL.revokeObjectURL(markPreviewRef.current);
+      const preview = URL.createObjectURL(blob);
+      markPreviewRef.current = preview;
+      setPendingMark(blob);
+      setEmblemUrl(preview);
       setEmblem('custom');
     } catch (err) {
       setError(err.message || '마크를 올리지 못했습니다.');
@@ -244,18 +283,25 @@ function HubSettingsModal({ onClose, lounge, isMaster, isAdmin, updateHubSetting
           <Field label="길드 마크">
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
               <div className="glass-avatar" style={{ width: 52, height: 52 }}>
-                <GuildMark emblem={emblem} emblemUrl={emblemUrl} size={26} />
+                <GuildMark emblem={emblem} emblemUrl={emblemUrl} size={26} fill />
               </div>
               <label className="btn-steel" style={{ padding: '8px 12px', fontSize: '12px', cursor: markBusy ? 'wait' : 'pointer' }}>
-                {markBusy ? '올리는 중…' : '이미지 올리기'}
+                {markBusy ? '준비 중…' : '이미지 올리기'}
                 <input type="file" accept="image/*" onChange={onPickMark} hidden disabled={markBusy} />
               </label>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700 }}>
+                저장 시 반영 · 덮어쓰기
+              </span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
               {HUB_EMBLEMS.map(e => {
                 const active = !emblemUrl && emblem === e.id;
                 return (
-                  <button key={e.id} type="button" onClick={() => { setEmblem(e.id); setEmblemUrl(''); }}
+                  <button key={e.id} type="button" onClick={() => {
+                    clearPendingMarkPreview();
+                    setEmblem(e.id);
+                    setEmblemUrl('');
+                  }}
                     style={{
                       padding: '10px 6px', borderRadius: '10px', cursor: 'pointer',
                       background: active ? 'rgba(255,255,255,0.86)' : 'rgba(255,255,255,0.06)',

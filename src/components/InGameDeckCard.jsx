@@ -1,5 +1,5 @@
 import { Fragment, useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
 import { heroes } from '../data/heroes';
 import { pets } from '../data/pets';
 import { formationsData } from '../data/formations';
@@ -16,6 +16,21 @@ import { closeOverlayFromUI, pushOverlay } from '../utils/overlayHistory';
 import CopyNotice from './lounge/CopyNotice';
 import { copyNodePng } from '../lib/copyNodeImage';
 import AwakenMark from './AwakenMark';
+
+/** 이미 body에 떠 있는 modal-scrim을 동기적으로 숨김 (다음 페인트 전에 처리) */
+function coverUnderlyingScrims() {
+  document.querySelectorAll('body > .modal-scrim').forEach((el) => {
+    el.classList.add('modal-scrim--covered');
+    el.style.setProperty('display', 'none');
+  });
+}
+
+function uncoverUnderlyingScrims() {
+  document.querySelectorAll('body > .modal-scrim.modal-scrim--covered').forEach((el) => {
+    el.classList.remove('modal-scrim--covered');
+    el.style.removeProperty('display');
+  });
+}
 
 const CARD_BG = {
   old_seven:    'linear-gradient(180deg, #fde047 0%, #ca8a04 100%)',
@@ -153,6 +168,8 @@ export default function InGameDeckCard({
   overviewNotes = null,
   accentColor = null,
   compact = false,
+  /** 부모 모달(카운터 덱 조회 등)을 세팅 확인과 같은 틱에 숨길 때 */
+  onUnderlyingCover = null,
 }) {
   // 길드전(maxHeroes=3)도 PvE와 동일한 5칸 공식 진형 레이아웃을 쓰고,
   // 빈 칸은 공란으로 남겨 진형 형태를 확실히 보이게 한다.
@@ -273,6 +290,25 @@ export default function InGameDeckCard({
   const [isGearOverviewOpen, setIsGearOverviewOpen] = useState(false);
   const subModalOpen = isFormationModalOpen || isSpeedModalOpen || isReservationModalOpen || isPetModalOpen || isGearOverviewOpen;
 
+  const openGearOverview = () => {
+    // 1) 아래 덱 모달을 같은 동기 구간에서 먼저 숨기고
+    // 2) flushSync로 세팅 확인까지 커밋 → 브라우저가 한 번에 그림
+    if (typeof onUnderlyingCover === 'function') {
+      flushSync(() => onUnderlyingCover(true));
+    } else {
+      coverUnderlyingScrims();
+    }
+    flushSync(() => setIsGearOverviewOpen(true));
+  };
+  const closeGearOverview = () => {
+    flushSync(() => setIsGearOverviewOpen(false));
+    if (typeof onUnderlyingCover === 'function') {
+      flushSync(() => onUnderlyingCover(false));
+    } else {
+      uncoverUnderlyingScrims();
+    }
+  };
+
   useEffect(() => {
     if (!subModalOpen) return;
     pushOverlay(() => {
@@ -281,8 +317,10 @@ export default function InGameDeckCard({
       setIsReservationModalOpen(false);
       setIsPetModalOpen(false);
       setIsGearOverviewOpen(false);
+      if (typeof onUnderlyingCover === 'function') onUnderlyingCover(false);
+      else uncoverUnderlyingScrims();
     });
-  }, [subModalOpen]);
+  }, [subModalOpen, onUnderlyingCover]);
 
   const dismissSubModal = (fn) => closeOverlayFromUI(fn);
   const [shareNotice, setShareNotice] = useState('');
@@ -308,7 +346,7 @@ export default function InGameDeckCard({
       if (maxHeroes && !h && filled >= maxHeroes) return;
       onSlotClick(idx);
     } else if (h) {
-      setIsGearOverviewOpen(true);
+      openGearOverview();
     }
   };
 
@@ -569,7 +607,7 @@ export default function InGameDeckCard({
           }}
         >
           {h.isAwakened && (
-            <AwakenMark size={23} />
+            <AwakenMark size={18} compact />
           )}
           <SafeImg src={h.portraitUrl} alt={h.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', pointerEvents: 'none' }} />
 
@@ -617,7 +655,7 @@ export default function InGameDeckCard({
           }}
         >
           {h.isAwakened && (
-            <AwakenMark size={23} />
+            <AwakenMark size={18} compact />
           )}
           <SafeImg src={h.portraitUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
           {ROLE_ICON[role] && (
@@ -799,7 +837,7 @@ export default function InGameDeckCard({
       {isInspectView && (
         <button
           type="button"
-          onClick={() => setIsGearOverviewOpen(true)}
+          onClick={() => openGearOverview()}
           className="btn-ops"
           style={{
             marginTop: compact ? 0 : '-4px', padding: compact ? '7px 6px' : '11px 10px',
@@ -1079,7 +1117,7 @@ export default function InGameDeckCard({
       )}
       {/* 세팅 확인 — 스킬/속공 + 장비 디테일 한 화면 */}
       {isGearOverviewOpen && (
-        <div className="modal-scrim" style={{ zIndex: 4000, padding: '16px' }} {...backdropDismissProps(() => dismissSubModal(() => setIsGearOverviewOpen(false)))}>
+        <div className="modal-scrim" style={{ zIndex: 8200, padding: '16px' }} {...backdropDismissProps(() => dismissSubModal(closeGearOverview))}>
           <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} ref={settingCaptureRef} className="glass-modal" style={{
             width: 'fit-content', minWidth: 'min(560px, 96vw)', maxWidth: '96vw', maxHeight: '90vh', padding: '12px 14px', borderRadius: '16px',
             display: 'flex', flexDirection: 'column', gap: '10px', boxSizing: 'border-box'
@@ -1094,7 +1132,7 @@ export default function InGameDeckCard({
                   {isPvp ? '스킬 예약 · 장비 · 장신구 · 디테일' : '속공 순서 · 장비 · 장신구 · 디테일'}
                 </div>
               </div>
-              <button type="button" className="no-capture" onClick={() => dismissSubModal(() => setIsGearOverviewOpen(false))}
+              <button type="button" className="no-capture" onClick={() => dismissSubModal(closeGearOverview)}
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-subtle)', borderRadius: '8px', color: '#fff', cursor: 'pointer', padding: '6px', display: 'flex', flexShrink: 0 }}>
                 <Icon name="close" size={16} />
               </button>
@@ -1212,7 +1250,7 @@ export default function InGameDeckCard({
                 <Icon name="copy" size={14} color="#161616" />
                 {shareBusy ? '복사 중…' : '세팅 공유'}
               </button>
-              <button type="button" onClick={() => dismissSubModal(() => setIsGearOverviewOpen(false))} className="btn-ops" style={{
+              <button type="button" onClick={() => dismissSubModal(closeGearOverview)} className="btn-ops" style={{
                 padding: '12px', justifyContent: 'center', borderRadius: '12px'
               }}>
                 닫기

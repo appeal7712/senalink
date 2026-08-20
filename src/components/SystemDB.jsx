@@ -174,22 +174,22 @@ export default function SystemDB() {
       {activeSubTab === 'effects' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
-          {/* 4대 카테고리 필터 탭 */}
-          <div style={{ display: 'flex', gap: '8px' }}>
+          {/* 4대 카테고리 필터 탭 — 유리(glass) 세그먼트 */}
+          <div className="dex-effect-cats luxury-panel" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', padding: '10px 12px' }}>
             {[
-              { id: 'cc',       label: '행동 제어 (CC 9종)', icon: 'bolt', count: effects_registry.cc_effects.length },
-              { id: 'dot',      label: '지속 피해 (DoT 4종)', icon: 'flame', count: effects_registry.dot_effects.length },
-              { id: 'survival', label: '생존 효과 (11종)', icon: 'shield', count: effects_registry.survival_effects.length },
-              { id: 'utility',  label: '특수 유틸리티 (11종)', icon: 'sparkle', count: effects_registry.special_utility.length },
+              { id: 'cc',       label: `행동 제어 (CC ${effects_registry.cc_effects.length}종)`, icon: 'bolt' },
+              { id: 'dot',      label: `지속 피해 (DoT ${effects_registry.dot_effects.length}종)`, icon: 'flame' },
+              { id: 'survival', label: `생존 효과 (${effects_registry.survival_effects.length}종)`, icon: 'shield' },
+              { id: 'utility',  label: `특수 유틸리티 (${effects_registry.special_utility.length}종)`, icon: 'sparkle' },
             ].map(cat => (
-              <button key={cat.id} onClick={() => setEffectCategory(cat.id)}
-                style={{
-                  padding: '8px 16px', fontSize: '13px', fontWeight: 800, borderRadius: '999px', border: 'none', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: '6px',
-                  background: effectCategory === cat.id ? 'var(--gold-primary)' : 'rgba(255,255,255,0.05)',
-                  color: effectCategory === cat.id ? '#000' : '#e2e8f0'
-                }}>
-                <Icon name={cat.icon} size={13} />
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setEffectCategory(cat.id)}
+                className={`nav-tab-btn${effectCategory === cat.id ? ' active' : ''}`}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Icon name={cat.icon} size={13} color={effectCategory === cat.id ? '#161616' : 'rgba(255,255,255,0.88)'} />
                 {cat.label}
               </button>
             ))}
