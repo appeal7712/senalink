@@ -1,5 +1,5 @@
 import Icon from './icons/Icon';
-import { EQUIPMENT_SET_ICONS, accessories } from '../data/equipments';
+import { EQUIPMENT_SET_ICONS, accessories, weaponOptions, armorOptions } from '../data/equipments';
 
 export const emptyGearConfig = () => ({
   setName: '복수자',
@@ -14,8 +14,8 @@ export const emptyGearConfig = () => ({
 
 const SET_NAMES = ['선봉장', '추적자', '성기사', '수문장', '수호자', '암살자', '복수자', '주술사', '조율자'];
 
-const WEAPON_OPTS = ['약점 공격 확률', '치명타 확률', '치명타 피해', '모든 공격력(%)', '효과 적중'];
-const ARMOR_OPTS = ['받는 피해 감소', '막기 확률', '모든 공격력(%)', '방어력(%)', '생명력(%)', '효과 저항'];
+const WEAPON_OPTS = weaponOptions;
+const ARMOR_OPTS = armorOptions;
 
 const OPT_SHORT = {
   '약점 공격 확률': '약공',
@@ -24,10 +24,10 @@ const OPT_SHORT = {
   '모든 공격력(%)': '공',
   '효과 적중': '효적',
   '받는 피해 감소': '받',
-  '막기 확률': '막확',
+  '막기 확률': '막',
   '방어력(%)': '방',
   '생명력(%)': '생',
-  '효과 저항': '저항',
+  '효과 저항': '효저',
 };
 
 export function buildOptionCode(cfg = {}) {
@@ -36,7 +36,12 @@ export function buildOptionCode(cfg = {}) {
     .filter(Boolean)
     .join('');
   if (fromSlots) return fromSlots;
-  return String(cfg.optionCode || '').trim().replaceAll('적중', '효적').replaceAll('피감', '받');
+  // 슬롯이 비어 옛 optionCode 문자열을 그대로 쓰는 경우 현재 약어 표기로 맞춘다.
+  return String(cfg.optionCode || '').trim()
+    .replaceAll('적중', '효적')
+    .replaceAll('피감', '받')
+    .replaceAll('막확', '막')
+    .replaceAll('저항', '효저');
 }
 
 const selectStyle = {

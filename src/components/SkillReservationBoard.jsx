@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import SafeImg from './icons/SafeImg';
+import HeroPortraitCard from './HeroPortraitCard';
 
 /** 영웅에서 예약 가능한 스킬 목록 — 각성기 / 스킬1 / 스킬2 (도감과 동일: upper=스킬1, down=스킬2) */
 export function getReservableSkills(hero) {
@@ -212,24 +213,8 @@ export default function SkillReservationBoard({
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', minWidth: 0
               }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '7px', flexShrink: 0, minWidth: 0 }}>
-                  <div style={{
-                    width: `${portraitSize}px`,
-                    height: `${portraitSize}px`,
-                    borderRadius: '50%',
-                    overflow: 'hidden',
-                    border: '2.5px solid var(--gold-primary)',
-                    boxShadow: '0 0 0 2px rgba(0,0,0,0.45), 0 4px 12px rgba(0,0,0,0.5)',
-                    background: '#0a0d14',
-                    flexShrink: 0,
-                  }}>
-                    {hero && (
-                      <SafeImg
-                        src={hero.portraitUrl}
-                        alt={hero.name}
-                        fallbackIcon="user"
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
-                      />
-                    )}
+                  <div style={{ width: `${portraitSize}px`, flexShrink: 0 }}>
+                    {hero ? <HeroPortraitCard hero={hero} showStars showRole showName={false} /> : null}
                   </div>
                   <div style={{
                     fontSize: useCompact ? '12px' : '13px',

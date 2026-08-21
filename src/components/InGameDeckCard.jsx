@@ -4,7 +4,6 @@ import { heroes } from '../data/heroes';
 import { pets } from '../data/pets';
 import { formationsData } from '../data/formations';
 import { EQUIPMENT_SET_ICONS, findAccessory } from '../data/equipments';
-import { ROLE_ICONS as ROLE_ICON } from '../data/roleIcons';
 import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
 import SkillReservationBoard from './SkillReservationBoard';
@@ -15,7 +14,7 @@ import { backdropDismissProps } from '../utils/backdropDismiss';
 import { closeOverlayFromUI, pushOverlay } from '../utils/overlayHistory';
 import CopyNotice from './lounge/CopyNotice';
 import { copyNodePng } from '../lib/copyNodeImage';
-import AwakenMark from './AwakenMark';
+import HeroPortraitCard from './HeroPortraitCard';
 
 /** 이미 body에 떠 있는 modal-scrim을 동기적으로 숨김 (다음 페인트 전에 처리) */
 function coverUnderlyingScrims() {
@@ -31,13 +30,6 @@ function uncoverUnderlyingScrims() {
     el.style.removeProperty('display');
   });
 }
-
-const CARD_BG = {
-  old_seven:    'linear-gradient(180deg, #fde047 0%, #ca8a04 100%)',
-  special:      'linear-gradient(180deg, #facc15 0%, #ca8a04 100%)',
-  semi_special: 'linear-gradient(180deg, #facc15 0%, #d97706 100%)',
-  normal:       'linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%)',
-};
 
 // 인게임 4대 공식 원형 사선 별 아이콘 렌더러 (원 중앙 정밀 중앙 정렬)
 export const renderFormationCircleIcon = (fId, size = 56) => {
@@ -389,12 +381,8 @@ export default function InGameDeckCard({
         display: 'flex', flexDirection: 'column', gap: '12px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: compact ? '8px' : '10px', minWidth: 0 }}>
-          <div style={{
-            width: compact ? '48px' : '56px', height: compact ? '54px' : '64px',
-            borderRadius: '10px', overflow: 'hidden', flexShrink: 0,
-            border: '1.5px solid var(--gold-primary)', background: 'transparent'
-          }} className={compact ? 'gear-block-face' : undefined}>
-            <SafeImg src={hero.portraitUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+          <div style={{ width: compact ? '48px' : '56px', flexShrink: 0 }} className={compact ? 'gear-block-face' : undefined}>
+            <HeroPortraitCard hero={hero} showStars showRole showName={false} />
           </div>
           <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
@@ -588,13 +576,10 @@ export default function InGameDeckCard({
       );
     }
 
-    const role = h.role || h.type || 'offensive';
-    const tier = h.cardTier || 'normal';
-
     return (
       <div key={idx} className="deck-hero-slot" style={{ opacity: isDragging ? 0.45 : 1 }}>
         <div
-          className="deck-hero-slot-face"
+          className={`deck-hero-slot-face${selected ? ' is-selected' : ''}`}
           draggable={canDragSlots}
           onDragStart={e => {
             if (!canDragSlots) return;
@@ -608,25 +593,11 @@ export default function InGameDeckCard({
           onClick={() => handleSlotClickInternal(h, idx)}
           title={h.name ? h.name.replace('(각성)', '') : undefined}
           style={{
-            position: 'relative', background: CARD_BG[tier],
-            border: selected ? '2.5px solid var(--accent-cyan)' : '1.5px solid var(--gold-primary)',
-            boxShadow: selected ? '0 0 14px rgba(56,189,248,0.6)' : '0 2px 6px rgba(0,0,0,0.6)',
-            cursor: canDragSlots ? 'grab' : 'pointer', transition: 'all 0.2s ease',
+            cursor: canDragSlots ? 'grab' : 'pointer', transition: 'outline 0.15s ease',
             ...dropStyle,
           }}
         >
-          {h.isAwakened && (
-            <AwakenMark size={18} compact />
-          )}
-          <SafeImg src={h.portraitUrl} alt={h.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', pointerEvents: 'none' }} />
-
-          {ROLE_ICON[role] && (
-            <img src={ROLE_ICON[role]} alt="" style={{ position: 'absolute', bottom: '2px', left: '2px', width: '12px', height: '12px', zIndex: 5, pointerEvents: 'none' }} />
-          )}
-
-          {selected && (
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(56,189,248,0.15)', zIndex: 7, pointerEvents: 'none' }} />
-          )}
+          <HeroPortraitCard hero={h} showStars showRole showName={false} />
         </div>
       </div>
     );
@@ -647,29 +618,12 @@ export default function InGameDeckCard({
       );
     }
 
-    const role = h.role || h.type || 'offensive';
-    const tier = h.cardTier || 'normal';
     const name = h.name ? h.name.replace('(각성)', '') : '';
 
     return (
       <div key={idx} className="deck-hero-slot">
-        <div
-          className="deck-hero-slot-face"
-          title={name || undefined}
-          style={{
-            position: 'relative',
-            background: CARD_BG[tier],
-            border: '1.5px solid var(--gold-primary)',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.6)',
-          }}
-        >
-          {h.isAwakened && (
-            <AwakenMark size={18} compact />
-          )}
-          <SafeImg src={h.portraitUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
-          {ROLE_ICON[role] && (
-            <img src={ROLE_ICON[role]} alt="" style={{ position: 'absolute', bottom: '2px', left: '2px', width: '12px', height: '12px', zIndex: 5 }} />
-          )}
+        <div className="deck-hero-slot-face" title={name || undefined}>
+          <HeroPortraitCard hero={h} showStars showRole showName={false} />
         </div>
       </div>
     );
@@ -967,19 +921,19 @@ export default function InGameDeckCard({
                       title={isEditMode ? '드래그해서 순서 변경' : undefined}
                     >
                       <div style={{
-                        position: 'relative', width: '56px', height: '56px', borderRadius: '11px', overflow: 'hidden',
-                        border: ignored ? '2px solid #64748b' : '2px solid var(--gold-primary)',
-                        boxShadow: '0 3px 10px rgba(0,0,0,0.45)'
+                        position: 'relative', width: '56px',
+                        borderRadius: '4px', overflow: 'visible',
+                        opacity: ignored ? 0.85 : 1,
                       }}>
                         <span style={{
-                          position: 'absolute', top: '3px', left: '3px', zIndex: 5, lineHeight: 1.2,
+                          position: 'absolute', top: '3px', left: '3px', zIndex: 6, lineHeight: 1.2,
                           background: ignored ? '#475569' : 'var(--gold-primary)',
                           color: ignored ? '#fff' : '#000',
                           fontSize: ignored ? '9px' : '11px', fontWeight: 900,
                           padding: ignored ? '2px 4px' : '1px 5px', borderRadius: '5px',
                           maxWidth: '50px', textAlign: 'center'
                         }}>{ignored ? '무관' : `${rank}위`}</span>
-                        <SafeImg src={h.portraitUrl} alt={h.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <HeroPortraitCard hero={h} showStars showRole showName={false} />
                       </div>
                       <span style={{
                         fontSize: '11px', fontWeight: 900, color: '#fff', textAlign: 'center',
@@ -1180,7 +1134,7 @@ export default function InGameDeckCard({
                             <div className={`speed-order-chip${ignored ? ' is-off' : ''}`}>
                               <span className="speed-order-num">{ignored ? '제외' : idx + 1}</span>
                               <div className="speed-order-face">
-                                <SafeImg src={h.portraitUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+                                <HeroPortraitCard hero={h} showStars showRole showName={false} />
                               </div>
                               <strong>{name}</strong>
                             </div>

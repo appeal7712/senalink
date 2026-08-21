@@ -3,10 +3,11 @@ import GNB from './components/GNB';
 import PublicMainPage from './pages/main/PublicMainPage';
 import HubPage from './pages/hub/HubPage';
 import ToastContainer from './components/Toast';
+import SiteEntranceBanner from './components/SiteEntranceBanner';
+import NicknameGate from './components/NicknameGate';
 import { PAGE, navigateTo, pathToPage } from './config/routes';
 import { handleOverlayPopState, readHubTabFromState } from './utils/overlayHistory';
 import { useSuperAdmin } from './context/SuperAdminContext';
-import { usingEmulators } from './lib/firebase';
 
 const OpsPage = lazy(() => import('./pages/ops/OpsPage'));
 const CommunityPage = lazy(() => import('./pages/community/CommunityPage'));
@@ -38,22 +39,22 @@ export default function App() {
   };
 
   const onOpsPath = activeTab === PAGE.OPS;
-  const canSeeOps = onOpsPath && (usingEmulators || (authReady && adminReady && isSuperAdmin));
-  const gnbTab = canSeeOps ? PAGE.OPS : (onOpsPath ? PAGE.MAIN : activeTab);
-  const showMain = activeTab === PAGE.MAIN || (onOpsPath && !canSeeOps);
+  // /ops 는 항상 OpsPage(로그인 게이트 포함). 쓰기 잠금은 Firestore isSuperAdmin().
+  const opsUnlocked = authReady && adminReady && isSuperAdmin;
+  const gnbTab = onOpsPath && opsUnlocked ? PAGE.OPS : (onOpsPath ? PAGE.MAIN : activeTab);
 
   return (
     <div className="app-shell">
       <GNB activeTab={gnbTab} setActiveTab={go} />
 
       <main className="app-main">
-        {canSeeOps ? (
+        {onOpsPath ? (
           <Suspense fallback={null}>
             <OpsPage onOpenHub={() => go(PAGE.HUB)} />
           </Suspense>
         ) : (
           <>
-            {showMain && (
+            {activeTab === PAGE.MAIN && (
               <PublicMainPage onNavigateToLounge={() => go(PAGE.HUB)} />
             )}
             {activeTab === PAGE.HUB && <HubPage />}
@@ -69,6 +70,8 @@ export default function App() {
           </>
         )}
       </main>
+      {!onOpsPath ? <SiteEntranceBanner /> : null}
+      {!onOpsPath ? <NicknameGate /> : null}
       <ToastContainer />
     </div>
   );

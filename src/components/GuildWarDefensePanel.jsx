@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
+import HeroPortraitCard from './HeroPortraitCard';
 import HeroGridPicker from './HeroGridPicker';
 import InGameDeckCard from './InGameDeckCard';
 import HeroGearPanel, { emptyGearConfig } from './HeroGearPanel';
@@ -344,8 +345,8 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                       const h = resolveHeroByName(s.primaryName);
                       return (
                         <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '48px' }}>
-                          <div style={{ width: '48px', height: '48px', borderRadius: '10px', overflow: 'hidden', border: '1.5px solid var(--border-gold)', background: '#0a0d14', flexShrink: 0 }}>
-                            {h && <SafeImg src={h.portraitUrl} alt={h.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />}
+                          <div style={{ width: '48px', flexShrink: 0 }}>
+                            {h ? <HeroPortraitCard hero={h} showStars showRole showName={false} /> : null}
                           </div>
                           <span style={{
                             fontSize: '11px', fontWeight: 800, color: '#fff', marginTop: '4px',
@@ -527,18 +528,18 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
                   <div style={{ fontSize: '12.5px', color: '#94a3b8', fontWeight: 800, marginBottom: '4px' }}>부옵/장비 우선순위 요약</div>
-                  <textarea value={form.gearPriorityNote} onChange={e => patchForm({ gearPriorityNote: e.target.value })} rows={2} placeholder="예: 여포 - 궁수+부활"
+                  <textarea value={form.gearPriorityNote} onChange={e => patchForm({ gearPriorityNote: e.target.value })} rows={2} placeholder="예: 여포 약공 100 , 칼헤론 효적 100 필수"
                     style={{ width: '100%', padding: '8px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }} />
                 </div>
                 <div>
                   <div style={{ fontSize: '12.5px', color: '#c084fc', fontWeight: 800, marginBottom: '4px' }}>장신구 요약</div>
-                  <textarea value={form.accessoryNote} onChange={e => patchForm({ accessoryNote: e.target.value })} rows={2} placeholder="예: 오르카 - 궁수 반지 우선"
+                  <textarea value={form.accessoryNote} onChange={e => patchForm({ accessoryNote: e.target.value })} rows={2} placeholder="예: 델론즈 부불 우선"
                     style={{ width: '100%', padding: '8px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }} />
                 </div>
               </div>
               <div>
                 <div style={{ fontSize: '12.5px', color: '#94a3b8', fontWeight: 800, marginBottom: '4px' }}>기타 디테일</div>
-                <textarea value={form.otherDetail} onChange={e => patchForm({ otherDetail: e.target.value })} rows={2} placeholder="예: 피회짐 > 칼헤론 or 오르카 target"
+                <textarea value={form.otherDetail} onChange={e => patchForm({ otherDetail: e.target.value })} rows={2} placeholder="예: 피뢰침 - 선란이 맞게 세팅 (모공 최대로)"
                   style={{ width: '100%', padding: '8px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }} />
               </div>
             </div>

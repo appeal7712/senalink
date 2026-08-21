@@ -41,15 +41,18 @@ export function findAccessory(value) {
 export const equipmentSets = equipments;
 
 // 무기 메인 옵션 (실전 유효 옵션만 엄선!)
+// 덱 수정 / 길드전 / ops 메타덱이 모두 이 배열을 쓴다. 여기만 고치면 전부 반영된다.
 export const weaponOptions = [
   '약점 공격 확률',
   '치명타 확률',
   '치명타 피해',
   '모든 공격력(%)',
-  '효과 적중'
+  '효과 적중',
+  '방어력(%)',
+  '생명력(%)'
 ];
 
-// 방어구 메인 옵션 (실전 유효 옵션만 엄선!)
+// 방어구 메인 옵션 (실전 유효 옵션만 엄선!) — 무기와 같은 단일 출처
 export const armorOptions = [
   '받는 피해 감소',
   '막기 확률',

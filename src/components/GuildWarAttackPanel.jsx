@@ -1,6 +1,7 @@
 import { Fragment, useState, useEffect } from 'react';
 import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
+import HeroPortraitCard from './HeroPortraitCard';
 import InGameDeckCard from './InGameDeckCard';
 import HeroGridPicker from './HeroGridPicker';
 import HeroGearPanel, { emptyGearConfig } from './HeroGearPanel';
@@ -33,11 +34,10 @@ function MiniHeroTrio({ heroNames = [], resolveHeroByName, size = 34 }) {
         const h = filled[i] ? resolveHeroByName(filled[i]) : null;
         return (
           <div key={i} style={{
-            width: `${size}px`, height: `${size}px`, borderRadius: '8px', overflow: 'hidden',
-            border: '1.5px solid var(--border-gold)', marginLeft: i === 0 ? 0 : '-8px',
-            background: '#0a0d14', boxShadow: '0 2px 6px rgba(0,0,0,0.5)', flexShrink: 0, zIndex: 3 - i
+            width: `${size}px`, marginLeft: i === 0 ? 0 : '-8px',
+            flexShrink: 0, zIndex: 3 - i
           }}>
-            {h ? <SafeImg src={h.portraitUrl} alt={h.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} /> : null}
+            {h ? <HeroPortraitCard hero={h} showStars showRole showName={false} /> : null}
           </div>
         );
       })}

@@ -1,15 +1,7 @@
 import { useState } from 'react';
-import SafeImg from './icons/SafeImg';
-import AwakenMark from './AwakenMark';
+import HeroPortraitCard from './HeroPortraitCard';
 import { ROLE_ICONS } from '../data/roleIcons';
 import { setDeckDragData } from '../utils/deckDrag';
-
-const CARD_BG = {
-  old_seven:    'linear-gradient(180deg, #fde047 0%, #ca8a04 100%)',
-  special:      'linear-gradient(180deg, #facc15 0%, #ca8a04 100%)',
-  semi_special: 'linear-gradient(180deg, #facc15 0%, #d97706 100%)',
-  normal:       'linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%)',
-};
 
 const ROLE_FILTERS = [
   { id: 'all',       label: '전체',   icon: null },
@@ -75,12 +67,14 @@ export default function HeroGridPicker({ heroes, selectedNames = [], onPick, hei
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'grab' }}
             >
               <div style={{
-                position: 'relative', width: '62px', height: '68px', background: CARD_BG[h.cardTier || 'normal'],
-                borderRadius: '9px', border: isCurrent ? '2.5px solid var(--accent-cyan)' : '1px solid rgba(255,255,255,0.15)',
-                overflow: 'hidden', boxShadow: isCurrent ? '0 0 10px rgba(56,189,248,0.55)' : 'none', transition: 'all 0.15s ease'
+                width: '62px',
+                outline: isCurrent ? '2.5px solid var(--accent-cyan)' : 'none',
+                outlineOffset: 1,
+                borderRadius: 8,
+                boxShadow: isCurrent ? '0 0 10px rgba(56,189,248,0.55)' : 'none',
+                transition: 'all 0.15s ease',
               }}>
-                <SafeImg src={h.portraitUrl} alt={h.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', pointerEvents: 'none' }} />
-                {h.isAwakened && <AwakenMark size={18} compact />}
+                <HeroPortraitCard hero={h} showStars showRole showName={false} />
               </div>
               <div style={{ width: '62px', marginTop: '4px', textAlign: 'center', fontSize: '12px', color: '#fff', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {cleanName}

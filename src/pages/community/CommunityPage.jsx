@@ -16,7 +16,7 @@ export default function CommunityPage() {
         alignItems: 'center', justifyContent: 'center',
       }}>
         <span className="ops-tag" style={{ marginBottom: 12 }}>Community Hub</span>
-        <h1 className="hero-headline" style={{ margin: '0 0 8px', fontSize: 22 }}>공용허브</h1>
+        <h1 className="hero-headline" style={{ margin: '0 0 8px', fontSize: 22 }}>공용 허브</h1>
         <p style={{ margin: '0 0 24px', fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: 700 }}>
           길드 가입과 관계없이 모두가 공략을 공유할 수 있는 공간입니다.
         </p>

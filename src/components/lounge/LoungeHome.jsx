@@ -29,8 +29,22 @@ const ACTION_LABEL = {
 };
 
 const MAX_IMAGES = 4;
-const MAX_IMAGE_EDGE = 1280;
-const JPEG_QUALITY = 0.72;
+/**
+ * 첨부 이미지는 base64로 Firestore 문서에 함께 저장된다.
+ * 문서 한도(1MiB)를 넘기면 글 자체가 저장되지 않으므로 여유를 두고 상한을 건다.
+ */
+const MAX_SINGLE_IMAGE_BYTES = 200_000;
+const MAX_IMAGES_TOTAL_BYTES = 700_000;
+/** 상한에 걸리면 화질·크기를 순서대로 낮춰 재인코딩한다. */
+const COMPRESS_STEPS = [
+  { edge: 1280, quality: 0.72 },
+  { edge: 1280, quality: 0.6 },
+  { edge: 1024, quality: 0.56 },
+  { edge: 1024, quality: 0.46 },
+  { edge: 860, quality: 0.44 },
+  { edge: 720, quality: 0.4 },
+  { edge: 600, quality: 0.34 },
+];
 
 export default function LoungeHome() {
   const {
@@ -316,13 +330,28 @@ function WritePostModal({ mode, onClose, onSubmit }) {
     setBusy(true);
     setLocalErr('');
     try {
-      const next = [];
+      const merged = [...images];
+      let total = merged.reduce((sum, src) => sum + src.length, 0);
+      let dropped = 0;
       for (const file of files.slice(0, room)) {
-        next.push(await compressImageFile(file));
+        let compressed = null;
+        try {
+          compressed = await compressImageFile(file);
+        } catch {
+          dropped += 1;
+          continue;
+        }
+        if (total + compressed.length > MAX_IMAGES_TOTAL_BYTES) {
+          dropped += 1;
+          continue;
+        }
+        merged.push(compressed);
+        total += compressed.length;
       }
-      setImages(prev => [...prev, ...next].slice(0, MAX_IMAGES));
-    } catch {
-      setLocalErr('이미지 처리에 실패했습니다. 다른 파일을 시도해 주세요.');
+      setImages(merged.slice(0, MAX_IMAGES));
+      if (dropped) {
+        setLocalErr(`이미지 ${dropped}장은 용량 한도 때문에 첨부하지 못했습니다. 더 작은 이미지를 올려 주세요.`);
+      }
     } finally {
       setBusy(false);
       if (fileRef.current) fileRef.current.value = '';
@@ -482,6 +511,18 @@ function MiniBtn({ onClick, label, title, tone }) {
   );
 }
 
+function encodeAtStep(img, edge, quality) {
+  const scale = Math.min(1, edge / Math.max(img.width, img.height));
+  const w = Math.max(1, Math.round(img.width * scale));
+  const h = Math.max(1, Math.round(img.height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, w, h);
+  return canvas.toDataURL('image/jpeg', quality);
+}
+
 function compressImageFile(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -490,15 +531,16 @@ function compressImageFile(file) {
       const img = new Image();
       img.onerror = () => reject(new Error('decode failed'));
       img.onload = () => {
-        const scale = Math.min(1, MAX_IMAGE_EDGE / Math.max(img.width, img.height));
-        const w = Math.max(1, Math.round(img.width * scale));
-        const h = Math.max(1, Math.round(img.height * scale));
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', JPEG_QUALITY));
+        let out = '';
+        for (const step of COMPRESS_STEPS) {
+          out = encodeAtStep(img, step.edge, step.quality);
+          if (out.length <= MAX_SINGLE_IMAGE_BYTES) break;
+        }
+        if (!out || out.length > MAX_SINGLE_IMAGE_BYTES) {
+          reject(new Error('too large'));
+          return;
+        }
+        resolve(out);
       };
       img.src = reader.result;
     };

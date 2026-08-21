@@ -159,7 +159,6 @@ export function LoungeCreateModal({ onClose, onCreated }) {
   const [name, setName] = useState('');
   const [affiliation, setAffiliation] = useState('lounge');
   const [tags, setTags] = useState([]);
-  const [masterNickname, setMasterNickname] = useState(profile.nickname || '');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -175,7 +174,7 @@ export function LoungeCreateModal({ onClose, onCreated }) {
     try {
       setError('');
       setBusy(true);
-      const lounge = await createLounge({ name, affiliation, tags, masterNickname });
+      const lounge = await createLounge({ name, affiliation, tags });
       onCreated?.(lounge);
       onClose?.();
     } catch (e) {
@@ -242,7 +241,7 @@ export function LoungeCreateModal({ onClose, onCreated }) {
         </Field>
 
         <Field label="마스터 닉네임">
-          <input value={masterNickname} onChange={e => setMasterNickname(e.target.value)} placeholder="예: 길마_태오" style={inputStyle} />
+          <ProfileNicknameRow nickname={profile.nickname} />
         </Field>
 
         <p style={{ margin: 0, fontSize: '12px', color: '#fff', fontWeight: 700, lineHeight: 1.5 }}>
@@ -271,7 +270,6 @@ export function LoungeJoinModal({ onClose, onJoined, initialCode = '' }) {
   }, [initialCode]);
 
   const [inviteCode, setInviteCode] = useState(queryCode);
-  const [nickname, setNickname] = useState(profile.nickname || '');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -279,7 +277,7 @@ export function LoungeJoinModal({ onClose, onJoined, initialCode = '' }) {
     try {
       setError('');
       setBusy(true);
-      const lounge = await joinLounge({ inviteCode, nickname });
+      const lounge = await joinLounge({ inviteCode });
       onJoined?.(lounge);
       onClose?.();
     } catch (e) {
@@ -304,7 +302,7 @@ export function LoungeJoinModal({ onClose, onJoined, initialCode = '' }) {
         </div>
 
         <p style={{ margin: 0, fontSize: '12px', color: '#fff', lineHeight: 1.55, fontWeight: 700 }}>
-          초대 코드 또는 링크와 닉네임만 있으면 됩니다. 다른 길드에 들어가 있으면 자동으로 나갑니다.
+          초대 코드 또는 링크만 있으면 됩니다. 닉네임은 마이페이지에 저장한 이름을 그대로 씁니다.
         </p>
 
         <Field label="초대 코드 또는 링크">
@@ -316,7 +314,7 @@ export function LoungeJoinModal({ onClose, onJoined, initialCode = '' }) {
           />
         </Field>
         <Field label="내 닉네임">
-          <input value={nickname} onChange={e => setNickname(e.target.value)} placeholder="길드에서 쓸 닉네임" style={inputStyle} />
+          <ProfileNicknameRow nickname={profile.nickname} />
         </Field>
 
         {error && <div style={{ color: '#fca5a5', fontSize: '13px', fontWeight: 800 }}>{error}</div>}
@@ -338,6 +336,22 @@ function Field({ label, children }) {
     <div>
       <div style={{ fontSize: '12px', color: '#fff', fontWeight: 800, marginBottom: '6px' }}>{label}</div>
       {children}
+    </div>
+  );
+}
+
+/** 닉네임은 마이페이지에서만 고친다. 허브에서는 읽기 전용으로 보여준다. */
+function ProfileNicknameRow({ nickname }) {
+  const nick = String(nickname || '').trim();
+  return (
+    <div style={{
+      ...inputStyle,
+      display: 'flex', alignItems: 'center', gap: '8px',
+      background: 'rgba(255,255,255,0.05)',
+      color: nick ? '#fff' : '#fca5a5',
+    }}>
+      <Icon name="user" size={14} color={nick ? 'var(--gold-light)' : '#fca5a5'} />
+      {nick || '마이페이지에서 닉네임을 먼저 설정해 주세요.'}
     </div>
   );
 }

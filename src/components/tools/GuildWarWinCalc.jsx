@@ -11,6 +11,8 @@ import {
 
 const fmt = (n) => Number(n).toLocaleString('ko-KR');
 const signed = (n) => `${n >= 0 ? '+' : ''}${fmt(n)}점`;
+const OUR_COLOR = '#22c55e';
+const ENEMY_COLOR = '#ff4d5e';
 
 function ZoneRow({ zone, value, onChange, accent }) {
   const rule = ZONE_RULES[zone];
@@ -87,23 +89,23 @@ export default function GuildWarWinCalc() {
       <div className="gwcalc-stats">
         <div className="luxury-panel gwcalc-stat">
           <p>현재 점수차</p>
-          <strong style={{ color: result.currentGap >= 0 ? '#34d399' : '#ff7a7a' }}>{signed(result.currentGap)}</strong>
+          <strong style={{ color: result.currentGap >= 0 ? OUR_COLOR : ENEMY_COLOR }}>{signed(result.currentGap)}</strong>
           <span>우리 점수 - 상대 점수</span>
         </div>
         <div className="luxury-panel gwcalc-stat">
           <p>우리 최대 추가점수</p>
-          <strong style={{ color: '#34d399' }}>{fmt(result.ourGain.total)}점</strong>
+          <strong style={{ color: OUR_COLOR }}>{fmt(result.ourGain.total)}점</strong>
           <span>우리 남은 공격 기준</span>
         </div>
         <div className="luxury-panel gwcalc-stat">
           <p>상대 최대 추가점수</p>
-          <strong style={{ color: '#ff7a7a' }}>{fmt(result.enemyGain.total)}점</strong>
+          <strong style={{ color: ENEMY_COLOR }}>{fmt(result.enemyGain.total)}점</strong>
           <span>상대 남은 공격 기준</span>
         </div>
         <div className="luxury-panel gwcalc-stat">
           <p>최대 최종 점수차</p>
           <strong style={{
-            color: result.maxFinalGap > 0 ? '#34d399' : result.maxFinalGap < 0 ? '#ff7a7a' : '#fb923c',
+            color: result.maxFinalGap > 0 ? OUR_COLOR : result.maxFinalGap < 0 ? ENEMY_COLOR : '#fb923c',
           }}>{signed(result.maxFinalGap)}</strong>
           <span>우리 최대 최종 - 상대 최대 최종</span>
         </div>
@@ -132,7 +134,7 @@ export default function GuildWarWinCalc() {
             </div>
             <input type="range" min={0} max={TOTAL_ATTACKS} value={ourAttacks}
               onChange={(e) => setOurAttacks(clampInt(e.target.value, 0, TOTAL_ATTACKS))}
-              style={{ accentColor: '#34d399' }} />
+              style={{ accentColor: OUR_COLOR }} />
             <input type="number" min={0} max={TOTAL_ATTACKS} value={ourAttacks}
               onChange={(e) => setOurAttacks(clampInt(e.target.value, 0, TOTAL_ATTACKS))} />
           </label>
@@ -144,7 +146,7 @@ export default function GuildWarWinCalc() {
             </div>
             <input type="range" min={0} max={TOTAL_ATTACKS} value={enemyAttacks}
               onChange={(e) => setEnemyAttacks(clampInt(e.target.value, 0, TOTAL_ATTACKS))}
-              style={{ accentColor: '#ff7a7a' }} />
+              style={{ accentColor: ENEMY_COLOR }} />
             <input type="number" min={0} max={TOTAL_ATTACKS} value={enemyAttacks}
               onChange={(e) => setEnemyAttacks(clampInt(e.target.value, 0, TOTAL_ATTACKS))} />
           </label>
@@ -159,7 +161,7 @@ export default function GuildWarWinCalc() {
                 <button type="button" className="gwcalc-mini" onClick={() => setOurRemaining({ ...DEFAULT_REMAINING })}>최대치로</button>
               </div>
               {ZONE_KEYS.map((key) => (
-                <ZoneRow key={key} zone={key} value={ourRemaining[key]} accent="#34d399"
+                <ZoneRow key={key} zone={key} value={ourRemaining[key]} accent={OUR_COLOR}
                   onChange={(v) => setRemain('our', key, v)} />
               ))}
             </div>
@@ -172,7 +174,7 @@ export default function GuildWarWinCalc() {
                 <button type="button" className="gwcalc-mini" onClick={() => setEnemyRemaining({ ...DEFAULT_REMAINING })}>최대치로</button>
               </div>
               {ZONE_KEYS.map((key) => (
-                <ZoneRow key={key} zone={key} value={enemyRemaining[key]} accent="#ff7a7a"
+                <ZoneRow key={key} zone={key} value={enemyRemaining[key]} accent={ENEMY_COLOR}
                   onChange={(v) => setRemain('enemy', key, v)} />
               ))}
             </div>
@@ -204,7 +206,7 @@ export default function GuildWarWinCalc() {
               <div className="gwcalc-calccard">
                 <p>최대 최종 점수차</p>
                 <strong style={{
-                  color: result.maxFinalGap > 0 ? '#34d399' : result.maxFinalGap < 0 ? '#ff7a7a' : '#fb923c',
+                  color: result.maxFinalGap > 0 ? OUR_COLOR : result.maxFinalGap < 0 ? ENEMY_COLOR : '#fb923c',
                 }}>{signed(result.maxFinalGap)}</strong>
               </div>
             </div>

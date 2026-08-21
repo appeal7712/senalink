@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { heroes } from '../data/heroes';
-import { skillKeywords, EFFECT_KEYWORDS } from '../data/keywords';
 import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
-import AwakenMark from './AwakenMark';
+import HeroPortraitCard from './HeroPortraitCard';
+import SkillRichText, { SkillUpgradeBlocks } from './SkillRichText';
 
 const ROLE_ICON = {
   offensive: '/images/common/공격형 아이콘.png',
@@ -12,75 +12,6 @@ const ROLE_ICON = {
   support:   '/images/common/지원형 아이콘.png',
   universal: '/images/common/만능형 아이콘.png',
 };
-
-const CORNER_BORDER = {
-  old_seven:    '/images/common/구 세븐나이츠 전용 테두리.png',
-  special:      '/images/common/스페셜 영웅 테두리.png',
-  semi_special: null,
-  normal:       null,
-};
-
-const CARD_BG = {
-  old_seven:    'linear-gradient(180deg, #fde047 0%, #ca8a04 100%)',
-  special:      'linear-gradient(180deg, #facc15 0%, #ca8a04 100%)',
-  semi_special: 'linear-gradient(180deg, #facc15 0%, #d97706 100%)',
-  normal:       'linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%)',
-};
-
-// Rich Text 렌더러
-function renderRichText(text) {
-  if (!text) return null;
-  const lines = text.split('\n');
-
-  return lines.map((line, lIdx) => {
-    const targetMatch = line.match(/^\[(.*?)\]$/);
-    if (targetMatch) {
-      const label = targetMatch[1];
-      // 적군 디버프/타겟 = 빨강, 아군 버프/타겟 = 파랑 (유리 말고 단색 알약)
-      const isAlly  = /아군|자신/.test(label);
-      const isEnemy = !isAlly && /적/.test(label);
-      const bg = isEnemy ? '#ff7a7a' : isAlly ? '#5eb0ff' : '#cbd5e1';
-      return (
-        <span
-          key={lIdx}
-          className="kind-pill kind-pill--sm"
-          style={{ background: bg, whiteSpace: 'normal', margin: '4px 0 2px', alignSelf: 'flex-start' }}
-        >
-          {label}
-        </span>
-      );
-    }
-
-    const numSplitRegex = /(\d+%(?:\s*확률)?|\d+회|\d+턴|\d+중첩|\d+명|\d+개|\d+초|\d+마다|\d+레벨)/g;
-    const numTestRegex = /^(?:\d+%(?:\s*확률)?|\d+회|\d+턴|\d+중첩|\d+명|\d+개|\d+초|\d+마다|\d+레벨)$/;
-    const sortedKw = [...EFFECT_KEYWORDS, ...Object.keys(skillKeywords)].sort((a, b) => b.length - a.length);
-    const kwPattern = new RegExp(`(${sortedKw.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'g');
-
-    const kwParts = line.split(kwPattern);
-
-    return (
-      <div key={lIdx} style={{ marginBottom: '4px', lineHeight: '1.6' }}>
-        {kwParts.map((part, kIdx) => {
-          if (sortedKw.includes(part)) {
-            return (
-              <span key={kIdx} style={{ color: 'var(--accent-cyan)', fontWeight: 800, padding: '0 2px' }} title={skillKeywords[part] || ''}>
-                {part}
-              </span>
-            );
-          }
-
-          const numParts = part.split(numSplitRegex);
-          return numParts.map((sub, nIdx) => {
-            if (numTestRegex.test(sub)) {
-              return <span key={nIdx} style={{ color: 'var(--gold-primary)', fontWeight: 800, padding: '0 1px' }}>{sub}</span>;
-            }
-            return <span key={nIdx}>{sub}</span>;
-          });
-        })}
-      </div>
-    );
-  });
-}
 
 export default function HeroDB() {
   const [activeTab, setActiveTab]         = useState('special');
@@ -136,11 +67,6 @@ export default function HeroDB() {
   };
 
   const selectedSkill = selectedHero?.skills?.[activeSkillIdx] || selectedHero?.skills?.[0] || null;
-  const fullSkillText = selectedSkill ? ((selectedSkill.description || '') + ' ' + (selectedSkill.skillEnhance || []).join(' ') + ' ' + Object.values(selectedSkill.transcendenceEffects || {}).join(' ')) : '';
-  const rawTooltipsObj = selectedSkill?.tooltips || {};
-  const activeTooltips = {};
-  Object.entries(rawTooltipsObj).forEach(([k, v]) => { if (fullSkillText.includes(k)) activeTooltips[k] = v; });
-  const activeGlobalMatches = Object.keys(skillKeywords).filter(k => fullSkillText.includes(k) && !activeTooltips[k]);
 
   return (
     <div className="container fade-in dex-hero-page" style={{ padding: '16px 24px 60px' }}>
@@ -238,8 +164,6 @@ export default function HeroDB() {
             justifyItems: 'center',
           }}>
             {filteredHeroes.map(h => {
-              const role       = getRole(h);
-              const tier       = h.cardTier || 'normal';
               const isSelected = selectedHero?.id === h.id;
 
               return (
@@ -253,23 +177,14 @@ export default function HeroDB() {
                     background: '#07090e',
                   }}>
 
-                  <div style={{
-                    position: 'relative', width: '100%', aspectRatio: '88 / 98',
-                    background: CARD_BG[tier], overflow: 'hidden',
-                  }}>
-                    {h.isAwakened && (
-                      <AwakenMark size={23} style={{ top: 3, left: 3 }} />
-                    )}
-                    <SafeImg src={h.portraitUrl} alt={h.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }} />
-                    {CORNER_BORDER[tier] && <img src={CORNER_BORDER[tier]} alt="" style={{ position: 'absolute', top: 0, right: 0, width: '40px', height: '40px', pointerEvents: 'none' }} />}
-                    {ROLE_ICON[role] && <img src={ROLE_ICON[role]} alt="" style={{ position: 'absolute', bottom: '3px', left: '3px', width: '18px', height: '18px', filter: 'drop-shadow(0 2px 4px #000)' }} />}
-                  </div>
-
-                  <div style={{
-                    background: 'rgba(0,0,0,0.88)', padding: '6px 4px', textAlign: 'center', fontSize: '11px', color: '#ffffff', fontWeight: 800,
-                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2,
-                  }}>
-                    {h.name.replace('(각성)', '')}
+                  <div style={{ position: 'relative', width: '100%', containerType: 'inline-size' }}>
+                    <HeroPortraitCard
+                      hero={h}
+                      showStars={false}
+                      showRole
+                      showName
+                      cropNameBar={false}
+                    />
                   </div>
                 </div>
               );
@@ -284,19 +199,29 @@ export default function HeroDB() {
               
               {/* 프로필 헤더 */}
               <div style={{ display: 'flex', gap: '18px', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid var(--border-subtle)', marginBottom: '16px' }}>
-                <div style={{
-                  position: 'relative', flexShrink: 0, width: '90px', height: '90px', borderRadius: '12px', overflow: 'hidden',
-                  border: selectedHero.isAwakened ? '3px solid var(--accent-purple)' : '3px solid var(--gold-primary)',
-                  boxShadow: 'var(--shadow-gold)'
-                }}>
-                  <SafeImg src={selectedHero.portraitUrl} alt={selectedHero.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+                <div style={{ width: '90px', flexShrink: 0, containerType: 'inline-size' }}>
+                  <HeroPortraitCard
+                    hero={selectedHero}
+                    showStars={false}
+                    showRole
+                    showName
+                    cropNameBar={false}
+                  />
                 </div>
 
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '12px', color: 'var(--gold-primary)', fontWeight: 800 }}>{selectedHero.group}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '2px 0' }}>
-                    <h3 style={{ fontSize: '24px', fontWeight: 900, color: '#fff' }}>{selectedHero.name.replace('(각성)', '')}</h3>
-                    {selectedHero.isAwakened && <AwakenMark size={26} corner={false} />}
+                    <h3 style={{
+                      fontSize: '24px',
+                      fontWeight: 900,
+                      color: selectedHero.isAwakened ? '#e9d5ff' : '#fff',
+                      textShadow: selectedHero.isAwakened
+                        ? '0 0 8px rgba(192,132,252,0.9), 0 0 18px rgba(168,85,247,0.55)'
+                        : undefined,
+                    }}>
+                      {selectedHero.name.replace('(각성)', '')}
+                    </h3>
                   </div>
                 </div>
               </div>
@@ -324,36 +249,24 @@ export default function HeroDB() {
                 </div>
               </div>
 
-              {/* 스킬 본문 + 효과 사전 패널 */}
+              {/* 스킬 본문 — 인라인 툴팁 + 강화/초월 */}
               {selectedSkill && (
-                <div style={{ display: 'grid', gridTemplateColumns: (Object.keys(activeTooltips).length > 0 || activeGlobalMatches.length > 0) ? '1fr 1.3fr' : '1fr', gap: '16px' }}>
-                  
-                  {(Object.keys(activeTooltips).length > 0 || activeGlobalMatches.length > 0) && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <div style={{ fontSize: '13px', color: 'var(--gold-primary)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Icon name="book" size={13} /> 효과
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '340px', overflowY: 'auto' }}>
-                        {Object.entries(activeTooltips).map(([term, def]) => (
-                          <div key={term} style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', padding: '10px 12px', borderRadius: '16px' }}>
-                            <div style={{ fontSize: '13px', color: 'var(--gold-primary)', fontWeight: 900 }}>{term}</div>
-                            <div style={{ fontSize: '12px', color: '#e2e8f0', marginTop: '4px' }}>{renderRichText(def)}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <div style={{ fontSize: '13px', color: 'var(--accent-cyan)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Icon name="swords" size={13} /> 스킬 설명
-                    </div>
-                    <div style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      <div style={{ fontSize: '17px', fontWeight: 900, color: '#fff' }}>{selectedSkill.name}</div>
-                      <div style={{ fontSize: '13px', color: '#e2e8f0', lineHeight: '1.7' }}>{renderRichText(selectedSkill.description)}</div>
-                    </div>
+                <div className="hero-db-skill-inline">
+                  <div className="hero-db-skill-inline-head">
+                    <Icon name="swords" size={13} /> 스킬 설명
+                    <span className="hero-db-skill-inline-hint">효과 글자에 올려보거나 탭하세요</span>
                   </div>
-
+                  <div className="hero-db-skill-inline-card">
+                    <div className="hero-db-skill-inline-title">{selectedSkill.name}</div>
+                    {selectedSkill.cooldown > 0 ? (
+                      <div className="hero-db-skill-inline-cd">쿨타임 {selectedSkill.cooldown}</div>
+                    ) : null}
+                    <SkillRichText
+                      text={selectedSkill.description}
+                      skillTooltips={selectedSkill.tooltips || {}}
+                    />
+                    <SkillUpgradeBlocks skill={selectedSkill} />
+                  </div>
                 </div>
               )}
 

@@ -75,6 +75,13 @@ export function mergeSiteMain(raw) {
     metaDecks: padMetaDecks(raw.metaDecks),
     pickRates: padPickRates(raw.pickRates),
     news: mergeNews(raw.news, SITE_MAIN_DEFAULTS.news),
+    entranceBanner: {
+      ...SITE_MAIN_DEFAULTS.entranceBanner,
+      ...(raw.entranceBanner || {}),
+      enabled: !!(raw.entranceBanner?.enabled),
+      title: String(raw.entranceBanner?.title || ''),
+      body: String(raw.entranceBanner?.body || ''),
+    },
   };
 }
 

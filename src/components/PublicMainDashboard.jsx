@@ -61,7 +61,7 @@ export default function PublicMainDashboard({ onNavigateToLounge }) {
                 <div className="meta-deck-tags">
                   <span
                     className="kind-pill kind-pill--sm"
-                    style={{ background: kind.pill }}
+                    style={{ background: kind.pill, color: kind.id === 'hybrid' ? '#161616' : undefined }}
                   >
                     {kind.label}
                   </span>

@@ -93,7 +93,7 @@ export default function GNB({ activeTab, setActiveTab }) {
   const menuItems = [
     { id: PAGE.MAIN, icon: 'globe', label: '메인' },
     { id: PAGE.HUB, icon: 'fortress', label: '길드 허브' },
-    { id: PAGE.COMMUNITY, icon: 'users', label: '공용허브' },
+    { id: PAGE.COMMUNITY, icon: 'users', label: '공용 허브' },
     { id: PAGE.DEX, icon: 'book', label: '도감' },
   ];
 

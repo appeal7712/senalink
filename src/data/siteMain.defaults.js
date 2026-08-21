@@ -100,4 +100,10 @@ export const SITE_MAIN_DEFAULTS = {
   news: [
     { id: 'n1', title: '세븐나이츠 라운지에서 패치 노트를 연결해 주세요', url: '', date: '', tag: '라운지' },
   ],
+  entranceBanner: {
+    enabled: false,
+    title: '',
+    body: '',
+    updatedAt: '',
+  },
 };

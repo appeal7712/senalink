@@ -1,19 +1,21 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
-import { doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { heroes } from '../data/heroes';
 import InGameDeckCard from './InGameDeckCard';
 import GuildWarAttackPanel from './GuildWarAttackPanel';
 import GuildWarDefensePanel from './GuildWarDefensePanel';
 import TotalWarPanel from './TotalWarPanel';
-import { INITIAL_TOTALWAR_TIERED_BUILDS, TOTALWAR_TIERS } from '../data/totalwarTiers';
-import { EQUIPMENT_SET_ICONS, accessories } from '../data/equipments';
+import { TOTALWAR_TIERS } from '../data/totalwarTiers';
+import { EQUIPMENT_SET_ICONS, accessories, weaponOptions, armorOptions } from '../data/equipments';
 import { pets } from '../data/pets';
 import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
 import AwakenMark from './AwakenMark';
+import HeroPortraitCard from './HeroPortraitCard';
 import { setDeckDragData } from '../utils/deckDrag';
 import { useLounge } from '../context/LoungeContext';
-import { auth, db } from '../lib/firebase';
+import { db } from '../lib/firebase';
+import { showToast } from './Toast';
 import PvpModeToggle, { PvpModeBadge } from './PvpModeToggle';
 import ArenaDeckKindToggle, { ArenaDeckKindBadge, arenaKindTheme, normalizeArenaKind } from './ArenaDeckKind';
 import { LoungeLanding, InviteReadyModal, LoungeJoinModal } from './lounge/LoungeGate';
@@ -161,81 +163,6 @@ const CARD_BG = {
   normal:       'linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%)',
 };
 
-const INITIAL_SIEGE_BUILDS = {
-  mon: [
-    {
-      id: 's_mon_1',
-      title: '월요일 마법 공성 (루디) - 600만 딜 수확 빌드',
-      author: '길마_태오',
-      updatedAt: '2026-08-09 14:50',
-      formationId: 'protect',
-      heroNames: ['미호', '나타', '리나', '에반', '비스킷'],
-      skillSequence: [
-        { round: '1라운드', heroName: '비스킷', dir: 'down', text: '비스킷 아래 [1라운드]' },
-        { round: '4턴', heroName: '미호', dir: 'upper', text: '미호 위 [4턴]' },
-        { round: '70턴', heroName: '미호', dir: 'upper', text: '미호 위 [70턴 마무리]' },
-      ],
-      speedOrderNames: ['미호', '나타', '리나', '에반', '비스킷'],
-      speedIgnoredNames: ['에반', '비스킷'],
-      heroGearConfigs: [
-        { setName: '복수자', weapon1: '치명타 피해', weapon2: '치명타 피해', armor1: '모든 공격력(%)', armor2: '모든 공격력(%)', accessory: '권능의 반지', optionCode: '치피치피공공', detailNote: '치확 67%에 가깝게\n약공 46%에 가깝게\n치피 최대한 땡기기' },
-        { setName: '복수자', weapon1: '치명타 확률', weapon2: '약점 공격 확률', armor1: '모든 공격력(%)', armor2: '모든 공격력(%)', accessory: '불사의 반지', optionCode: '치확약공공공', detailNote: '치확 73%에 가깝게!\n약공 46% 필수!\n치피 최대한 땡기기!!' },
-        { setName: '성기사', weapon1: '효과 적중', weapon2: '효과 적중', armor1: '받는 피해 감소', armor2: '생명력(%)', accessory: '권능의 반지', optionCode: '효적효적피감생', detailNote: '효과 적중 최대한\n피감/생명력 균형' },
-        { setName: '수문장', weapon1: '약점 공격 확률', weapon2: '약점 공격 확률', armor1: '막기 확률', armor2: '방어력(%)', accessory: '부활의 반지', optionCode: '약공약공막확방', detailNote: '막확 100% 권장!' },
-        { setName: '선봉장', weapon1: '치명타 피해', weapon2: '치명타 피해', armor1: '모든 공격력(%)', armor2: '모든 공격력(%)', accessory: '부활의 반지', optionCode: '치피치피공공', detailNote: '속공 상관없음\n생존기 우선' },
-      ],
-    }
-  ],
-  tue: [{ id: 's_tue_1', title: '화요일 마법 공성 (아일린)', author: '카일마스터', updatedAt: '2026-08-09 14:00', formationId: 'basic', heroNames: ['나타', '쥬리', '에반', '미호', '비스킷'], skillSequence: [] }],
-  wed: [{ id: 's_wed_1', title: '수요일 마법 공성 (레이첼)', author: '길마_태오', updatedAt: '2026-08-09 14:00', formationId: 'protect', heroNames: ['바네사', '샤오', '태오', '파스칼', '비스킷'], skillSequence: [] }],
-  thu: [{ id: 's_thu_1', title: '목요일 물리 공성 (델론즈)', author: '세인귀신', updatedAt: '2026-08-09 14:00', formationId: 'attack', heroNames: ['세인', '아일린', '레이첼', '에반', '카린'], skillSequence: [] }],
-  fri: [{ id: 's_fri_1', title: '금요일 물리 공성 (제이브)', author: '루디탱커', updatedAt: '2026-08-09 14:00', formationId: 'balance', heroNames: ['루디', '제이브', '아일린', '에반', '카린'], skillSequence: [] }],
-  sat: [{ id: 's_sat_1', title: '토요일 물리 공성 (스파이크)', author: '연희꿈동산', updatedAt: '2026-08-09 14:00', formationId: 'protect', heroNames: ['빙결면역', '세인', '아일린', '에반', '카린'], skillSequence: [] }],
-  sun: [{ id: 's_sun_1', title: '일요일 단일 공성 (크리스)', author: '길마_태오', updatedAt: '2026-08-09 14:00', formationId: 'protect', heroNames: ['즉사면역', '세인', '아일린', '에반', '카린'], skillSequence: [] }]
-};
-
-const INITIAL_EXPEDITION_BUILDS = {
-  taeho: [
-    {
-      id: 'e_taeho_1',
-      title: '파괴의 그림자 (태오) 600만 수확 빌드',
-      author: '길마_태오',
-      updatedAt: '2026-08-09 14:50',
-      rounds: {
-        1: {
-          formationId: 'protect',
-          heroNames: ['레긴레이프', '소교', '미호', '밀리아', '파스칼'],
-          speedOrderNames: ['레긴레이프', '소교', '미호', '밀리아', '파스칼'],
-          speedIgnoredNames: [],
-          skillSequence: [
-            { round: '0라', heroName: '소교', dir: 'upper', text: '' },
-            { round: '4라', heroName: '파스칼', dir: 'upper', text: '' },
-            { round: '8라', heroName: '소교', dir: 'down', text: '' },
-          ],
-        },
-        2: {
-          formationId: 'protect',
-          heroNames: ['파이', '샤오', '헤브니아', '세인', '비스킷'],
-          speedOrderNames: ['파이', '샤오', '헤브니아', '세인', '비스킷'],
-          speedIgnoredNames: [],
-          skillSequence: [
-            { round: '4라', heroName: '헤브니아', dir: 'upper', text: '' },
-            { round: '8라', heroName: '샤오', dir: 'down', text: '' },
-            { round: '12라', heroName: '비스킷', dir: 'down', text: '' },
-            { round: '16라', heroName: '파이', dir: 'upper', text: '' },
-            { round: '20라', heroName: '세인', dir: 'upper', text: '' },
-          ],
-        },
-      },
-    }
-  ],
-  yeonhee: [{ id: 'e_yeon_1', title: '파괴의 그림자 (연희) 공략 빌드', author: '카일마스터', updatedAt: '2026-08-09 14:00', formationId: 'basic', heroNames: ['연희', '오를리', '미호', '에반', '비스킷'], skillSequence: [] }],
-  kyle: [{ id: 'e_kyle_1', title: '파괴의 그림자 (카일) 공략 빌드', author: '세인귀신', updatedAt: '2026-08-09 14:00', formationId: 'attack', heroNames: ['카일', '아일린', '레이첼', '에반', '카린'], skillSequence: [] }],
-  karma: [{ id: 'e_karma_1', title: '파괴의 그림자 (카르마) 공략 빌드', author: '길마_태오', updatedAt: '2026-08-09 14:00', formationId: 'protect', heroNames: ['카르마', '린', '여포', '에반', '카린'], skillSequence: [] }],
-  god: [{ id: 'e_god_1', title: '파괴신 강림 최종 공략 빌드', author: '길마_태오', updatedAt: '2026-08-09 14:00', formationId: 'protect', heroNames: ['태오', '연희', '카일', '카르마', '비스킷'], skillSequence: [] }]
-};
-
-// 콘텐츠 카테고리 → 진행 방식 매핑 (PvE=속공 순서 무제한 / PvP=스킬 예약 최대 3개, 3v3=길드전 전용)
 const CONTENT_META = {
   siege:      { mode: 'pve', slotCount: 5 },
   expedition: { mode: 'pve', slotCount: 5 },
@@ -265,76 +192,30 @@ const expeditionThemeVars = (theme) => ({
 
 const ROLE_LABEL = { master: '길드마스터', admin: '관리자', member: '길드원' };
 
-const INITIAL_ARENA_BUILDS = [
-  { id: 'a_1', title: '결투장 마법 극딜 프리징 조합', author: '길마_태오', updatedAt: '2026-08-09 15:10', formationId: 'protect', mode: '속공', deckKind: 'magic', heroNames: ['미호', '나타', '리나', '에반', '비스킷'], skillSequence: [{ round: '1번째 예약', heroName: '나타', dir: 'upper', text: '선제 빙결' }, { round: '2번째 예약', heroName: '미호', dir: 'upper', text: '광역 마무리' }] },
-];
-
-const GW_ATTACK_COUNTER_DATA = [
-  {
-    id: 'gwa_1',
-    title: 'vs 트겔미 (손오공 + 겔리두스 + 미스트)',
-    heroNames: ['손오공', '겔리두스', '미스트', '', ''],
-    formationId: 'protect',
-    petId: 'pet_1',
-    note: '외성따리 덱 · 갤두+미스트로 어느정도 즉사 면역이 있어서 칼이 안나올 때만 즉사 사용',
-    author: '길마_태오',
-    updatedAt: '2026-08-09 15:20',
-    counters: [
-      { id: 'gwac_1', title: '마덱 카운터 덱', heroNames: ['오목', '실베스타', '레긴레이프', '', ''], formationId: 'protect', petId: 'pet_1', reservedSkills: [{ round: '1번째 예약', heroName: '오목', skillKey: 'upper', dir: 'upper', text: '' }, { round: '2번째 예약', heroName: '실베스타', skillKey: 'down', dir: 'down', text: '' }], gearNote: '오목: 추적자, 치확 90 이상, 불사 / 레긴: 추적자, 약 90 이상, 권능or부활', author: '길마_태오', updatedAt: '2026-08-09 15:20' }
-    ]
-  }
-];
-
-const GW_DEFENSE_DATA = [
-  {
-    id: 'gwd_1',
-    title: '여포 속공 방어',
-    tier: 5,
-    formationId: 'protect',
-    petId: 'pet_1',
-    mode: '속공',
-    speedMin: '180',
-    speedMax: '',
-    heroSlots: [
-      { primaryName: '여포', altText: '' },
-      { primaryName: '칼헤론', altText: '' },
-      { primaryName: '오르카', altText: '' },
-      { primaryName: '', altText: '' },
-      { primaryName: '', altText: '' },
-    ],
-    reservedSkills: [
-      { round: '1번째 예약', heroName: '오르카', skillKey: 'down', dir: 'down', text: '' },
-      { round: '2번째 예약', heroName: '칼헤론', skillKey: 'upper', dir: 'upper', text: '' },
-      { round: '3번째 예약', heroName: '여포', skillKey: 'upper', dir: 'upper', text: '' },
-    ],
-    gearPriorityNote: '여포 - 궁수+부활, 칼헤론 - 관통+돌파',
-    accessoryNote: '오르카 - 궁수 반지 우선',
-    otherDetail: '피회짐 > 칼헤론 or 오르카 target',
-    author: '길마_태오', updatedAt: '2026-08-09 15:20'
-  }
-];
-
 const EMPTY_ASSIGNMENTS = { taeho: [], yeonhee: [], kyle: [], karma: [] };
 
-const defaultBuildBundle = () => ({
-  siege: INITIAL_SIEGE_BUILDS,
-  expedition: INITIAL_EXPEDITION_BUILDS,
-  arena: INITIAL_ARENA_BUILDS,
-  totalwar: INITIAL_TOTALWAR_TIERED_BUILDS,
-  gwAttacks: GW_ATTACK_COUNTER_DATA,
-  gwDefenses: GW_DEFENSE_DATA,
-  expeditionAssignments: EMPTY_ASSIGNMENTS,
+/** Firestore 문서 한도(1MiB)에 여유를 둔 공략 번들 저장 상한 */
+const BUILDS_DOC_SAFE_BYTES = 900_000;
+
+/** 신규 허브는 공략 없이 시작. 데모 시드(INITIAL_*)는 UI 폴백에 쓰지 않는다. */
+const emptyBuildBundle = () => ({
+  siege: {},
+  expedition: {},
+  arena: [],
+  totalwar: {},
+  gwAttacks: [],
+  gwDefenses: [],
+  expeditionAssignments: { ...EMPTY_ASSIGNMENTS },
 });
 
 const applyBuildBundle = (saved, setters) => {
-  const base = defaultBuildBundle();
-  const data = saved || {};
-  const siege = (data.siege && Object.keys(data.siege).length) ? data.siege : base.siege;
-  const expedition = (data.expedition && Object.keys(data.expedition).length) ? data.expedition : base.expedition;
-  const arena = Array.isArray(data.arena) && data.arena.length ? data.arena : base.arena;
-  const totalwar = (data.totalwar && Object.keys(data.totalwar).length) ? data.totalwar : base.totalwar;
-  const gwAttacks = Array.isArray(data.gwAttacks) && data.gwAttacks.length ? data.gwAttacks : base.gwAttacks;
-  const gwDefenses = Array.isArray(data.gwDefenses) && data.gwDefenses.length ? data.gwDefenses : base.gwDefenses;
+  const data = saved && typeof saved === 'object' ? saved : {};
+  const siege = (data.siege && typeof data.siege === 'object') ? data.siege : {};
+  const expedition = (data.expedition && typeof data.expedition === 'object') ? data.expedition : {};
+  const arena = Array.isArray(data.arena) ? data.arena : [];
+  const totalwar = (data.totalwar && typeof data.totalwar === 'object') ? data.totalwar : {};
+  const gwAttacks = Array.isArray(data.gwAttacks) ? data.gwAttacks : [];
+  const gwDefenses = Array.isArray(data.gwDefenses) ? data.gwDefenses : [];
   setters.setSiegeBuilds(siege);
   setters.setExpeditionBuilds(expedition);
   setters.setArenaBuilds(arena);
@@ -369,19 +250,20 @@ export default function GuildLounge() {
   const {
     activeLounge, me, session, myRole, canEditBuilds,
     logBuildHistory, freshInvite, dismissFreshInvite,
+    authReady, authUser,
   } = useLounge();
 
   const [activeTab, setActiveTab]           = useState('home');
   const [siegeDay, setSiegeDay]             = useState('mon');
   const [expeditionBoss, setExpeditionBoss] = useState('taeho');
 
-  const [siegeBuilds, setSiegeBuilds]           = useState(INITIAL_SIEGE_BUILDS);
-  const [expeditionBuilds, setExpeditionBuilds] = useState(INITIAL_EXPEDITION_BUILDS);
-  const [arenaBuilds, setArenaBuilds]           = useState(INITIAL_ARENA_BUILDS);
-  const [totalwarBuilds, setTotalwarBuilds]     = useState(INITIAL_TOTALWAR_TIERED_BUILDS);
-  const [gwAttacks, setGwAttacks]               = useState(GW_ATTACK_COUNTER_DATA);
-  const [gwDefenses, setGwDefenses]             = useState(GW_DEFENSE_DATA);
-  const [selectedGwAttackId, setSelectedGwAttackId] = useState(GW_ATTACK_COUNTER_DATA[0]?.id || null);
+  const [siegeBuilds, setSiegeBuilds]           = useState({});
+  const [expeditionBuilds, setExpeditionBuilds] = useState({});
+  const [arenaBuilds, setArenaBuilds]           = useState([]);
+  const [totalwarBuilds, setTotalwarBuilds]     = useState({});
+  const [gwAttacks, setGwAttacks]               = useState([]);
+  const [gwDefenses, setGwDefenses]             = useState([]);
+  const [selectedGwAttackId, setSelectedGwAttackId] = useState(null);
   const [expeditionAssignments, setExpeditionAssignments] = useState(EMPTY_ASSIGNMENTS);
   const [assignModalBoss, setAssignModalBoss] = useState(null);
   const [inspectingCounter, setInspectingCounter]   = useState(null);
@@ -393,6 +275,8 @@ export default function GuildLounge() {
   const loadedLoungeId = useRef(null);
   const lastAppliedKey = useRef('');
   const lastSavedKey = useRef('');
+  /** 용량 초과 안내를 같은 내용으로 반복해서 띄우지 않기 위한 표시 */
+  const oversizeWarnedKey = useRef('');
 
   const guildRoom = useMemo(() => {
     if (!activeLounge || !me) {
@@ -414,6 +298,7 @@ export default function GuildLounge() {
     skipNextSave.current = true;
     lastAppliedKey.current = '';
     lastSavedKey.current = '';
+    oversizeWarnedKey.current = '';
     loadedLoungeId.current = activeLounge.id;
     setActiveTab('home');
 
@@ -425,7 +310,7 @@ export default function GuildLounge() {
       const data = snap.exists() ? snap.data() : null;
       const key = data
         ? buildsContentKey(data)
-        : buildsContentKey(defaultBuildBundle());
+        : buildsContentKey(emptyBuildBundle());
       if (key === lastAppliedKey.current || key === lastSavedKey.current) {
         buildsReady.current = true;
         return;
@@ -475,18 +360,22 @@ export default function GuildLounge() {
         ...content,
         updatedAt: new Date().toISOString(),
       });
+      // Firestore 문서 한도는 1MiB. 넘기면 저장이 통째로 실패하니 미리 막고 알린다.
+      if (new Blob([JSON.stringify(payload)]).size > BUILDS_DOC_SAFE_BYTES) {
+        if (oversizeWarnedKey.current !== key) {
+          oversizeWarnedKey.current = key;
+          showToast('공략 데이터가 너무 커서 저장하지 못했습니다. 오래된 덱을 정리해 주세요.', 'error');
+        }
+        return;
+      }
       try {
-        const payloadSize = new Blob([JSON.stringify(payload)]).size;
-        console.warn('[builds] saving', { hubId, payloadSizeKB: Math.round(payloadSize / 1024), uid: auth.currentUser?.uid });
-        const memberSnap = await getDoc(doc(db, 'hubs', hubId, 'members', auth.currentUser?.uid));
-        console.warn('[builds] member exists?', memberSnap.exists(), memberSnap.data()?.role);
         await setDoc(doc(db, 'hubs', hubId, 'builds', 'main'), payload, { merge: true });
         lastSavedKey.current = key;
-        console.warn('[builds] saved OK');
       } catch (err) {
         console.error('builds save failed', err);
         lastSavedKey.current = '';
         lastAppliedKey.current = '';
+        showToast('공략 저장에 실패했습니다. 네트워크를 확인하고 다시 시도해 주세요.', 'error');
       }
     }, 350);
 
@@ -1110,7 +999,7 @@ export default function GuildLounge() {
                       <div className={`timeline-step${seq.text?.trim() ? '' : ' timeline-step--no-note'}`}>
                         <div className="timeline-step-body">
                           <div className="timeline-step-face">
-                            <SafeImg src={heroData?.portraitUrl} alt={heroData?.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            {heroData ? <HeroPortraitCard hero={heroData} showStars showRole showName={false} /> : null}
                           </div>
                           <div className="timeline-step-round">
                             <RoundMark round={seq.round} />
@@ -1170,8 +1059,8 @@ export default function GuildLounge() {
               <Fragment key={`${roundNo}_${idx}`}>
                 <div className={`timeline-step${step.text?.trim() ? '' : ' timeline-step--no-note'}`}>
                   <div className="timeline-step-body">
-                    <div className="timeline-step-face" style={{ borderColor: expTheme.border }}>
-                      <SafeImg src={heroData?.portraitUrl} alt={step.heroName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <div className="timeline-step-face">
+                      {heroData ? <HeroPortraitCard hero={heroData} showStars showRole showName={false} /> : null}
                     </div>
                     <div className="timeline-step-round">
                       <RoundMark round={step.round} />
@@ -1248,7 +1137,9 @@ export default function GuildLounge() {
   };
 
   if (!session || !activeLounge || !me) {
-    if (session) {
+    // 로그인이 풀린 채 로컬 세션만 남아 있으면 허브를 영원히 못 불러온다.
+    // 인증이 끝났는데 계정이 없으면 로딩 대신 로그인 화면을 보여준다.
+    if (session && (!authReady || authUser)) {
       return (
         <div className="container fade-in" style={{ padding: '48px 24px', color: '#fff', fontWeight: 800, textAlign: 'center' }}>
           허브를 불러오는 중…
@@ -1565,12 +1456,11 @@ export default function GuildLounge() {
                   >
                     <div style={{ fontSize: '14px', fontWeight: 900, color: 'var(--gold-light)' }}>{i + 1}팀</div>
                     <div className="totalwar-team-lead-face" style={{
-                      width: '48px', height: '48px', borderRadius: '10px', overflow: 'hidden',
-                      border: '1.5px solid var(--border-gold)', background: '#0a0d14', flexShrink: 0,
+                      width: '48px', flexShrink: 0,
                       display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}>
                       {leadHero
-                        ? <SafeImg src={leadHero.portraitUrl} alt={leadHero.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+                        ? <HeroPortraitCard hero={leadHero} showStars showRole showName={false} />
                         : <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 800 }}>빈 덱</span>}
                     </div>
                     <button
@@ -1831,22 +1721,13 @@ export default function GuildLounge() {
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                           <div style={{ fontSize: '11px', color: '#fff', marginBottom: '4px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}><Icon name="swords" size={11} /> 무기 1</div>
                           <select value={heroGearConfigs[selectedHeroGearIdx]?.weapon1 || '치명타 확률'} onChange={e => handleUpdateSelectedHeroGear('weapon1', e.target.value)} style={{ width: '100%', flex: 1, minHeight: '36px', padding: '0 8px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '5px', fontSize: '12.5px', fontWeight: 800, boxSizing: 'border-box', colorScheme: 'dark' }}>
-                            <option value="약점 공격 확률">약점 공격 확률</option>
-                            <option value="치명타 확률">치명타 확률</option>
-                            <option value="치명타 피해">치명타 피해</option>
-                            <option value="모든 공격력(%)">모든 공격력(%)</option>
-                            <option value="효과 적중">효과 적중</option>
+                            {weaponOptions.map(o => <option key={o} value={o}>{o}</option>)}
                           </select>
                         </div>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                           <div style={{ fontSize: '11px', color: '#fff', marginBottom: '4px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}><Icon name="shield" size={11} /> 방어구 1</div>
                           <select value={heroGearConfigs[selectedHeroGearIdx]?.armor1 || '모든 공격력(%)'} onChange={e => handleUpdateSelectedHeroGear('armor1', e.target.value)} style={{ width: '100%', flex: 1, minHeight: '36px', padding: '0 8px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '5px', fontSize: '12.5px', fontWeight: 800, boxSizing: 'border-box', colorScheme: 'dark' }}>
-                            <option value="받는 피해 감소">받는 피해 감소</option>
-                            <option value="막기 확률">막기 확률</option>
-                            <option value="모든 공격력(%)">모든 공격력(%)</option>
-                            <option value="방어력(%)">방어력(%)</option>
-                            <option value="생명력(%)">생명력(%)</option>
-                            <option value="효과 저항">효과 저항</option>
+                            {armorOptions.map(o => <option key={o} value={o}>{o}</option>)}
                           </select>
                         </div>
                       </div>
@@ -1855,22 +1736,13 @@ export default function GuildLounge() {
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                           <div style={{ fontSize: '11px', color: '#fff', marginBottom: '4px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}><Icon name="swords" size={11} /> 무기 2</div>
                           <select value={heroGearConfigs[selectedHeroGearIdx]?.weapon2 || '치명타 확률'} onChange={e => handleUpdateSelectedHeroGear('weapon2', e.target.value)} style={{ width: '100%', flex: 1, minHeight: '36px', padding: '0 8px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '5px', fontSize: '12.5px', fontWeight: 800, boxSizing: 'border-box', colorScheme: 'dark' }}>
-                            <option value="약점 공격 확률">약점 공격 확률</option>
-                            <option value="치명타 확률">치명타 확률</option>
-                            <option value="치명타 피해">치명타 피해</option>
-                            <option value="모든 공격력(%)">모든 공격력(%)</option>
-                            <option value="효과 적중">효과 적중</option>
+                            {weaponOptions.map(o => <option key={o} value={o}>{o}</option>)}
                           </select>
                         </div>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                           <div style={{ fontSize: '11px', color: '#fff', marginBottom: '4px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}><Icon name="shield" size={11} /> 방어구 2</div>
                           <select value={heroGearConfigs[selectedHeroGearIdx]?.armor2 || '모든 공격력(%)'} onChange={e => handleUpdateSelectedHeroGear('armor2', e.target.value)} style={{ width: '100%', flex: 1, minHeight: '36px', padding: '0 8px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '5px', fontSize: '12.5px', fontWeight: 800, boxSizing: 'border-box', colorScheme: 'dark' }}>
-                            <option value="받는 피해 감소">받는 피해 감소</option>
-                            <option value="막기 확률">막기 확률</option>
-                            <option value="모든 공격력(%)">모든 공격력(%)</option>
-                            <option value="방어력(%)">방어력(%)</option>
-                            <option value="생명력(%)">생명력(%)</option>
-                            <option value="효과 저항">효과 저항</option>
+                            {armorOptions.map(o => <option key={o} value={o}>{o}</option>)}
                           </select>
                         </div>
                       </div>
@@ -1939,9 +1811,8 @@ export default function GuildLounge() {
                           onClick={() => handleSelectHeroFromBottom(h)}
                           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'grab' }}
                         >
-                          <div style={{ position: 'relative', width: '54px', height: '60px', background: CARD_BG[h.cardTier || 'normal'], borderRadius: '7px', border: (editingHeroNames[targetSlotIdx] || '') === cleanName ? '2px solid var(--accent-cyan)' : '1px solid rgba(255,255,255,0.15)', overflow: 'hidden' }}>
-                            <SafeImg src={h.portraitUrl} alt={h.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', pointerEvents: 'none' }} />
-                            {h.isAwakened && <AwakenMark size={18} compact />}
+                          <div style={{ width: '54px', outline: (editingHeroNames[targetSlotIdx] || '') === cleanName ? '2px solid var(--accent-cyan)' : 'none', outlineOffset: 1, borderRadius: 8 }}>
+                            <HeroPortraitCard hero={h} showStars showRole showName={false} />
                           </div>
                           <div style={{ width: '54px', marginTop: '2px', background: '#000', borderRadius: '3px', padding: '1px 0', textAlign: 'center', fontSize: '8px', color: '#fff', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {cleanName}

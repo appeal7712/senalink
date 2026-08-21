@@ -147,6 +147,53 @@ body {
   border-radius: 16px;
 }
 
+/* 사이트 입장 공지 배너 */
+.site-entrance-scrim {
+  align-items: center;
+  justify-content: center;
+}
+.site-entrance-card {
+  width: min(440px, 100%);
+  padding: 22px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+.site-entrance-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--gold-primary);
+  letter-spacing: 0.02em;
+}
+.site-entrance-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.35;
+}
+.site-entrance-body {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e2e8f0;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  max-height: min(42vh, 320px);
+  overflow-y: auto;
+}
+.site-entrance-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
 /* 세팅 확인 등 body로 올린 모달: backdrop-filter가 배경 레이어를 못 잡을 때 대비 */
 body:has(> .modal-scrim) .app-shell,
 body:has(> .modal-scrim) #root::before {
@@ -228,8 +275,9 @@ select option,
   color-scheme: dark;
 }
 
+/* 드롭다운 팝업. R=G=B 중성 회색이라 파란 기운(남색)이 돌지 않는다. */
 option {
-  background-color: #141821;
+  background-color: #2a2a2a;
   color: #f4f7fb;
 }
 
@@ -615,8 +663,9 @@ h1, h2, h3 {
 
 .deck-card-compact .deck-hero-slot-face {
   width: 44px;
-  height: 44px;
-  border-radius: 8px;
+  height: auto;
+  aspect-ratio: 162 / 154;
+  border-radius: 0;
 }
 
 /* Frosted action pills */
@@ -720,6 +769,18 @@ h1, h2, h3 {
   border-color: rgba(22, 22, 22, 0.14);
 }
 
+/* /ops 메타 덱 유형 토글. 항목 5개 + '하이브리드' 라벨이 길어 flex:1 균등폭으로는 박스를 넘친다. */
+.kind-toggle--meta {
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.kind-toggle--meta .kind-toggle-btn {
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
 .btn-steel {
   display: inline-flex;
   align-items: center;
@@ -735,6 +796,178 @@ h1, h2, h3 {
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 .btn-steel:hover { background: rgba(8, 10, 16, 0.45); }
+
+/* ── Hero portrait card (negi-lab identical layer stack) ── */
+.hero-portrait-card {
+  position: relative;
+  width: 100%;
+  display: block;
+  line-height: 0;
+  flex-shrink: 0;
+  container-type: inline-size;
+}
+.hero-portrait-card-visual {
+  position: relative;
+  width: 100%;
+  display: block;
+}
+/* 덱용: GradeBG 하단 이름 검정칸 클립 (162×202 → 가시 높이 ~154) — 별·역할 유지
+   ※ 프레임 둥근 모서리 안 검정은 에셋 자체라 크롭으로 제거 불가 */
+.hero-portrait-card--crop-name {
+  overflow: hidden;
+  aspect-ratio: 162 / 154;
+}
+.hero-portrait-card--crop-name .hero-portrait-card-visual {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+}
+.hero-portrait-card--crop-name .hero-portrait-card-bg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.hero-portrait-card--crop-name .hero-portrait-card-star {
+  bottom: 26.5%;
+}
+.hero-portrait-card--crop-name .hero-portrait-card-role {
+  bottom: 37%;
+}
+.hero-portrait-card-bg {
+  width: 100%;
+  height: auto;
+  display: block;
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+}
+.hero-portrait-card-mask {
+  position: absolute;
+  top: 3.75%;
+  left: 4.75%;
+  width: 90.5%;
+  height: 72.7%;
+  z-index: 2;
+  border-radius: 20% 4%;
+  overflow: hidden;
+  background: transparent;
+}
+.hero-portrait-card-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+.hero-portrait-card-badge-wrap {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 75%;
+  height: auto;
+  z-index: 4;
+  pointer-events: none;
+}
+.hero-portrait-card-badge {
+  position: relative;
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  pointer-events: none;
+}
+.hero-portrait-card-badge-glow {
+  position: absolute;
+  top: 15%;
+  right: 15%;
+  width: 45%;
+  height: 45%;
+  transform: translate(50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle, rgb(255, 255, 255) 0%, rgba(255, 255, 255, 0.9) 10%, rgba(255, 255, 255, 0.6) 20%, rgba(255, 200, 220, 0.4) 35%, rgba(200, 220, 255, 0.3) 50%, rgba(220, 255, 220, 0.2) 65%, rgba(255, 200, 255, 0.1) 80%, transparent 100%);
+  box-shadow: rgba(255, 255, 255, 0.9) 0 0 12px 6px, rgba(255, 200, 220, 0.4) 0 0 24px 12px, rgba(200, 220, 255, 0.2) 0 0 36px 18px;
+  filter: blur(1px) contrast(1.15) saturate(1.3);
+  animation: hero-badge-glow-expand 10s ease-out infinite;
+}
+@keyframes hero-badge-glow-expand {
+  0% { opacity: 0; transform: translate(50%, -50%) scale(0.2); filter: blur(0) contrast(1.3) saturate(1.5); }
+  3% { opacity: 1; transform: translate(50%, -50%) scale(0.3); filter: blur(0) contrast(1.3) saturate(1.5); }
+  8% { opacity: 0.9; transform: translate(50%, -50%) scale(0.6); filter: blur(1px) contrast(1.2) saturate(1.4); }
+  14% { opacity: 0.5; transform: translate(50%, -50%) scale(1); filter: blur(2px) contrast(1.1) saturate(1.3); }
+  22% { opacity: 0; transform: translate(50%, -50%) scale(1.15); filter: blur(3px) contrast(1) saturate(1.2); }
+  32% { opacity: 0; transform: translate(50%, -50%) scale(0.2); filter: blur(0) contrast(1.3) saturate(1.5); }
+  35% { opacity: 0.5; transform: translate(50%, -50%) scale(0.3); filter: blur(0) contrast(1.3) saturate(1.5); }
+  40% { opacity: 0.4; transform: translate(50%, -50%) scale(0.6); filter: blur(1px) contrast(1.2) saturate(1.4); }
+  46% { opacity: 0.2; transform: translate(50%, -50%) scale(1); filter: blur(2px) contrast(1.1) saturate(1.3); }
+  54% { opacity: 0; transform: translate(50%, -50%) scale(1.15); filter: blur(3px) contrast(1) saturate(1.2); }
+  64% { opacity: 0; transform: translate(50%, -50%) scale(0.2); filter: blur(0) contrast(1.3) saturate(1.5); }
+  67% { opacity: 1; transform: translate(50%, -50%) scale(0.3); filter: blur(0) contrast(1.3) saturate(1.5); }
+  74% { opacity: 0.85; transform: translate(50%, -50%) scale(0.6); filter: blur(1px) contrast(1.2) saturate(1.4); }
+  82% { opacity: 0.5; transform: translate(50%, -50%) scale(1); filter: blur(2px) contrast(1.1) saturate(1.3); }
+  92% { opacity: 0.2; transform: translate(50%, -50%) scale(1.1); filter: blur(2.5px) contrast(1.05) saturate(1.25); }
+  100% { opacity: 0; transform: translate(50%, -50%) scale(1.15); filter: blur(3px) contrast(1) saturate(1.2); }
+}
+.hero-portrait-card-role {
+  position: absolute;
+  bottom: 30%;
+  left: 5%;
+  width: 22%;
+  height: auto;
+  z-index: 3;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+  pointer-events: none;
+}
+.hero-portrait-card-star {
+  position: absolute;
+  bottom: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 15%;
+  width: auto;
+  z-index: 3;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+  pointer-events: none;
+}
+.hero-portrait-card-name {
+  position: absolute;
+  left: 3%;
+  right: 3%;
+  bottom: 4.4%;
+  height: 12%;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+.hero-portrait-card-name span {
+  display: inline-block;
+  max-width: 100%;
+  font-size: clamp(10px, 12cqi, 13px);
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.15;
+  transform: translateY(-2px);
+}
+/* 각성: 글자 자체에 은은한 보라 글로우 (배경 칠 X) */
+.hero-portrait-card-name.is-awakened span {
+  color: #f3e8ff;
+  text-shadow:
+    0 0 2px rgba(233, 213, 255, 0.95),
+    0 0 5px rgba(192, 132, 252, 0.9),
+    0 0 9px rgba(168, 85, 247, 0.65),
+    0 1px 2px rgba(0, 0, 0, 0.85);
+  filter: drop-shadow(0 0 2.5px rgba(192, 132, 252, 0.75));
+}
 
 /* Small icon-in-circle chip used for stat readouts */
 .stat-chip {
@@ -2077,12 +2310,15 @@ h1, h2, h3 {
   color: #e2e8f0;
 }
 .speed-order-face {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  width: 32px;
+  height: auto;
+  border-radius: 0;
+  overflow: visible;
+  border: none;
   flex-shrink: 0;
+}
+.speed-order-face .hero-portrait-card {
+  width: 100%;
 }
 .speed-order-chip strong {
   font-size: 13px;
@@ -2237,8 +2473,9 @@ h1, h2, h3 {
 
 .setting-overview-deck .deck-hero-slot-face {
   width: clamp(44px, min(18cqh, 26cqw), 60px);
-  height: clamp(44px, min(18cqh, 26cqw), 60px);
-  border-radius: 9px;
+  height: auto;
+  aspect-ratio: 162 / 154;
+  border-radius: 0;
 }
 
 .setting-overview-deck .deck-stage-col {
@@ -2453,6 +2690,211 @@ h1, h2, h3 {
   color: var(--gold-primary);
 }
 
+/* ── HeroDB skill inline (negi-style tooltip) ── */
+.hero-db-skill-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.hero-db-skill-inline-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--gold-primary);
+}
+.hero-db-skill-inline-hint {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+.hero-db-skill-inline-card {
+  position: relative;
+  overflow: visible;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  backdrop-filter: blur(18px) saturate(1.15);
+  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.hero-db-skill-inline-title {
+  font-size: 17px;
+  font-weight: 900;
+  color: #fff;
+}
+.hero-db-skill-inline-cd {
+  margin-top: -6px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #fbbf24;
+  letter-spacing: 0.02em;
+}
+
+.skill-rich-text {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13.5px;
+  color: #e2e8f0;
+  line-height: 1.75;
+  font-weight: 600;
+}
+.skill-rich-line {
+  margin-bottom: 2px;
+}
+.skill-rich-gap {
+  height: 8px;
+}
+.skill-rich-target {
+  margin: 6px 0 2px;
+  align-self: flex-start;
+  white-space: normal;
+  color: #0b1220;
+  font-weight: 900;
+  /* 알약(999) → 살짝 둥근 사각 — 본문에 붙는 라벨감 */
+  border-radius: 6px;
+  padding: 5px 10px;
+  line-height: 1.25;
+}
+.skill-rich-target--ally { background: #5eb0ff; }
+.skill-rich-target--enemy { background: #ff7a7a; }
+.skill-rich-target--neutral { background: #cbd5e1; }
+/* 턴/수치 — 인게임 노랑·주황 */
+.skill-rich-num {
+  color: #fbbf24;
+  font-weight: 800;
+  padding: 0 1px;
+}
+
+/* 팝오버 있는 효과 — 인게임 보라 + 볼드 */
+.skill-tip-term {
+  display: inline;
+  margin: 0;
+  padding: 0 1px;
+  border: none;
+  background: none;
+  color: #94a3b8;
+  font: inherit;
+  font-weight: 700;
+  cursor: default;
+  border-bottom: none;
+  border-radius: 2px;
+  line-height: inherit;
+  vertical-align: baseline;
+}
+.skill-tip-term.has-tip {
+  color: #c084fc;
+  font-weight: 900;
+  cursor: help;
+  border-bottom: 1px solid rgba(192, 132, 252, 0.45);
+}
+.skill-tip-term.has-tip:hover,
+.skill-tip-term.is-open {
+  color: #e9d5ff;
+  background: rgba(168, 85, 247, 0.16);
+  border-bottom-color: #e9d5ff;
+}
+
+.skill-tip-pop {
+  position: fixed;
+  z-index: 9999;
+  width: min(280px, 82vw);
+  transform: translate(-50%, calc(-100% - 12px));
+  padding: 11px 13px;
+  border-radius: 12px;
+  background: rgba(14, 18, 28, 0.82);
+  border: 1px solid rgba(192, 132, 252, 0.4);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  text-align: left;
+}
+.skill-tip-pop::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 10px;
+  height: 10px;
+  transform: translateX(-50%) rotate(45deg);
+  background: rgba(14, 18, 28, 0.9);
+  border-right: 1px solid rgba(192, 132, 252, 0.4);
+  border-bottom: 1px solid rgba(192, 132, 252, 0.4);
+}
+.skill-tip-pop-title {
+  font-size: 12.5px;
+  font-weight: 900;
+  color: #c084fc;
+  margin-bottom: 5px;
+}
+.skill-tip-pop-body {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #f1f5f9;
+  line-height: 1.5;
+}
+
+.skill-upgrade-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.skill-upgrade-block {
+  border-radius: 12px;
+  padding: 11px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.skill-upgrade-block--enhance {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.1);
+}
+.skill-upgrade-block--t2 {
+  border-color: rgba(167, 139, 250, 0.5);
+  background: rgba(139, 92, 246, 0.14);
+}
+.skill-upgrade-block--t6 {
+  border-color: rgba(251, 191, 36, 0.5);
+  background: rgba(245, 158, 11, 0.12);
+}
+.skill-upgrade-label {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: var(--gold-primary);
+  margin-bottom: 5px;
+}
+.skill-upgrade-block--enhance .skill-upgrade-label { color: #7dd3fc; }
+.skill-upgrade-block--t2 .skill-upgrade-label { color: #c4b5fd; }
+.skill-upgrade-block--t6 .skill-upgrade-label { color: #fbbf24; }
+.skill-upgrade-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.skill-upgrade-body,
+.skill-upgrade-list .skill-rich-text {
+  font-size: 13px;
+  color: #e2e8f0;
+}
+
 @media (max-width: 1100px) {
   .hero-db-grid {
     grid-template-columns: 1fr;
@@ -2528,11 +2970,24 @@ h1, h2, h3 {
 
 .deck-hero-slot-face {
   width: 56px;
-  height: 56px;
-  border-radius: 10px;
-  overflow: hidden;
+  height: auto;
+  /* 빈 슬롯도 크롭된 초상 비율 유지 (미지정 시 height:auto로 납작해짐) */
+  aspect-ratio: 162 / 154;
+  border-radius: 8px;
+  overflow: visible;
   box-sizing: border-box;
   flex-shrink: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+.deck-hero-slot-face .hero-portrait-card {
+  width: 100%;
+}
+.deck-hero-slot-face.is-selected {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 1px;
+  border-radius: 10px;
 }
 
 /* Build detail panels in guild lounge — 옆 칸이 커져도 덱은 세로 중앙, 타임라인은 남은 높이 채움 */
@@ -2635,12 +3090,15 @@ h1, h2, h3 {
 }
 
 .timeline-step-face {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  width: 36px;
+  height: auto;
+  border-radius: 0;
+  overflow: visible;
+  border: none;
   flex-shrink: 0;
+}
+.timeline-step-face .hero-portrait-card {
+  width: 100%;
 }
 
 .timeline-step-name {
@@ -3153,6 +3611,14 @@ h1, h2, h3 {
   color: rgba(255, 255, 255, 0.34);
 }
 
+.gwcalc {
+  --gw-our: #22c55e;
+  --gw-enemy: #ff4d5e;
+  --gw-our-bg: rgba(34, 197, 94, 0.26);
+  --gw-enemy-bg: rgba(255, 77, 94, 0.26);
+  --gw-our-border: rgba(34, 197, 94, 0.62);
+  --gw-enemy-border: rgba(255, 77, 94, 0.62);
+}
 .gwcalc-hero {
   display: flex;
   align-items: flex-end;
@@ -3183,7 +3649,17 @@ h1, h2, h3 {
   line-height: 1.55;
   max-width: 640px;
 }
-.gwcalc-reset { flex-shrink: 0; }
+.gwcalc-reset {
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  color: #fff;
+  font-weight: 800;
+}
+.gwcalc-reset:hover {
+  background: rgba(255, 255, 255, 0.26);
+  border-color: rgba(255, 255, 255, 0.62);
+}
 .gwcalc-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -3253,10 +3729,10 @@ h1, h2, h3 {
   margin-bottom: 8px;
   color: #fff;
 }
-.gwcalc-our { background: rgba(52, 211, 153, 0.14); border: 1px solid rgba(52, 211, 153, 0.30); }
-.gwcalc-enemy { background: rgba(255, 122, 122, 0.14); border: 1px solid rgba(255, 122, 122, 0.30); }
-.gwcalc-plain.gwcalc-our { background: rgba(52, 211, 153, 0.10); }
-.gwcalc-plain.gwcalc-enemy { background: rgba(255, 122, 122, 0.10); }
+.gwcalc-our { background: var(--gw-our-bg); border: 1px solid var(--gw-our-border); }
+.gwcalc-enemy { background: var(--gw-enemy-bg); border: 1px solid var(--gw-enemy-border); }
+.gwcalc-plain.gwcalc-our { background: rgba(34, 197, 94, 0.18); }
+.gwcalc-plain.gwcalc-enemy { background: rgba(255, 77, 94, 0.18); }
 .gwcalc-box input[type="number"] {
   width: 100%;
   min-height: 44px;
@@ -3291,15 +3767,31 @@ h1, h2, h3 {
   white-space: nowrap;
 }
 .gwcalc-mini {
-  padding: 7px 11px;
+  padding: 7px 12px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.14);
   color: #fff;
   font-size: 12px;
   font-weight: 800;
   cursor: pointer;
   flex-shrink: 0;
+}
+.gwcalc-our .gwcalc-mini {
+  background: rgba(34, 197, 94, 0.32);
+  border-color: rgba(34, 197, 94, 0.78);
+  color: #d1fae5;
+}
+.gwcalc-our .gwcalc-mini:hover {
+  background: rgba(34, 197, 94, 0.44);
+}
+.gwcalc-enemy .gwcalc-mini {
+  background: rgba(255, 77, 94, 0.32);
+  border-color: rgba(255, 77, 94, 0.78);
+  color: #fecdd3;
+}
+.gwcalc-enemy .gwcalc-mini:hover {
+  background: rgba(255, 77, 94, 0.44);
 }
 .gwcalc-targets {
   display: grid;
@@ -3356,11 +3848,23 @@ h1, h2, h3 {
   line-height: 1.6;
   color: #fff;
 }
-.gwcalc-result--locked { border-color: rgba(52, 211, 153, 0.45); }
-.gwcalc-result--locked .gwcalc-result-title { color: #34d399; }
-.gwcalc-result--bad { border-color: rgba(255, 122, 122, 0.45); }
-.gwcalc-result--bad .gwcalc-result-title { color: #ff7a7a; }
-.gwcalc-result--unlocked { border-color: rgba(251, 146, 60, 0.4); }
+.gwcalc-result--locked {
+  border-color: rgba(34, 197, 94, 0.72);
+  background: linear-gradient(160deg, rgba(34, 197, 94, 0.18), rgba(8, 12, 22, 0.35));
+}
+.gwcalc-result--locked .gwcalc-result-title {
+  color: var(--gw-our);
+  text-shadow: 0 0 18px rgba(34, 197, 94, 0.45);
+}
+.gwcalc-result--bad {
+  border-color: rgba(255, 77, 94, 0.72);
+  background: linear-gradient(160deg, rgba(255, 77, 94, 0.18), rgba(8, 12, 22, 0.35));
+}
+.gwcalc-result--bad .gwcalc-result-title {
+  color: var(--gw-enemy);
+  text-shadow: 0 0 18px rgba(255, 77, 94, 0.45);
+}
+.gwcalc-result--unlocked { border-color: rgba(251, 146, 60, 0.55); }
 .gwcalc-result--unlocked .gwcalc-result-title { color: #fb923c; }
 .gwcalc-calcgrid {
   display: grid;
@@ -4041,15 +4545,15 @@ h1, h2, h3 {
   }
 
   .timeline-step-face {
-    width: 30px;
-    height: 30px;
-    border-radius: 7px;
+    width: 34px;
+    height: auto;
+    border-radius: 0;
   }
 
   .timeline-step--no-note .timeline-step-face {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
+    width: 40px;
+    height: auto;
+    border-radius: 0;
   }
 
   .timeline-step-name {

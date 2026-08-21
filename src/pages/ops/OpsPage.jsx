@@ -27,13 +27,13 @@ export default function OpsPage({ onOpenHub }) {
     void signInWithGoogleForOps();
   };
 
-  if (!authReady) {
+  if (!authReady || !adminReady) {
     return (
       <div className="container fade-in page-section" style={{
         color: '#94a3b8', fontWeight: 800, textAlign: 'center', padding: '64px 24px',
         minHeight: '60vh', background: '#0c0b0a',
       }}>
-        연결하는 중…
+        권한 확인 중…
       </div>
     );
   }
@@ -99,7 +99,7 @@ export default function OpsPage({ onOpenHub }) {
         <span className="ops-tag"><Icon name="shield" size={13} /> 슈퍼관리자</span>
         <h1 style={{ fontSize: 24, fontWeight: 900, color: '#fff', margin: '10px 0 6px' }}>사이트 관리</h1>
         <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>
-          메인페이지 공개 내용과 길드 허브 감독. 도감은 코드·에셋으로 관리합니다.
+          메인페이지·입장 배너·길드 허브 감독. 쓰기 권한은 Firestore <code style={{ color: 'var(--gold-light)' }}>admins/&#123;내UID&#125;</code> 의 role=super 만 통과합니다. 다른 구글 계정은 /ops 로그인 화면만 보고 데이터는 못 바꿉니다.
         </p>
         <div style={{ marginTop: 14, fontSize: 11, color: '#64748b' }}>
           {usingEmulators ? '로컬 에뮬레이터' : (authUser?.email || authUser?.uid)}

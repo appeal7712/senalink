@@ -9,6 +9,7 @@ import HeroGridPicker from '../../components/HeroGridPicker';
 import { metaDeckKindTheme, MetaDeckKindToggle } from '../../components/ArenaDeckKind';
 import { ROLE_ICONS } from '../../data/roleIcons';
 import OpsMetaDeckModal from './OpsMetaDeckModal';
+import HeroPortraitCard from '../../components/HeroPortraitCard';
 
 const ghostBtn = {
   padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255, 255, 255, 0.22)',
@@ -37,7 +38,7 @@ function PickHeroCell({ name, taken, onPick }) {
         display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', textAlign: 'left',
       }}>
         {hero ? (
-          <img src={hero.portraitUrl} alt="" style={{ width: 36, height: 40, objectFit: 'cover', objectPosition: 'top', borderRadius: 6 }} />
+          <div style={{ width: 36 }}><HeroPortraitCard hero={hero} showStars showRole showName={false} /></div>
         ) : (
           <span style={{ width: 36, height: 40, borderRadius: 6, background: 'rgba(255,255,255,0.12)', display: 'inline-block' }} />
         )}
@@ -160,10 +161,68 @@ export default function MainSiteEditor() {
         </div>
       )}
 
+      <section className="luxury-panel" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#fff' }}>사이트 입장 배너</h3>
+            <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
+              켜면 방문자가 메인·허브 등에서 글라스 공지 모달을 봅니다. 「오늘 하루 안 보기」는 브라우저에만 저장됩니다.
+            </div>
+          </div>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 800, color: '#fff', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={!!form.entranceBanner?.enabled}
+              onChange={(e) => setForm({
+                ...form,
+                entranceBanner: {
+                  ...(form.entranceBanner || {}),
+                  enabled: e.target.checked,
+                  updatedAt: new Date().toISOString(),
+                },
+              })}
+            />
+            배너 표시
+          </label>
+        </div>
+        <label className="ops-glass-label">제목
+          <input
+            className="ops-glass-field"
+            value={form.entranceBanner?.title || ''}
+            placeholder="예: 오픈 안내 / 점검 공지"
+            onChange={(e) => setForm({
+              ...form,
+              entranceBanner: {
+                ...(form.entranceBanner || {}),
+                title: e.target.value,
+                updatedAt: new Date().toISOString(),
+              },
+            })}
+          />
+        </label>
+        <label className="ops-glass-label">내용
+          <textarea
+            className="ops-glass-field"
+            rows={4}
+            value={form.entranceBanner?.body || ''}
+            placeholder="공지 본문 (줄바꿈 가능)"
+            onChange={(e) => setForm({
+              ...form,
+              entranceBanner: {
+                ...(form.entranceBanner || {}),
+                body: e.target.value,
+                updatedAt: new Date().toISOString(),
+              },
+            })}
+            style={{ resize: 'vertical', minHeight: 96 }}
+          />
+        </label>
+      </section>
+
       <section className="luxury-panel" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14, overflow: 'visible' }}>
         <div>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#fff' }}>결투장 & 상급결투장 메타 덱</h3>
-          <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>결투장 덱 수정이랑 같은 화면입니다. 유형(공덱/마덱/방덱/즉사덱)은 덱마다 직접 고르세요.</div>
+          <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>결투장 덱 수정이랑 같은 화면입니다. 유형(공덱/마덱/방덱/하이브리드/즉사덱)은 덱마다 직접 고르세요.</div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
           {(form.metaDecks || []).map((deck, di) => {
@@ -171,7 +230,7 @@ export default function MainSiteEditor() {
             return (
               <div key={deck.id || di} style={{ border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                  <span className="kind-pill kind-pill--sm" style={{ background: kind.pill }}>{kind.label}</span>
+                  <span className="kind-pill kind-pill--sm" style={{ background: kind.pill, color: kind.id === 'hybrid' ? '#161616' : undefined }}>{kind.label}</span>
                   <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 800 }}>{deck.type || '결투장'}</span>
                 </div>
                 <MetaDeckKindToggle kind={deck.kind || 'attack'} onChange={(k) => updateDeck(di, { kind: k })} />

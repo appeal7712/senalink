@@ -2,20 +2,26 @@ import { useEffect, useRef, useState } from 'react';
 import Icon from './icons/Icon';
 import ModalScrim from './ModalScrim';
 import { useUserProfile } from '../context/UserProfileContext';
+import { useLounge } from '../context/LoungeContext';
 import { uploadAvatar } from '../lib/avatarUpload';
 import { TOTALWAR_TIERS } from '../data/totalwarTiers';
 import { backdropDismissProps } from '../utils/backdropDismiss';
 
 const ALL_TIERS = [
   ...TOTALWAR_TIERS,
-  { id: 'legend_plus', label: '전설 이상', deckCount: 5, color: '#f472b6', iconUrl: '/images/totalwar/legend.png' },
+  { id: 'legend_plus', label: '전설 이상', deckCount: 5, color: '#f472b6', iconUrl: '/images/totalwar/legend_plus.png' },
 ];
 
 const formatScore = (n) => (n || 0).toLocaleString('ko-KR');
 const parseScore = (s) => Number(String(s).replace(/[^0-9]/g, '')) || 0;
 
-export default function MyPageModal({ onClose }) {
+/**
+ * mandatory=true 는 최초 로그인 직후 닉네임을 받는 모드.
+ * 닉네임을 저장할 때까지 닫을 수 없다. 총력전 등급과 파괴신 점수는 선택.
+ */
+export default function MyPageModal({ onClose, mandatory = false }) {
   const { authUser, profile, saveProfile } = useUserProfile();
+  const { me, updateMyNickname } = useLounge();
   const [nickname, setNickname] = useState(profile.nickname || '');
   const [tier, setTier] = useState(profile.totalwarTier || 'normal');
   const [scoreRaw, setScoreRaw] = useState(formatScore(profile.destructionScore));
@@ -61,6 +67,11 @@ export default function MyPageModal({ onClose }) {
     try {
       setSaving(true);
       setError('');
+      // 허브 멤버 닉네임과 프로필 닉네임이 갈라지지 않도록 먼저 맞춘다.
+      // 허브 안에서 중복이면 여기서 막히고 프로필도 저장되지 않는다.
+      if (me && !me.isSuperAdminObserver && String(me.nickname || '').trim() !== trimmed) {
+        await updateMyNickname(trimmed);
+      }
       let photoURL = profile.photoURL || null;
       if (file && authUser?.uid) {
         photoURL = await uploadAvatar(authUser.uid, file);
@@ -86,16 +97,29 @@ export default function MyPageModal({ onClose }) {
   };
 
   return (
-    <ModalScrim {...backdropDismissProps(onClose)}>
+    <ModalScrim
+      style={mandatory ? { zIndex: 9700 } : undefined}
+      {...(mandatory ? {} : backdropDismissProps(onClose))}>
       <div className="glass-modal" onClick={e => e.stopPropagation()}
         style={{ width: '100%', maxWidth: 420, borderRadius: 20, padding: 28, maxHeight: 'min(92dvh, 92vh)', overflowY: 'auto' }}>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: '#fff' }}>마이페이지</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 4 }}>
-            <Icon name="close" size={18} />
-          </button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: mandatory ? 10 : 20 }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: '#fff' }}>
+            {mandatory ? '닉네임 설정' : '마이페이지'}
+          </h2>
+          {!mandatory && (
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 4 }}>
+              <Icon name="close" size={18} />
+            </button>
+          )}
         </div>
+
+        {mandatory && (
+          <p style={{ margin: '0 0 18px', fontSize: 13, color: '#fff', fontWeight: 700, lineHeight: 1.55, textAlign: 'center' }}>
+            사이트에서 사용할 닉네임을 정해 주세요. 길드 허브에서도 이 닉네임으로 표시됩니다.
+            총력전 등급과 파괴신 점수는 나중에 입력해도 됩니다.
+          </p>
+        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 20, gap: 10 }}>
           <div style={{
@@ -151,7 +175,7 @@ export default function MyPageModal({ onClose }) {
           ))}
         </div>
 
-        <label style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 4, display: 'block', textAlign: 'center' }}>파괴신 3합 점수</label>
+        <label style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 4, display: 'block', textAlign: 'center' }}>파괴신 3합 평균 점수</label>
         <input value={scoreRaw} onChange={handleScoreChange} placeholder="예: 34,555,000"
           inputMode="numeric" style={{ ...inputStyle, marginBottom: 18, textAlign: 'center' }} />
 
@@ -160,7 +184,7 @@ export default function MyPageModal({ onClose }) {
         <button type="button" className="btn-ops" disabled={saving}
           onClick={handleSave}
           style={{ width: '100%', padding: '13px 0', fontSize: 15, fontWeight: 900, justifyContent: 'center' }}>
-          {saving ? '저장 중...' : '저장'}
+          {saving ? '저장 중...' : (mandatory ? '닉네임 저장하고 시작하기' : '저장')}
         </button>
       </div>
     </ModalScrim>

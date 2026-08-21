@@ -1,0 +1,807 @@
+{
+  "연희": {
+    "negiId": "100536",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/연희/card.webp"
+  },
+  "카르마": {
+    "negiId": "101426",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/카르마/card.webp"
+  },
+  "카일": {
+    "negiId": "101436",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/카일/card.webp"
+  },
+  "태오": {
+    "negiId": "100526",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/태오/card.webp"
+  },
+  "겔리두스": {
+    "negiId": "101196",
+    "negiRarity": "legendary++",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/겔리두스/card.webp"
+  },
+  "로지": {
+    "negiId": "101226",
+    "negiRarity": "legendary++",
+    "negiStar": "6",
+    "negiRole": "4",
+    "cardUrl": "/images/로지/card.webp"
+  },
+  "밀리아": {
+    "negiId": "101206",
+    "negiRarity": "legendary++",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/밀리아/card.webp"
+  },
+  "쥬리": {
+    "negiId": "101256",
+    "negiRarity": "legendary++",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/쥬리/card.webp"
+  },
+  "파이": {
+    "negiId": "101216",
+    "negiRarity": "legendary++",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/파이/card.webp"
+  },
+  "실베스타": {
+    "negiId": "400557",
+    "negiRarity": "legendary+",
+    "negiStar": "7",
+    "negiRole": "2",
+    "cardUrl": "/images/실베스타/card.webp"
+  },
+  "선란": {
+    "negiId": "401877",
+    "negiRarity": "legendary+",
+    "negiStar": "7",
+    "negiRole": "1",
+    "cardUrl": "/images/선란/card.webp"
+  },
+  "아킬라": {
+    "negiId": "101446",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "3",
+    "cardUrl": "/images/아킬라/card.webp"
+  },
+  "오를리": {
+    "negiId": "101266",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "4",
+    "cardUrl": "/images/오를리/card.webp"
+  },
+  "오목": {
+    "negiId": "101776",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/오목/card.webp"
+  },
+  "칼헤론": {
+    "negiId": "101786",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/칼헤론/card.webp"
+  },
+  "타카": {
+    "negiId": "101146",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/타카/card.webp"
+  },
+  "델론즈": {
+    "negiId": "400587",
+    "negiRarity": "legendary+",
+    "negiStar": "7",
+    "negiRole": "1",
+    "cardUrl": "/images/델론즈/card.webp"
+  },
+  "멜키르": {
+    "negiId": "101126",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/멜키르/card.webp"
+  },
+  "브란즈&브란셀": {
+    "negiId": "101456",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/브란즈&브란셀/card.webp"
+  },
+  "콜트": {
+    "negiId": "101136",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/콜트/card.webp"
+  },
+  "팔라누스": {
+    "negiId": "101466",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/팔라누스/card.webp"
+  },
+  "플라튼": {
+    "negiId": "100546",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "4",
+    "cardUrl": "/images/플라튼/card.webp"
+  },
+  "라이언": {
+    "negiId": "101296",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/라이언/card.webp"
+  },
+  "엘리시아": {
+    "negiId": "101276",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/엘리시아/card.webp"
+  },
+  "키리엘": {
+    "negiId": "101286",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/키리엘/card.webp"
+  },
+  "린": {
+    "negiId": "101416",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/린/card.webp"
+  },
+  "에이스": {
+    "negiId": "100516",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/에이스/card.webp"
+  },
+  "여포": {
+    "negiId": "101486",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/여포/card.webp"
+  },
+  "레이첼": {
+    "negiId": "100606",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/레이첼/card.webp"
+  },
+  "루디": {
+    "negiId": "400567",
+    "negiRarity": "legendary+",
+    "negiStar": "7",
+    "negiRole": "3",
+    "cardUrl": "/images/루디/card.webp"
+  },
+  "바네사": {
+    "negiId": "100636",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/바네사/card.webp"
+  },
+  "스파이크": {
+    "negiId": "100626",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/스파이크/card.webp"
+  },
+  "아일린": {
+    "negiId": "100596",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/아일린/card.webp"
+  },
+  "제이브": {
+    "negiId": "100616",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/제이브/card.webp"
+  },
+  "크리스": {
+    "negiId": "100576",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/크리스/card.webp"
+  },
+  "미호": {
+    "negiId": "101396",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/미호/card.webp"
+  },
+  "아멜리아": {
+    "negiId": "101406",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/아멜리아/card.webp"
+  },
+  "카구라": {
+    "negiId": "101386",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/카구라/card.webp"
+  },
+  "클라한": {
+    "negiId": "101376",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/클라한/card.webp"
+  },
+  "라드그리드": {
+    "negiId": "101696",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "3",
+    "cardUrl": "/images/라드그리드/card.webp"
+  },
+  "란드그리드": {
+    "negiId": "101716",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/란드그리드/card.webp"
+  },
+  "레긴레이프": {
+    "negiId": "101706",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/레긴레이프/card.webp"
+  },
+  "미스트": {
+    "negiId": "101726",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/미스트/card.webp"
+  },
+  "스쿨드": {
+    "negiId": "401687",
+    "negiRarity": "legendary+",
+    "negiStar": "7",
+    "negiRole": "2",
+    "cardUrl": "/images/스쿨드/card.webp"
+  },
+  "트루드": {
+    "negiId": "101306",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/트루드/card.webp"
+  },
+  "프레이야": {
+    "negiId": "101316",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/프레이야/card.webp"
+  },
+  "아리스": {
+    "negiId": "401827",
+    "negiRarity": "legendary+",
+    "negiStar": "7",
+    "negiRole": "5",
+    "cardUrl": "/images/아리스/card.webp"
+  },
+  "오르카": {
+    "negiId": "401807",
+    "negiRarity": "legendary+",
+    "negiStar": "7",
+    "negiRole": "1",
+    "cardUrl": "/images/오르카/card.webp"
+  },
+  "클레미스": {
+    "negiId": "401797",
+    "negiRarity": "legendary+",
+    "negiStar": "7",
+    "negiRole": "4",
+    "cardUrl": "/images/클레미스/card.webp"
+  },
+  "녹스": {
+    "negiId": "400497",
+    "negiRarity": "legendary",
+    "negiStar": "7",
+    "negiRole": "3",
+    "cardUrl": "/images/녹스/card.webp"
+  },
+  "사라": {
+    "negiId": "100486",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "4",
+    "cardUrl": "/images/사라/card.webp"
+  },
+  "호킨": {
+    "negiId": "100076",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/호킨/card.webp"
+  },
+  "베인": {
+    "negiId": "100286",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/베인/card.webp"
+  },
+  "라니아": {
+    "negiId": "100426",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/라니아/card.webp"
+  },
+  "라쿤": {
+    "negiId": "100146",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "3",
+    "cardUrl": "/images/라쿤/card.webp"
+  },
+  "레오": {
+    "negiId": "100216",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/레오/card.webp"
+  },
+  "데이지": {
+    "negiId": "101176",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/데이지/card.webp"
+  },
+  "레이": {
+    "negiId": "101186",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/레이/card.webp"
+  },
+  "리나": {
+    "negiId": "100726",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "4",
+    "cardUrl": "/images/리나/card.webp"
+  },
+  "진": {
+    "negiId": "101166",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/진/card.webp"
+  },
+  "캐티": {
+    "negiId": "101156",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/캐티/card.webp"
+  },
+  "관우": {
+    "negiId": "101616",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/관우/card.webp"
+  },
+  "조운": {
+    "negiId": "101596",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/조운/card.webp"
+  },
+  "초선": {
+    "negiId": "101606",
+    "negiRarity": null,
+    "negiStar": "6",
+    "negiRole": "",
+    "cardUrl": "/images/초선/card.webp"
+  },
+  "동영": {
+    "negiId": "401897",
+    "negiRarity": "legendary+",
+    "negiStar": "7",
+    "negiRole": "2",
+    "cardUrl": "/images/동영/card.webp"
+  },
+  "아수라": {
+    "negiId": "100996",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/아수라/card.webp"
+  },
+  "파스칼": {
+    "negiId": "101006",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/파스칼/card.webp"
+  },
+  "나타": {
+    "negiId": "101566",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/나타/card.webp"
+  },
+  "백각": {
+    "negiId": "101556",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/백각/card.webp"
+  },
+  "비담": {
+    "negiId": "100706",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/비담/card.webp"
+  },
+  "소교": {
+    "negiId": "101526",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/소교/card.webp"
+  },
+  "유신": {
+    "negiId": "100696",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/유신/card.webp"
+  },
+  "링링": {
+    "negiId": "101496",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/링링/card.webp"
+  },
+  "백룡": {
+    "negiId": "101546",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/백룡/card.webp"
+  },
+  "소이": {
+    "negiId": "100716",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/소이/card.webp"
+  },
+  "풍연": {
+    "negiId": "100686",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/풍연/card.webp"
+  },
+  "발리스타": {
+    "negiId": "100916",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/발리스타/card.webp"
+  },
+  "블랙로즈": {
+    "negiId": "101116",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/블랙로즈/card.webp"
+  },
+  "세라": {
+    "negiId": "100936",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/세라/card.webp"
+  },
+  "제인": {
+    "negiId": "100926",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/제인/card.webp"
+  },
+  "루시": {
+    "negiId": "100806",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "4",
+    "cardUrl": "/images/루시/card.webp"
+  },
+  "벨리카": {
+    "negiId": "100816",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/벨리카/card.webp"
+  },
+  "빅토리아": {
+    "negiId": "100796",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/빅토리아/card.webp"
+  },
+  "샤오": {
+    "negiId": "101856",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/샤오/card.webp"
+  },
+  "실비아": {
+    "negiId": "100826",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/실비아/card.webp"
+  },
+  "조커": {
+    "negiId": "100776",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/조커/card.webp"
+  },
+  "카론": {
+    "negiId": "100786",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "4",
+    "cardUrl": "/images/카론/card.webp"
+  },
+  "니아": {
+    "negiId": "100856",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/니아/card.webp"
+  },
+  "루리": {
+    "negiId": "100846",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/루리/card.webp"
+  },
+  "세인": {
+    "negiId": "100876",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/세인/card.webp"
+  },
+  "에스파다": {
+    "negiId": "100866",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/에스파다/card.webp"
+  },
+  "지크": {
+    "negiId": "100886",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/지크/card.webp"
+  },
+  "리": {
+    "negiId": "100646",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "3",
+    "cardUrl": "/images/리/card.webp"
+  },
+  "스니퍼": {
+    "negiId": "100736",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/스니퍼/card.webp"
+  },
+  "아리엘": {
+    "negiId": "100656",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/아리엘/card.webp"
+  },
+  "에반": {
+    "negiId": "100756",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "3",
+    "cardUrl": "/images/에반/card.webp"
+  },
+  "유리": {
+    "negiId": "100186",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/유리/card.webp"
+  },
+  "유이": {
+    "negiId": "100836",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "4",
+    "cardUrl": "/images/유이/card.webp"
+  },
+  "쥬피": {
+    "negiId": "100746",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/쥬피/card.webp"
+  },
+  "카린": {
+    "negiId": "100766",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "4",
+    "cardUrl": "/images/카린/card.webp"
+  },
+  "헤브니아": {
+    "negiId": "400677",
+    "negiRarity": "epic",
+    "negiStar": "7",
+    "negiRole": "1",
+    "cardUrl": "/images/헤브니아/card.webp"
+  },
+  "헬레니아": {
+    "negiId": "400667",
+    "negiRarity": "epic",
+    "negiStar": "7",
+    "negiRole": "3",
+    "cardUrl": "/images/헬레니아/card.webp"
+  },
+  "노호": {
+    "negiId": "100986",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/노호/card.webp"
+  },
+  "돼오": {
+    "negiId": "101866",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/돼오/card.webp"
+  },
+  "룩": {
+    "negiId": "100896",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "3",
+    "cardUrl": "/images/룩/card.webp"
+  },
+  "메이": {
+    "negiId": "100946",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/메이/card.webp"
+  },
+  "비스킷": {
+    "negiId": "101106",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "4",
+    "cardUrl": "/images/비스킷/card.webp"
+  },
+  "아라곤": {
+    "negiId": "100966",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "3",
+    "cardUrl": "/images/아라곤/card.webp"
+  },
+  "엘리스": {
+    "negiId": "100956",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "4",
+    "cardUrl": "/images/엘리스/card.webp"
+  },
+  "챈슬러": {
+    "negiId": "100906",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "5",
+    "cardUrl": "/images/챈슬러/card.webp"
+  },
+  "클로에": {
+    "negiId": "100976",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "4",
+    "cardUrl": "/images/클로에/card.webp"
+  },
+  "collab_성진우": {
+    "negiId": "101736",
+    "negiRarity": "legendary+",
+    "negiStar": "6",
+    "negiRole": "2",
+    "cardUrl": "/images/성진우/card.webp"
+  },
+  "collab_유진호": {
+    "negiId": "101756",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "3",
+    "cardUrl": "/images/유진호/card.webp"
+  },
+  "collab_이주희": {
+    "negiId": "101766",
+    "negiRarity": "epic",
+    "negiStar": "6",
+    "negiRole": "4",
+    "cardUrl": "/images/이주희/card.webp"
+  },
+  "collab_차해인": {
+    "negiId": "101746",
+    "negiRarity": "legendary",
+    "negiStar": "6",
+    "negiRole": "1",
+    "cardUrl": "/images/차해인/card.webp"
+  }
+}
