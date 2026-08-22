@@ -16,6 +16,7 @@ function mergeNews(rawNews, fallback) {
   return rawNews.map((n, i) => ({
     id: n.id || `n_${i}_${Date.now()}`,
     title: n.title || '',
+    body: n.body || n.content || '',
     url: n.url || n.link || '',
     date: n.date || '',
     tag: n.tag || '라운지',

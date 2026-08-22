@@ -7,7 +7,10 @@ export const COL = {
   INVITE_INDEX: 'inviteIndex',
   PUBLIC_GUILDS: 'publicGuilds',
   USERS: 'users',
+  COMMUNITY_GUIDES: 'communityGuides',
 };
+
+export const communityGuideDoc = (guideId) => [COL.COMMUNITY_GUIDES, guideId];
 
 export const SITE_MAIN_ID = 'main';
 

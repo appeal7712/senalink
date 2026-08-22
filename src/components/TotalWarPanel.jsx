@@ -2,6 +2,7 @@ import { useState } from 'react';
 import InGameDeckCard from './InGameDeckCard';
 import StrategyActionBar from './StrategyActionBar';
 import DeckLikeButton from './DeckLikeButton';
+import { AuthorMeta } from './PublicProfileModal';
 import { TOTALWAR_TIERS } from '../data/totalwarTiers';
 import { PvpModeBadge } from './PvpModeToggle';
 import { pets } from '../data/pets';
@@ -16,6 +17,7 @@ export default function TotalWarPanel({
   resolveHeroByName,
   likeUserId,
   onToggleLike,
+  onOpenProfile,
 }) {
   const [activeTier, setActiveTier] = useState('legend');
   const tier = TOTALWAR_TIERS.find(t => t.id === activeTier) || TOTALWAR_TIERS[0];
@@ -63,7 +65,13 @@ export default function TotalWarPanel({
           <div className="totalwar-build-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             <div>
               <div style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>{b.title}</div>
-              <div className="build-title-meta">{b.author} · {b.updatedAt}</div>
+              <AuthorMeta
+                author={b.author}
+                authorId={b.authorId}
+                updatedAt={b.updatedAt}
+                prefix=""
+                onOpenProfile={onOpenProfile}
+              />
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <DeckLikeButton

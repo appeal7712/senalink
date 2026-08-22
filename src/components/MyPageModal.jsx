@@ -5,6 +5,7 @@ import { useUserProfile } from '../context/UserProfileContext';
 import { useLounge } from '../context/LoungeContext';
 import { uploadAvatar } from '../lib/avatarUpload';
 import { TOTALWAR_TIERS } from '../data/totalwarTiers';
+import { ARENA_TIERS, normalizeArenaTier } from '../data/arenaTiers';
 import { backdropDismissProps } from '../utils/backdropDismiss';
 
 const ALL_TIERS = [
@@ -24,13 +25,13 @@ export default function MyPageModal({ onClose, mandatory = false }) {
   const { me, updateMyNickname } = useLounge();
   const [nickname, setNickname] = useState(profile.nickname || '');
   const [tier, setTier] = useState(profile.totalwarTier || 'normal');
+  const [arenaTier, setArenaTier] = useState(normalizeArenaTier(profile.arenaTier || 'bronze'));
   const [scoreRaw, setScoreRaw] = useState(formatScore(profile.destructionScore));
   const [photoPreview, setPhotoPreview] = useState(profile.photoURL || null);
   const [file, setFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const fileRef = useRef(null);
-
   const blobUrlRef = useRef(null);
 
   useEffect(() => {
@@ -79,6 +80,7 @@ export default function MyPageModal({ onClose, mandatory = false }) {
       await saveProfile({
         nickname: trimmed,
         totalwarTier: tier,
+        arenaTier,
         destructionScore: parseScore(scoreRaw),
         photoURL,
       });
@@ -170,6 +172,26 @@ export default function MyPageModal({ onClose, mandatory = false }) {
                 color: t.color, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
               }}>
               <img src={t.iconUrl} alt="" style={{ width: 18, height: 18 }} />
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <label style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 6, display: 'block', textAlign: 'center' }}>결투장 티어</label>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14, justifyContent: 'center' }}>
+          {ARENA_TIERS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setArenaTier(t.id)}
+              style={{
+                padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800,
+                border: arenaTier === t.id ? '2px solid var(--gold-primary)' : '1px solid rgba(255,255,255,0.14)',
+                background: arenaTier === t.id ? 'rgba(255,255,255,0.08)' : 'transparent',
+                color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+              }}
+            >
+              <img src={t.iconUrl} alt="" style={{ width: 16, height: 16 }} />
               {t.label}
             </button>
           ))}

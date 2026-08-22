@@ -1,5 +1,6 @@
 import InGameDeckCard from './InGameDeckCard';
 import { heroes } from '../data/heroes';
+import { pets } from '../data/pets';
 import { ROLE_ICONS } from '../data/roleIcons';
 import Icon from './icons/Icon';
 import { useSiteMain } from '../lib/siteMain';
@@ -13,6 +14,8 @@ const resolveHeroByName = (name) => {
     || heroes.find(h => h.name.replace('(각성)', '').trim() === clean)
     || null;
 };
+
+const resolvePetById = (petId) => pets.find(p => p.id === petId) || pets[0];
 
 const ROLE_LABEL_KR = { offensive: '공격형', magic: '마법형', defensive: '방어형', support: '지원형', universal: '만능형' };
 
@@ -79,6 +82,7 @@ export default function PublicMainDashboard({ onNavigateToLounge }) {
                   embedded
                   teamName=""
                   formationId={deck.formationId}
+                  petObj={resolvePetById(deck.petId)}
                   heroList={(deck.heroNames || []).map((name, idx) => {
                     const baseHero = resolveHeroByName(name);
                     return baseHero ? { hero: baseHero, gearConfig: (deck.heroGearConfigs || [])[idx] } : name;
@@ -143,25 +147,32 @@ export default function PublicMainDashboard({ onNavigateToLounge }) {
           <div className="main-news-scroller">
             {news.filter((n) => n.title).map(n => {
               const url = n.url || n.link || '';
+              const body = String(n.body || '').trim();
               return (
-              <div key={n.id} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-subtle)', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, borderRadius: 16 }}>
-                <div style={{ minWidth: 0 }}>
-                  <span style={{ fontSize: '10px', background: 'rgba(236,232,224,0.12)', color: 'var(--gold-light)', padding: '3px 8px', fontWeight: 600, borderRadius: 999 }}>{n.tag || '라운지'}</span>
-                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff', marginTop: '6px' }}>{n.title}</div>
+              <div key={n.id} className="main-news-card">
+                <div className="main-news-card-top">
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '10px', background: 'rgba(236,232,224,0.12)', color: 'var(--gold-light)', padding: '3px 8px', fontWeight: 600, borderRadius: 999 }}>{n.tag || '라운지'}</span>
+                      {n.date ? <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>{n.date}</span> : null}
+                    </div>
+                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff', marginTop: '6px' }}>{n.title}</div>
+                  </div>
+                  {url ? (
+                    <a
+                      href={url.startsWith('http') ? url : `https://${url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-ops"
+                      style={{ flexShrink: 0, fontSize: 12, padding: '8px 12px', textDecoration: 'none' }}
+                    >
+                      열기
+                    </a>
+                  ) : null}
                 </div>
-                {url ? (
-                  <a
-                    href={url.startsWith('http') ? url : `https://${url}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-ops"
-                    style={{ flexShrink: 0, fontSize: 12, padding: '8px 12px', textDecoration: 'none' }}
-                  >
-                    열기
-                  </a>
-                ) : (
-                  <span style={{ fontSize: '11px', color: '#fff', flexShrink: 0 }}>{n.date}</span>
-                )}
+                {body ? (
+                  <div className="main-news-card-body">{body}</div>
+                ) : null}
               </div>
               );
             })}

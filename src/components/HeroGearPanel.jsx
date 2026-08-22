@@ -59,6 +59,8 @@ export default function HeroGearPanel({
   selectedIdx = 0,
   onSelectIdx,
   onChange,
+  embedded = false,
+  showDetail = true,
 }) {
   const filled = heroNames.map((n, i) => ({ name: n, idx: i })).filter(x => x.name);
   const activeIdx = filled.some(f => f.idx === selectedIdx)
@@ -73,21 +75,28 @@ export default function HeroGearPanel({
     onChange(next);
   };
 
+  const shellStyle = embedded
+    ? { flex: 1, minWidth: 0, minHeight: 0, height: '100%', background: 'transparent', border: 'none', borderRadius: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '10px', boxSizing: 'border-box' }
+    : { flex: 1, minWidth: '360px', background: 'rgba(255,255,255,0.07)', border: '1.5px solid var(--border-gold)', borderRadius: '12px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' };
+
   if (filled.length === 0) {
     return (
-      <div className="hero-gear-panel hero-gear-panel--empty" style={{ flex: 1, minWidth: '320px', background: 'rgba(255,255,255,0.07)', border: '1.5px solid var(--border-gold)', borderRadius: '12px', padding: '16px', color: '#64748b', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className={`hero-gear-panel hero-gear-panel--empty${embedded ? ' hero-gear-panel--embedded' : ''}`} style={embedded
+        ? { flex: 1, minWidth: 0, color: '#64748b', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+        : { flex: 1, minWidth: '320px', background: 'rgba(255,255,255,0.07)', border: '1.5px solid var(--border-gold)', borderRadius: '12px', padding: '16px', color: '#64748b', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+      }>
         영웅을 배치하면 장비 세팅이 활성화됩니다.
       </div>
     );
   }
 
   return (
-    <div className="hero-gear-panel" style={{ flex: 1, minWidth: '360px', background: 'rgba(255,255,255,0.07)', border: '1.5px solid var(--border-gold)', borderRadius: '12px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-      <div style={{ fontSize: '13px', fontWeight: 900, color: 'var(--gold-primary)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+    <div className={`hero-gear-panel${embedded ? ' hero-gear-panel--embedded' : ''}`} style={shellStyle}>
+      <div style={{ fontSize: '13px', fontWeight: 900, color: embedded ? '#fff' : 'var(--gold-primary)', display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
         <Icon name="swords" size={13} /> 장비 세팅
       </div>
 
-      <div style={{ display: 'flex', gap: '5px' }}>
+      <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
         {filled.map(({ name, idx }) => (
           <button key={idx} type="button" onClick={() => onSelectIdx(idx)}
             style={{
@@ -101,7 +110,7 @@ export default function HeroGearPanel({
         ))}
       </div>
 
-      <div>
+      <div style={{ flexShrink: 0 }}>
         <div style={{ fontSize: '11px', color: 'var(--accent-cyan)', marginBottom: '6px', fontWeight: 800 }}>장비 세트</div>
         <div className="hero-gear-panel-set-grid">
           {SET_NAMES.map(setName => {
@@ -124,7 +133,7 @@ export default function HeroGearPanel({
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
         <div style={{ display: 'flex', gap: '8px' }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '3px', fontWeight: 800 }}>무기 1</div>
@@ -155,7 +164,7 @@ export default function HeroGearPanel({
         </div>
       </div>
 
-      <div>
+      <div style={{ flexShrink: 0 }}>
         <div style={{ fontSize: '11px', color: '#c084fc', marginBottom: '6px', fontWeight: 800 }}>장신구</div>
         <div className="hero-gear-panel-accessory-grid">
           {accessories.map(acc => {
@@ -176,20 +185,22 @@ export default function HeroGearPanel({
         </div>
       </div>
 
-      <div>
-        <div style={{ fontSize: '11px', color: 'var(--accent-cyan)', marginBottom: '4px', fontWeight: 800 }}>세팅 디테일</div>
-        <textarea
-          value={cfg.detailNote || ''}
-          onChange={e => update('detailNote', e.target.value)}
-          rows={5}
-          placeholder={'예:\n치확 67%에 가깝게\n약공 46%에 가깝게\n치피 최대한 땡기기'}
-          style={{
-            width: '100%', padding: '10px 12px', background: '#07090e', border: '1px solid var(--border-gold)',
-            color: '#e2e8f0', borderRadius: '7px', fontSize: '14px', fontWeight: 700, lineHeight: 1.5,
-            boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', minHeight: '110px'
-          }}
-        />
-      </div>
+      {showDetail && (
+        <div>
+          <div style={{ fontSize: '11px', color: 'var(--accent-cyan)', marginBottom: '4px', fontWeight: 800 }}>세팅 디테일</div>
+          <textarea
+            value={cfg.detailNote || ''}
+            onChange={e => update('detailNote', e.target.value)}
+            rows={5}
+            placeholder={'예:\n치확 67%에 가깝게\n약공 46%에 가깝게\n치피 최대한 땡기기'}
+            style={{
+              width: '100%', padding: '10px 12px', background: '#07090e', border: '1px solid var(--border-gold)',
+              color: '#e2e8f0', borderRadius: '7px', fontSize: '14px', fontWeight: 700, lineHeight: 1.5,
+              boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', minHeight: '110px'
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

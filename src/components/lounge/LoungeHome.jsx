@@ -6,6 +6,7 @@ import { formatJoinedAt, formatLastActive } from '../../lib/formatTime';
 import { backdropDismissProps } from '../../utils/backdropDismiss';
 import { showToast } from '../Toast';
 import ModalScrim from '../ModalScrim';
+import PublicProfileModal from '../PublicProfileModal';
 
 const ROLE_LABEL = { master: '길드마스터', admin: '관리자', member: '길드원', super: '슈퍼관리자' };
 const ACTION_LABEL = {
@@ -58,6 +59,7 @@ export default function LoungeHome() {
   const [writeMode, setWriteMode] = useState(null); // 'notice' | 'post' | null
   const [err, setErr] = useState('');
   const [lightbox, setLightbox] = useState(null);
+  const [profileUid, setProfileUid] = useState(null);
 
   if (!activeLounge || !me) return null;
 
@@ -200,11 +202,18 @@ export default function LoungeHome() {
           paddingRight: '2px',
         }}>
           {sortedMembers.map(m => (
-            <div key={m.id} style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '8px 10px', background: 'rgba(255,255,255,0.08)', borderRadius: '12px',
-              border: '1px solid var(--border-subtle)', minHeight: '44px'
-            }}>
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => setProfileUid(m.id)}
+              title="프로필 보기"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '8px 10px', background: 'rgba(255,255,255,0.08)', borderRadius: '12px',
+                border: '1px solid var(--border-subtle)', minHeight: '44px',
+                width: '100%', textAlign: 'left', cursor: 'pointer', color: 'inherit', font: 'inherit',
+              }}
+            >
               {m.avatarURL ? (
                 <img src={m.avatarURL} alt="" style={{
                   width: '28px', height: '28px', borderRadius: '8px', flexShrink: 0,
@@ -235,8 +244,7 @@ export default function LoungeHome() {
                   {m.googleEmail || m.googleName || `입장 ${formatJoinedAt(m.joinedAt)}`}
                 </div>
               </div>
-              {/* 참여 길드원 리스트에서는 액션 버튼을 숨기고, 관리는 '길드원 관리' 모달에서만 수행합니다. */}
-            </div>
+            </button>
           ))}
         </div>
       </section>
@@ -305,6 +313,10 @@ export default function LoungeHome() {
           }}>
           <img src={lightbox} alt="첨부 이미지" style={{ maxWidth: '96vw', maxHeight: '90vh', borderRadius: '10px', objectFit: 'contain' }} />
         </div>
+      )}
+
+      {profileUid && (
+        <PublicProfileModal uid={profileUid} onClose={() => setProfileUid(null)} />
       )}
     </div>
   );

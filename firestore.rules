@@ -60,18 +60,50 @@ service cloud.firestore {
 
     function validUserFields() {
       let d = request.resource.data;
-      return d.keys().hasOnly(['nickname', 'photoURL', 'totalwarTier', 'destructionScore', 'hubId', 'updatedAt'])
+      return d.keys().hasOnly(['nickname', 'photoURL', 'totalwarTier', 'arenaTier', 'destructionScore', 'hubId', 'updatedAt'])
         && ((!('nickname' in d)) || (d.nickname is string && d.nickname.size() >= 2 && d.nickname.size() <= 12))
         && ((!('totalwarTier' in d)) || d.totalwarTier in ['normal', 'advanced', 'rare', 'legend', 'legend_plus'])
+        && ((!('arenaTier' in d)) || d.arenaTier in ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'master', 'challenger', 'legend', 'champion'])
         && ((!('destructionScore' in d)) || (d.destructionScore is int && d.destructionScore >= 0))
         && ((!('photoURL' in d)) || d.photoURL == null || d.photoURL is string);
     }
 
     match /users/{uid} {
-      allow get: if signedIn() && request.auth.uid == uid;
+      // 공용·길드 작성자 프로필 조회용 (list 금지)
+      allow get: if signedIn();
       allow list: if false;
       allow create, update: if signedIn() && request.auth.uid == uid && validUserFields();
       allow delete: if false;
+    }
+
+    // 공용 허브 공략 — 길드 hubs/.../builds 와 완전 분리
+    match /communityGuides/{guideId} {
+      allow read: if true;
+
+      allow create: if isSuperAdmin()
+        || (
+          signedIn()
+          && request.resource.data.section == 'pvp'
+          && request.resource.data.authorId == request.auth.uid
+          && request.resource.data.category in ['arena', 'totalwar']
+        );
+
+      allow update: if isSuperAdmin()
+        || (
+          signedIn()
+          && resource.data.section == 'pvp'
+          && resource.data.authorId == request.auth.uid
+          && request.resource.data.authorId == resource.data.authorId
+          && request.resource.data.section == 'pvp'
+          && request.resource.data.category in ['arena', 'totalwar']
+        );
+
+      allow delete: if isSuperAdmin()
+        || (
+          signedIn()
+          && resource.data.section == 'pvp'
+          && resource.data.authorId == request.auth.uid
+        );
     }
 
     match /inviteIndex/{code} {

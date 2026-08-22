@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { heroes } from '../data/heroes';
+import { heroes, HERO_FACTION_ORDER } from '../data/heroes';
 import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
 import HeroPortraitCard from './HeroPortraitCard';
@@ -15,19 +15,13 @@ const ROLE_ICON = {
 
 export default function HeroDB() {
   const [activeTab, setActiveTab]         = useState('special');
-  const [activeFaction, setActiveFaction] = useState('세븐나이츠');
+  const [activeFaction, setActiveFaction] = useState(HERO_FACTION_ORDER.special[0]);
   const [activeRoleFilter, setActiveRoleFilter] = useState('all');
   const [selectedHero, setSelectedHero]   = useState(null);
   const [searchTerm, setSearchTerm]       = useState('');
   const [activeSkillIdx, setActiveSkillIdx] = useState(0);
 
-  const tabFactions = {
-    special: ['세븐나이츠', '(구)세븐나이츠', '다크나이츠', '사황', '(구)사황', '나이트크로우', '루미너스 혁명단', '천상의 수호자', '펜타곤', '숨은강자들', '경계의 수호자', '????'],
-    normal:  ['에반 원정대', '그림자단', '모험가', '성십자단', '테라영지'],
-    asgard:  ['신비의 숲', '침묵의 광산', '화염의 사막', '암흑의 무덤', '용의 유적지', '복주자의 지옥'],
-    aisha:   ['달빛의 섬', '천자의 땅', '어둠의 안식처', '신지', '삼국호걸'],
-    other:   ['콜라보레이션', '기타 영웅'],
-  };
+  const tabFactions = HERO_FACTION_ORDER;
 
   useEffect(() => {
     const list = tabFactions[activeTab] || [];

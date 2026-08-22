@@ -12,7 +12,14 @@ export function useUserProfile() {
   return ctx;
 }
 
-const EMPTY_PROFILE = { nickname: '', photoURL: null, totalwarTier: 'normal', destructionScore: 0, hubId: null };
+const EMPTY_PROFILE = {
+  nickname: '',
+  photoURL: null,
+  totalwarTier: 'normal',
+  arenaTier: 'bronze',
+  destructionScore: 0,
+  hubId: null,
+};
 
 export function UserProfileProvider({ children }) {
   const [authUser, setAuthUser] = useState(null);

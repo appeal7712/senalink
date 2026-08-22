@@ -13,7 +13,7 @@ import { buildOptionCode } from './HeroGearPanel';
 import { backdropDismissProps } from '../utils/backdropDismiss';
 import { closeOverlayFromUI, pushOverlay } from '../utils/overlayHistory';
 import CopyNotice from './lounge/CopyNotice';
-import { copyNodePng } from '../lib/copyNodeImage';
+import { shareSettingPng, warmSettingCapture } from '../lib/copyNodeImage';
 import HeroPortraitCard from './HeroPortraitCard';
 
 /** 이미 body에 떠 있는 modal-scrim을 동기적으로 숨김 (다음 페인트 전에 처리) */
@@ -146,6 +146,7 @@ export default function InGameDeckCard({
   contentMode = 'pve',
   reservedSkills = [],
   onReservationChange,
+  maxReservations = 3,
   slotCount = 5,
   hidePet = false,
   maxHeroes = null,
@@ -311,6 +312,14 @@ export default function InGameDeckCard({
   const closeReservationModal = () => closeStackedSubModal(setIsReservationModalOpen);
 
   useEffect(() => {
+    if (!isGearOverviewOpen) return;
+    const id = window.setTimeout(() => {
+      warmSettingCapture(settingCaptureRef.current);
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [isGearOverviewOpen]);
+
+  useEffect(() => {
     if (!subModalOpen) return;
     pushOverlay(() => {
       setIsFormationModalOpen(false);
@@ -332,10 +341,17 @@ export default function InGameDeckCard({
     if (shareBusy) return;
     setShareBusy(true);
     try {
-      await copyNodePng(settingCaptureRef.current);
-      setShareNotice('세팅이 복사 되었습니다\n붙여넣기로 공유 해보세요');
+      const result = await shareSettingPng(settingCaptureRef.current);
+      if (result.method === 'clipboard') {
+        setShareNotice('세팅이 복사 되었습니다\n붙여넣기로 공유 해보세요');
+      } else if (result.method === 'share') {
+        setShareNotice('세팅 이미지를 공유했습니다');
+      } else if (result.method === 'download') {
+        setShareNotice('이미지 복사를 지원하지 않아\nPC 포맷 PNG로 저장했습니다');
+      }
+      /* cancelled: 안내 없이 종료 */
     } catch {
-      setShareNotice('이미지 복사에 실패했습니다. 브라우저가 이미지 복사를 막았을 수 있습니다.');
+      setShareNotice('세팅 이미지 만들기에 실패했습니다.\n잠시 후 다시 시도해 주세요.');
     } finally {
       setShareBusy(false);
     }
@@ -393,10 +409,10 @@ export default function InGameDeckCard({
                 marginLeft: 'auto',
                 display: 'inline-flex', alignItems: 'center', gap: '5px',
                 padding: '3px 8px', borderRadius: '7px', flexShrink: 0,
-                background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(74,222,128,0.45)'
+                background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)'
               }}>
                 <img src={setIcon} alt="" style={{ width: '14px', height: '14px' }} />
-                <span style={{ fontSize: '12.5px', fontWeight: 900, color: '#86efac' }}>{setName}</span>
+                <span style={{ fontSize: '12.5px', fontWeight: 900, color: 'var(--gold-light)' }}>{setName}</span>
               </div>
             </div>
             {optionCode && (
@@ -437,7 +453,7 @@ export default function InGameDeckCard({
         </div>
 
         <div style={{
-          background: 'rgba(192,132,252,0.1)', border: '1px solid rgba(192,132,252,0.35)',
+          background: 'rgba(0,0,0,0.35)', border: '1px solid var(--border-subtle)',
           borderRadius: '8px', padding: compact ? '6px 8px' : '8px 10px',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
           textAlign: 'center'
@@ -735,7 +751,7 @@ export default function InGameDeckCard({
                     fontSize: '11px', fontWeight: 800, padding: '1px 7px', borderRadius: '999px',
                     background: 'rgba(255,255,255,0.86)', color: '#161616',
                   }}>
-                    {(reservedSkills || []).filter(Boolean).length}/3
+                    {(reservedSkills || []).filter(Boolean).length}/{maxReservations}
                   </span>
                 )}
               </button>
@@ -1000,7 +1016,9 @@ export default function InGameDeckCard({
               <Icon name="target" size={19} color="var(--accent-cyan)" /> 스킬 예약
             </div>
             <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '18px', flexShrink: 0 }}>
-              {onReservationChange ? '아이콘을 눌러 최대 3개까지 예약하세요. 같은 아이콘을 다시 누르면 해제됩니다.' : 'PvP는 최대 3개의 스킬만 미리 예약할 수 있습니다.'}
+              {onReservationChange
+                ? `아이콘을 눌러 최대 ${maxReservations}개까지 예약하세요. 같은 아이콘을 다시 누르면 해제됩니다.`
+                : `최대 ${maxReservations}개의 스킬만 미리 예약할 수 있습니다.`}
             </div>
 
             <div style={{ minHeight: 0, overflowY: 'auto' }}>
@@ -1011,6 +1029,7 @@ export default function InGameDeckCard({
               onChange={onReservationChange}
               readOnly={!onReservationChange}
               maxHeroes={maxHeroes}
+              maxReservations={maxReservations}
             />
             </div>
 

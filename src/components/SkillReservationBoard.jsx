@@ -35,7 +35,8 @@ export function skillKeyLabel(key) {
   return key;
 }
 
-export function toggleReservationSlot(value, heroName, skillKey) {
+export function toggleReservationSlot(value, heroName, skillKey, maxSlots = 3) {
+  const limit = Math.max(1, Number(maxSlots) || 3);
   const cleaned = (value || []).filter(Boolean);
   const idx = cleaned.findIndex(v => v.heroName === heroName && reservationSkillKey(v) === skillKey);
   let next;
@@ -43,7 +44,7 @@ export function toggleReservationSlot(value, heroName, skillKey) {
     next = cleaned.filter((_, i) => i !== idx);
   } else {
     next = [...cleaned, { heroName, skillKey, dir: skillKey }];
-    if (next.length > 3) next = next.slice(next.length - 3);
+    if (next.length > limit) next = next.slice(next.length - limit);
   }
   return next.map((v, i) => ({
     ...v,
@@ -148,8 +149,10 @@ export default function SkillReservationBoard({
   readOnly = false,
   compact = false,
   maxHeroes = null,
+  maxReservations = 3,
 }) {
   const editable = !readOnly && !!onChange;
+  const slotLimit = Math.max(1, Number(maxReservations) || 3);
   const names = (heroNames || []).filter(Boolean).slice(0, maxHeroes || undefined);
   const reserved = (value || []).filter(Boolean);
 
@@ -182,7 +185,7 @@ export default function SkillReservationBoard({
     <div className="skill-reserve is-row">
       {editable && (
         <div className="skill-reserve-help">
-          스킬 아이콘을 순서대로 클릭해 최대 3개까지 예약하세요. 위=스킬2 · 아래=스킬1, 각성기는 오른쪽에 표시됩니다.
+          {`스킬 아이콘을 순서대로 클릭해 최대 ${slotLimit}개까지 예약하세요. 위=스킬2 · 아래=스킬1, 각성기는 오른쪽에 표시됩니다.`}
         </div>
       )}
 
@@ -248,7 +251,7 @@ export default function SkillReservationBoard({
                       editable={editable}
                       iconSize={iconSize}
                       badgeFont={badgeFont}
-                      onToggle={() => onChange(toggleReservationSlot(value, name, key))}
+                      onToggle={() => onChange(toggleReservationSlot(value, name, key, slotLimit))}
                     />
                   ))}
                 </div>
@@ -262,7 +265,7 @@ export default function SkillReservationBoard({
                       editable={editable}
                       iconSize={iconSize}
                       badgeFont={badgeFont}
-                      onToggle={() => onChange(toggleReservationSlot(value, name, 'awaken'))}
+                      onToggle={() => onChange(toggleReservationSlot(value, name, 'awaken', slotLimit))}
                     />
                   </div>
                 )}

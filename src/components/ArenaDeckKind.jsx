@@ -6,8 +6,11 @@ export const ARENA_DECK_KINDS = [
 ];
 
 export const META_DECK_KINDS = [
-  ...ARENA_DECK_KINDS,
+  { id: 'attack',  label: '공덱', text: '#ff6b6b', pill: '#ff7a7a' },
+  { id: 'magic',   label: '마덱', text: '#3b9eff', pill: '#5eb0ff' },
+  { id: 'defense', label: '방덱', text: '#12b981', pill: '#3dce9a' },
   { id: 'instant', label: '즉사덱', text: '#c084fc', pill: '#c4a0ff' },
+  { id: 'hybrid',  label: '하이브리드', text: '#eab308', pill: '#facc15' },
 ];
 
 export function metaDeckKindTheme(kind) {
@@ -19,13 +22,18 @@ export function normalizeArenaKind(kind) {
   return 'attack';
 }
 
+export function normalizeMetaDeckKind(kind) {
+  if (META_DECK_KINDS.some((k) => k.id === kind)) return kind;
+  return 'attack';
+}
+
 export function arenaKindTheme(kind) {
   const id = normalizeArenaKind(kind);
   return ARENA_DECK_KINDS.find(k => k.id === id) || ARENA_DECK_KINDS[0];
 }
 
 export function ArenaDeckKindBadge({ kind, size = 'sm' }) {
-  const k = arenaKindTheme(kind);
+  const k = metaDeckKindTheme(kind);
   return (
     <span
       className={`kind-pill ${size === 'sm' ? 'kind-pill--sm' : 'kind-pill--md'}`}

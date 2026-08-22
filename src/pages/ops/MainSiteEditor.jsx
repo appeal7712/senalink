@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSuperAdmin } from '../../context/SuperAdminContext';
 import { mergeSiteMain, saveSiteMain, useSiteMain } from '../../lib/siteMain';
 import { heroes } from '../../data/heroes';
+import { pets } from '../../data/pets';
 import Icon from '../../components/icons/Icon';
 import InGameDeckCard from '../../components/InGameDeckCard';
 import HeroGridPicker from '../../components/HeroGridPicker';
@@ -15,9 +16,22 @@ const ghostBtn = {
   background: 'rgba(8, 12, 22, 0.45)', color: '#fff', fontWeight: 800, cursor: 'pointer',
 };
 const ROLE_LABEL = { offensive: '공격형', magic: '마법형', defensive: '방어형', support: '지원형', universal: '만능형' };
+const NEWS_TAGS = ['라운지', '패치', '세나링크', '공지', '이벤트'];
+const resolvePetById = (petId) => pets.find((p) => p.id === petId) || pets[0];
 
 function clone(v) {
   return JSON.parse(JSON.stringify(v));
+}
+
+function emptyNewsItem() {
+  return {
+    id: `n_${Date.now()}`,
+    title: '',
+    body: '',
+    url: '',
+    date: new Date().toISOString().slice(0, 10).replace(/-/g, '.'),
+    tag: '세나링크',
+  };
 }
 
 function resolveHeroByName(name) {
@@ -69,6 +83,8 @@ export default function MainSiteEditor() {
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
   const [editingDeck, setEditingDeck] = useState(null);
+  /** null | { index: number|null, item } — 게시판형 글쓰기/수정 (카드 무한 증식 방지) */
+  const [newsComposer, setNewsComposer] = useState(null);
 
   const form = draft || content;
 
@@ -108,27 +124,48 @@ export default function MainSiteEditor() {
     setForm({ ...form, pickRates });
   };
 
-  const updateNews = (index, patch) => {
-    const news = clone(form.news || []);
-    news[index] = { ...news[index], ...patch };
-    setForm({ ...form, news });
+  const openNewsCreate = () => {
+    setNewsComposer({ index: null, item: emptyNewsItem() });
   };
 
-  const addNews = () => {
-    setForm({
-      ...form,
-      news: [...(form.news || []), {
-        id: `n_${Date.now()}`,
-        title: '',
-        url: '',
-        date: new Date().toISOString().slice(0, 10).replace(/-/g, '.'),
-        tag: '라운지',
-      }],
-    });
+  const openNewsEdit = (index) => {
+    const item = form.news?.[index];
+    if (!item) return;
+    setNewsComposer({ index, item: clone(item) });
+  };
+
+  const patchNewsComposer = (patch) => {
+    setNewsComposer((prev) => (prev ? { ...prev, item: { ...prev.item, ...patch } } : prev));
+  };
+
+  const commitNewsComposer = () => {
+    if (!newsComposer) return;
+    const title = String(newsComposer.item.title || '').trim();
+    if (!title) {
+      alert('제목을 입력해 주세요.');
+      return;
+    }
+    const nextItem = {
+      ...newsComposer.item,
+      title,
+      body: String(newsComposer.item.body || '').trim(),
+      url: String(newsComposer.item.url || '').trim(),
+      tag: newsComposer.item.tag || '세나링크',
+      date: newsComposer.item.date || emptyNewsItem().date,
+    };
+    const news = clone(form.news || []);
+    if (newsComposer.index == null) news.unshift(nextItem);
+    else news[newsComposer.index] = nextItem;
+    setForm({ ...form, news });
+    setNewsComposer(null);
   };
 
   const removeNews = (index) => {
+    const item = form.news?.[index];
+    if (!item) return;
+    if (!window.confirm(`「${item.title || '제목 없음'}」글을 삭제할까요?`)) return;
     setForm({ ...form, news: (form.news || []).filter((_, i) => i !== index) });
+    if (newsComposer?.index === index) setNewsComposer(null);
   };
 
   const pickRows = (() => {
@@ -136,6 +173,8 @@ export default function MainSiteEditor() {
     while (rows.length < 5) rows.push({ name: '', role: 'offensive', pickRate: '', winRate: '' });
     return rows;
   })();
+
+  const newsList = form.news || [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -238,6 +277,7 @@ export default function MainSiteEditor() {
                     embedded
                     teamName=""
                     formationId={deck.formationId}
+                    petObj={resolvePetById(deck.petId)}
                     heroList={(deck.heroNames || []).map((name, idx) => {
                       const baseHero = resolveHeroByName(name);
                       return baseHero ? { hero: baseHero, gearConfig: (deck.heroGearConfigs || [])[idx] } : name;
@@ -292,28 +332,120 @@ export default function MainSiteEditor() {
       </section>
 
       <section className="luxury-panel" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12, overflow: 'visible' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
           <div>
             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
               <Icon name="news" size={16} /> 세나리 뉴스 & 패치 브리핑
             </h3>
-            <div style={{ fontSize: 12, color: '#fff', marginTop: 4, textShadow: '0 1px 6px rgba(0,0,0,0.7)' }}>라운지 글 제목과 링크만 넣으면 됩니다. 메인 박스는 높이 고정, 글이 많으면 그 안에서 스크롤됩니다.</div>
-          </div>
-          <button type="button" style={ghostBtn} onClick={addNews}>글 추가</button>
-        </div>
-        {(form.news || []).map((n, i) => (
-          <div key={n.id || i} className="ops-glass-card">
-            <label className="ops-glass-label">제목
-              <input className="ops-glass-field" value={n.title || ''} onChange={(e) => updateNews(i, { title: e.target.value })} placeholder="라운지 글 제목" />
-            </label>
-            <label className="ops-glass-label">링크
-              <input className="ops-glass-field" value={n.url || ''} onChange={(e) => updateNews(i, { url: e.target.value })} placeholder="https://lounge..." />
-            </label>
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button type="button" style={ghostBtn} onClick={() => removeNews(i)}>삭제</button>
+            <div style={{ fontSize: 12, color: '#fff', marginTop: 4, textShadow: '0 1px 6px rgba(0,0,0,0.7)' }}>
+              슈퍼 관리자 전용 게시판입니다. 본문만 써도 되고(패치노트), 라운지 링크만 넣어도 됩니다. 「목록에 넣기」후 위쪽 「저장」으로 메인에 반영하세요.
             </div>
           </div>
-        ))}
+          <button
+            type="button"
+            className="btn-ops"
+            onClick={openNewsCreate}
+            disabled={!!newsComposer}
+            style={{ padding: '8px 12px', fontSize: 12 }}
+          >
+            <Icon name="plus" size={13} /> 글쓰기
+          </button>
+        </div>
+
+        {newsComposer && (
+          <div className="ops-glass-card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ fontSize: 13, fontWeight: 900, color: 'var(--gold-light)' }}>
+              {newsComposer.index == null ? '새 글 작성' : '글 수정'}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
+              <label className="ops-glass-label" style={{ gridColumn: '1 / -1' }}>제목
+                <input
+                  className="ops-glass-field"
+                  value={newsComposer.item.title || ''}
+                  onChange={(e) => patchNewsComposer({ title: e.target.value })}
+                  placeholder="예: 세나링크 v2026.08.22 패치 / 라운지 공지"
+                />
+              </label>
+              <label className="ops-glass-label">태그
+                <select
+                  className="ops-glass-field"
+                  value={newsComposer.item.tag || '세나링크'}
+                  onChange={(e) => patchNewsComposer({ tag: e.target.value })}
+                >
+                  {NEWS_TAGS.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </label>
+              <label className="ops-glass-label">날짜
+                <input
+                  className="ops-glass-field"
+                  value={newsComposer.item.date || ''}
+                  onChange={(e) => patchNewsComposer({ date: e.target.value })}
+                  placeholder="2026.08.22"
+                />
+              </label>
+            </div>
+            <label className="ops-glass-label">본문 (패치노트 · 선택)
+              <textarea
+                className="ops-glass-field"
+                rows={6}
+                value={newsComposer.item.body || ''}
+                onChange={(e) => patchNewsComposer({ body: e.target.value })}
+                placeholder={'링크 없이 여기다 패치노트를 적어도 됩니다.\n예:\n- 세팅 공유 PC 포맷 캡처\n- 공용 허브 공략 UI 정리'}
+                style={{ resize: 'vertical', minHeight: 120, lineHeight: 1.5 }}
+              />
+            </label>
+            <label className="ops-glass-label">외부 링크 (선택)
+              <input
+                className="ops-glass-field"
+                value={newsComposer.item.url || ''}
+                onChange={(e) => patchNewsComposer({ url: e.target.value })}
+                placeholder="있으면 입력 · 없으면 비워두기"
+              />
+            </label>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button type="button" style={ghostBtn} onClick={() => setNewsComposer(null)}>취소</button>
+              <button type="button" className="btn-ops" onClick={commitNewsComposer} style={{ padding: '8px 14px' }}>
+                목록에 넣기
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="ops-news-board">
+          {newsList.length === 0 && (
+            <div className="ops-news-board-empty">등록된 글이 없습니다. 「글쓰기」로 첫 글을 올려 보세요.</div>
+          )}
+          {newsList.map((n, i) => (
+            <div
+              key={n.id || i}
+              className={`ops-news-board-row${newsComposer?.index === i ? ' is-editing' : ''}`}
+            >
+              <div className="ops-news-board-main">
+                <div className="ops-news-board-meta">
+                  <span className="ops-news-board-tag">{n.tag || '라운지'}</span>
+                  <span className="ops-news-board-date">{n.date || '—'}</span>
+                  {n.body ? <span className="ops-news-board-kind">본문</span> : null}
+                  {n.url ? <span className="ops-news-board-kind">링크</span> : null}
+                </div>
+                <div className="ops-news-board-title">{n.title || '제목 없음'}</div>
+                {n.body ? (
+                  <div className="ops-news-board-body">{n.body}</div>
+                ) : null}
+                {n.url ? (
+                  <div className="ops-news-board-url" title={n.url}>{n.url}</div>
+                ) : null}
+              </div>
+              <div className="ops-news-board-actions">
+                <button type="button" className="btn-edit" onClick={() => openNewsEdit(i)} disabled={!!newsComposer && newsComposer.index !== i}>
+                  수정
+                </button>
+                <button type="button" className="btn-danger-solid" onClick={() => removeNews(i)}>
+                  삭제
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
       {editingDeck && (

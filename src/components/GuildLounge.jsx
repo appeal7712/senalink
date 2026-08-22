@@ -29,6 +29,7 @@ import { backdropDismissProps } from '../utils/backdropDismiss';
 import { closeOverlayFromUI, collapseOverlayHistory, pushHubTab, pushOverlay } from '../utils/overlayHistory';
 import { parseInviteCode } from '../lib/invite';
 import ModalScrim from './ModalScrim';
+import PublicProfileModal, { AuthorMeta } from './PublicProfileModal';
 
 // 정확 일치 우선 탐색 — 짧은 이름(예: '린')이 다른 영웅 이름(예: '카린', '아일린')의
 // 부분 문자열로 오탐되는 것을 방지하기 위해 느슨한 부분일치는 최후 수단으로만 사용
@@ -267,6 +268,7 @@ export default function GuildLounge() {
   const [expeditionAssignments, setExpeditionAssignments] = useState(EMPTY_ASSIGNMENTS);
   const [assignModalBoss, setAssignModalBoss] = useState(null);
   const [inspectingCounter, setInspectingCounter]   = useState(null);
+  const [profileUid, setProfileUid] = useState(null);
   const [inviteJoinOpen, setInviteJoinOpen] = useState(() => !!parseInviteCode(window.location.search));
   const pendingInvite = useMemo(() => parseInviteCode(window.location.search), []);
   const buildsReady = useRef(false);
@@ -606,6 +608,7 @@ export default function GuildLounge() {
       title: buildTitle,
       decks,
       author: guildRoom.myNickname,
+      authorId: me?.id || authUser?.uid || '',
       updatedAt: now,
       likedBy: likedByList((totalwarBuilds[editingTotalwarTier] || []).find(b => b.id === (editingTotalwarId || ''))),
     };
@@ -821,6 +824,7 @@ export default function GuildLounge() {
             [editingExpeditionRound]: captureCurrentRound(),
           },
           author: guildRoom.myNickname,
+          authorId: me?.id || authUser?.uid || '',
           updatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
         }
       : editingCategory === 'totalwar'
@@ -840,6 +844,7 @@ export default function GuildLounge() {
           speedIgnoredNames: editingSpeedIgnored,
           heroGearConfigs: heroGearConfigs,
           author: guildRoom.myNickname,
+          authorId: me?.id || authUser?.uid || '',
           updatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
           likedBy: likedByList(editingBuild),
         };
@@ -907,6 +912,16 @@ export default function GuildLounge() {
       handleStartEditBuild(build, category);
     };
 
+    const requestDelete = () => {
+      if (!canEditBuilds) {
+        alert('허브에 입장한 멤버만 공략을 삭제할 수 있습니다.');
+        return;
+      }
+      if (!confirm('이 결투장&상급 결투장 공략을 삭제할까요?')) return;
+      setArenaBuilds((prev) => prev.filter((b) => b.id !== build.id));
+      logBuildHistory('delete_build', build.title || build.id, 'arena 공략');
+    };
+
     return (
       <div key={build.id} className="luxury-panel build-panel" style={arenaKind ? {
         boxShadow: `inset 3px 0 0 ${arenaKind.text}`,
@@ -916,6 +931,7 @@ export default function GuildLounge() {
             embedded
             teamName=""
             formationId={build.formationId}
+            petObj={resolvePetById(build.petId)}
             heroList={(build.heroNames || []).map((name, idx) => {
               const baseHero = resolveHeroByName(name);
               return baseHero ? { hero: baseHero, gearConfig: (build.heroGearConfigs || [])[idx] } : name;
@@ -944,9 +960,12 @@ export default function GuildLounge() {
                 {arenaKind ? <ArenaDeckKindBadge kind={build.deckKind} /> : null}
                 <h3 className="build-title-name">{build.title}</h3>
               </div>
-              <div className="build-title-meta">
-                수정 및 고정자: <strong>{build.author}</strong> ({build.updatedAt})
-              </div>
+              <AuthorMeta
+                author={build.author}
+                authorId={build.authorId}
+                updatedAt={build.updatedAt}
+                onOpenProfile={setProfileUid}
+              />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: 'auto' }}>
               {category === 'arena' && (
@@ -963,6 +982,15 @@ export default function GuildLounge() {
                   className="btn-edit"
                 >
                   <Icon name="edit" size={14} /> 수정
+                </button>
+              )}
+              {category === 'arena' && canEditBuilds && (
+                <button
+                  type="button"
+                  onClick={requestDelete}
+                  className="btn-danger-solid"
+                >
+                  <Icon name="close" size={14} /> 삭제
                 </button>
               )}
             </div>
@@ -1098,9 +1126,12 @@ export default function GuildLounge() {
         }}>
           <div style={{ minWidth: 0, flex: '1 1 180px' }}>
             <h3 className="build-title-name">{build.title}</h3>
-            <div className="build-title-meta">
-              수정 및 고정자: <strong>{build.author}</strong> ({build.updatedAt})
-            </div>
+            <AuthorMeta
+              author={build.author}
+              authorId={build.authorId}
+              updatedAt={build.updatedAt}
+              onOpenProfile={setProfileUid}
+            />
           </div>
           <button
             type="button"
@@ -1385,6 +1416,7 @@ export default function GuildLounge() {
             setTotalwarBuilds(prev => ({ ...prev, [tierId]: (prev[tierId] || []).filter(b => b.id !== id) }));
             logBuildHistory('delete_build', title || id, `총력전 ${tierId}`);
           }}
+          onOpenProfile={setProfileUid}
         />
       )}
 
@@ -1591,10 +1623,6 @@ export default function GuildLounge() {
               </div>
               
               <div className="editing-build-author-row" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <span style={{ fontSize: '11px', color: '#fff' }}>
-                  작성자: <strong style={{ color: 'var(--accent-cyan)' }}>{guildRoom.myNickname}</strong>
-                  {' '}({ROLE_LABEL[myRole] || myRole})
-                </span>
                 <button
                   type="button"
                   className="editing-build-modal-close editing-build-modal-close--desktop"
@@ -1982,6 +2010,10 @@ export default function GuildLounge() {
           }}
           onClose={() => setAssignModalBoss(null)}
         />
+      )}
+
+      {profileUid && (
+        <PublicProfileModal uid={profileUid} onClose={() => setProfileUid(null)} />
       )}
 
     </div>
