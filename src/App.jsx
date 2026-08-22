@@ -15,6 +15,18 @@ const CommunityPage = lazy(() => import('./pages/community/CommunityPage'));
 const EncyclopediaPage = lazy(() => import('./pages/encyclopedia/EncyclopediaPage'));
 const ToolsPage = lazy(() => import('./pages/tools/ToolsPage'));
 
+function RouteFallback() {
+  return (
+    <div className="container fade-in page-section" style={{ paddingTop: 48, opacity: 0.55 }}>
+      <div className="luxury-panel" style={{ padding: '28px 22px', minHeight: 120 }}>
+        <div style={{ height: 14, width: 96, background: 'rgba(255,255,255,0.12)', borderRadius: 4, marginBottom: 14 }} />
+        <div style={{ height: 22, width: '42%', background: 'rgba(255,255,255,0.16)', borderRadius: 4, marginBottom: 10 }} />
+        <div style={{ height: 12, width: '68%', background: 'rgba(255,255,255,0.08)', borderRadius: 4 }} />
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const { isSuperAdmin, authReady, adminReady } = useSuperAdmin();
   const [activeTab, setActiveTab] = useState(() => pathToPage(window.location.pathname));
@@ -54,7 +66,7 @@ export default function App() {
 
       <main className="app-main">
         {onOpsPath ? (
-          <Suspense fallback={null}>
+          <Suspense fallback={<RouteFallback />}>
             <OpsPage onOpenHub={() => go(PAGE.HUB)} />
           </Suspense>
         ) : (
@@ -64,13 +76,13 @@ export default function App() {
             )}
             {activeTab === PAGE.HUB && <HubPage />}
             {activeTab === PAGE.COMMUNITY && (
-              <Suspense fallback={null}><CommunityPage /></Suspense>
+              <Suspense fallback={<RouteFallback />}><CommunityPage /></Suspense>
             )}
             {activeTab === PAGE.TOOLS && (
-              <Suspense fallback={null}><ToolsPage /></Suspense>
+              <Suspense fallback={<RouteFallback />}><ToolsPage /></Suspense>
             )}
             {activeTab === PAGE.DEX && (
-              <Suspense fallback={null}><EncyclopediaPage /></Suspense>
+              <Suspense fallback={<RouteFallback />}><EncyclopediaPage /></Suspense>
             )}
           </>
         )}

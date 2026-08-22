@@ -1,5 +1,5 @@
 import {
-  collection, deleteDoc, doc, onSnapshot, query, setDoc, where,
+  collection, deleteDoc, doc, limit, onSnapshot, query, setDoc, where,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { COL, communityGuideDoc } from '../config/firestorePaths';
@@ -8,6 +8,9 @@ import { pets } from '../data/pets';
 import { normalizeMetaDeckKind } from '../components/ArenaDeckKind';
 import { normalizePvpMode } from '../components/PvpModeToggle';
 import { normalizeArenaTier } from '../data/arenaTiers';
+
+/** 섹션(또는 카테고리)당 실시간 구독 상한. 복합 인덱스 없이 section(+category)만 사용. */
+const GUIDE_LISTEN_LIMIT = 100;
 
 const padNames5 = (names = []) => {
   const next = (names || []).map((n) => n || '');
@@ -96,8 +99,12 @@ export function normalizeCommunityGuide(raw = {}, id = '') {
 }
 
 export function subscribeCommunityGuides({ section, category, contentKey }, onData, onError) {
-  // section 단일 조건만 사용해 복합 인덱스 없이 동작. category/contentKey 는 클라이언트 필터.
-  const q = query(collection(db, COL.COMMUNITY_GUIDES), where('section', '==', section));
+  // section + limit 만 사용(복합 인덱스·배포 대기 없음). category/contentKey·정렬은 클라.
+  const q = query(
+    collection(db, COL.COMMUNITY_GUIDES),
+    where('section', '==', section),
+    limit(GUIDE_LISTEN_LIMIT),
+  );
   return onSnapshot(
     q,
     (snap) => {

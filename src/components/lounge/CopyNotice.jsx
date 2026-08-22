@@ -5,7 +5,8 @@ export default function CopyNotice({ message, onClose }) {
   if (!message) return null;
   return (
     <ModalScrim
-      style={{ zIndex: 7200, padding: '16px' }}
+      /* 세팅 확인(8200)보다 위에 — 모바일에선 뒤에 가려져 ‘된 줄 모름’이 났음 */
+      style={{ zIndex: 10050, padding: '16px' }}
       {...backdropDismissProps(onClose)}
     >
       <div

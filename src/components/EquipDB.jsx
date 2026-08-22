@@ -81,7 +81,7 @@ export default function EquipDB() {
                 const eq = equipments.find((e) => e.name === name);
                 return (
                   <Chip key={name} active={setFilter === name} onClick={() => setSetFilter(name)}>
-                    {eq && <SafeImg src={eq.iconUrl} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} />}
+                    {eq && <SafeImg src={eq.iconUrl} alt="" loading="lazy" style={{ width: 18, height: 18, objectFit: 'contain' }} />}
                     {name}
                   </Chip>
                 );
@@ -118,7 +118,7 @@ export default function EquipDB() {
                       width: 56, height: 56, borderRadius: 12, background: '#07090e',
                       border: '1.5px solid var(--border-gold)', padding: 6, flexShrink: 0,
                     }}>
-                      <SafeImg src={eq.iconUrl} alt={eq.name} fallbackIcon="shield" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      <SafeImg src={eq.iconUrl} alt={eq.name} fallbackIcon="shield" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     </div>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: 18, fontWeight: 900, color: '#fff' }}>{eq.name}</div>
@@ -141,7 +141,7 @@ export default function EquipDB() {
                           {piece ? (
                             <>
                               <div style={{ width: 64, height: 64 }}>
-                                <SafeImg src={piece.iconUrl} alt={piece.name} fallbackIcon="swords" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                <SafeImg src={piece.iconUrl} alt={piece.name} fallbackIcon="swords" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                               </div>
                               <div style={{ fontSize: 11, fontWeight: 800, color: '#e2e8f0', textAlign: 'center', lineHeight: 1.35 }}>
                                 {piece.name.replace(/^빛나는\s*/, '')}
@@ -194,7 +194,7 @@ export default function EquipDB() {
                     background: r.bg, padding: 6,
                     boxShadow: `inset 0 0 0 1px ${r.border}`,
                   }}>
-                    <SafeImg src={acc.iconUrl} alt={acc.displayName || acc.name} fallbackIcon="ring" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    <SafeImg src={acc.iconUrl} alt={acc.displayName || acc.name} fallbackIcon="ring" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 11, fontWeight: 900, color: r.color, marginBottom: 2 }}>{r.label}</div>

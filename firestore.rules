@@ -38,10 +38,33 @@ service cloud.firestore {
     }
 
     // 첨부 이미지는 base64로 같은 문서에 들어간다. 문서 한도(1MiB)를 넘겨 글이 통째로
-    // 저장 실패하지 않도록 장수를 제한한다. 없는 필드는 통과시켜 기존 쓰기 경로를 깨지 않는다.
+    // 저장 실패하지 않도록 장수·장당 길이를 제한한다. 없는 필드는 통과시켜 기존 쓰기 경로를 깨지 않는다.
+    function feedImageSlotOk(i) {
+      return !('images' in request.resource.data)
+        || !(request.resource.data.images is list)
+        || request.resource.data.images.size() <= i
+        || (request.resource.data.images[i] is string
+            && request.resource.data.images[i].size() <= 280000);
+    }
+
     function validFeedImages() {
       return !('images' in request.resource.data)
-        || (request.resource.data.images is list && request.resource.data.images.size() <= 4);
+        || (
+          request.resource.data.images is list
+          && request.resource.data.images.size() <= 4
+          && feedImageSlotOk(0)
+          && feedImageSlotOk(1)
+          && feedImageSlotOk(2)
+          && feedImageSlotOk(3)
+        );
+    }
+
+    function validFeedWrite() {
+      return request.resource.data.title is string
+        && request.resource.data.title.size() <= 50
+        && request.resource.data.body is string
+        && request.resource.data.body.size() <= 2000
+        && validFeedImages();
     }
 
     match /admins/{uid} {
@@ -115,12 +138,17 @@ service cloud.firestore {
       allow delete: if isSuperAdmin() && listId in ['pve', 'pvp'];
     }
 
+    // 초대 인덱스: 해당 허브 관리자만 "새 코드" create 가능.
+    // 기존 코드 덮어쓰기(update)는 금지 → 다른 길드 초대 링크 하이재킹 차단.
+    // 가입 시 멤버 create 는 joinHub Callable(Admin SDK)만 수행.
     match /inviteIndex/{code} {
       allow get: if signedIn();
       allow list: if isSuperAdmin();
-      allow create, update: if signedIn()
+      allow create: if signedIn()
         && request.resource.data.keys().hasOnly(['hubId'])
-        && request.resource.data.hubId is string;
+        && request.resource.data.hubId is string
+        && canRunHub(request.resource.data.hubId);
+      allow update: if false;
       allow delete: if signedIn() && (isMaster(resource.data.hubId) || isSuperAdmin());
     }
 
@@ -144,13 +172,12 @@ service cloud.firestore {
       match /members/{uid} {
         allow get: if signedIn() && (uid == request.auth.uid || isHubMember(hubId) || isSuperAdmin());
         allow list: if isHubMember(hubId) || isSuperAdmin();
+        // role:member 신규 가입은 joinHub Callable 만 허용.
+        // 허브 개설 시 길드마스터 문서만 클라이언트가 직접 create.
         allow create: if signedIn()
           && uid == request.auth.uid
-          && request.resource.data.role in ['member', 'master']
-          && (
-            request.resource.data.role == 'member'
-            || get(/databases/$(database)/documents/hubs/$(hubId)).data.masterId == request.auth.uid
-          );
+          && request.resource.data.role == 'master'
+          && get(/databases/$(database)/documents/hubs/$(hubId)).data.masterId == request.auth.uid;
         allow update: if isSuperAdmin()
           || isHubAdmin(hubId)
           || (signedIn() && uid == request.auth.uid
@@ -167,30 +194,20 @@ service cloud.firestore {
 
       match /notices/{noticeId} {
         allow read: if isHubMember(hubId) || isSuperAdmin();
-        allow create: if canRunHub(hubId)
-          && request.resource.data.title is string
-          && request.resource.data.title.size() <= 50
-          && request.resource.data.body is string
-          && request.resource.data.body.size() <= 2000
-          && validFeedImages();
+        allow create: if canRunHub(hubId) && validFeedWrite();
         allow update: if (canRunHub(hubId)
           || (isHubMember(hubId) && resource.data.authorId == request.auth.uid))
-          ;
+          && validFeedWrite();
         allow delete: if canRunHub(hubId)
           || (isHubMember(hubId) && resource.data.authorId == request.auth.uid);
       }
 
       match /posts/{postId} {
         allow read: if isHubMember(hubId) || isSuperAdmin();
-        allow create: if (isHubMember(hubId) || isSuperAdmin())
-          && request.resource.data.title is string
-          && request.resource.data.title.size() <= 50
-          && request.resource.data.body is string
-          && request.resource.data.body.size() <= 2000
-          && validFeedImages();
+        allow create: if (isHubMember(hubId) || isSuperAdmin()) && validFeedWrite();
         allow update: if (canRunHub(hubId)
           || (isHubMember(hubId) && resource.data.authorId == request.auth.uid))
-          ;
+          && validFeedWrite();
         allow delete: if canRunHub(hubId)
           || (isHubMember(hubId) && resource.data.authorId == request.auth.uid);
       }

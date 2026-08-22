@@ -233,7 +233,7 @@ export default function HeroDB() {
                         className={`hero-db-skill${isActive ? ' is-on' : ''}`}
                       >
                         <div className="hero-db-skill-face">
-                          <SafeImg src={skill.iconUrl} alt={skill.name} fallbackIcon="swords" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <SafeImg src={skill.iconUrl} alt={skill.name} fallbackIcon="swords" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
                         <span className="hero-db-skill-name">{skill.name}</span>
                         <span className="hero-db-skill-type">{getSkillCategoryName(skill, idx)}</span>

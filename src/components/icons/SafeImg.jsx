@@ -3,9 +3,18 @@ import Icon from './Icon';
 
 /**
  * 게임 자산(초상화/장비 아이콘 등) 로딩 실패 시 이니셜/아이콘 폴백을 보여주는 안전한 이미지.
- * 스크레이핑 데이터의 파일명 불일치(예: 누락된 장신구 아이콘) 대비용.
+ * 기본은 eager — lazy면 페이지 전환 직후 뷰포트 안에서도 늦게 뜨는 체감이 난다.
+ * 긴 목록(도감 그리드 등)만 loading="lazy" 를 넘긴다.
  */
-export default function SafeImg({ src, alt = '', fallbackIcon = 'user', style, className }) {
+export default function SafeImg({
+  src,
+  alt = '',
+  fallbackIcon = 'user',
+  style,
+  className,
+  loading = 'eager',
+  fetchPriority,
+}) {
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
@@ -33,8 +42,9 @@ export default function SafeImg({ src, alt = '', fallbackIcon = 'user', style, c
       key={src}
       src={src}
       alt={alt}
-      loading="lazy"
+      loading={loading}
       decoding="async"
+      fetchPriority={fetchPriority}
       className={className}
       style={style}
       onError={() => setFailed(true)}

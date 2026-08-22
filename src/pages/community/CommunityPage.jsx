@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Icon from '../../components/icons/Icon';
 import CommunityPvePanel from './CommunityPvePanel';
 import CommunityPvpPanel from './CommunityPvpPanel';
@@ -12,6 +12,16 @@ const tabs = [
 
 export default function CommunityPage() {
   const [tab, setTab] = useState(null);
+  const bodyRef = useRef(null);
+
+  useEffect(() => {
+    if (!tab || !bodyRef.current) return;
+    // 레이아웃 반영 후 스크롤 — 모바일에서 버튼만 바뀌고 아래로 안 가는 느낌 방지
+    const id = window.requestAnimationFrame(() => {
+      bodyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [tab]);
 
   return (
     <div className="container fade-in community-page">
@@ -20,9 +30,9 @@ export default function CommunityPage() {
           <span className="ops-tag" style={{ marginBottom: 12 }}>Community Hub</span>
           <h1 className="community-hero-title">공용 허브</h1>
           <p className="community-hero-copy">
-            누구나 덱을 공유할 수 있다.
+            PvP는 누구나 덱을 공유할 수 있고, PvE·티어리스트는 운영진이 관리합니다.
             <br />
-            나만의 덱을 공유 해보세요!
+            나만의 덱을 공유해 보세요!
           </p>
         </div>
 
@@ -49,7 +59,7 @@ export default function CommunityPage() {
       </div>
 
       {tab && (
-        <div className="community-body">
+        <div className="community-body" ref={bodyRef}>
           {tab === 'pvp' && <CommunityPvpPanel />}
           {tab === 'pve' && <CommunityPvePanel />}
           {tab === 'tierlist' && <CommunityTierPanel />}

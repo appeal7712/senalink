@@ -200,6 +200,19 @@ body:has(> .modal-scrim) #root::before {
   filter: blur(22px) saturate(130%);
 }
 
+/* 모달 열린 동안 뒤 페이지 스크롤 잠금 (PC·모바일 공통, ModalScrim ref-count) */
+html.body-scroll-locked,
+html.body-scroll-locked body {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+body.body-scroll-locked {
+  position: fixed;
+  width: 100%;
+  left: 0;
+  right: 0;
+}
+
 /*
   길드전 카운터 등: 덱 배치 위에 세팅 확인이 열리면 아래 스크림 숨김
   (실제 전환은 flushSync + display:none 으로 같은 페인트에 처리)
@@ -5993,18 +6006,49 @@ h1, h2, h3 {
 .community-body {
   margin-top: 16px;
 }
-@media (max-width: 560px) {
+@media (max-width: 980px) {
+  /* 모바일만: 세로 스택 + 컴팩트. PC(981+) 3열 레이아웃은 그대로 */
   .community-hero-gates {
     grid-template-columns: 1fr;
+    gap: 8px;
+    padding-top: 12px;
   }
   .community-hero-gate {
-    min-height: 92px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    min-height: 0;
+    padding: 10px 14px;
+    text-align: left;
+    border-radius: 14px;
   }
-}
-
-@media (max-width: 900px) and (min-width: 561px) {
-  .community-hero-gates {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .community-hero-gate:hover {
+    transform: none;
+  }
+  .community-hero-gate:active {
+    background: rgba(255, 255, 255, 0.14);
+  }
+  .community-hero-gate-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+  .community-hero-gate-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+  .community-hero-gate-copy {
+    align-items: flex-start;
+  }
+  .community-hero-gate-label {
+    font-size: 14px;
+  }
+  .community-hero-gate-hint {
+    font-size: 11px;
+  }
+  .community-body {
+    scroll-margin-top: 72px;
   }
 }
 

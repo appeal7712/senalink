@@ -1,5 +1,6 @@
 import { Fragment, useState, useEffect, useRef } from 'react';
 import { createPortal, flushSync } from 'react-dom';
+import { lockBodyScroll, unlockBodyScroll } from '../lib/bodyScrollLock';
 import { heroes } from '../data/heroes';
 import { pets } from '../data/pets';
 import { formationsData } from '../data/formations';
@@ -310,6 +311,12 @@ export default function InGameDeckCard({
   const closeSpeedModal = () => closeStackedSubModal(setIsSpeedModalOpen);
   const openReservationModal = () => openStackedSubModal(setIsReservationModalOpen);
   const closeReservationModal = () => closeStackedSubModal(setIsReservationModalOpen);
+
+  useEffect(() => {
+    if (!subModalOpen) return undefined;
+    lockBodyScroll();
+    return () => unlockBodyScroll();
+  }, [subModalOpen]);
 
   useEffect(() => {
     if (!isGearOverviewOpen) return;

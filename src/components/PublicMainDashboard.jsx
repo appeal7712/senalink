@@ -20,12 +20,25 @@ const resolvePetById = (petId) => pets.find(p => p.id === petId) || pets[0];
 const ROLE_LABEL_KR = { offensive: '공격형', magic: '마법형', defensive: '방어형', support: '지원형', universal: '만능형' };
 
 export default function PublicMainDashboard({ onNavigateToLounge }) {
-  const { content } = useSiteMain();
+  const { content, loaded } = useSiteMain();
   const metaDecks = (content.metaDecks || []).filter(
     (d) => String(d.title || '').trim() || (d.heroNames || []).some((n) => String(n || '').trim())
   );
   const pickRates = content.pickRates || [];
   const news = content.news || [];
+
+  if (!loaded) {
+    return (
+      <div className="container fade-in page-section" aria-busy="true">
+        <div className="luxury-panel hero-banner hero-banner--center" style={{ minHeight: 180, opacity: 0.55 }}>
+          <div className="hero-copy">
+            <div style={{ height: 28, width: 200, background: 'rgba(255,255,255,0.14)', borderRadius: 6, margin: '0 auto 14px' }} />
+            <div style={{ height: 14, width: '55%', background: 'rgba(255,255,255,0.08)', borderRadius: 4, margin: '0 auto' }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container fade-in page-section">

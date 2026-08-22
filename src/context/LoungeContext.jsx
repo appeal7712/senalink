@@ -7,7 +7,6 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
-  deleteField,
   onSnapshot,
   query,
   orderBy,
@@ -50,7 +49,16 @@ const uid = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).sl
 const nowIso = () => new Date().toISOString();
 const ONE_HUB_MSG = '이미 길드 허브에 소속되어 있습니다. 다른 허브로 가려면 먼저 현재 허브에서 나가 주세요.';
 const NEED_NICKNAME_MSG = '먼저 마이페이지에서 닉네임을 설정해 주세요.';
-const NICK_TAKEN_MSG = '이 허브에 같은 닉네임을 쓰는 사람이 있습니다. 마이페이지에서 닉네임을 바꿔 주세요.';
+
+/** Callable HttpsError 메시지를 UI용으로 정리 */
+const callableErrorMessage = (err, fallback = '요청에 실패했습니다.') => {
+  const raw = String(err?.message || '').trim();
+  if (!raw) return fallback;
+  return raw
+    .replace(/^Firebase:\s*/i, '')
+    .replace(/\s*\(functions\/[^)]+\)\.?\s*$/i, '')
+    .trim() || fallback;
+};
 
 const MAX_FEED_IMAGES = 4;
 /** 첨부 이미지는 base64로 같은 문서에 저장된다. Firestore 문서 한도(1MiB)에 여유를 둔 상한. */
@@ -73,6 +81,23 @@ const clearUserHubPointer = (userId) => {
 const makeInviteCode = () => {
   const chunk = () => Math.random().toString(36).slice(2, 6).toUpperCase();
   return `7K-${chunk()}-${chunk()}`;
+};
+
+/**
+ * inviteIndex 는 update 금지(하이재킹 차단). 기존 코드와 충돌하면 create 가 실패하므로
+ * 새 코드를 골라 hub.inviteCode 와 인덱스를 맞춰 둔다.
+ */
+const claimInviteIndex = async (hubId, preferredCode = null) => {
+  let inviteCode = preferredCode || makeInviteCode();
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    try {
+      await setDoc(doc(db, 'inviteIndex', inviteCode), { hubId });
+      return inviteCode;
+    } catch {
+      inviteCode = makeInviteCode();
+    }
+  }
+  throw new Error('초대 코드 발급에 실패했습니다. 잠시 후 다시 시도해 주세요.');
 };
 
 const purgeOldHistory = (events) => {
@@ -267,7 +292,8 @@ export function LoungeProvider({ children }) {
       setMembersReady(true);
     }));
 
-    const noticesQ = query(collection(db, 'hubs', loungeId, 'notices'), orderBy('createdAt', 'desc'), limit(50));
+    // 피드·히스토리 limit: 입장 시 base64 이미지 포함 문서 읽기 비용 상한
+    const noticesQ = query(collection(db, 'hubs', loungeId, 'notices'), orderBy('createdAt', 'desc'), limit(40));
     unsubs.push(onSnapshot(noticesQ, (snap) => {
       const list = snap.docs.map(d => {
         const data = d.data();
@@ -281,7 +307,7 @@ export function LoungeProvider({ children }) {
       setNotices(list);
     }, (err) => console.error('notices snapshot', err)));
 
-    const postsQ = query(collection(db, 'hubs', loungeId, 'posts'), orderBy('createdAt', 'desc'), limit(100));
+    const postsQ = query(collection(db, 'hubs', loungeId, 'posts'), orderBy('createdAt', 'desc'), limit(50));
     unsubs.push(onSnapshot(postsQ, (snap) => {
       const list = snap.docs.map(d => {
         const data = d.data();
@@ -295,7 +321,7 @@ export function LoungeProvider({ children }) {
       setPosts(list);
     }, (err) => console.error('posts snapshot', err)));
 
-    const historyQ = query(collection(db, 'hubs', loungeId, 'history'), orderBy('createdAt', 'desc'), limit(200));
+    const historyQ = query(collection(db, 'hubs', loungeId, 'history'), orderBy('createdAt', 'desc'), limit(120));
     unsubs.push(onSnapshot(historyQ, (snap) => {
       const events = snap.docs.map(d => {
         const data = d.data();
@@ -358,7 +384,8 @@ export function LoungeProvider({ children }) {
       updateDoc(doc(db, 'hubs', loungeId, 'members', authUser.uid), patch).catch(() => {});
     };
     bump();
-    const timer = window.setInterval(bump, 300_000);
+    // 프레즌스 쓰기 스로틀 (기존 5분 → 15분). UI lastActive 표시만 조금 덜 잦아짐.
+    const timer = window.setInterval(bump, 900_000);
     const onVis = () => {
       if (document.visibilityState === 'visible') bump();
     };
@@ -505,8 +532,8 @@ export function LoungeProvider({ children }) {
     }
 
     const hubId = uid('lounge');
-    const inviteCode = makeInviteCode();
-    const passwordHash = await hashPassword(inviteCode);
+    let inviteCode = makeInviteCode();
+    let passwordHash = await hashPassword(inviteCode);
     const ts = nowIso();
 
     await setDoc(doc(db, 'hubs', hubId), {
@@ -538,9 +565,12 @@ export function LoungeProvider({ children }) {
     if (masterAvatar) masterData.avatarURL = masterAvatar;
     await setDoc(doc(db, 'hubs', hubId, 'members', authUser.uid), masterData);
 
-    await setDoc(doc(db, 'inviteIndex', inviteCode), {
-      hubId,
-    });
+    const claimed = await claimInviteIndex(hubId, inviteCode);
+    if (claimed !== inviteCode) {
+      inviteCode = claimed;
+      passwordHash = await hashPassword(inviteCode);
+      await updateDoc(doc(db, 'hubs', hubId), { inviteCode, passwordHash, updatedAt: nowIso() });
+    }
 
     await setDoc(doc(db, 'hubs', hubId, 'builds', 'main'), {
       siege: {},
@@ -584,89 +614,26 @@ export function LoungeProvider({ children }) {
     const code = parseInviteCode(inviteCode);
     if (!code) throw new Error('초대 코드를 확인할 수 없습니다. 코드 또는 초대 링크를 붙여넣어 주세요.');
 
-    const indexSnap = await getDoc(doc(db, 'inviteIndex', code));
-    if (!indexSnap.exists()) throw new Error('초대 코드를 찾을 수 없습니다.');
-
-    const { hubId } = indexSnap.data();
-    const ts = nowIso();
-    const memberRef = doc(db, 'hubs', hubId, 'members', authUser.uid);
-
-    // 멤버 목록은 그 허브의 멤버만 읽을 수 있다. 먼저 내 멤버 문서만 확인한다.
-    const mineSnap = await getDoc(memberRef);
-    const mine = mineSnap.exists() ? { id: mineSnap.id, ...mineSnap.data() } : null;
-
-    // 닉네임은 마이페이지 프로필이 유일한 출처다. 허브에서 따로 받지 않는다.
+    // 빠른 UX 사전 검사(실제 강제력은 joinHub Callable + Admin 트랜잭션).
     const userSnap = await getDoc(doc(db, COL.USERS, authUser.uid));
     const userData = userSnap.data() || null;
     const nick = String(userData?.nickname || '').trim();
     if (!nick) throw new Error(NEED_NICKNAME_MSG);
 
-    const currentHubId = userData?.hubId || null;
-    if (currentHubId && currentHubId !== hubId) {
-      throw new Error(ONE_HUB_MSG);
-    }
-
-    const readMembers = async () => {
-      const snap = await getDocs(collection(db, 'hubs', hubId, 'members'));
-      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    };
-    const nickTakenIn = (list) => list.some(m => m.id !== authUser.uid
-      && String(m.nickname || '').trim().toLowerCase() === nick.toLowerCase());
-
-    if (mine) {
-      if (nickTakenIn(await readMembers())) {
-        throw new Error(NICK_TAKEN_MSG);
-      }
-      const patch = {
-        lastActiveAt: ts,
-      };
-      if (mine.nickname !== nick) patch.nickname = nick;
-      if (mine.googleEmail || mine.googleName || mine.photoURL) {
-        patch.googleEmail = deleteField();
-        patch.googleName = deleteField();
-        patch.photoURL = deleteField();
-      }
-      await updateDoc(memberRef, patch);
-      if (mine.nickname !== nick) {
-        await pushHistory(hubId, nick, 'rename', nick, '닉네임 수정');
-      }
-      try { localStorage.setItem(LOUNGE_STORAGE_KEYS.inviteHint, code); } catch { /* ignore */ }
-      await writeUserHub(hubId);
-      setSession({ loungeId: hubId, memberId: authUser.uid });
-      return { id: hubId };
-    }
-
-    const joinData = {
-      nickname: nick,
-      role: 'member',
-      joinedAt: ts,
-      lastActiveAt: ts,
-    };
-    const joinAvatar = userData?.photoURL || authUser.photoURL || null;
-    if (joinAvatar) joinData.avatarURL = joinAvatar;
-
-    // 정원·닉네임 중복은 멤버가 된 뒤에만 확인할 수 있다. 먼저 들어간 뒤 위반이면 되돌린다.
-    // 이 시점엔 users/{uid}.hubId 를 아직 쓰지 않았으므로 되돌려도 남는 흔적이 없다.
-    await setDoc(memberRef, joinData);
+    let hubId;
     try {
-      const list = await readMembers();
-      if (nickTakenIn(list)) {
-        throw new Error(NICK_TAKEN_MSG);
-      }
-      if (list.length > MAX_HUB_MEMBERS) {
-        throw new Error(`길드 허브는 최대 ${MAX_HUB_MEMBERS}명까지입니다.`);
-      }
+      const res = await httpsCallable(functions, 'joinHub')({ inviteCode: code });
+      hubId = String(res?.data?.hubId || '').trim();
     } catch (err) {
-      await deleteDoc(memberRef).catch(() => {});
-      throw err;
+      throw new Error(callableErrorMessage(err, '가입에 실패했습니다. 잠시 후 다시 시도해 주세요.'));
     }
+    if (!hubId) throw new Error('가입에 실패했습니다. 잠시 후 다시 시도해 주세요.');
 
-    await pushHistory(hubId, nick, 'join', nick, '허브 입장');
     try { localStorage.setItem(LOUNGE_STORAGE_KEYS.inviteHint, code); } catch { /* ignore */ }
     await writeUserHub(hubId);
     setSession({ loungeId: hubId, memberId: authUser.uid });
     return { id: hubId };
-  }, [authUser, pushHistory, writeUserHub]);
+  }, [authUser, writeUserHub]);
 
   const leaveLounge = useCallback(async () => {
     if (session?.observer) {
@@ -745,10 +712,9 @@ export function LoungeProvider({ children }) {
     if (!isMaster && !isSuperAdmin) throw new Error('초대 코드 재발급은 길드마스터만 가능합니다.');
 
     const oldCode = activeLounge.inviteCode;
-    const inviteCode = makeInviteCode();
+    const inviteCode = await claimInviteIndex(loungeId);
 
     await updateDoc(doc(db, 'hubs', loungeId), { inviteCode, updatedAt: nowIso() });
-    await setDoc(doc(db, 'inviteIndex', inviteCode), { hubId: loungeId });
     if (oldCode && oldCode !== inviteCode) {
       try { await deleteDoc(doc(db, 'inviteIndex', oldCode)); } catch { /* ignore */ }
     }
