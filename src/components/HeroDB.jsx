@@ -124,8 +124,8 @@ export default function HeroDB() {
       {/* 3. 파노라마 3열 도감 뷰포트 (영웅 수량 뱃지 100% 삭제!) */}
       <div className="hero-db-grid">
         
-        {/* Col 1: 수직 세력 사이드바 (수량 뱃지 제거!) */}
-        <div className="luxury-panel hero-db-factions" style={{ padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {/* Col 1: 수직 세력 사이드바 */}
+        <div className="luxury-panel hero-db-factions" style={{ padding: '16px 12px', gap: '6px' }}>
           <div className="hero-db-factions-label" style={{ fontSize: '11px', color: 'var(--gold-primary)', fontWeight: 900, paddingLeft: '8px', marginBottom: '8px', letterSpacing: '2px' }}>
             FACTIONS
           </div>
@@ -138,7 +138,8 @@ export default function HeroDB() {
                   borderRadius: '8px', cursor: 'pointer', transition: 'all 0.18s ease',
                   background: isActive ? 'rgba(255,255,255,0.86)' : 'transparent',
                   color: isActive ? '#161616' : 'rgba(255,255,255,0.88)',
-                  border: isActive ? '1px solid transparent' : '1px solid transparent'
+                  border: isActive ? '1px solid transparent' : '1px solid transparent',
+                  flexShrink: 0,
                 }}>
                 {faction}
               </button>
@@ -146,41 +147,27 @@ export default function HeroDB() {
           })}
         </div>
 
-        {/* Col 2: 영웅 목록 선택 카드 (수량 뱃지 제거!) */}
-        <div className="luxury-panel hero-db-list" style={{ padding: '18px 16px', display: 'flex', flexDirection: 'column' }}>
-          <div className="hero-db-hero-grid" style={{
-            flex: 1, overflowY: 'auto',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))',
-            gap: '14px 12px',
-            padding: '4px 4px 8px',
-            alignItems: 'start',
-            justifyItems: 'center',
-          }}>
+        {/* Col 2: 영웅 목록 — 카드 비율 유지, 칸이 모자라면 내부 스크롤 */}
+        <div className="luxury-panel hero-db-list" style={{ padding: '18px 16px' }}>
+          <div className="hero-db-hero-grid">
             {filteredHeroes.map(h => {
               const isSelected = selectedHero?.id === h.id;
 
               return (
-                <div key={h.id} onClick={() => handleSelectHero(h)}
-                  style={{
-                    width: '100%', maxWidth: '100px', cursor: 'pointer',
-                    borderRadius: '10px', overflow: 'hidden',
-                    boxSizing: 'border-box',
-                    border: isSelected ? '2px solid var(--gold-primary)' : '2px solid rgba(255,255,255,0.14)',
-                    boxShadow: isSelected ? '0 0 0 1px rgba(236,232,224,0.35), 0 8px 18px rgba(0,0,0,0.45)' : '0 4px 8px rgba(0,0,0,0.4)',
-                    background: '#07090e',
-                  }}>
-
-                  <div style={{ position: 'relative', width: '100%', containerType: 'inline-size' }}>
-                    <HeroPortraitCard
-                      hero={h}
-                      showStars={false}
-                      showRole
-                      showName
-                      cropNameBar={false}
-                    />
-                  </div>
-                </div>
+                <button
+                  key={h.id}
+                  type="button"
+                  className={`hero-db-pick${isSelected ? ' is-on' : ''}`}
+                  onClick={() => handleSelectHero(h)}
+                >
+                  <HeroPortraitCard
+                    hero={h}
+                    showStars={false}
+                    showRole
+                    showName
+                    cropNameBar={false}
+                  />
+                </button>
               );
             })}
           </div>

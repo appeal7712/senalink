@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import GNB from './components/GNB';
+import SiteFooter from './components/SiteFooter';
 import PublicMainPage from './pages/main/PublicMainPage';
 import HubPage from './pages/hub/HubPage';
 import ToastContainer from './components/Toast';
@@ -87,6 +88,7 @@ export default function App() {
           </>
         )}
       </main>
+      <SiteFooter onNavigate={go} />
       {!onOpsPath ? <SiteEntranceBanner /> : null}
       {!onOpsPath ? <NicknameGate /> : null}
       <ToastContainer />
