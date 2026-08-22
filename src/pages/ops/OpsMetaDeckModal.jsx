@@ -153,10 +153,10 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
               <PvpModeToggle mode={mode} onChange={setMode} />
             </div>
             <button type="button" onClick={onClose} style={{
-              background: 'rgba(239,68,68,0.2)', border: '1px solid var(--accent-red)', color: '#fff',
-              width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'none', border: 'none', color: '#fff',
+              width: 30, height: 30, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <Icon name="close" size={14} />
+              <Icon name="closeBtn" size={26} />
             </button>
           </div>
         </div>

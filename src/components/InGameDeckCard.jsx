@@ -717,7 +717,7 @@ export default function InGameDeckCard({
                   color: '#fff',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                 }} title="속공 순서 보기/설정">
-                <Icon name="boot" size={16} /> 속공 순서
+                <Icon name="speed" size={16} /> 속공 순서
               </button>
             )}
             {!isInspectView && isPvp && !hideReservationBtn && (
@@ -827,7 +827,7 @@ export default function InGameDeckCard({
               <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--gold-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Icon name="paw" size={17} /> 펫 도감 장착 선택 ({pets.length}종)
               </h3>
-              <button onClick={() => dismissSubModal(closePetModal)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="close" size={18} /></button>
+              <button onClick={() => dismissSubModal(closePetModal)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="closeBtn" size={18} /></button>
             </div>
 
             {/* 펫 그리드 내부 스크롤 처리 */}
@@ -882,7 +882,7 @@ export default function InGameDeckCard({
             boxSizing: 'border-box'
           }}>
             <div style={{ fontSize: '16px', fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-              <Icon name="bolt" size={16} color="var(--gold-primary)" /> 속공 순서
+              <Icon name="speed" size={16} /> 속공 순서
             </div>
             {isEditMode && (
               <div style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.4, textAlign: 'center' }}>
@@ -1034,7 +1034,7 @@ export default function InGameDeckCard({
               <h3 style={{ fontSize: '22px', fontWeight: 900, color: 'var(--gold-primary)', display: 'flex', alignItems: 'center', gap: '9px' }}>
                 <Icon name="shield" size={20} /> 진형 선택
               </h3>
-              <button onClick={() => dismissSubModal(closeFormationModal)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="close" size={20} /></button>
+              <button onClick={() => dismissSubModal(closeFormationModal)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="closeBtn" size={20} /></button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -1096,8 +1096,8 @@ export default function InGameDeckCard({
                 </div>
               </div>
               <button type="button" className="no-capture" onClick={() => dismissSubModal(closeGearOverview)}
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-subtle)', borderRadius: '8px', color: '#fff', cursor: 'pointer', padding: '6px', display: 'flex', flexShrink: 0 }}>
-                <Icon name="close" size={16} />
+                style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 0, display: 'flex', flexShrink: 0 }}>
+                <Icon name="closeBtn" size={28} />
               </button>
             </div>
 
@@ -1119,7 +1119,7 @@ export default function InGameDeckCard({
               ) : (
                 <div className="setting-overview-section">
                   <div className="setting-overview-label">
-                    <Icon name="boot" size={14} /> 속공 순서
+                    <Icon name="speed" size={14} /> 속공 순서
                   </div>
                   {speedOrderList.length === 0 ? (
                     <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 700 }}>등록된 속공 순서가 없습니다.</div>

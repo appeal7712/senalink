@@ -394,7 +394,7 @@ function WritePostModal({ mode, onClose, onSubmit }) {
             {isNotice ? '공지 작성' : '커뮤니티 글 작성'}
           </h3>
           <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
-            <Icon name="close" size={18} />
+            <Icon name="closeBtn" size={18} />
           </button>
         </div>
 

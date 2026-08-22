@@ -88,7 +88,7 @@ function RankEditModal({ lounge, onClose, onSave }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#fff' }}>길드 순위 갱신</h3>
           <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
-            <Icon name="close" size={18} />
+            <Icon name="closeBtn" size={18} />
           </button>
         </div>
         <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, lineHeight: 1.5 }}>

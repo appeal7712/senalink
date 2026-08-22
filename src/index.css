@@ -2877,6 +2877,9 @@ h1, h2, h3 {
   letter-spacing: 0.02em;
   color: var(--gold-primary);
   margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 .skill-upgrade-block--enhance .skill-upgrade-label { color: #7dd3fc; }
 .skill-upgrade-block--t2 .skill-upgrade-label { color: #c4b5fd; }
@@ -3135,12 +3138,11 @@ h1, h2, h3 {
 }
 
 .editing-build-modal-close {
-  background: rgba(239, 68, 68, 0.2);
-  border: 1px solid var(--accent-red);
+  background: none;
+  border: none;
   color: #fff;
   width: 30px;
   height: 30px;
-  border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;

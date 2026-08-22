@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { skillKeywords, EFFECT_KEYWORDS } from '../data/keywords';
+import Icon from './icons/Icon';
 
 /** "방어자세 (중첩)" → ["방어자세 (중첩)", "방어자세"] */
 function matchAliases(term) {
@@ -237,7 +238,9 @@ export function SkillUpgradeBlocks({ skill }) {
       )}
       {t2 ? (
         <div className="skill-upgrade-block skill-upgrade-block--t2">
-          <div className="skill-upgrade-label">2초월</div>
+          <div className="skill-upgrade-label">
+            <Icon name="transcend2" size={15} /> 2초월
+          </div>
           <div className="skill-upgrade-body">
             <SkillRichText text={t2} skillTooltips={skill.tooltips || {}} />
           </div>
@@ -245,7 +248,9 @@ export function SkillUpgradeBlocks({ skill }) {
       ) : null}
       {t6 ? (
         <div className="skill-upgrade-block skill-upgrade-block--t6">
-          <div className="skill-upgrade-label">6초월</div>
+          <div className="skill-upgrade-label">
+            <Icon name="transcend6" size={15} /> 6초월
+          </div>
           <div className="skill-upgrade-body">
             <SkillRichText text={t6} skillTooltips={skill.tooltips || {}} />
           </div>

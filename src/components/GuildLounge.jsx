@@ -1430,8 +1430,8 @@ export default function GuildLounge() {
                 총력전 팀 선택 · {(TOTALWAR_TIERS.find(t => t.id === editingTotalwarTier) || {}).label || ''} 등급
               </h3>
               <button type="button" onClick={closeTotalwarTeamPick}
-                style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid var(--accent-red)', color: '#fff', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name="close" size={14} />
+                style={{ background: 'none', border: 'none', color: '#fff', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="closeBtn" size={26} />
               </button>
             </div>
             <div>
@@ -1509,7 +1509,7 @@ export default function GuildLounge() {
                     onClick={closeEditorModal}
                     title="모달 닫기"
                   >
-                    <Icon name="close" size={14} />
+                    <Icon name="closeBtn" size={26} />
                   </button>
                 </div>
                 <div className="editing-build-title-input-row" style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, maxWidth: '540px' }}>
@@ -1601,7 +1601,7 @@ export default function GuildLounge() {
                   onClick={closeEditorModal}
                   title="모달 닫기"
                 >
-                  <Icon name="close" size={14} />
+                  <Icon name="closeBtn" size={26} />
                 </button>
               </div>
             </div>
@@ -2034,7 +2034,7 @@ function ExpeditionAssignModal({ bossId, bossLabel, accentColor, members, assign
             <span style={{ color: accentColor }}>파괴의 그림자 · {bossLabel}</span> 길드원 배치
           </h3>
           <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
-            <Icon name="close" size={18} />
+            <Icon name="closeBtn" size={18} />
           </button>
         </div>
 

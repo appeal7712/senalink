@@ -18,7 +18,9 @@ const ROLE_LABEL_KR = { offensive: '공격형', magic: '마법형', defensive: '
 
 export default function PublicMainDashboard({ onNavigateToLounge }) {
   const { content } = useSiteMain();
-  const metaDecks = content.metaDecks || [];
+  const metaDecks = (content.metaDecks || []).filter(
+    (d) => String(d.title || '').trim() || (d.heroNames || []).some((n) => String(n || '').trim())
+  );
   const pickRates = content.pickRates || [];
   const news = content.news || [];
 

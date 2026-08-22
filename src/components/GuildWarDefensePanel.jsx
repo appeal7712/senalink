@@ -449,13 +449,13 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                 type="button"
                 onClick={closeDefenseModal}
                 style={{
-                  background: 'rgba(239,68,68,0.2)', border: '1px solid var(--accent-red)', color: '#fff',
-                  width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer',
+                  background: 'none', border: 'none', color: '#fff',
+                  width: '30px', height: '30px', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                 }}
                 title="모달 닫기"
               >
-                <Icon name="close" size={14} />
+                <Icon name="closeBtn" size={26} />
               </button>
             </div>
 

@@ -408,13 +408,13 @@ export default function GuildWarAttackPanel({
                 type="button"
                 onClick={closeTargetModal}
                 style={{
-                  background: 'rgba(239,68,68,0.2)', border: '1px solid var(--accent-red)', color: '#fff',
-                  width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer',
+                  background: 'none', border: 'none', color: '#fff',
+                  width: '30px', height: '30px', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                 }}
                 title="모달 닫기"
               >
-                <Icon name="close" size={14} />
+                <Icon name="closeBtn" size={26} />
               </button>
             </div>
             <div>
@@ -451,13 +451,13 @@ export default function GuildWarAttackPanel({
                 type="button"
                 onClick={closeCounterModal}
                 style={{
-                  background: 'rgba(239,68,68,0.2)', border: '1px solid var(--accent-red)', color: '#fff',
-                  width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer',
+                  background: 'none', border: 'none', color: '#fff',
+                  width: '30px', height: '30px', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                 }}
                 title="모달 닫기"
               >
-                <Icon name="close" size={14} />
+                <Icon name="closeBtn" size={26} />
               </button>
             </div>
             <div>
@@ -508,7 +508,7 @@ export default function GuildWarAttackPanel({
                 fontSize: '17px', fontWeight: 900, display: 'flex', alignItems: 'flex-start', gap: '7px',
                 margin: 0, minWidth: 0, lineHeight: 1.35, overflowWrap: 'anywhere'
               }}><Icon name="swords" size={16} color="var(--accent-cyan)" /> {inspectingCounter.title}</h3>
-              <button onClick={closeInspectModal} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', flexShrink: 0, padding: 0 }}><Icon name="close" size={18} /></button>
+              <button onClick={closeInspectModal} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', flexShrink: 0, padding: 0 }}><Icon name="closeBtn" size={18} /></button>
             </div>
             <div className="build-title-meta" style={{ width: '100%' }}>등록: <strong>{inspectingCounter.author}</strong> ({inspectingCounter.updatedAt})</div>
 

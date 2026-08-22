@@ -29,26 +29,31 @@ function emptyPick() {
   return { name: '', role: 'offensive', pickRate: '', winRate: '' };
 }
 
+function emptyMetaDeck(i) {
+  return {
+    id: `m${i + 1}`,
+    kind: 'attack',
+    rank: '',
+    tier: '',
+    title: '',
+    usageRate: '',
+    type: '결투장',
+    formationId: 'balance',
+    heroNames: ['', '', '', '', ''],
+    desc: '',
+    reservedSkills: [],
+    heroGearConfigs: [],
+  };
+}
+
+/** 편집기가 항상 4칸을 기대하므로 개수는 맞추되, 빈 칸에 예시 덱을 채우지는 않는다. */
 function padMetaDecks(list) {
-  const source = Array.isArray(list) && list.length ? list : SITE_MAIN_DEFAULTS.metaDecks;
-  const decks = source.slice(0, 4).map((d) => ({
-    ...d,
-    kind: d.kind || 'attack',
+  const decks = (Array.isArray(list) ? list : []).slice(0, 4).map((d, i) => ({
+    ...emptyMetaDeck(i),
+    ...(d || {}),
+    kind: d?.kind || 'attack',
   }));
-  const template = SITE_MAIN_DEFAULTS.metaDecks[0];
-  while (decks.length < 4) {
-    const i = decks.length;
-    decks.push({
-      ...JSON.parse(JSON.stringify(template)),
-      id: `m${i + 1}`,
-      kind: 'attack',
-      title: '',
-      usageRate: '',
-      desc: '',
-      heroNames: ['', '', '', '', ''],
-      reservedSkills: [],
-    });
-  }
+  while (decks.length < 4) decks.push(emptyMetaDeck(decks.length));
   return decks;
 }
 
@@ -58,8 +63,9 @@ function padPickRates(list) {
   return rows;
 }
 
-export function mergeSiteMain(raw) {
-  if (!raw || typeof raw !== 'object') return { ...SITE_MAIN_DEFAULTS };
+export function mergeSiteMain(input) {
+  // 문서가 없어도 같은 정규화 경로를 타야 편집기가 기대하는 칸 수가 맞는다.
+  const raw = input && typeof input === 'object' ? input : {};
   const headline = !raw.headline || LEGACY_HEADLINES.includes(raw.headline)
     ? SITE_MAIN_DEFAULTS.headline
     : raw.headline;
@@ -86,8 +92,9 @@ export function mergeSiteMain(raw) {
 }
 
 export function useSiteMain() {
-  const [content, setContent] = useState(SITE_MAIN_DEFAULTS);
-  const [loaded, setLoaded] = useState(true);
+  // 스냅샷 도착 전에는 빈 골격만 들고 있는다. 표시용 데이터를 미리 채우면 화면에 스쳐 보인다.
+  const [content, setContent] = useState(() => mergeSiteMain(null));
+  const [loaded, setLoaded] = useState(false);
   const [fromServer, setFromServer] = useState(false);
 
   useEffect(() => {
@@ -96,12 +103,12 @@ export function useSiteMain() {
         setContent(mergeSiteMain(snap.data()));
         setFromServer(true);
       } else {
-        setContent({ ...SITE_MAIN_DEFAULTS });
+        setContent(mergeSiteMain(null));
         setFromServer(false);
       }
       setLoaded(true);
     }, () => {
-      setContent({ ...SITE_MAIN_DEFAULTS });
+      setContent(mergeSiteMain(null));
       setFromServer(false);
       setLoaded(true);
     });

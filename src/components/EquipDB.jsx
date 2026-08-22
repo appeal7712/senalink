@@ -237,7 +237,7 @@ export default function EquipDB() {
                       </div>
                     </div>
                     <button type="button" onClick={() => setSelectedAcc(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
-                      <Icon name="close" size={18} />
+                      <Icon name="closeBtn" size={18} />
                     </button>
                   </div>
                   <div style={{
@@ -283,7 +283,7 @@ export default function EquipDB() {
                 </div>
               </div>
               <button type="button" onClick={() => setSelectedSet(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
-                <Icon name="close" size={18} />
+                <Icon name="closeBtn" size={18} />
               </button>
             </div>
             <div style={{

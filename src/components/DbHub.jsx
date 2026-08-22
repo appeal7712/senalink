@@ -137,7 +137,7 @@ export default function DbHub() {
                   <h3 style={{ fontSize: 20, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
                     <Icon name="paw" size={18} /> {selectedPet.name}
                   </h3>
-                  <button type="button" onClick={() => setSelectedPet(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="close" size={20} /></button>
+                  <button type="button" onClick={() => setSelectedPet(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="closeBtn" size={20} /></button>
                 </div>
                 <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
                   <div style={{

@@ -195,7 +195,7 @@ export function LoungeCreateModal({ onClose, onCreated }) {
           <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Icon name="fortress" size={17} color="var(--gold-primary)" /> 허브 생성
           </h3>
-          <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="close" size={18} /></button>
+          <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="closeBtn" size={18} /></button>
         </div>
 
         <Field label="길드 이름">
@@ -298,7 +298,7 @@ export function LoungeJoinModal({ onClose, onJoined, initialCode = '' }) {
           <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Icon name="key" size={17} color="var(--accent-cyan)" /> 허브 입장
           </h3>
-          <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="close" size={18} /></button>
+          <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="closeBtn" size={18} /></button>
         </div>
 
         <p style={{ margin: 0, fontSize: '12px', color: '#fff', lineHeight: 1.55, fontWeight: 700 }}>

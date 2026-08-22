@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useSuperAdmin } from '../../context/SuperAdminContext';
-import { saveSiteMain, useSiteMain } from '../../lib/siteMain';
-import { SITE_MAIN_DEFAULTS } from '../../data/siteMain.defaults';
+import { mergeSiteMain, saveSiteMain, useSiteMain } from '../../lib/siteMain';
 import { heroes } from '../../data/heroes';
 import Icon from '../../components/icons/Icon';
 import InGameDeckCard from '../../components/InGameDeckCard';
@@ -148,8 +147,8 @@ export default function MainSiteEditor() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button type="button" onClick={() => { setForm(clone(SITE_MAIN_DEFAULTS)); setStatus('기본값을 불러왔습니다. 저장해야 반영됩니다.'); }} style={ghostBtn}>
-            기본값
+          <button type="button" onClick={() => { setForm(mergeSiteMain(null)); setStatus('내용을 비웠습니다. 저장해야 반영됩니다.'); }} style={ghostBtn}>
+            비우기
           </button>
           <button type="button" className="btn-ops" disabled={busy} onClick={onSave}>저장</button>
         </div>

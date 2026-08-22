@@ -473,7 +473,7 @@ function ModalShell({ title, onClose, children, wide }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#fff' }}>{title}</h3>
           <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
-            <Icon name="close" size={18} />
+            <Icon name="closeBtn" size={18} />
           </button>
         </div>
         {children}
