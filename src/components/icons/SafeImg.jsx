@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Icon from './Icon';
 
 /**
@@ -7,6 +7,10 @@ import Icon from './Icon';
  */
 export default function SafeImg({ src, alt = '', fallbackIcon = 'user', style, className }) {
   const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
 
   if (!src || failed) {
     const initial = alt ? alt.replace('(각성)', '').slice(0, 1) : '';
@@ -26,6 +30,7 @@ export default function SafeImg({ src, alt = '', fallbackIcon = 'user', style, c
 
   return (
     <img
+      key={src}
       src={src}
       alt={alt}
       loading="lazy"

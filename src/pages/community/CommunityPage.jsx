@@ -2,10 +2,12 @@ import { useState } from 'react';
 import Icon from '../../components/icons/Icon';
 import CommunityPvePanel from './CommunityPvePanel';
 import CommunityPvpPanel from './CommunityPvpPanel';
+import CommunityTierPanel from './CommunityTierPanel';
 
 const tabs = [
   { id: 'pvp', label: 'PvP 공략', hint: '결투장 · 상급 · 총력전', icon: 'swords' },
   { id: 'pve', label: 'PvE 공략', hint: '레이드 · 돌발 · 성장던전', icon: 'flask' },
+  { id: 'tierlist', label: '티어 리스트', hint: 'PVE · PVP 영웅 티어', icon: 'chart' },
 ];
 
 export default function CommunityPage() {
@@ -48,7 +50,9 @@ export default function CommunityPage() {
 
       {tab && (
         <div className="community-body">
-          {tab === 'pvp' ? <CommunityPvpPanel /> : <CommunityPvePanel />}
+          {tab === 'pvp' && <CommunityPvpPanel />}
+          {tab === 'pve' && <CommunityPvePanel />}
+          {tab === 'tierlist' && <CommunityTierPanel />}
         </div>
       )}
     </div>

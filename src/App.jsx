@@ -8,6 +8,7 @@ import NicknameGate from './components/NicknameGate';
 import { PAGE, navigateTo, pathToPage } from './config/routes';
 import { handleOverlayPopState, readHubTabFromState } from './utils/overlayHistory';
 import { useSuperAdmin } from './context/SuperAdminContext';
+import { applyPageSeo } from './lib/seo';
 
 const OpsPage = lazy(() => import('./pages/ops/OpsPage'));
 const CommunityPage = lazy(() => import('./pages/community/CommunityPage'));
@@ -32,6 +33,10 @@ export default function App() {
       window.removeEventListener('app:navigate', sync);
     };
   }, []);
+
+  useEffect(() => {
+    applyPageSeo(activeTab);
+  }, [activeTab]);
 
   const go = (page) => {
     navigateTo(page);

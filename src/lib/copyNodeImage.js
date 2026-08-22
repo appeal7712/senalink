@@ -166,6 +166,53 @@ function downloadPng(blob, filename = 'setting.png') {
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
+/** 노드를 PNG로 저장 (세팅 공유용 PC 강제폭과 분리 — 현재 보드 폭 기준) */
+export async function downloadNodePng(node, filename = 'tierlist.png') {
+  if (!node) throw new Error('캡처할 화면이 없습니다.');
+
+  const imageCache = buildImageDataCache(node);
+  const fontCssPromise = ensureFontCss(node);
+  const width = Math.max(node.scrollWidth, node.offsetWidth, 720);
+
+  const host = document.createElement('div');
+  host.className = 'setting-capture-host';
+  host.setAttribute('aria-hidden', 'true');
+
+  const clone = node.cloneNode(true);
+  clone.querySelectorAll('.no-capture').forEach((el) => el.remove());
+  applyImageDataCache(clone, imageCache);
+  clone.style.width = `${width}px`;
+  clone.style.maxWidth = `${width}px`;
+  clone.style.minWidth = `${width}px`;
+  clone.style.maxHeight = 'none';
+  clone.style.height = 'auto';
+
+  host.appendChild(clone);
+  document.body.appendChild(host);
+
+  try {
+    await waitFrame();
+    const fontEmbed = await fontCssPromise;
+    const height = Math.max(clone.scrollHeight, clone.offsetHeight, 1);
+    const blob = await toBlob(clone, {
+      pixelRatio: capturePixelRatio(),
+      backgroundColor: '#141311',
+      filter: skipCapture,
+      fontEmbedCSS: fontEmbed,
+      skipFonts: !fontEmbed,
+      cacheBust: false,
+      width,
+      height,
+      style: { transform: 'none', margin: '0' },
+    });
+    if (!blob) throw new Error('이미지를 만들지 못했습니다.');
+    downloadPng(blob, filename);
+    return blob;
+  } finally {
+    host.remove();
+  }
+}
+
 /**
  * PC 포맷 캡처 후 클립보드 → 공유 시트 → 다운로드
  */

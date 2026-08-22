@@ -195,6 +195,7 @@ function CommunityArenaSection({ arenaKind, bannerUrl }) {
               onEdit={setEditing}
               onDelete={handleDelete}
               onOpenProfile={setProfileUid}
+              collapsible
             />
           );
         })}

@@ -8,9 +8,11 @@ export const COL = {
   PUBLIC_GUILDS: 'publicGuilds',
   USERS: 'users',
   COMMUNITY_GUIDES: 'communityGuides',
+  COMMUNITY_TIER_LISTS: 'communityTierLists',
 };
 
 export const communityGuideDoc = (guideId) => [COL.COMMUNITY_GUIDES, guideId];
+export const communityTierListDoc = (listId) => [COL.COMMUNITY_TIER_LISTS, listId];
 
 export const SITE_MAIN_ID = 'main';
 

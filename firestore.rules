@@ -106,6 +106,15 @@ service cloud.firestore {
         );
     }
 
+    // 공용 허브 티어리스트 — 공개 열람, 슈퍼관리자만 수정
+    match /communityTierLists/{listId} {
+      allow read: if true;
+      allow create, update: if isSuperAdmin()
+        && listId in ['pve', 'pvp']
+        && request.resource.data.section == listId;
+      allow delete: if isSuperAdmin() && listId in ['pve', 'pvp'];
+    }
+
     match /inviteIndex/{code} {
       allow get: if signedIn();
       allow list: if isSuperAdmin();

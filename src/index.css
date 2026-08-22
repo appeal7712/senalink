@@ -3795,6 +3795,301 @@ h1, h2, h3 {
   color: rgba(255, 255, 255, 0.34);
 }
 
+/* ── Tier list maker ── */
+.tierlist {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.tierlist-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 22px 22px 20px;
+}
+.tierlist-eyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--gold-light);
+  margin-bottom: 6px;
+}
+.tierlist-hero h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+  font-family: var(--font-display);
+}
+.tierlist-hero p {
+  margin: 0;
+  max-width: 520px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.68);
+}
+.tierlist-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.tierlist-count {
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.7);
+}
+.tierlist-reset {
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.28);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.tierlist-reset:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+.tierlist-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.tierlist-notice {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  font-weight: 800;
+}
+.tierlist-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: 14px;
+  align-items: start;
+}
+.tierlist-capture {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  height: fit-content;
+}
+.tierlist-title-wrap {
+  padding: 2px 2px 4px;
+}
+.tierlist-title-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 900;
+  font-family: var(--font-display);
+  text-align: center;
+  outline: none;
+}
+.tierlist-title-input::placeholder {
+  color: rgba(255, 255, 255, 0.32);
+  font-weight: 800;
+}
+.tierlist-board {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tierlist-row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 8px;
+  align-items: stretch;
+  min-height: 72px;
+}
+.tierlist-rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+.tierlist-rank img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+.tierlist-drop {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 8px;
+  min-height: 72px;
+  padding: 10px;
+  border-radius: 14px;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.tierlist-drop.is-over,
+.tierlist-pool.is-over {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+}
+.tierlist-drop-empty {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.38);
+  padding: 8px 4px;
+}
+.tierlist-chip {
+  width: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: grab;
+  user-select: none;
+}
+.tierlist-chip:active { cursor: grabbing; }
+.tierlist-chip-face {
+  width: 52px;
+}
+.tierlist-chip-name {
+  width: 100%;
+  font-size: 9px;
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+.tierlist-pool-panel {
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.tierlist-pool-head {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+.tierlist-pool-head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.tierlist-search {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #07090e;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  box-sizing: border-box;
+}
+.tierlist-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tierlist-role {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.tierlist-role img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
+}
+.tierlist-role.is-on {
+  background: rgba(255, 255, 255, 0.88);
+  color: #161616;
+  border-color: transparent;
+}
+.tierlist-pool {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-sizing: border-box;
+}
+.tierlist-pool-empty {
+  width: 100%;
+  text-align: center;
+  padding: 36px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.45);
+}
+@media (max-width: 960px) {
+  .tierlist-layout {
+    grid-template-columns: 1fr;
+  }
+  .tierlist-pool-panel {
+    height: auto !important;
+    max-height: none;
+  }
+  .tierlist-pool {
+    min-height: 220px;
+    max-height: 280px;
+  }
+}
+@media (max-width: 720px) {
+  .tierlist-row {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+  .tierlist-rank img {
+    width: 34px;
+    height: 34px;
+  }
+  .tierlist-title-input {
+    font-size: 18px;
+  }
+}
+
 .gwcalc {
   --gw-our: #22c55e;
   --gw-enemy: #ff4d5e;
@@ -5627,7 +5922,7 @@ h1, h2, h3 {
 }
 .community-hero-gates {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   width: 100%;
   margin-top: 4px;
@@ -5704,6 +5999,455 @@ h1, h2, h3 {
   }
   .community-hero-gate {
     min-height: 92px;
+  }
+}
+
+@media (max-width: 900px) and (min-width: 561px) {
+  .community-hero-gates {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ── Community hub tier list (7k-db style, our assets) ── */
+.hub-tier {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.hub-tier-head {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 52px;
+}
+.hub-tier-modes {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 6px;
+  border-radius: 16px;
+  box-sizing: border-box;
+}
+.hub-tier-mode {
+  width: 108px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.26);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
+}
+.hub-tier-mode:hover:not(:disabled):not(.is-on) {
+  background: rgba(255, 255, 255, 0.34);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+  transform: translateY(-1px);
+}
+.hub-tier-mode:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.hub-tier-mode.is-on {
+  background: rgba(255, 255, 255, 0.92);
+  color: #161616;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+.hub-tier-mode.is-on:hover:not(:disabled) {
+  background: #fff;
+  transform: translateY(-1px);
+}
+.hub-tier-actions {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: min(42%, 280px);
+}
+@media (max-width: 640px) {
+  .hub-tier-head {
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+  }
+  .hub-tier-actions {
+    position: static;
+    transform: none;
+    max-width: none;
+    width: 100%;
+    justify-content: center;
+    order: -1;
+  }
+}
+.hub-tier-updated {
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.5);
+}
+.hub-tier-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.hub-tier-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.hub-tier-role img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+.hub-tier-role.is-on {
+  border-color: rgba(232, 197, 71, 0.55);
+  background: rgba(232, 197, 71, 0.14);
+  color: #fff;
+}
+.hub-tier-error {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 80, 80, 0.35);
+  background: rgba(255, 60, 60, 0.12);
+  color: #ffb4b4;
+  font-size: 12px;
+  font-weight: 800;
+}
+.hub-tier-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.hub-tier-layout.is-editing {
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+}
+.hub-tier-board-wrap {
+  padding: 12px;
+  overflow-x: auto;
+}
+.hub-tier-colhead,
+.hub-tier-row {
+  display: grid;
+  grid-template-columns: 64px repeat(var(--hub-tier-cols, 5), minmax(88px, 1fr));
+  gap: 8px;
+  align-items: stretch;
+  min-width: calc(64px + var(--hub-tier-cols, 5) * 96px);
+}
+.hub-tier-colhead {
+  margin-bottom: 8px;
+}
+.hub-tier-colhead-rank {
+  min-height: 1px;
+}
+.hub-tier-colhead-role {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.78);
+}
+.hub-tier-colhead-role img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+.hub-tier-board {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hub-tier-row.is-over .hub-tier-cell {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+}
+.hub-tier-rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  min-height: 88px;
+}
+.hub-tier-rank img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+.hub-tier-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 6px;
+  min-height: 88px;
+  padding: 8px;
+  border-radius: 14px;
+}
+.hub-tier-cell-empty {
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.28);
+  padding: 18px 4px;
+}
+.hub-tier-chip {
+  position: relative;
+  width: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  user-select: none;
+}
+.hub-tier-chip[draggable='true'] {
+  cursor: grab;
+}
+.hub-tier-chip-face {
+  width: 48px;
+}
+.hub-tier-chip-name {
+  width: 100%;
+  font-size: 9px;
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+.hub-tier-chip-x {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+.hub-tier-pool-panel {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  max-height: min(80vh, 820px);
+  overflow: hidden;
+}
+.hub-tier-pool-panel.is-over {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+.hub-tier-pool-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hub-tier-pool-head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 900;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.hub-tier-pool {
+  flex: 1 1 auto;
+  min-height: 200px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-sizing: border-box;
+}
+@media (max-width: 960px) {
+  .hub-tier-layout.is-editing {
+    grid-template-columns: 1fr;
+  }
+  .hub-tier-pool-panel {
+    max-height: 320px;
+  }
+}
+
+/* ── Community PvP collapsible guide cards (1 per row) ── */
+.community-pvp-card {
+  min-width: 0;
+  overflow: hidden;
+}
+.community-pvp-card-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  user-select: none;
+}
+.community-pvp-card-head.is-on {
+  background: rgba(236, 232, 224, 0.08);
+}
+.community-pvp-card-title {
+  flex: 0 1 200px;
+  min-width: 120px;
+  max-width: 220px;
+  font-size: 14px;
+  font-weight: 900;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.community-pvp-card-rule {
+  color: rgba(255, 255, 255, 0.22);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.community-pvp-card-heroes {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  align-items: flex-start;
+}
+.community-pvp-card-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 48px;
+}
+.community-pvp-card-hero-face {
+  width: 48px;
+  flex-shrink: 0;
+}
+.community-pvp-card-hero-name {
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
+  line-height: 1.2;
+}
+.community-pvp-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.community-pvp-card-tier {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+.community-pvp-card-tier img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+.community-pvp-card-author {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.community-pvp-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.community-pvp-card-body {
+  padding: 0 14px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.community-pvp-card-body.build-panel {
+  align-items: stretch;
+}
+.community-pvp-card-body .build-panel-body {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  justify-content: flex-start;
+}
+.community-pvp-card-body .build-panel-playbook {
+  flex: 1 1 auto;
+  min-height: 0;
+  justify-content: center;
+}
+.community-pvp-card-body .build-panel-playbook .skill-reserve {
+  flex: 0 0 auto;
+  justify-content: center;
+}
+.community-pvp-card-expanded-meta {
+  margin-bottom: 10px;
+  padding-top: 12px;
+  flex-shrink: 0;
+}
+@media (max-width: 900px) {
+  .community-pvp-card-head {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .community-pvp-card-rule {
+    display: none;
+  }
+  .community-pvp-card-title {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+  .community-pvp-card-actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
   }
 }
 
@@ -6186,6 +6930,12 @@ h1, h2, h3 {
   object-fit: cover;
   object-position: center 18%;
   filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.4));
+  opacity: 0;
+  pointer-events: none;
+}
+.community-surprise-view-boss.is-ready {
+  opacity: 1;
+  transition: opacity 0.12s ease;
 }
 /* 몸통이 아트 왼쪽이라 기본보다 약간만 오른쪽 — 직전에 과하게 민 것의 절반 */
 .community-surprise-view-boss--calistra {

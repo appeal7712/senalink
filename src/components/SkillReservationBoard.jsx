@@ -139,7 +139,7 @@ function SkillIconButton({
 
 /**
  * 인게임형 스킬 예약 (가로):
- * 초상화 | 위=스킬2 · 아래=스킬1 | 각성기 — 예약 순서는 스킬 아이콘 뱃지 1·2·3
+ * 초상화 | 위→아래: 각성기 · 스킬2 · 스킬1 — 예약 순서는 스킬 아이콘 뱃지 1·2·3
  */
 export default function SkillReservationBoard({
   heroNames = [],
@@ -185,7 +185,7 @@ export default function SkillReservationBoard({
     <div className="skill-reserve is-row">
       {editable && (
         <div className="skill-reserve-help">
-          {`스킬 아이콘을 순서대로 클릭해 최대 ${slotLimit}개까지 예약하세요. 위=스킬2 · 아래=스킬1, 각성기는 오른쪽에 표시됩니다.`}
+          {`스킬 아이콘을 순서대로 클릭해 최대 ${slotLimit}개까지 예약하세요. 위→아래: 각성기 · 스킬2 · 스킬1.`}
         </div>
       )}
 
@@ -209,7 +209,8 @@ export default function SkillReservationBoard({
             const awaken = skills.find(s => s.key === 'awaken');
             const skill1 = skills.find(s => s.key === 'upper');
             const skill2 = skills.find(s => s.key === 'down');
-            const basics = [skill2, skill1].filter(Boolean);
+            // 위→아래: 각성기 · 스킬2 · 스킬1 (각성 전원 편성 시 가로 공간 절약)
+            const stacked = [awaken, skill2, skill1].filter(Boolean);
 
             return (
               <div key={`${name}_${i}`} style={{
@@ -234,7 +235,7 @@ export default function SkillReservationBoard({
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '6px' }}>
-                  {basics.length === 0 && !awaken && (
+                  {stacked.length === 0 && (
                     <div style={{
                       width: `${iconSize}px`, height: `${iconSize}px`, borderRadius: '10px',
                       background: 'rgba(0,0,0,0.35)', border: '1px solid var(--border-subtle)',
@@ -242,7 +243,7 @@ export default function SkillReservationBoard({
                       fontSize: '11px', color: '#64748b', fontWeight: 800
                     }}>?</div>
                   )}
-                  {basics.map(({ key, skill }) => (
+                  {stacked.map(({ key, skill }) => (
                     <SkillIconButton
                       key={key}
                       skill={skill}
@@ -255,20 +256,6 @@ export default function SkillReservationBoard({
                     />
                   ))}
                 </div>
-
-                {awaken && (
-                  <div style={{ display: 'flex', alignItems: 'center', paddingBottom: '6px' }}>
-                    <SkillIconButton
-                      skill={awaken.skill}
-                      skillKey="awaken"
-                      order={findOrder(name, 'awaken')}
-                      editable={editable}
-                      iconSize={iconSize}
-                      badgeFont={badgeFont}
-                      onToggle={() => onChange(toggleReservationSlot(value, name, 'awaken', slotLimit))}
-                    />
-                  </div>
-                )}
               </div>
             );
           })}

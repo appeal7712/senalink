@@ -23,6 +23,26 @@ import {
 import { useSuperAdmin } from '../../context/SuperAdminContext';
 import { useUserProfile } from '../../context/UserProfileContext';
 
+/** 보스별 object-position 이 src 교체보다 먼저 바뀌면 1초간 어긋남 → key+로드 전 숨김 */
+function SurpriseBossArt({ content }) {
+  const [ready, setReady] = useState(false);
+
+  return (
+    <img
+      className={`community-surprise-view-boss community-surprise-view-boss--${content.key}${ready ? ' is-ready' : ''}`}
+      src={content.iconUrl}
+      alt={content.name}
+      decoding="async"
+      onLoad={() => setReady(true)}
+      ref={(node) => {
+        if (node?.complete && node.naturalWidth > 0 && !ready) {
+          queueMicrotask(() => setReady(true));
+        }
+      }}
+    />
+  );
+}
+
 export default function CommunityPvePanel() {
   const { isSuperAdmin } = useSuperAdmin();
   const { authUser, profile } = useUserProfile();
@@ -145,13 +165,7 @@ export default function CommunityPvePanel() {
             ))}
           </div>
           <div className="luxury-panel community-surprise-view">
-            {activeContent && (
-              <SafeImg
-                className={`community-surprise-view-boss community-surprise-view-boss--${activeContent.key}`}
-                src={activeContent.iconUrl}
-                alt={activeContent.name}
-              />
-            )}
+            {activeContent && <SurpriseBossArt key={activeContent.key} content={activeContent} />}
             <div className="community-surprise-view-name">{activeContent?.name}</div>
           </div>
         </div>

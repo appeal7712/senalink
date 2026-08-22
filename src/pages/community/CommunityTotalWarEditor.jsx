@@ -7,7 +7,6 @@ import HeroGearPanel, { emptyGearConfig, buildOptionCode } from '../../component
 import Icon from '../../components/icons/Icon';
 import ModalScrim from '../../components/ModalScrim';
 import PvpModeToggle, { normalizePvpMode } from '../../components/PvpModeToggle';
-import { emptyCommunityGuide } from '../../lib/communityGuides';
 import { backdropDismissProps } from '../../utils/backdropDismiss';
 
 const padNames5 = (names = []) => {
@@ -21,17 +20,6 @@ const padGear5 = (list = []) => Array.from({ length: 5 }, (_, i) => ({
   ...(list?.[i] || {}),
 }));
 
-function emptyDeck() {
-  return {
-    formationId: 'protect',
-    petId: pets[0]?.id || 'pet_1',
-    heroNames: ['', '', '', '', ''],
-    reservedSkills: [],
-    mode: '속공',
-    heroGearConfigs: padGear5(),
-  };
-}
-
 function resolveHeroByName(name) {
   if (!name || !String(name).trim()) return null;
   const raw = String(name);
@@ -42,36 +30,28 @@ function resolveHeroByName(name) {
 }
 
 /**
- * 공용 허브 총력전 에디터 — 길드 허브 총력전 editing-build-grid is-pvp 포맷과 동일.
- * GuildLounge / 길드 저장 로직은 건드리지 않음.
+ * 공용 허브 총력전 — 단일 팀 세팅 창 (팀 선택 모달에서 진입)
  */
 export default function CommunityTotalWarEditor({
-  initial,
+  team,
+  deck,
   deckCount,
-  authorName,
-  authorId,
-  onSave,
+  onChangeDeck,
+  onSelectTeam,
+  onBack,
   onClose,
 }) {
-  const [title, setTitle] = useState(initial.title || '');
-  const [team, setTeam] = useState(0);
-  const [decks, setDecks] = useState(() => {
-    const raw = Array.isArray(initial.decks) ? initial.decks : [];
-    const next = raw.map((d) => ({
-      ...emptyDeck(),
-      ...d,
-      heroNames: padNames5(d.heroNames),
-      heroGearConfigs: padGear5(d.heroGearConfigs),
-      reservedSkills: Array.isArray(d.reservedSkills) ? d.reservedSkills : [],
-      mode: normalizePvpMode(d.mode),
-    }));
-    while (next.length < deckCount) next.push(emptyDeck());
-    return next.slice(0, deckCount);
-  });
   const [slot, setSlot] = useState(0);
-  const [saving, setSaving] = useState(false);
 
-  const current = decks[team] || emptyDeck();
+  const current = {
+    formationId: deck?.formationId || 'protect',
+    petId: deck?.petId || pets[0]?.id || 'pet_1',
+    heroNames: padNames5(deck?.heroNames),
+    reservedSkills: Array.isArray(deck?.reservedSkills) ? deck.reservedSkills : [],
+    mode: normalizePvpMode(deck?.mode),
+    heroGearConfigs: padGear5(deck?.heroGearConfigs),
+  };
+
   const petObj = useMemo(
     () => pets.find((p) => p.id === current.petId) || pets[0],
     [current.petId],
@@ -79,7 +59,18 @@ export default function CommunityTotalWarEditor({
   const filledNames = (current.heroNames || []).filter(Boolean);
 
   const patchDeck = (patch) => {
-    setDecks((prev) => prev.map((d, i) => (i === team ? { ...d, ...patch } : d)));
+    const next = {
+      ...current,
+      ...patch,
+      heroNames: padNames5(patch.heroNames ?? current.heroNames),
+      heroGearConfigs: padGear5(patch.heroGearConfigs ?? current.heroGearConfigs).map((g) => ({
+        ...g,
+        optionCode: buildOptionCode(g) || g.optionCode || '',
+      })),
+      reservedSkills: (patch.reservedSkills ?? current.reservedSkills ?? []).filter(Boolean),
+      mode: normalizePvpMode(patch.mode ?? current.mode),
+    };
+    onChangeDeck?.(next);
   };
 
   const setHeroAt = (idx, name) => {
@@ -102,42 +93,8 @@ export default function CommunityTotalWarEditor({
     if (payload.name) setHeroAt(toIdx, payload.name);
   };
 
-  const handleSave = async () => {
-    const trimmed = title.trim();
-    if (!trimmed) {
-      alert('제목을 입력해 주세요.');
-      return;
-    }
-    try {
-      setSaving(true);
-      const normalizedDecks = decks.map((d) => ({
-        ...d,
-        heroNames: padNames5(d.heroNames),
-        heroGearConfigs: padGear5(d.heroGearConfigs).map((g) => ({
-          ...g,
-          optionCode: buildOptionCode(g) || g.optionCode || '',
-        })),
-        reservedSkills: (d.reservedSkills || []).filter(Boolean),
-        mode: normalizePvpMode(d.mode),
-      }));
-      await onSave(emptyCommunityGuide({
-        ...initial,
-        title: trimmed,
-        author: authorName,
-        authorId,
-        category: 'totalwar',
-        section: 'pvp',
-        decks: normalizedDecks,
-      }));
-    } catch (e) {
-      alert(e?.message || '저장에 실패했습니다.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return (
-    <ModalScrim style={{ zIndex: 3500, padding: 16, overflow: 'hidden' }} {...backdropDismissProps(onClose)}>
+    <ModalScrim style={{ zIndex: 3500, padding: 16, overflow: 'hidden' }} {...backdropDismissProps(onBack || onClose)}>
       <div
         className="luxury-panel glass-modal editing-build-modal"
         onClick={(e) => e.stopPropagation()}
@@ -155,31 +112,29 @@ export default function CommunityTotalWarEditor({
           <div className="editing-build-modal-header-main" style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, flexWrap: 'wrap' }}>
             <div className="editing-build-modal-title-row">
               <h3 className="editing-build-title" style={{ fontSize: 17, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', margin: 0 }}>
-                {initial.id ? '총력전 공략 수정' : '총력전 공략 생성'}
+                {team + 1}팀 세팅
               </h3>
-              <button type="button" className="editing-build-modal-close editing-build-modal-close--mobile" onClick={onClose} title="모달 닫기">
+              <button type="button" className="editing-build-modal-close editing-build-modal-close--mobile" onClick={onBack || onClose} title="모달 닫기">
                 <Icon name="closeBtn" size={26} />
               </button>
             </div>
-            <div className="editing-build-title-input-row" style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, maxWidth: 540 }}>
-              <span style={{ fontSize: 12, color: '#fff', fontWeight: 800, whiteSpace: 'nowrap' }}>제목:</span>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="총력전 공략 제목"
-                style={{ width: '100%', padding: '6px 12px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: 6, fontSize: 12, fontWeight: 800, boxSizing: 'border-box' }}
-              />
-            </div>
+            <button
+              type="button"
+              className="btn-edit"
+              onClick={onBack}
+              style={{ padding: '8px 12px', fontSize: 12, fontWeight: 900 }}
+            >
+              팀 선택
+            </button>
             <div style={{ width: 220, flexShrink: 0 }}>
               <PvpModeToggle mode={current.mode} onChange={(m) => patchDeck({ mode: m })} />
             </div>
             <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-              {decks.map((_, i) => (
+              {Array.from({ length: deckCount }, (_, i) => (
                 <button
                   key={i}
                   type="button"
-                  onClick={() => { setTeam(i); setSlot(0); }}
+                  onClick={() => onSelectTeam?.(i)}
                   style={{
                     padding: '8px 14px', fontSize: 13, fontWeight: 900, borderRadius: 8, cursor: 'pointer',
                     border: team === i ? '1.5px solid var(--gold-primary)' : '1px solid var(--border-subtle)',
@@ -195,7 +150,7 @@ export default function CommunityTotalWarEditor({
           </div>
 
           <div className="editing-build-author-row" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <button type="button" className="editing-build-modal-close editing-build-modal-close--desktop" onClick={onClose} title="모달 닫기">
+            <button type="button" className="editing-build-modal-close editing-build-modal-close--desktop" onClick={onBack || onClose} title="팀 선택으로">
               <Icon name="closeBtn" size={26} />
             </button>
           </div>
@@ -285,8 +240,8 @@ export default function CommunityTotalWarEditor({
         </div>
 
         <div style={{ padding: '12px 24px', background: 'rgba(255,255,255,0.04)', borderTop: '1px solid rgba(255,255,255,0.10)', flexShrink: 0 }}>
-          <button type="button" onClick={handleSave} disabled={saving} className="btn-ops" style={{ width: '100%', padding: 11, justifyContent: 'center', borderRadius: 12, fontSize: 14 }}>
-            <Icon name="save" size={15} /> {saving ? '저장 중…' : '공략 저장'}
+          <button type="button" onClick={onBack} className="btn-ops" style={{ width: '100%', padding: 11, justifyContent: 'center', borderRadius: 12, fontSize: 14 }}>
+            팀 선택으로 돌아가기
           </button>
         </div>
       </div>
