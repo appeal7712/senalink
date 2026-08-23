@@ -34,6 +34,12 @@ function ToolsFlyout({ isActive, onOpenTools }) {
     };
   }, [open]);
 
+  const openTool = (toolId) => {
+    onOpenTools(toolId);
+    setOpen(false);
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  };
+
   return (
     <div
       ref={wrapRef}
@@ -44,11 +50,7 @@ function ToolsFlyout({ isActive, onOpenTools }) {
       <button
         type="button"
         className={`gnb-link${isActive ? ' active' : ''}`}
-        onClick={() => {
-          onOpenTools();
-          setOpen(false);
-          if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-        }}
+        onClick={() => openTool()}
       >
         <Icon name="flask" size={14} />
         도구
@@ -70,9 +72,7 @@ function ToolsFlyout({ isActive, onOpenTools }) {
                 disabled={!tool.ready}
                 onClick={() => {
                   if (!tool.ready) return;
-                  onOpenTools();
-                  setOpen(false);
-                  if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+                  openTool(tool.id);
                 }}
               >
                 <span>{tool.label}</span>
@@ -87,13 +87,15 @@ function ToolsFlyout({ isActive, onOpenTools }) {
   );
 }
 
-export default function GNB({ activeTab, setActiveTab }) {
+export default function GNB({ activeTab, setActiveTab, onOpenTools }) {
   const menuItems = [
     { id: PAGE.MAIN, icon: 'globe', label: '메인' },
     { id: PAGE.HUB, icon: 'fortress', label: '길드 허브' },
     { id: PAGE.COMMUNITY, icon: 'users', label: '공용 허브' },
     { id: PAGE.DEX, icon: 'book', label: '도감' },
   ];
+
+  const openTools = onOpenTools || (() => setActiveTab(PAGE.TOOLS));
 
   return (
     <header className="gnb-header">
@@ -116,7 +118,7 @@ export default function GNB({ activeTab, setActiveTab }) {
           ))}
           <ToolsFlyout
             isActive={activeTab === PAGE.TOOLS}
-            onOpenTools={() => setActiveTab(PAGE.TOOLS)}
+            onOpenTools={openTools}
           />
           {menuItems.slice(3).map((item) => (
             <button
