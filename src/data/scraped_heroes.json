@@ -11604,7 +11604,7 @@
     "role": "magic",
     "attackType": "magic",
     "rarity": "rare",
-    "isAwakened": false,
+    "isAwakened": true,
     "baseStats": {
       "hp": 0,
       "speed": 0,

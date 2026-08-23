@@ -24,6 +24,14 @@ function resolvePetById(petId) {
   return pets.find((p) => p.id === petId) || pets[0];
 }
 
+/** 스킬 시전 순서 턴 라벨 (저장값이 1라여도 1턴으로 표시) */
+function formatSkillTurnLabel(round) {
+  const s = String(round || '').trim();
+  if (!s) return '';
+  const m = s.match(/(\d+)/);
+  return m ? `${Number(m[1])}턴` : s.replace(/라/g, '턴');
+}
+
 export default function CommunityGuideCard({
   guide,
   canEdit,
@@ -168,7 +176,7 @@ export default function CommunityGuideCard({
                         <div className="timeline-step-face">
                           {heroData ? <HeroPortraitCard hero={heroData} showStars showRole showName={false} /> : null}
                         </div>
-                        <div className="timeline-step-round">{seq.round}</div>
+                        <div className="timeline-step-round">{formatSkillTurnLabel(seq.round)}</div>
                         <div className="timeline-step-name">{seq.heroName}</div>
                         {dirLabel ? <div className="timeline-step-dir">{dirLabel}</div> : null}
                       </div>

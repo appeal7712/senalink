@@ -46,6 +46,14 @@ function resolveHeroByName(name) {
     || null;
 }
 
+/** 스킬 시전 순서 턴 라벨 (저장값이 1라여도 1턴으로 표시) */
+function formatSkillTurnLabel(round) {
+  const s = String(round || '').trim();
+  if (!s) return '';
+  const m = s.match(/(\d+)/);
+  return m ? `${Number(m[1])}턴` : s.replace(/라/g, '턴');
+}
+
 const fieldStyle = {
   width: '100%', padding: '8px 10px', background: '#07090e', border: '1px solid var(--border-gold)',
   color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 800, boxSizing: 'border-box', colorScheme: 'dark',
@@ -90,7 +98,7 @@ export default function CommunityGuideEditor({
   const [speedIgnored, setSpeedIgnored] = useState(initial.speedIgnoredNames || []);
   const [petId, setPetId] = useState(initial.petId || pets[0]?.id || '');
   const [slot, setSlot] = useState(0);
-  const [turnInput, setTurnInput] = useState('1라');
+  const [turnInput, setTurnInput] = useState('1턴');
   const [newHero, setNewHero] = useState('');
   const [newDir, setNewDir] = useState('upper');
   const [newNote, setNewNote] = useState('');
@@ -263,6 +271,7 @@ export default function CommunityGuideEditor({
           className={`editing-build-grid editing-build-modal-body ${contentMode === 'pvp' ? 'is-pvp' : 'is-pve'}`}
           style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px 20px', gap: 20, alignItems: 'stretch', boxSizing: 'border-box' }}
         >
+          <div className="editing-build-left-stack">
           <div className="editing-build-deck-slot" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <InGameDeckCard
               teamName=""
@@ -311,6 +320,7 @@ export default function CommunityGuideEditor({
                 boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', minHeight: 110, flex: 1,
               }}
             />
+          </div>
           </div>
 
           <div
@@ -440,7 +450,7 @@ export default function CommunityGuideEditor({
                           borderLeft: '3px solid var(--gold-primary)', flexShrink: 0, marginBottom: 4,
                         }}>
                           <div style={{ fontSize: 11, color: '#fff', fontWeight: 700 }}>
-                            {step.round} · {step.heroName} · {step.dir === 'upper' ? '위 스킬' : step.dir === 'down' ? '아래 스킬' : '각성'}
+                            {formatSkillTurnLabel(step.round)} · {step.heroName} · {step.dir === 'upper' ? '위 스킬' : step.dir === 'down' ? '아래 스킬' : '각성'}
                             {step.text ? ` — ${step.text}` : ''}
                           </div>
                           <button
@@ -459,8 +469,8 @@ export default function CommunityGuideEditor({
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 2 }}>
                       {Array.from({ length: 70 }, (_, i) => {
                         const n = i + 1;
-                        const r = `${n}라`;
-                        const selected = turnInput === r;
+                        const r = `${n}턴`;
+                        const selected = turnInput === r || Number(String(turnInput).match(/(\d+)/)?.[1]) === n;
                         return (
                           <button
                             key={r}

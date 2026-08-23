@@ -35,7 +35,7 @@ function MiniHeroTrio({ heroNames = [], resolveHeroByName, size = 34 }) {
         const h = filled[i] ? resolveHeroByName(filled[i]) : null;
         return (
           <div key={i} style={{
-            width: `${size}px`, marginLeft: i === 0 ? 0 : '-8px',
+            width: `${size}px`, marginLeft: i === 0 ? 0 : '2px',
             flexShrink: 0, zIndex: 3 - i
           }}>
             {h ? <HeroPortraitCard hero={h} showStars showRole showName={false} /> : null}

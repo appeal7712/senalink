@@ -56,6 +56,15 @@ function parseRoundNumber(round) {
   return m ? Number(m[1]) : 0;
 }
 
+/** 스킬 시전 순서 턴 라벨 표시 (저장값이 1라여도 1턴으로 보이게) */
+function formatSkillTurnLabel(round) {
+  const s = String(round || '').trim();
+  if (!s) return '';
+  const n = parseRoundNumber(s);
+  if (n > 0) return `${n}턴`;
+  return s.replace(/라/g, '턴');
+}
+
 function SkillDirBadge({ dir }) {
   const meta = dir === 'upper'
     ? { label: '위 스킬', bg: '#5eb0ff' }
@@ -73,7 +82,7 @@ function SkillDirBadge({ dir }) {
 }
 
 function RoundMark({ round }) {
-  return <span className="round-mark">{round}</span>;
+  return <span className="round-mark">{formatSkillTurnLabel(round)}</span>;
 }
 
 const defaultGear5 = () => Array.from({ length: 5 }, () => ({
@@ -399,7 +408,7 @@ export default function GuildLounge() {
   const [editingSkillTimeline, setEditingSkillTimeline] = useState([]);
   const [editingPvpMode, setEditingPvpMode]             = useState('속공');
   const [editingArenaKind, setEditingArenaKind]         = useState('attack');
-  const [turnNumberInput, setTurnNumberInput]           = useState('1라');
+  const [turnNumberInput, setTurnNumberInput]           = useState('1턴');
   const [newSkillHero, setNewSkillHero]               = useState('미호');
   const [newSkillDir, setNewSkillDir]                 = useState('upper');
   const [newSkillText, setNewSkillText]               = useState('');
@@ -420,7 +429,7 @@ export default function GuildLounge() {
 
   useEffect(() => {
     if (lastReservedRound > 0 && parseRoundNumber(turnNumberInput) < lastReservedRound) {
-      setTurnNumberInput(`${lastReservedRound}라`);
+      setTurnNumberInput(`${lastReservedRound}턴`);
     }
   }, [lastReservedRound, turnNumberInput]);
   
@@ -466,7 +475,7 @@ export default function GuildLounge() {
     setSelectedHeroGearIdx(0);
     setNewSkillHero(next.heroNames.find(Boolean) || '');
     const lastRound = Math.max(0, ...next.skillSequence.map(s => parseRoundNumber(s.round)));
-    setTurnNumberInput(`${lastRound > 0 ? lastRound : 1}라`);
+    setTurnNumberInput(`${lastRound > 0 ? lastRound : 1}턴`);
   };
 
   const switchExpeditionRound = (nextRound) => {
@@ -744,7 +753,7 @@ export default function GuildLounge() {
     setNewSkillHero((build.heroNames || [])[0] || '미호');
     setEditingPetId(build.petId || pets[0]?.id || 'pet_1');
     const lastRound = Math.max(0, ...(build.skillSequence || []).map(s => parseRoundNumber(s.round)));
-    setTurnNumberInput(`${lastRound > 0 ? lastRound : 1}라`);
+    setTurnNumberInput(`${lastRound > 0 ? lastRound : 1}턴`);
   };
 
   const handleSelectHeroFromBottom = (heroObj) => {
@@ -790,11 +799,11 @@ export default function GuildLounge() {
     if (!newSkillHero) return;
     const picked = parseRoundNumber(turnNumberInput) || 1;
     if (lastReservedRound > 0 && picked < lastReservedRound) {
-      alert(`${lastReservedRound}라 이전은 선택할 수 없습니다. ${lastReservedRound}라부터 추가해 주세요.`);
-      setTurnNumberInput(`${lastReservedRound}라`);
+      alert(`${lastReservedRound}턴 이전은 선택할 수 없습니다. ${lastReservedRound}턴부터 추가해 주세요.`);
+      setTurnNumberInput(`${lastReservedRound}턴`);
       return;
     }
-    const roundStr = `${picked}라`;
+    const roundStr = `${picked}턴`;
     const newStep = {
       round: roundStr,
       heroName: newSkillHero,
@@ -1013,7 +1022,7 @@ export default function GuildLounge() {
             <div className="build-panel-timeline">
               <div className="build-panel-timeline-title">
                 <Icon name="clock" size={15} />
-                스킬 시전 순서 타임라인 (최대 70라운드)
+                스킬 시전 순서 타임라인 (최대 70턴)
               </div>
               <div className="timeline-steps">
                 {(build.skillSequence || []).length === 0 && (
@@ -1639,6 +1648,7 @@ export default function GuildLounge() {
               className={`editing-build-grid editing-build-modal-body ${(CONTENT_META[editingCategory] || CONTENT_META.siege).mode === 'pvp' ? 'is-pvp' : 'is-pve'}`}
               style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px 20px', gap: '20px', alignItems: 'stretch', boxSizing: 'border-box' }}
             >
+              <div className="editing-build-left-stack">
               <div className="editing-build-deck-slot" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <InGameDeckCard
                       teamName={
@@ -1690,6 +1700,7 @@ export default function GuildLounge() {
                     boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', minHeight: '110px', flex: 1
                   }}
                 />
+              </div>
               </div>
 
               {/* 장비 세팅 */}
@@ -1904,25 +1915,25 @@ export default function GuildLounge() {
                   <div className="glass-inset editing-build-timeline-add" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
                     <div style={{ fontSize: '12px', fontWeight: 800, color: '#fff' }}>+ 스킬 시전 순서 추가</div>
 
-                    {/* 라운드 선택 버튼 */}
+                    {/* 턴 선택 버튼 */}
                     <div>
                       <div style={{ fontSize: '10px', color: '#fff', marginBottom: '3px', fontWeight: 800 }}>
-                        라운드 선택 (1~70라운드)
-                        {lastReservedRound > 0 ? ` · ${lastReservedRound}라 이전 잠금` : ''}
+                        턴 선택 (1~70턴)
+                        {lastReservedRound > 0 ? ` · ${lastReservedRound}턴 이전 잠금` : ''}
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '2px' }}>
                         {Array.from({ length: 70 }, (_, i) => {
                           const n = i + 1;
-                          const r = `${n}라`;
+                          const r = `${n}턴`;
                           const isLocked = lastReservedRound > 0 && n < lastReservedRound;
-                          const isSelected = turnNumberInput === r;
+                          const isSelected = turnNumberInput === r || parseRoundNumber(turnNumberInput) === n;
                           return (
                             <button
                               key={r}
                               type="button"
                               disabled={isLocked}
                               onClick={() => setTurnNumberInput(r)}
-                              title={isLocked ? `${lastReservedRound}라 이전은 선택할 수 없습니다` : undefined}
+                              title={isLocked ? `${lastReservedRound}턴 이전은 선택할 수 없습니다` : undefined}
                               style={{
                                 padding: '3px 0', fontSize: '9px', fontWeight: 800, borderRadius: '3px',
                                 border: isSelected ? '1px solid var(--gold-light)' : '1px solid rgba(255,255,255,0.08)',

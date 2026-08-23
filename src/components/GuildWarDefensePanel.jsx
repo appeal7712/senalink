@@ -311,6 +311,120 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
 
   const patchForm = (updates) => setForm(prev => ({ ...prev, ...updates }));
 
+  const sortedDefenses = gwDefenses.slice().sort((a, b) => b.tier - a.tier);
+  const leftCol = sortedDefenses.filter((_, i) => i % 2 === 0);
+  const rightCol = sortedDefenses.filter((_, i) => i % 2 === 1);
+
+  const renderDefenseCard = (raw, keyPrefix = '') => {
+    const d = flattenDefense(raw);
+    const isExpanded = expandedId === d.id;
+    const slots = padSlots5(d.heroSlots);
+    const heroNames5 = slots.map(s => s.primaryName);
+    const mode = d.mode === '내실' ? '내실' : '속공';
+    return (
+      <div key={`${keyPrefix}${d.id}`} className="luxury-panel gw-defense-card">
+        <div
+          className={`gw-defense-head${isExpanded ? ' is-on' : ''}`}
+          onClick={() => setExpandedId(isExpanded ? null : d.id)}
+        >
+          {!isExpanded && (
+            <>
+              <div className="gw-defense-heroes">
+                {slots.filter(s => s.primaryName).map((s, i) => {
+                  const h = resolveHeroByName(s.primaryName);
+                  return (
+                    <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '48px' }}>
+                      <div style={{ width: '48px', flexShrink: 0 }}>
+                        {h ? <HeroPortraitCard hero={h} showStars showRole showName={false} /> : null}
+                      </div>
+                      <span style={{
+                        fontSize: '11px', fontWeight: 800, color: '#fff', marginTop: '4px',
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        maxWidth: '100%', textAlign: 'center', lineHeight: 1.2
+                      }}>
+                        {s.primaryName}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <span className="gw-defense-rule">|</span>
+              <div className="gw-defense-mode-tier">
+                <PvpModeBadge mode={mode} size="sm" />
+                <TierStars tier={d.tier} readOnly />
+              </div>
+            </>
+          )}
+
+          {isExpanded && (
+            <div className="gw-defense-meta">
+              <div className="gw-defense-title">{d.title || '이름 없는 방어 덱'}</div>
+              <span className="gw-defense-rule">|</span>
+              <div style={{ flexShrink: 0 }}>
+                <TierStars tier={d.tier} readOnly />
+              </div>
+            </div>
+          )}
+
+          <div className="gw-defense-actions">
+            {isExpanded && <PvpModeBadge mode={mode} size="sm" />}
+            <button type="button" className="btn-edit" onClick={e => { e.stopPropagation(); openEdit(raw); }}>
+              <Icon name="edit" size={13} /> 수정
+            </button>
+            <button type="button" className="btn-danger-solid" onClick={e => { e.stopPropagation(); remove(d.id); }}>
+              <Icon name="close" size={13} /> 삭제
+            </button>
+          </div>
+        </div>
+
+        {isExpanded && (
+          <div style={{ padding: '4px 14px 16px', display: 'flex', gap: '12px', alignItems: 'stretch' }}>
+            <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', alignSelf: 'stretch' }}>
+              <InGameDeckCard
+                teamName=""
+                compact
+                formationId={normalizeFormationId(d.formationId)}
+                heroList={heroNames5.map((name, idx) => {
+                  const baseHero = resolveHeroByName(name);
+                  return baseHero ? { hero: baseHero, gearConfig: (d.heroGearConfigs || [])[idx] } : name;
+                })}
+                slotCount={5}
+                maxHeroes={3}
+                petObj={resolvePet(d.petId)}
+                contentMode="pvp"
+                reservedSkills={d.reservedSkills}
+                pvpMode={mode}
+                overviewNotes={[
+                  (d.speedMin || d.speedMax) ? { label: '속공 수치', text: `속공 ${d.speedMin || '?'} 이상${d.speedMax ? ` ~ ${d.speedMax} 이하` : ''}` } : null,
+                  d.gearPriorityNote ? { label: '부옵 우선순위', text: d.gearPriorityNote } : null,
+                  d.accessoryNote ? { label: '장신구', text: d.accessoryNote } : null,
+                  d.otherDetail ? { label: '기타 디테일', text: d.otherDetail } : null,
+                ].filter(Boolean)}
+              />
+            </div>
+            <div style={{
+              flex: 1, minWidth: 0,
+              display: 'flex', flexDirection: 'column', gap: '8px'
+            }}>
+              {(d.speedMin || d.speedMax) && (
+                <span style={{
+                  fontSize: '11px', fontWeight: 800, color: 'var(--accent-cyan)',
+                  background: 'rgba(56,217,248,0.1)', padding: '5px 8px', borderRadius: '8px',
+                  border: '1px solid rgba(56,217,248,0.35)', alignSelf: 'flex-start'
+                }}>
+                  속공 {d.speedMin || '?'} 이상{d.speedMax ? ` ~ ${d.speedMax} 이하` : ''}
+                </span>
+              )}
+              <DefenseInfoCell icon="bolt" label="부옵 우선순위" color="var(--gold-light)" text={d.gearPriorityNote} />
+              <DefenseInfoCell icon="ring" label="장신구" color="#c084fc" text={d.accessoryNote} />
+              <DefenseInfoCell icon="news" label="기타 디테일" color="#94a3b8" text={d.otherDetail} />
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <StrategyActionBar
@@ -325,116 +439,14 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
         <div className="luxury-panel" style={{ padding: '40px', textAlign: 'center', color: '#fff', fontWeight: 700 }}>등록된 방어 공략이 없습니다. 위 「방어덱 추가」로 등록해 보세요.</div>
       )}
 
-      <div className="gw-defense-grid">
-      {gwDefenses.slice().sort((a, b) => b.tier - a.tier).map(raw => {
-        const d = flattenDefense(raw);
-        const isExpanded = expandedId === d.id;
-        const slots = padSlots5(d.heroSlots);
-        const heroNames5 = slots.map(s => s.primaryName);
-        const mode = d.mode === '내실' ? '내실' : '속공';
-        return (
-          <div key={d.id} className="luxury-panel gw-defense-card">
-            <div
-              className={`gw-defense-head${isExpanded ? ' is-on' : ''}`}
-              onClick={() => setExpandedId(isExpanded ? null : d.id)}
-            >
-              {!isExpanded && (
-                <>
-                  <div className="gw-defense-heroes">
-                    {slots.filter(s => s.primaryName).map((s, i) => {
-                      const h = resolveHeroByName(s.primaryName);
-                      return (
-                        <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '48px' }}>
-                          <div style={{ width: '48px', flexShrink: 0 }}>
-                            {h ? <HeroPortraitCard hero={h} showStars showRole showName={false} /> : null}
-                          </div>
-                          <span style={{
-                            fontSize: '11px', fontWeight: 800, color: '#fff', marginTop: '4px',
-                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                            maxWidth: '100%', textAlign: 'center', lineHeight: 1.2
-                          }}>
-                            {s.primaryName}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <span className="gw-defense-rule">|</span>
-                  <div className="gw-defense-mode-tier">
-                    <PvpModeBadge mode={mode} size="sm" />
-                    <TierStars tier={d.tier} readOnly />
-                  </div>
-                </>
-              )}
-
-              {isExpanded && (
-                <div className="gw-defense-meta">
-                  <div className="gw-defense-title">{d.title || '이름 없는 방어 덱'}</div>
-                  <span className="gw-defense-rule">|</span>
-                  <div style={{ flexShrink: 0 }}>
-                    <TierStars tier={d.tier} readOnly />
-                  </div>
-                </div>
-              )}
-
-              <div className="gw-defense-actions">
-                {isExpanded && <PvpModeBadge mode={mode} size="sm" />}
-                <button type="button" className="btn-edit" onClick={e => { e.stopPropagation(); openEdit(raw); }}>
-                  <Icon name="edit" size={13} /> 수정
-                </button>
-                <button type="button" className="btn-danger-solid" onClick={e => { e.stopPropagation(); remove(d.id); }}>
-                  <Icon name="close" size={13} /> 삭제
-                </button>
-              </div>
-            </div>
-
-            {isExpanded && (
-              <div style={{ padding: '4px 14px 16px', display: 'flex', gap: '12px', alignItems: 'stretch' }}>
-                <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', alignSelf: 'stretch' }}>
-                  <InGameDeckCard
-                    teamName=""
-                    compact
-                    formationId={normalizeFormationId(d.formationId)}
-                    heroList={heroNames5.map((name, idx) => {
-                      const baseHero = resolveHeroByName(name);
-                      return baseHero ? { hero: baseHero, gearConfig: (d.heroGearConfigs || [])[idx] } : name;
-                    })}
-                    slotCount={5}
-                    maxHeroes={3}
-                    petObj={resolvePet(d.petId)}
-                    contentMode="pvp"
-                    reservedSkills={d.reservedSkills}
-                    pvpMode={mode}
-                    overviewNotes={[
-                      (d.speedMin || d.speedMax) ? { label: '속공 수치', text: `속공 ${d.speedMin || '?'} 이상${d.speedMax ? ` ~ ${d.speedMax} 이하` : ''}` } : null,
-                      d.gearPriorityNote ? { label: '부옵 우선순위', text: d.gearPriorityNote } : null,
-                      d.accessoryNote ? { label: '장신구', text: d.accessoryNote } : null,
-                      d.otherDetail ? { label: '기타 디테일', text: d.otherDetail } : null,
-                    ].filter(Boolean)}
-                  />
-                </div>
-                <div style={{
-                  flex: 1, minWidth: 0,
-                  display: 'flex', flexDirection: 'column', gap: '8px'
-                }}>
-                  {(d.speedMin || d.speedMax) && (
-                    <span style={{
-                      fontSize: '11px', fontWeight: 800, color: 'var(--accent-cyan)',
-                      background: 'rgba(56,217,248,0.1)', padding: '5px 8px', borderRadius: '8px',
-                      border: '1px solid rgba(56,217,248,0.35)', alignSelf: 'flex-start'
-                    }}>
-                      속공 {d.speedMin || '?'} 이상{d.speedMax ? ` ~ ${d.speedMax} 이하` : ''}
-                    </span>
-                  )}
-                  <DefenseInfoCell icon="bolt" label="부옵 우선순위" color="var(--gold-light)" text={d.gearPriorityNote} />
-                  <DefenseInfoCell icon="ring" label="장신구" color="#c084fc" text={d.accessoryNote} />
-                  <DefenseInfoCell icon="news" label="기타 디테일" color="#94a3b8" text={d.otherDetail} />
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {/* PC: 좌(1·3·5…) / 우(2·4·6…) 독립 열 — 2번 펼쳐도 3번은 안 밀림 */}
+      <div className="gw-defense-grid gw-defense-grid--cols">
+        <div className="gw-defense-col">{leftCol.map((raw) => renderDefenseCard(raw, 'L-'))}</div>
+        <div className="gw-defense-col">{rightCol.map((raw) => renderDefenseCard(raw, 'R-'))}</div>
+      </div>
+      {/* 모바일: 1열 순서 유지 */}
+      <div className="gw-defense-grid gw-defense-grid--stack">
+        {sortedDefenses.map((raw) => renderDefenseCard(raw, 'S-'))}
       </div>
 
       {isModalOpen && form && (
