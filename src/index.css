@@ -6749,8 +6749,7 @@ h1, h2, h3 {
     white-space: nowrap;
   }
 
-  .hero-db-list,
-  .hero-db-detail {
+  .hero-db-list {
     max-height: min(360px, 48dvh);
     height: auto;
     padding: 12px 10px !important;
@@ -6765,8 +6764,13 @@ h1, h2, h3 {
     max-width: 84px;
   }
 
+  /* 모바일 도감: 영웅 스킬/설명 칸 내부 스크롤 없이 전체 펼침 (PC·목록 칸 무관) */
   .hero-db-detail {
+    max-height: none;
+    height: auto;
+    overflow: visible;
     gap: 12px !important;
+    padding: 12px 10px !important;
   }
 
   .hero-db-skills {
