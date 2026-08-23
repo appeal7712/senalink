@@ -189,6 +189,43 @@ exports.disbandHub = onCall({ region: REGION }, async (request) => {
 });
 
 /**
+ * 로그인 계정이 실제 멤버인 허브를 찾아 users.hubId 를 복구한다.
+ * (기기 로컬 세션 / hubId 포인터가 비어 있어도 소속 허브로 입장 가능하게)
+ */
+exports.resolveMyHub = onCall({ region: REGION }, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+  }
+  const uid = request.auth.uid;
+  const userRef = db.doc(`users/${uid}`);
+  const userSnap = await userRef.get();
+  const pointed = String(userSnap.data()?.hubId || '').trim();
+
+  if (pointed) {
+    const memberSnap = await db.doc(`hubs/${pointed}/members/${uid}`).get();
+    if (memberSnap.exists) {
+      return { hubId: pointed, restored: false };
+    }
+  }
+
+  // 사이트 허브 수가 작다는 전제 — 멤버 문서로 소속 허브 스캔
+  const hubsSnap = await db.collection('hubs').select('name').get();
+  for (const hubDoc of hubsSnap.docs) {
+    const memberSnap = await db.doc(`hubs/${hubDoc.id}/members/${uid}`).get();
+    if (!memberSnap.exists) continue;
+    const hubId = hubDoc.id;
+    await userRef.set({ hubId, updatedAt: nowIso() }, { merge: true });
+    logger.info('resolveMyHub restored', { uid, hubId });
+    return { hubId, restored: true };
+  }
+
+  if (pointed) {
+    await userRef.set({ hubId: null, updatedAt: nowIso() }, { merge: true });
+  }
+  return { hubId: null, restored: false };
+});
+
+/**
  * 초대 코드로 허브 가입. Admin SDK 트랜잭션으로 초대·정원·닉네임·1인1허브를 강제한다.
  * 클라이언트는 members role:member create 를 할 수 없다 (firestore.rules).
  */

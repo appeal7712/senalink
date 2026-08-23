@@ -260,7 +260,7 @@ export default function GuildLounge() {
   const {
     activeLounge, me, session, myRole, canEditBuilds,
     logBuildHistory, freshInvite, dismissFreshInvite,
-    authReady, authUser,
+    authReady, authUser, hubRecovering,
   } = useLounge();
 
   const [activeTab, setActiveTab]           = useState('home');
@@ -1179,10 +1179,10 @@ export default function GuildLounge() {
   if (!session || !activeLounge || !me) {
     // 로그인이 풀린 채 로컬 세션만 남아 있으면 허브를 영원히 못 불러온다.
     // 인증이 끝났는데 계정이 없으면 로딩 대신 로그인 화면을 보여준다.
-    if (session && (!authReady || authUser)) {
+    if (hubRecovering || (session && (!authReady || authUser))) {
       return (
         <div className="container fade-in" style={{ padding: '48px 24px', color: '#fff', fontWeight: 800, textAlign: 'center' }}>
-          허브를 불러오는 중…
+          {hubRecovering ? '소속 길드 허브를 찾는 중…' : '허브를 불러오는 중…'}
         </div>
       );
     }

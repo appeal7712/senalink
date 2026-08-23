@@ -408,12 +408,12 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
             }}>
               {(d.speedMin || d.speedMax) && (
                 <span style={{
-                  fontSize: '14px', fontWeight: 900, letterSpacing: '0.2px',
+                  fontSize: '12.5px', fontWeight: 900, letterSpacing: '0.15px',
                   color: '#041018',
                   background: 'linear-gradient(135deg, #5eead4, #22d3ee)',
-                  padding: '8px 14px', borderRadius: '10px',
-                  border: '1px solid rgba(255,255,255,0.55)',
-                  boxShadow: '0 0 0 1px rgba(34,211,238,0.45), 0 4px 14px rgba(34,211,238,0.35)',
+                  padding: '6px 11px', borderRadius: '8px',
+                  border: '1px solid rgba(255,255,255,0.4)',
+                  boxShadow: '0 2px 8px rgba(34,211,238,0.28)',
                   alignSelf: 'flex-start',
                   lineHeight: 1.25,
                 }}>

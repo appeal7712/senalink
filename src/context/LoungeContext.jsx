@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   collection,
   doc,
@@ -153,6 +153,10 @@ export function LoungeProvider({ children }) {
   const [bootError, setBootError] = useState(null);
   const [freshInvite, setFreshInvite] = useState(null);
   const [membersReady, setMembersReady] = useState(false);
+  /** 멤버 목록 스냅샷이 성공으로 끝난 경우에만 true — 에러/미수신 시 hubId 지우지 않음 */
+  const [membersSnapOk, setMembersSnapOk] = useState(false);
+  const [hubRecovering, setHubRecovering] = useState(false);
+  const hubRecoverTriedFor = useRef(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -225,26 +229,78 @@ export function LoungeProvider({ children }) {
 
   const loungeId = session?.loungeId || null;
 
+  // 기기별 localStorage와 무관하게, users.hubId 실시간 구독으로 허브 세션 복구
   useEffect(() => {
-    if (!authReady || !authUser || session?.observer) return undefined;
-    let cancelled = false;
-    (async () => {
-      try {
-        const snap = await getDoc(doc(db, COL.USERS, authUser.uid));
-        if (cancelled) return;
-        const hubId = snap.data()?.hubId || null;
-        if (!hubId) return;
-        setSession((prev) => {
-          if (prev?.observer) return prev;
-          if (prev?.loungeId === hubId) return prev;
-          return { loungeId: hubId, memberId: authUser.uid };
-        });
-      } catch (err) {
-        console.error('user hub restore', err);
-      }
-    })();
-    return () => { cancelled = true; };
+    if (!authReady || !authUser) return undefined;
+    const unsub = onSnapshot(doc(db, COL.USERS, authUser.uid), (snap) => {
+      if (!snap.exists()) return;
+      const hubId = snap.data()?.hubId || null;
+      if (!hubId) return;
+      setSession((prev) => {
+        if (prev?.observer) return prev;
+        if (prev?.loungeId === hubId) return prev;
+        return { loungeId: hubId, memberId: authUser.uid };
+      });
+    }, (err) => {
+      console.error('user hub restore', err);
+    });
+    return () => unsub();
   }, [authReady, authUser]);
+
+  // hubId 포인터가 비어 있어도, 실제 members 문서로 소속 허브를 찾아 복구
+  useEffect(() => {
+    if (!authReady || !authUser) {
+      hubRecoverTriedFor.current = null;
+      setHubRecovering(false);
+      return undefined;
+    }
+    if (session?.observer) return undefined;
+    if (session?.loungeId) {
+      setHubRecovering(false);
+      return undefined;
+    }
+    if (hubRecoverTriedFor.current === authUser.uid) return undefined;
+
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        if (cancelled) return;
+        // 짧은 대기: users.hubId 스냅샷이 먼저 채울 수 있음
+        if (cancelled) return;
+        hubRecoverTriedFor.current = authUser.uid;
+        setHubRecovering(true);
+        try {
+          const userSnap = await getDoc(doc(db, COL.USERS, authUser.uid));
+          if (cancelled) return;
+          const pointed = userSnap.data()?.hubId || null;
+          if (pointed) {
+            setSession((prev) => {
+              if (prev?.observer) return prev;
+              if (prev?.loungeId === pointed) return prev;
+              return { loungeId: pointed, memberId: authUser.uid };
+            });
+            return;
+          }
+          const res = await httpsCallable(functions, 'resolveMyHub')({});
+          const hubId = String(res?.data?.hubId || '').trim();
+          if (cancelled) return;
+          if (hubId) {
+            setSession({ loungeId: hubId, memberId: authUser.uid });
+          }
+        } catch (err) {
+          console.error('resolveMyHub', err);
+          hubRecoverTriedFor.current = null;
+        } finally {
+          if (!cancelled) setHubRecovering(false);
+        }
+      })();
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [authReady, authUser, session?.loungeId, session?.observer]);
 
   // Subscribe hub + subcollections when session has loungeId
   useEffect(() => {
@@ -252,6 +308,7 @@ export function LoungeProvider({ children }) {
       setHubMeta(null);
       setMembers([]);
       setMembersReady(false);
+      setMembersSnapOk(false);
       setNotices([]);
       setPosts([]);
       setHistory([]);
@@ -260,6 +317,7 @@ export function LoungeProvider({ children }) {
     }
 
     setMembersReady(false);
+    setMembersSnapOk(false);
 
     const unsubs = [];
 
@@ -272,11 +330,9 @@ export function LoungeProvider({ children }) {
       }
       setHubMeta({ id: snap.id, ...snap.data() });
     }, (err) => {
+      // 권한·네트워크 일시 실패로 hubId를 지우면 다른 기기까지 끊김 — 세션/포인터 유지
       console.error('hub snapshot', err);
       setHubMeta(null);
-      setSession(null);
-      setMembersReady(true);
-      clearUserHubPointer(authUser.uid);
     }));
 
     unsubs.push(onSnapshot(collection(db, 'hubs', loungeId, 'members'), (snap) => {
@@ -286,10 +342,12 @@ export function LoungeProvider({ children }) {
         return (rank[a.role] ?? 9) - (rank[b.role] ?? 9) || String(a.nickname).localeCompare(String(b.nickname));
       });
       setMembers(list);
+      setMembersSnapOk(true);
       setMembersReady(true);
     }, (err) => {
       console.error('members snapshot', err);
-      setMembers([]);
+      // 빈 목록+ready 로 hubId 삭제하는 레이스를 막음
+      setMembersSnapOk(false);
       setMembersReady(true);
     }));
 
@@ -399,18 +457,37 @@ export function LoungeProvider({ children }) {
   }, [loungeId, authUser, me?.id]);
 
   useEffect(() => {
-    if (!session || !authUser || !membersReady) return;
-    if (isSuperAdmin) return;
-    if (!members.some(m => m.id === authUser.uid)) {
-      setSession(null);
-      setDoc(doc(db, COL.USERS, authUser.uid), { hubId: null, updatedAt: nowIso() }, { merge: true }).catch(() => {});
+    if (!session || !authUser || !membersReady || !membersSnapOk) return;
+    if (isSuperAdmin || session.observer) return;
+    if (members.some(m => m.id === authUser.uid)) {
+      setDoc(doc(db, COL.USERS, authUser.uid), {
+        hubId: session.loungeId,
+        updatedAt: nowIso(),
+      }, { merge: true }).catch(() => {});
       return;
     }
-    setDoc(doc(db, COL.USERS, authUser.uid), {
-      hubId: session.loungeId,
-      updatedAt: nowIso(),
-    }, { merge: true }).catch(() => {});
-  }, [session, authUser, membersReady, members, isSuperAdmin]);
+
+    // 목록에 없어도 단건 get으로 한 번 더 확인 — 빈/부분 스냅샷 오판으로 hubId 삭제 방지
+    let cancelled = false;
+    (async () => {
+      try {
+        const memberSnap = await getDoc(doc(db, 'hubs', session.loungeId, 'members', authUser.uid));
+        if (cancelled) return;
+        if (memberSnap.exists()) {
+          setDoc(doc(db, COL.USERS, authUser.uid), {
+            hubId: session.loungeId,
+            updatedAt: nowIso(),
+          }, { merge: true }).catch(() => {});
+          return;
+        }
+        setSession(null);
+        setDoc(doc(db, COL.USERS, authUser.uid), { hubId: null, updatedAt: nowIso() }, { merge: true }).catch(() => {});
+      } catch (err) {
+        console.error('member membership verify', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [session, authUser, membersReady, membersSnapOk, members, isSuperAdmin]);
 
   const myRole = me?.role || null;
   const isMaster = myRole === 'master';
@@ -894,6 +971,7 @@ export function LoungeProvider({ children }) {
     authReady,
     bootError,
     authUser,
+    hubRecovering,
     usingEmulators,
     useGoogleAuth: useGoogleForHub,
     signInWithGoogle,
