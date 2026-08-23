@@ -2306,8 +2306,11 @@ h1, h2, h3 {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  /* 내용이 칸보다 넓을 때만 스크롤바 · 충분하면 안 생김 */
   overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
   background: rgba(255, 255, 255, 0.07);
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.10);
@@ -3274,6 +3277,7 @@ h1, h2, h3 {
 .setting-overview-section .skill-reserve-row {
   width: 100%;
   max-width: 100%;
+  min-width: 0;
 }
 
 .setting-overview-section .skill-reserve-row {
@@ -3281,6 +3285,7 @@ h1, h2, h3 {
   border: none;
   padding-left: 0;
   padding-right: 0;
+  overflow-x: auto;
 }
 
 .setting-overview-label {
@@ -4078,7 +4083,7 @@ h1, h2, h3 {
 
 .build-panel-body {
   flex: 1;
-  min-width: 240px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -4290,6 +4295,8 @@ h1, h2, h3 {
 
 .build-panel-playbook .skill-reserve {
   flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .build-panel-playbook .skill-reserve-row {
@@ -4299,6 +4306,8 @@ h1, h2, h3 {
   align-items: center;
   width: 100%;
   max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
 }
 
 .expedition-round-block {
@@ -5620,7 +5629,9 @@ h1, h2, h3 {
   .build-panel-playbook .skill-reserve-row {
     width: 100% !important;
     max-width: 100% !important;
-    overflow-x: visible !important;
+    /* 넓을 땐 스크롤 없음 · 칸이 max-content보다 좁을 때만 가로 스크롤 (밖으로 안 뚫게) */
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
   }
 
   .build-panel-timeline .timeline-steps,
