@@ -284,22 +284,50 @@ export default function InGameDeckCard({
   const [isGearOverviewOpen, setIsGearOverviewOpen] = useState(false);
   const subModalOpen = isFormationModalOpen || isSpeedModalOpen || isReservationModalOpen || isPetModalOpen || isGearOverviewOpen;
 
-  /** 편집/펫/진형/속공/예약 — 아래 ModalScrim을 같은 틱에 숨기고 연다 */
+  /** 아래에 이미 떠 있는 스크림이 있을 때만 동기 cover (길드전 카운터 등) */
+  const hasUnderlyingScrim = () => (
+    typeof onUnderlyingCover === 'function'
+    || !!document.querySelector('body > .modal-scrim')
+  );
+
+  /** 편집/펫/진형/속공/예약 — 스택일 때만 flushSync, 단독 오픈은 버튼 :active 페인트 후 연다 */
   const openStackedSubModal = (setOpen) => {
-    if (typeof onUnderlyingCover === 'function') {
-      flushSync(() => onUnderlyingCover(true));
-    } else {
-      coverUnderlyingScrims();
+    const stacked = hasUnderlyingScrim();
+    const openNow = () => {
+      if (typeof onUnderlyingCover === 'function') {
+        flushSync(() => onUnderlyingCover(true));
+        flushSync(() => setOpen(true));
+        return;
+      }
+      if (stacked) {
+        coverUnderlyingScrims();
+        flushSync(() => setOpen(true));
+        return;
+      }
+      setOpen(true);
+    };
+    if (stacked) {
+      openNow();
+      return;
     }
-    flushSync(() => setOpen(true));
+    // 한 프레임 양보 → 눌림 피드백이 보이고, 무거운 세팅 확인 마운트가 클릭과 한 틱에 안 묶임
+    requestAnimationFrame(() => {
+      requestAnimationFrame(openNow);
+    });
   };
   const closeStackedSubModal = (setOpen) => {
-    flushSync(() => setOpen(false));
-    if (typeof onUnderlyingCover === 'function') {
-      flushSync(() => onUnderlyingCover(false));
-    } else {
-      uncoverUnderlyingScrims();
+    const stacked = typeof onUnderlyingCover === 'function'
+      || !!document.querySelector('body > .modal-scrim.modal-scrim--covered');
+    if (stacked) {
+      flushSync(() => setOpen(false));
+      if (typeof onUnderlyingCover === 'function') {
+        flushSync(() => onUnderlyingCover(false));
+      } else {
+        uncoverUnderlyingScrims();
+      }
+      return;
     }
+    setOpen(false);
   };
   const openGearOverview = () => openStackedSubModal(setIsGearOverviewOpen);
   const closeGearOverview = () => closeStackedSubModal(setIsGearOverviewOpen);
@@ -319,11 +347,21 @@ export default function InGameDeckCard({
   }, [subModalOpen]);
 
   useEffect(() => {
-    if (!isGearOverviewOpen) return;
-    const id = window.setTimeout(() => {
-      warmSettingCapture(settingCaptureRef.current);
-    }, 0);
-    return () => window.clearTimeout(id);
+    if (!isGearOverviewOpen) return undefined;
+    const run = () => warmSettingCapture(settingCaptureRef.current);
+    let idleId = 0;
+    let timeoutId = 0;
+    if (typeof window.requestIdleCallback === 'function') {
+      idleId = window.requestIdleCallback(run, { timeout: 1500 });
+    } else {
+      timeoutId = window.setTimeout(run, 500);
+    }
+    return () => {
+      if (idleId && typeof window.cancelIdleCallback === 'function') {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
   }, [isGearOverviewOpen]);
 
   useEffect(() => {
@@ -1112,8 +1150,8 @@ export default function InGameDeckCard({
       {/* 세팅 확인 — 스킬/속공 + 장비 디테일 한 화면 */}
       {isGearOverviewOpen && (
         <div className="modal-scrim" style={{ zIndex: 8200, padding: '16px' }} {...backdropDismissProps(() => dismissSubModal(closeGearOverview))}>
-          <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} ref={settingCaptureRef} className="glass-modal" style={{
-            width: 'fit-content', minWidth: 'min(560px, 96vw)', maxWidth: '96vw', maxHeight: '90vh', padding: '12px 14px', borderRadius: '16px',
+          <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} ref={settingCaptureRef} className="glass-modal setting-overview-modal" style={{
+            maxHeight: '90vh', padding: '12px 14px', borderRadius: '16px',
             display: 'flex', flexDirection: 'column', gap: '10px', boxSizing: 'border-box'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexShrink: 0 }}>

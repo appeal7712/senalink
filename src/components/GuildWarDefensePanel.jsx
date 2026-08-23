@@ -333,8 +333,8 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                 {slots.filter(s => s.primaryName).map((s, i) => {
                   const h = resolveHeroByName(s.primaryName);
                   return (
-                    <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '48px' }}>
-                      <div style={{ width: '48px', flexShrink: 0 }}>
+                    <div key={i} className="gw-defense-hero-slot" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '48px' }}>
+                      <div className="gw-defense-hero-face" style={{ width: '48px', flexShrink: 0 }}>
                         {h ? <HeroPortraitCard hero={h} showStars showRole showName={false} /> : null}
                       </div>
                       <span style={{

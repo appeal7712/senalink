@@ -161,6 +161,7 @@ Provider 순서 (`main.jsx`): **SuperAdmin → UserProfile → Lounge → App**.
   - **admin** — 공지·강퇴(다른 admin 제외)·점수·빌드 삭제 등. **`masterId` / `inviteCode` 변경 불가**
   - **member** — 가입은 Callable `joinHub`만. 빌드 편집·본인 글 가능
 - 상한: `MAX_HUB_MEMBERS=30`, `MAX_ADMINS=3` (`loungeMeta.js`).
+- **`users.hubId` 보호:** 멤버 스냅샷 오류·빈 목록만으로 hubId를 지우지 말 것. 클리어 전 `getDoc(members/{uid})`로 소속 확인. 로그인 후 세션 없으면 Callable **`resolveMyHub`**로 복구(허브 `members` 스캔 → `users.hubId` 복원).
 
 ### 6.4 프로필 일일 추천
 - 클라이언트: `src/lib/profileRecommend.js`
@@ -224,6 +225,7 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | `onHubHistoryCreated` | onCreate | 허브 `lastActivityAt` 갱신 |
 | `onHubMemberDeleted` | onDelete | 매칭 시 `users.hubId` 클리어 |
 | `joinHub` | Callable | 초대코드 가입 (Admin SDK 트랜잭션, 좀비 hubId 정리) |
+| `resolveMyHub` | Callable | 로그인 유저의 허브 멤버십 재탐색 → `users.hubId` 복구 (모바일에서 hubId만 날아간 경우) |
 | `disbandHub` | Callable | 허브 통째 삭제 (super 또는 마지막 멤버) |
 | `purgeIdleHubs` | Schedule 매일 04:00 KST | 60일 유휴 허브 삭제 |
 
@@ -259,6 +261,9 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 
 길드전 공격/방어 패널: `GuildWarAttackPanel.jsx`, `GuildWarDefensePanel.jsx`.
 
+- **방어 리스트 PC:** `.gw-defense-grid--cols` 좌·우 독립 열 (2번 펼쳐도 3번 안 밀림). **PC 레이아웃 함부로 바꾸지 말 것.**
+- **방어 리스트 모바일(≤900px):** `.gw-defense-grid--stack` 1열. 접힌 헤더는 `auto minmax(0,1fr) auto` — 초상화 | 속공·별(중앙) | 수정·삭제. 좁은 폰(≤380px)에서 초상·버튼만 더 축소. **상하 간격·PC는 유지, 가로 유동만.**
+
 ### 10.3 Ops 관리자 (`/ops`)
 
 `OpsPage.jsx` — Super만 탭 진입:
@@ -276,6 +281,14 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 
 - 도구: `ToolsPage` / `data/tools.js` (승확 계산기·티어리스트 메이커 등)
 - 도감: `EncyclopediaPage` → `DbHub` → `HeroDB` / `EquipDB` / `SystemDB`
+- **모바일 도감 영웅 상세(≤760px):** `.hero-db-detail`은 `max-height`/`overflow` 풀어 **스킬 설명 내부 스크롤 없이** 페이지로 펼침. 영웅 **목록** 칸 스크롤·PC(고정 높이 3열)는 유지.
+
+### 10.6 세팅 확인 (`InGameDeckCard`)
+
+- 모달 클래스 `.setting-overview-modal` — 화면 폭 **고정** `min(760px, 96vw)` (덱마다 `fit-content`로 가로가 들쭉날쭉하지 않게).
+- 모바일(≤760px) 세팅 개요: 장비 1열, `.setting-overview-deck`는 `height:auto` — **배치·펫 잘림 방지**. PC·`.setting-capture-pc`(공유 PNG 980px)와 분리.
+- **모달 뒤 블러:** body portal이라 스크림 `backdrop-filter`만으로는 뒤가 비침. **`body:has(> .modal-scrim) .app-shell` / `#root::before` 의 `filter: blur(22px)`는 의도된 것 — 성능 핑계로 제거하지 말 것.**
+- 서브모달 오픈: 아래에 스크림이 있을 때만 `flushSync`+cover(길드전 카운터 등). **단독 오픈은 rAF 양보** 후 열어 버튼 `:active`가 보이게. 데이터 로딩 경로와 무관.
 
 ---
 
@@ -339,6 +352,14 @@ API:
 
 새 영웅 추가 시 `group`/`category`/`isAwakened`를 맞추고, 새 스페셜 소속이면 `HERO_FACTION_ORDER`에만 넣으면 된다.
 
+### 12.2 모바일 전용 CSS 패치 원칙
+
+밍봉이 **「모바일만」** 이라고 하면:
+
+1. 스타일은 **`@media (max-width: 760px)` 또는 `900px` 안만** 추가/수정. 공통(베이스) 셀렉터에 넣으면 PC가 같이 바뀐다.
+2. **절대** `@media (min-width: 981px)` 등 PC 블록에 모바일용 규칙을 넣지 말 것 (과거에 방어 리스트 여백 패치가 PC 블록에 잘못 들어간 적 있음).
+3. 길드전 방어 PC 2열(`.gw-defense-grid--cols`)·세팅 확인 PC·공유 캡처는 요청 없이 건드리지 말 것.
+
 ---
 
 ## 13. 도감 업데이트 유의 사항 (영웅 · 펫 · 장비)
@@ -387,12 +408,14 @@ API:
 1. **이 폴더만** 수정. 라이브 배포는 요청 있을 때만.
 2. **§2.1** — 유저·허브 데이터·rules를 손상·완화하지 않는지 확인.
 3. Firestore/Storage **규칙 바꾸면** 해당 rules도 같이 배포 (완화인지 먼저 검토).
-4. Functions 바꾸면 `functions` 배포 + Node 20 유지. 허브/유저 삭제 경로 재확인.
+4. Functions 바꾸면 `functions` 배포 + Node 20 유지. 허브/유저 삭제 경로 재확인. **`resolveMyHub` / hubId 클리어 로직** 재확인.
 5. 도감 추가 후 피커·초상·진영 누락 없는지 `/dex`와 덱 수정에서 확인.
 6. 허브 가입/역할은 클라이언트 직쓰기가 아니라 **rules + joinHub** 전제.
 7. 커뮤니티 PvE 공략·티어 = Super; PvP만 일반 유저 작성 가능.
 8. 레이아웃: 덱 수정 모달 타임라인 높이 규칙 위반하지 말 것.
-9. 커밋/푸시는 밍봉 요청 시. 시크릿(`.env*`) 커밋 금지.
+9. **모바일만** 요청이면 §12.2 — PC 미디어/베이스 스타일 미포함 확인.
+10. 세팅 확인 모달 뒤 전체 blur(`.app-shell` filter) 제거 제안하지 말 것 (§10.6).
+11. 커밋/푸시는 밍봉 요청 시. 시크릿(`.env*`)·`.firebase/hosting.*.cache` 커밋 금지.
 
 ---
 
@@ -410,8 +433,9 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
+- 최근 호스팅 버전대: **v2026.08.23.57** 전후 (푸터 `APP_VERSION` 확인)
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 
 ---
 
-*문서 갱신 시: 구조·규칙·도감 경로가 바뀌면 이 파일도 같이 고친다.*
+*문서 갱신 시: 구조·규칙·도감 경로·모바일 UI 제약이 바뀌면 이 파일도 같이 고친다.*
