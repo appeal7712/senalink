@@ -164,7 +164,7 @@ export const pets = [
   {
     "id": "pet_8",
     "name": "제브",
-    "portraitUrl": "/images/pets/파이크.png",
+    "portraitUrl": "/images/pets/제브.png",
     "skills": [
       {
         "name": "펫의 응원",
@@ -396,5 +396,26 @@ export const pets = [
       }
     ],
     "tooltips": {}
+  },
+  {
+    "id": "pet_18",
+    "name": "Mr.아머",
+    "portraitUrl": "/images/pets/Mr.아머.png",
+    "skills": [
+      {
+        "name": "펫의 응원",
+        "effects": [
+          {
+            "target": "모든 아군",
+            "details": [
+              "받는 피해 감소 증가 [상시]"
+            ]
+          }
+        ]
+      }
+    ],
+    "tooltips": {
+      "받는 피해 감소 증가": "받는 피해 감소가 15% 증가합니다"
+    }
   }
 ];

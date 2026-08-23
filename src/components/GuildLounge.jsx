@@ -1691,7 +1691,7 @@ export default function GuildLounge() {
                 </div>
                 <textarea
                   className="editing-build-detail-textarea"
-                  rows={2}
+                  rows={3}
                   value={heroGearConfigs[selectedHeroGearIdx]?.detailNote || ''}
                   onChange={e => handleUpdateSelectedHeroGear('detailNote', e.target.value)}
                   placeholder={'예: 치확 67% · 약공 46%에 가깝게'}

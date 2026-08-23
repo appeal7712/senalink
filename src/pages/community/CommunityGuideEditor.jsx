@@ -307,7 +307,7 @@ export default function CommunityGuideEditor({
             </div>
             <textarea
               className="editing-build-detail-textarea"
-              rows={2}
+              rows={3}
               value={gear[slot]?.detailNote || ''}
               onChange={(e) => {
                 const next = padGear5(gear);

@@ -408,9 +408,14 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
             }}>
               {(d.speedMin || d.speedMax) && (
                 <span style={{
-                  fontSize: '11px', fontWeight: 800, color: 'var(--accent-cyan)',
-                  background: 'rgba(56,217,248,0.1)', padding: '5px 8px', borderRadius: '8px',
-                  border: '1px solid rgba(56,217,248,0.35)', alignSelf: 'flex-start'
+                  fontSize: '14px', fontWeight: 900, letterSpacing: '0.2px',
+                  color: '#041018',
+                  background: 'linear-gradient(135deg, #5eead4, #22d3ee)',
+                  padding: '8px 14px', borderRadius: '10px',
+                  border: '1px solid rgba(255,255,255,0.55)',
+                  boxShadow: '0 0 0 1px rgba(34,211,238,0.45), 0 4px 14px rgba(34,211,238,0.35)',
+                  alignSelf: 'flex-start',
+                  lineHeight: 1.25,
                 }}>
                   속공 {d.speedMin || '?'} 이상{d.speedMax ? ` ~ ${d.speedMax} 이하` : ''}
                 </span>

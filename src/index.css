@@ -5182,9 +5182,9 @@ h1, h2, h3 {
 
   /* 세팅 디테일: 최대 두 줄 */
   .editing-build-detail-panel .editing-build-detail-textarea {
-    min-height: calc(2 * 1.5em + 16px) !important;
-    max-height: calc(2 * 1.5em + 16px) !important;
-    height: calc(2 * 1.5em + 16px) !important;
+    min-height: calc(3 * 1.5em + 16px) !important;
+    max-height: calc(3 * 1.5em + 16px) !important;
+    height: calc(3 * 1.5em + 16px) !important;
     resize: none !important;
     overflow-y: auto !important;
     padding-top: 8px !important;
@@ -5391,10 +5391,10 @@ h1, h2, h3 {
     }
 
     .editing-build-detail-panel .editing-build-detail-textarea {
-      /* 두 줄 유지 (짧은 모니터에서도 키우지 않음) */
-      min-height: calc(2 * 1.5em + 12px) !important;
-      max-height: calc(2 * 1.5em + 12px) !important;
-      height: calc(2 * 1.5em + 12px) !important;
+      /* 세 줄 유지 (짧은 모니터에서도 키우지 않음) */
+      min-height: calc(3 * 1.5em + 12px) !important;
+      max-height: calc(3 * 1.5em + 12px) !important;
+      height: calc(3 * 1.5em + 12px) !important;
       padding-top: 6px !important;
       padding-bottom: 6px !important;
     }
