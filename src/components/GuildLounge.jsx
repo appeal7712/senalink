@@ -104,6 +104,7 @@ const padHeroNames5 = (names = []) => {
 
 const emptyExpeditionRound = () => ({
   formationId: 'protect',
+  petId: pets[0]?.id || 'pet_1',
   heroNames: ['', '', '', '', ''],
   skillSequence: [],
   speedOrderNames: [],
@@ -113,6 +114,7 @@ const emptyExpeditionRound = () => ({
 
 const roundFromFields = (src = {}) => ({
   formationId: src.formationId || 'protect',
+  petId: src.petId || pets[0]?.id || 'pet_1',
   heroNames: padHeroNames5(src.heroNames),
   skillSequence: [...(src.skillSequence || [])],
   speedOrderNames: [...(src.speedOrderNames || [])],
@@ -123,10 +125,16 @@ const roundFromFields = (src = {}) => ({
   })),
 });
 
-const normalizeExpeditionRounds = (build = {}) => ({
-  1: roundFromFields(build.rounds?.[1] || build.round1 || (build.heroNames ? build : {})),
-  2: roundFromFields(build.rounds?.[2] || build.round2 || {}),
-});
+const normalizeExpeditionRounds = (build = {}) => {
+  // 구형: 빌드에만 petId 있던 경우 → 라운드에 폴백 (서로 다른 펫은 라운드별 petId)
+  const legacyPet = build.petId || pets[0]?.id || 'pet_1';
+  const raw1 = build.rounds?.[1] || build.round1 || (build.heroNames ? build : {});
+  const raw2 = build.rounds?.[2] || build.round2 || {};
+  return {
+    1: roundFromFields({ ...raw1, petId: raw1.petId || legacyPet }),
+    2: roundFromFields({ ...raw2, petId: raw2.petId || legacyPet }),
+  };
+};
 
 const emptyTotalwarDeck = () => ({
   formationId: 'protect',
@@ -418,6 +426,7 @@ export default function GuildLounge() {
     2: emptyExpeditionRound(),
   }));
   const [editingPetId, setEditingPetId] = useState(pets[0]?.id || 'pet_1');
+  const skillTimelineScrollerRef = useRef(null);
   const [showTotalwarTeamPick, setShowTotalwarTeamPick] = useState(false);
   const [editingTotalwarTier, setEditingTotalwarTier] = useState('legend');
   const [editingTotalwarDeckCount, setEditingTotalwarDeckCount] = useState(5);
@@ -456,6 +465,7 @@ export default function GuildLounge() {
 
   const captureCurrentRound = () => ({
     formationId: editingBuild?.formationId || 'protect',
+    petId: editingPetId,
     heroNames: padHeroNames5(editingHeroNames),
     skillSequence: [...editingSkillTimeline],
     speedOrderNames: [...editingSpeedOrder],
@@ -466,6 +476,7 @@ export default function GuildLounge() {
   const applyRoundToEditor = (round = emptyExpeditionRound()) => {
     const next = roundFromFields(round);
     setEditingBuild(prev => prev ? { ...prev, formationId: next.formationId } : prev);
+    setEditingPetId(next.petId);
     setEditingHeroNames(next.heroNames);
     setEditingSkillTimeline(next.skillSequence);
     setEditingSpeedOrder(next.speedOrderNames.length ? next.speedOrderNames : next.heroNames.filter(Boolean));
@@ -710,6 +721,7 @@ export default function GuildLounge() {
       setEditingExpeditionRounds(rounds);
       setEditingExpeditionRound(1);
       setEditingBuild({ id: 'new_' + Date.now(), formationId: round1.formationId });
+      setEditingPetId(pets[0]?.id || 'pet_1');
       applyRoundToEditor(round1);
     } else {
       setEditingHeroNames(['미호', '나타', '리나', '에반', '비스킷']);
@@ -812,6 +824,11 @@ export default function GuildLounge() {
     };
     setEditingSkillTimeline([...editingSkillTimeline, newStep]);
     setNewSkillText('');
+    requestAnimationFrame(() => {
+      const scroller = skillTimelineScrollerRef.current;
+      if (!scroller) return;
+      scroller.scrollTop = scroller.scrollHeight;
+    });
   };
 
   const handleRemoveSkillStep = (idx) => {
@@ -825,17 +842,22 @@ export default function GuildLounge() {
     }
 
     const updated = editingCategory === 'expedition'
-      ? {
-          id: editingBuild.id,
-          title: buildTitle,
-          rounds: {
+      ? (() => {
+          const rounds = {
             ...editingExpeditionRounds,
             [editingExpeditionRound]: captureCurrentRound(),
-          },
-          author: guildRoom.myNickname,
-          authorId: me?.id || authUser?.uid || '',
-          updatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
-        }
+          };
+          return {
+            id: editingBuild.id,
+            title: buildTitle,
+            // 구형 폴백용(1라운드 펫). 실제 표시·편집은 rounds[n].petId
+            petId: rounds[1]?.petId || editingPetId,
+            rounds,
+            author: guildRoom.myNickname,
+            authorId: me?.id || authUser?.uid || '',
+            updatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
+          };
+        })()
       : editingCategory === 'totalwar'
       ? null
       : {
@@ -1065,6 +1087,7 @@ export default function GuildLounge() {
       <InGameDeckCard
         teamName=""
         formationId={round.formationId}
+        petObj={resolvePetById(round.petId)}
         heroList={(round.heroNames || []).map((name, idx) => {
           const baseHero = resolveHeroByName(name);
           return baseHero ? { hero: baseHero, gearConfig: (round.heroGearConfigs || [])[idx] } : name;
@@ -1840,7 +1863,7 @@ export default function GuildLounge() {
                     </div>
                   </div>
 
-                  <div className="editing-build-hero-grid" style={{ height: '168px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(62px, 1fr))', gap: '6px', overflowY: 'auto', paddingRight: '4px' }}>
+                  <div className="editing-build-hero-grid" style={{ minHeight: '168px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(62px, 1fr))', gap: '6px', overflowY: 'auto', paddingRight: '4px' }}>
                     {filteredHeroesByRole.map(h => {
                       const cleanName = h.name.replace('(각성)', '');
                       return (
@@ -1867,7 +1890,7 @@ export default function GuildLounge() {
               {(CONTENT_META[editingCategory] || CONTENT_META.siege).mode !== 'pvp' && (
                 <div className="editing-build-timeline-col" style={{ display: 'flex', flexDirection: 'column', gap: '12px', minHeight: 0 }}>
                   {/* 등록 목록 — 제목을 같은 줄에 넣어 세로 공간 절약 */}
-                  <div className="glass-inset editing-build-timeline-list" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', flex: '0 0 auto' }}>
+                  <div className="glass-inset editing-build-timeline-list" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                     <div className="editing-build-timeline-list-head" style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
                       marginBottom: '4px', flexShrink: 0, flexWrap: 'wrap'
@@ -1886,7 +1909,7 @@ export default function GuildLounge() {
                       </div>
                     </div>
 
-                    <div className="skill-timeline-scroller">
+                    <div className="skill-timeline-scroller" ref={skillTimelineScrollerRef}>
                       {editingSkillTimeline.length === 0 && (
                         <div style={{ fontSize: '11px', color: '#fff', fontWeight: 700, textAlign: 'center', padding: '16px 0' }}>아직 등록된 스킬 순서가 없습니다. 아래에서 추가해 주세요.</div>
                       )}

@@ -5314,7 +5314,8 @@ h1, h2, h3 {
   .editing-build-grid.is-pve {
     display: grid !important;
     grid-template-columns: minmax(240px, 276px) minmax(260px, 1.1fr) minmax(280px, 1fr);
-    grid-template-rows: minmax(0, auto) minmax(96px, 1fr);
+    /* 영웅 행: 짧은 모니터에서도 최소 ~2줄(168px)은 보이게 */
+    grid-template-rows: minmax(0, auto) minmax(168px, 1fr);
     grid-template-areas:
       "left gear timeline"
       "heroes heroes timeline";
@@ -5324,7 +5325,7 @@ h1, h2, h3 {
   .editing-build-grid.is-pvp {
     display: grid !important;
     grid-template-columns: minmax(240px, 276px) minmax(0, 1fr);
-    grid-template-rows: minmax(0, auto) minmax(120px, 1fr);
+    grid-template-rows: minmax(0, auto) minmax(168px, 1fr);
     grid-template-areas:
       "left gear"
       "heroes heroes";
@@ -5517,7 +5518,7 @@ h1, h2, h3 {
   .editing-build-hero-grid {
     flex: 1 1 auto !important;
     height: auto !important;
-    min-height: 64px;
+    min-height: 168px !important;
     max-height: none;
     grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)) !important;
     overflow-y: auto;
