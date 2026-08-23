@@ -3396,15 +3396,106 @@ h1, h2, h3 {
 }
 
 @media (max-width: 760px) {
-  .gear-overview-grid--1 {
-    grid-template-columns: 1fr;
-  }
+  .gear-overview-grid--1,
   .gear-overview-grid--2,
   .gear-overview-grid--3,
   .gear-overview-grid--4,
   .gear-overview-grid--5,
   .gear-overview-grid--6 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
+  }
+
+  /* 세팅 확인 모바일: 1열 + 이름/옵션 글자 가독성 (PC·캡처 레이아웃 무관) */
+  .gear-block-compact {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .gear-block-name {
+    min-width: 0;
+    flex: 1 1 auto;
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 15px !important;
+  }
+
+  .gear-block-set {
+    max-width: 42%;
+  }
+
+  .gear-block-set span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px !important;
+  }
+
+  .gear-block-optcode {
+    font-size: 12.5px !important;
+    letter-spacing: 0.2px !important;
+  }
+
+  .gear-block-slots {
+    gap: 8px !important;
+  }
+
+  .gear-block-slot {
+    padding: 8px 6px !important;
+  }
+
+  .gear-block-slot-label {
+    font-size: 11px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .gear-block-slot-value {
+    font-size: 13px !important;
+    line-height: 1.35 !important;
+    word-break: keep-all;
+  }
+
+  .gear-detail-body {
+    font-size: 13px;
+    height: auto;
+    min-height: 3.2em;
+    max-height: 5.2em;
+  }
+
+  /* 1열에선 카드/배치칸이 행 높이에 묶이지 않게 — 배치·펫 잘림 방지 */
+  .gear-overview-grid > div {
+    height: auto;
+  }
+
+  .gear-block-compact {
+    height: auto;
+  }
+
+  .setting-overview-deck {
+    height: auto;
+    min-height: 220px;
+    overflow: visible;
+    container-type: normal;
+  }
+
+  .setting-overview-deck .deck-stage {
+    overflow: visible;
+    flex: 0 0 auto;
+    min-height: 180px;
+  }
+
+  .setting-overview-deck .deck-hero-slot {
+    width: clamp(48px, 17vw, 62px);
+  }
+
+  .setting-overview-deck .deck-hero-slot-face {
+    width: clamp(48px, 17vw, 62px);
+    height: auto;
+  }
+
+  .setting-overview-deck-pet {
+    width: clamp(48px, 17vw, 62px);
+    height: clamp(48px, 17vw, 62px);
   }
 }
 

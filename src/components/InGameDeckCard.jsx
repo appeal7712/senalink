@@ -409,10 +409,15 @@ export default function InGameDeckCard({
           </div>
           <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-              <div style={{ fontSize: compact ? '15px' : '16px', fontWeight: 900, color: '#fff', lineHeight: 1.2 }}>
+              <div
+                className={compact ? 'gear-block-name' : undefined}
+                style={{ fontSize: compact ? '15px' : '16px', fontWeight: 900, color: '#fff', lineHeight: 1.2 }}
+              >
                 {name}
               </div>
-              <div style={{
+              <div
+                className={compact ? 'gear-block-set' : undefined}
+                style={{
                 marginLeft: 'auto',
                 display: 'inline-flex', alignItems: 'center', gap: '5px',
                 padding: '3px 8px', borderRadius: '7px', flexShrink: 0,
@@ -423,7 +428,7 @@ export default function InGameDeckCard({
               </div>
             </div>
             {optionCode && (
-              <div style={{ fontSize: '13px', fontWeight: 900, color: 'var(--gold-light)', letterSpacing: '0.4px' }}>
+              <div className={compact ? 'gear-block-optcode' : undefined} style={{ fontSize: '13px', fontWeight: 900, color: 'var(--gold-light)', letterSpacing: '0.4px' }}>
                 {optionCode}
               </div>
             )}
@@ -447,14 +452,14 @@ export default function InGameDeckCard({
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+        <div className={compact ? 'gear-block-slots' : undefined} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
           {slots.map(slot => (
-            <div key={slot.label} style={{
+            <div key={slot.label} className={compact ? 'gear-block-slot' : undefined} style={{
               background: 'rgba(0,0,0,0.35)', border: '1px solid var(--border-subtle)',
               borderRadius: '8px', padding: compact ? '6px' : '8px', textAlign: 'center'
             }}>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 800, marginBottom: '3px' }}>{slot.label}</div>
-              <div style={{ fontSize: '12px', fontWeight: 900, color: toneColor[slot.tone], lineHeight: 1.3 }}>{slot.value}</div>
+              <div className={compact ? 'gear-block-slot-label' : undefined} style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 800, marginBottom: '3px' }}>{slot.label}</div>
+              <div className={compact ? 'gear-block-slot-value' : undefined} style={{ fontSize: '12px', fontWeight: 900, color: toneColor[slot.tone], lineHeight: 1.3 }}>{slot.value}</div>
             </div>
           ))}
         </div>
