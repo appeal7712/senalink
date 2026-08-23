@@ -1,0 +1,345 @@
+# AGENTS.md — 세나링크 (sevennight_guild_web_formal) 핸드오프
+
+다른 에이전트·개발자가 **이 폴더만** 이어서 패치할 때 읽는 문서.  
+라이브: https://senalink.web.app · Firebase 프로젝트 **`senalink`만**.
+
+> **금지:** `sevennight_guild_web`, `*_backup*`, `mingbong-web` / layro / `sevennight-guild-hub` 등 다른 사본·프로젝트 열기·배포.  
+> **배포:** 밍봉/김봉이 명시할 때만. `npm run build` 후 `npx firebase deploy --only … --project senalink`.
+
+---
+
+## 1. 한 줄 요약
+
+세븐나이츠 유저용 **길드 허브 + 공용 커뮤니티 + 도감 + 메인 CMS** SPA.  
+React + Vite + Firebase (Auth / Firestore / Storage / Functions asia-northeast3).  
+라우터는 React Router가 아니라 `src/config/routes.js` + History API (`App.jsx`).
+
+---
+
+## 2. 반드시 지킬 Cursor 규칙
+
+| 파일 | 내용 |
+|------|------|
+| `.cursor/rules/local-only-until-launch.mdc` | 이 폴더만 패치, senalink만, 배포는 명시 요청 시 |
+| `.cursor/rules/center-and-fill-layout.mdc` | 덱+타임라인 2열: 행 stretch·덱 **세로 중앙**. 덱 수정 모달 「스킬 순서」높이 **px 고정**, 스크롤은 `.skill-timeline-scroller` 안만 |
+| `.cursor/rules/read-agents-md.mdc` | 비트리비얼 작업 전 이 문서 참고 |
+
+배포 시 관례: `src/config/appVersion.js`의 `APP_VERSION` bump → 푸터 `SiteFooter`에 표시.
+
+---
+
+## 3. 디렉터리 구조
+
+```
+sevennight_guild_web_formal/
+├── AGENTS.md                 ← 이 문서
+├── firebase.json / .firebaserc / firestore.rules / storage.rules / firestore.indexes.json
+├── functions/                ← Cloud Functions (Node 20, asia-northeast3)
+├── public/                   ← Vite 정적 (images, robots, sitemap…)
+├── asset/                    ← 원본 게임 에셋 (영웅/펫/장비 JSON·PNG)
+├── scripts/                  ← import_gear_assets.py, fetch_hero_cards.py, seed-emulator-admin.mjs
+├── src/
+│   ├── main.jsx              ← Provider 트리
+│   ├── App.jsx               ← 페이지 스위치 + GNB/푸터/배너
+│   ├── index.css             ← 거의 모든 스타일
+│   ├── config/               ← routes, firestorePaths, appVersion, deployMode, siteContact
+│   ├── context/              ← SuperAdmin / UserProfile / Lounge (3개뿐)
+│   ├── lib/                  ← Firebase·도메인 헬퍼
+│   ├── pages/                ← public / hub / community / encyclopedia / tools / ops
+│   ├── components/           ← GuildLounge, DbHub, 모달, 덱 카드…
+│   ├── data/                 ← 도감·기본값 JSON/JS
+│   └── utils/                ← overlayHistory, backdropDismiss, deckDrag
+└── (레거시 루트 스크래퍼 *.py — 경로가 옛 폴더를 가리킬 수 있음. formal 기준으로 고쳐서 쓸 것)
+```
+
+---
+
+## 4. 실행 · 배포
+
+```bash
+npm run dev              # Vite http://127.0.0.1:5173
+npm run emulators        # Auth 9099 / FS 8080 / Functions 5001 / Storage 9199
+npm run seed:admin       # 에뮬레이터 슈퍼관리자 시드
+npm run build
+npx firebase deploy --only hosting --project senalink
+npx firebase deploy --only firestore:rules --project senalink   # 규칙 변경 시
+npx firebase deploy --only storage --project senalink           # storage.rules 변경 시
+npx firebase deploy --only functions --project senalink         # functions 변경 시
+```
+
+클라이언트 Firebase: `VITE_FIREBASE_*` (`src/lib/firebase.js`).  
+개발: `.env.development`에서 `VITE_USE_EMULATORS=true`.
+
+---
+
+## 5. 라우팅 (페이지)
+
+정의: `src/config/routes.js` · 렌더: `src/App.jsx`
+
+| URL | PAGE id | 컴포넌트 |
+|-----|---------|----------|
+| `/` | `public_main` | `PublicMainPage` → `PublicMainDashboard` |
+| `/hub`, `/guild` | `guild_room` | `HubPage` → `GuildLounge` |
+| `/community` | `community` | lazy `CommunityPage` |
+| `/tools`, `/tools/*` | `tools` | lazy `ToolsPage` |
+| `/dex`, `/encyclopedia` | `encyclopedia` | lazy `EncyclopediaPage` → `DbHub` |
+| `/ops` | `ops` | lazy `OpsPage` |
+
+상시(ops 제외 일부): `GlobalNavBar`, `SiteFooter`, `SiteEntranceBanner`, `NicknameGate`, `ToastContainer`.  
+오버레이 뒤로가기: `src/utils/overlayHistory.js`.
+
+---
+
+## 6. Context · 인증 · 역할
+
+Provider 순서 (`main.jsx`): **SuperAdmin → UserProfile → Lounge → App**.
+
+### 6.1 SuperAdmin (`SuperAdminContext.jsx`)
+- Firestore `admins/{uid}`에 `{ role: "super" }` 가 있어야 함. **앱에서 생성 불가** (콘솔/시드만).
+- `/ops` 로그인: 구글 팝업 또는 에뮬레이터 `enterLocalOpsAdmin`.
+- 실제 쓰기 권한은 URL이 아니라 **Firestore `isSuperAdmin()`**.
+
+### 6.2 사이트 유저 프로필 (`UserProfileContext.jsx`)
+- 문서: `users/{uid}` 실시간 구독 + `saveProfile`.
+- 필드: `nickname`(2–12), `photoURL`, `totalwarTier`, `arenaTier`, `destructionScore`, `hubId`, `recommendCount`, `lastProfileRecommendDate`, `updatedAt`.
+- **마이페이지:** GNB `ProfileDropdown` → `MyPageModal` (본인만 수정).
+- **닉네임 게이트:** `NicknameGate` — 닉 없을 때 강제 모달 (`/ops` 제외).
+- **공개 프로필:** `PublicProfileModal` — 읽기 전용 + 일일 추천.
+- 아바타 Storage: `userAvatars/{uid}/avatar.jpg` (`avatarUpload.js`).
+
+### 6.3 길드 허브 (`LoungeContext.jsx`)
+- 허브 세션, 멤버/공지/게시글/히스토리/점수, 생성·가입·탈퇴·해산, 초대코드, `publicGuilds` 동기화.
+- 멤버 역할 (`hubs/{id}/members/{uid}.role`):
+  - **master** — 개설, 관리자 임명, 마스터 이양, 초대 재발급, 일부 설정
+  - **admin** — 공지·강퇴(다른 admin 제외)·점수·빌드 삭제 등. **`masterId` / `inviteCode` 변경 불가**
+  - **member** — 가입은 Callable `joinHub`만. 빌드 편집·본인 글 가능
+- 상한: `MAX_HUB_MEMBERS=30`, `MAX_ADMINS=3` (`loungeMeta.js`).
+
+### 6.4 프로필 일일 추천
+- 클라이언트: `src/lib/profileRecommend.js`
+- Claim: `profileDailyRecommends/{fromUid_YYYY-MM-DD}` + `users`의 `recommendCount` +1 (같은 배치, KST 하루 1회).
+- 취소 없음. 어뷰징은 ops에서 감시만 (삭제 UI 없음).
+
+---
+
+## 7. Firestore 경로 (`src/config/firestorePaths.js`)
+
+```js
+COL = {
+  ADMINS, SITE, HUBS, INVITE_INDEX, PUBLIC_GUILDS, USERS,
+  PROFILE_DAILY_RECOMMENDS, COMMUNITY_GUIDES, COMMUNITY_TIER_LISTS,
+}
+SITE_MAIN_DOC = ['site', 'main']   // CMS
+// site/stats 는 방문 집계 (헬퍼에만, COL 상수 없음)
+// hubs/{id}/builds|notices|posts|history|scores|members
+```
+
+### 읽기/쓰기 요약 (`firestore.rules`)
+
+| 경로 | 읽기 | 쓰기 |
+|------|------|------|
+| `admins/{uid}` | 본인 get | 클라이언트 불가 |
+| `site/main` | 공개 | Super만 (`updatedBy` = 본인) |
+| `site/stats` | 공개 | 누구나 create/update — total·dayCount **정확히 +1**, day=오늘 KST |
+| `users/{uid}` | signed-in get / **list=Super** | 본인 화이트리스트; 타인 recommend +1은 claim과 함께만 |
+| `profileDailyRecommends/…` | 본인 claim | 본인 create만 |
+| `communityGuides/{id}` | 공개 | Super 전부; signed-in은 PvP(arena/totalwar) 본인 글 |
+| `communityTierLists/{pve\|pvp}` | 공개 | Super만 |
+| `inviteIndex/{code}` | signed-in get | 허브 admin 생성; master/super 삭제 |
+| `publicGuilds/{hubId}` | 공개 | 허브 admin/master |
+| `hubs/{hubId}` | 멤버 또는 Super | 생성=본인이 master; 수정 master/admin/super(제약); 삭제 master/super |
+| `hubs/…/members` | 멤버/본인/super | 생성은 개설 시 master; 가입은 **Functions joinHub**; 역할 변경 master/super |
+| `hubs/…/builds` | 멤버/super | 멤버 C/U; 삭제 admin/super |
+| `hubs/…/notices, posts` | 멤버/super | 피드 검증; 수정/삭제 admin 또는 작성자 |
+| `hubs/…/history` | 멤버/super | create만 |
+| `hubs/…/scores` | 멤버/super | admin/super |
+
+**슈퍼관리자:** `admins/{uid}.role == 'super'`.
+
+`firestore.indexes.json`은 현재 비어 있음(복합 인덱스 없음).
+
+---
+
+## 8. Storage (`storage.rules`)
+
+| 경로 | 읽기 | 쓰기 |
+|------|------|------|
+| `userAvatars/{uid}/avatar.jpg` | 공개 | 본인, ≤500KB jpeg/png/webp |
+| `hubEmblems/{hubId}/byUser/{uid}/mark.jpg` | 공개 | 본인 동일 제한 |
+| `hubEmblems/{hubId}/mark.jpg` | 공개 | write 불가(레거시) |
+
+---
+
+## 9. Cloud Functions (`functions/index.js`)
+
+| 이름 | 종류 | 역할 |
+|------|------|------|
+| `onHubHistoryCreated` | onCreate | 허브 `lastActivityAt` 갱신 |
+| `onHubMemberDeleted` | onDelete | 매칭 시 `users.hubId` 클리어 |
+| `joinHub` | Callable | 초대코드 가입 (Admin SDK 트랜잭션, 좀비 hubId 정리) |
+| `disbandHub` | Callable | 허브 통째 삭제 (super 또는 마지막 멤버) |
+| `purgeIdleHubs` | Schedule 매일 04:00 KST | 60일 유휴 허브 삭제 |
+
+허브 삭제 시 지우는 서브컬렉션: `members`, `history`, `notices`, `posts`, `scores`, `builds`.
+
+---
+
+## 10. 기능 영역별 동작
+
+### 10.1 메인 CMS · 입장 배너 · 방문자
+
+| 항목 | 위치 |
+|------|------|
+| 문서 | `site/main` |
+| 기본값 | `src/data/siteMain.defaults.js` |
+| 구독/저장 | `src/lib/siteMain.js` → `useSiteMain()` |
+| Ops 편집 | `/ops` → **메인페이지** → `MainSiteEditor.jsx` (저장만, 「비우기」없음) |
+| 필드 | headline, subhead, highlight, metaDecks(4), pickRates(5), news[], entranceBanner, updatedAt/By |
+| 입장 배너 UI | `SiteEntranceBanner.jsx` (오늘 안 보기: localStorage) |
+| 방문 집계 | `site/stats` + `src/lib/siteVisitStats.js` — 브라우저당 **KST 하루 1회** (`localStorage` 키 `senalink_site_visit_day`). 히어로·ops에 `오늘 · 전체` 표시. 블로그급(시크릿 창 어뷰징 완전차단 불가) |
+
+### 10.2 길드 허브 vs 커뮤니티 (빌드 분리)
+
+| | 길드 허브 | 커뮤니티 |
+|--|----------|----------|
+| 데이터 | `hubs/{hubId}/builds/main` **단일 문서 번들** | `communityGuides/{id}` **문서 다수** |
+| UI | `GuildLounge.jsx` | `pages/community/*` + `lib/communityGuides.js` |
+| 내용 | siege, expedition, arena, totalwar, gwAttacks/Defenses, … | section pve/pvp, category, 영웅/장비/스킬, likes… |
+| 접근 | 허브 멤버만 | 공개 읽기; PvP는 닉네임 유저 작성; PvE·티어리스트는 Super |
+| 티어 | 허브 내 UI | `communityTierLists/pve` · `pvp` |
+
+규칙 주석: community guides는 길드 builds와 **완전 분리**.
+
+길드전 공격/방어 패널: `GuildWarAttackPanel.jsx`, `GuildWarDefensePanel.jsx`.
+
+### 10.3 Ops 관리자 (`/ops`)
+
+`OpsPage.jsx` — Super만 탭 진입:
+
+1. **메인페이지** — `MainSiteEditor` (+ `OpsMetaDeckModal`)
+2. **길드 허브 감독** — `HubOversee` (`hubOversee.js`)
+3. **유저 감독** — `UserOversee` (`userOversee.js`) — 목록·집계만, **강제탈퇴 UI 없음**
+
+### 10.4 「수정 및 고정자」 시각
+
+`AuthorMeta` / `formatUpdateAtDisplay` (`PublicProfileModal.jsx`):  
+저장은 ISO 유지, **표시만** `YYYY-MM-DD|HH:mm` · **Asia/Seoul 24시**.
+
+### 10.5 도구 · 도감
+
+- 도구: `ToolsPage` / `data/tools.js` (승확 계산기·티어리스트 메이커 등)
+- 도감: `EncyclopediaPage` → `DbHub` → `HeroDB` / `EquipDB` / `SystemDB`
+
+---
+
+## 11. 주요 `src/lib/` 맵
+
+| 파일 | 역할 |
+|------|------|
+| `firebase.js` | 초기화·에뮬레이터·`hashPassword` |
+| `googleSignIn.js` | 구글 로그인 |
+| `siteMain.js` / `siteVisitStats.js` | 메인 CMS / 방문 |
+| `profileRecommend.js` | 프로필 추천 |
+| `communityGuides.js` / `communityTierLists.js` | 공용 공략·티어 |
+| `publicGuilds.js` | 공개 길드 보드 |
+| `hubOversee.js` / `userOversee.js` | Ops |
+| `hubEmblem.js` / `avatarUpload.js` | 이미지 업로드 |
+| `copyNodeImage.js` | 세팅 공유 PNG |
+| `seo.js` / `sanitize.js` / `rateLimit.js` / `formatTime.js` | 부가 |
+
+---
+
+## 12. 컴포넌트 연결 (자주 만지는 것)
+
+```
+App
+├── GlobalNavBar → ProfileDropdown → MyPageModal
+├── page:
+│   ├── PublicMainDashboard (site/main + 방문수)
+│   ├── GuildLounge (LoungeContext + builds + 길드전/결투장/…)
+│   ├── CommunityPage → GuideCard/Editor, TierPanel, TotalWar…
+│   ├── EncyclopediaPage → DbHub
+│   ├── ToolsPage
+│   └── OpsPage → MainSiteEditor | HubOversee | UserOversee
+├── SiteEntranceBanner
+├── NicknameGate
+└── SiteFooter (버전)
+```
+
+덱/장비 UI 공통: `InGameDeckCard`, `HeroGearPanel`, `HeroGridPicker`, `HeroPortraitCard`, `equipments.js` 옵션.
+
+---
+
+## 13. 도감 업데이트 유의 사항 (영웅 · 펫 · 장비)
+
+앱이 **실제로 import하는 파일**만 고치면 UI에 반영된다. `asset/`은 원본·재생성 소스.
+
+### 13.1 영웅
+
+| 단계 | 할 일 |
+|------|--------|
+| 1 | `asset/영웅 목록/...`에 폴더·스킬 JSON·초상 원본 추가 |
+| 2 | `src/data/scraped_heroes.json`에 병합 (루트 `rebuild_heroes_json.py` 등은 **옛 경로**를 가리킬 수 있음 → 이 repo 기준으로 수정) |
+| 3 | `public/images/...` 초상; 카드는 `scripts/fetch_hero_cards.py` → `heroCardMeta.json` + `card.webp` |
+| 4 | `src/data/heroes.js` — `heroes` export, 새 진영이면 `HERO_FACTION_ORDER` 확인 |
+| 5 | 빌드·배포 시 `APP_VERSION` bump |
+
+런타임: `scraped_heroes.json` ← `heroes.js` ← `HeroDB` / 피커 / 초상.
+
+### 13.2 펫
+
+| 단계 | 할 일 |
+|------|--------|
+| 1 | **`src/data/pets.js`에 엔트리 추가** (앱은 여기만 봄) |
+| 2 | `/images/pets/{이름}.png` (또는 `portraitUrl`에 맞춤) |
+| 3 | (선택) `asset/펫 목록/모든 펫.json` 동기화 — 자동 import 아님 |
+
+### 13.3 장비 · 장신구
+
+| 단계 | 할 일 |
+|------|--------|
+| 1 | `asset/장비, 장신구/`에 PNG·메타 추가 |
+| 2 | `python scripts/import_gear_assets.py` → `src/data/gearDex.generated.json` + `public/images/equipment|accessories` |
+| 3 | **덱 에디터·길드전·ops 메타덱 세트/옵션**은 `src/data/equipments.js` (주석: 단일 소스) |
+| 4 | 도감 화면은 `gearDex.js`가 generated + legendary(`equipments.js`) 병합 |
+
+주의: `src/data/equipment.js`(단수)는 옛 스키마. 새 작업은 **`equipments.js` + gearDex**.
+
+### 13.4 도감 UI 탭
+
+`DbHub` — 영웅 / 장비 / 시스템(`systemRules.js`) / 펫.
+
+---
+
+## 14. 업데이트·패치 시 일반 체크리스트
+
+1. **이 폴더만** 수정. 라이브 배포는 요청 있을 때만.
+2. Firestore/Storage **규칙 바꾸면** 해당 rules도 같이 배포.
+3. Functions 바꾸면 `functions` 배포 + Node 20 유지.
+4. 도감 추가 후 피커·초상·진영 누락 없는지 `/dex`와 덱 수정에서 확인.
+5. 허브 가입/역할은 클라이언트 직쓰기가 아니라 **rules + joinHub** 전제.
+6. 커뮤니티 PvE 공략·티어 = Super; PvP만 일반 유저 작성 가능.
+7. 레이아웃: 덱 수정 모달 타임라인 높이 규칙 위반하지 말 것.
+8. 커밋/푸시는 밍봉 요청 시. 시크릿(`.env*`) 커밋 금지.
+
+---
+
+## 15. Ops에 아직 없는 유용한 후보 (구현 X, 참고)
+
+- 공용 공략 감독(최근 N / 삭제)
+- 추천수 상위·이상치
+- 허브 인원/최근활동 정렬 강화
+- 입장 배너 저장 전 미리보기
+- Functions Node 런타임 deprecation 대응
+
+---
+
+## 16. 연락 · 브랜치 관례
+
+- 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
+- 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
+- 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
+
+---
+
+*문서 갱신 시: 구조·규칙·도감 경로가 바뀌면 이 파일도 같이 고친다.*

@@ -55,14 +55,14 @@ function HeroChip({ hero, editing, onDragStart, onRemove }) {
         <HeroPortraitCard hero={hero} showStars showRole showName={false} />
       </div>
       <span className="hub-tier-chip-name">{cleanName(hero)}</span>
-      {editing ? (
+      {editing && onRemove ? (
         <button
           type="button"
           className="hub-tier-chip-x"
           aria-label={`${cleanName(hero)} 제거`}
           onClick={(e) => {
             e.stopPropagation();
-            onRemove?.(hero.id);
+            onRemove(hero.id);
           }}
         >
           ×
@@ -296,7 +296,7 @@ export default function CommunityTierPanel() {
           >
             <div className="hub-tier-pool-head">
               <h3>
-                <Icon name="user" size={14} /> 영웅 풀
+                <Icon name="user" size={14} /> 영웅 목록
               </h3>
               <input
                 className="tierlist-search"

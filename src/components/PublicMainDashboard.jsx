@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { heroes } from '../data/heroes';
 import { ROLE_ICONS } from '../data/roleIcons';
 import Icon from './icons/Icon';
 import { useSiteMain } from '../lib/siteMain';
+import { recordSiteVisitOnce, subscribeSiteVisitStats } from '../lib/siteVisitStats';
 import GuildRankBoard from './GuildRankBoard';
 import MetaDeckCarousel, { MetaDeckCard } from './MetaDeckCarousel';
 
@@ -17,11 +19,21 @@ const resolveHeroByName = (name) => {
 
 export default function PublicMainDashboard({ onNavigateToLounge }) {
   const { content, loaded } = useSiteMain();
+  const [visits, setVisits] = useState({ total: 0, dayCount: 0 });
   const metaDecks = (content.metaDecks || []).filter(
     (d) => String(d.title || '').trim() || (d.heroNames || []).some((n) => String(n || '').trim())
   );
   const pickRates = content.pickRates || [];
   const news = content.news || [];
+
+  useEffect(() => {
+    const unsub = subscribeSiteVisitStats(
+      (data) => setVisits({ total: data.total, dayCount: data.dayCount }),
+      () => {},
+    );
+    recordSiteVisitOnce().catch(() => {});
+    return unsub;
+  }, []);
 
   if (!loaded) {
     return (
@@ -51,6 +63,11 @@ export default function PublicMainDashboard({ onNavigateToLounge }) {
           </h1>
           <p className="hero-subhead">
             {content.subhead}
+          </p>
+          <p className="hero-visit-stats" aria-label="방문자 수">
+            오늘 방문자 {visits.dayCount.toLocaleString('ko-KR')}
+            <span aria-hidden="true"> · </span>
+            전체 {visits.total.toLocaleString('ko-KR')}
           </p>
 
           <button className="btn-ops" onClick={onNavigateToLounge}

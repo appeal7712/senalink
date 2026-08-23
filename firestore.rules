@@ -67,6 +67,15 @@ service cloud.firestore {
         && validFeedImages();
     }
 
+    // Asia/Seoul 달력일 (UTC+9 보정 후 year/month/day)
+    function pad2(n) {
+      return n < 10 ? '0' + string(n) : string(n);
+    }
+    function kstDateString() {
+      let t = request.time + duration.time(9, 0, 0, 0);
+      return string(t.year()) + '-' + pad2(t.month()) + '-' + pad2(t.day());
+    }
+
     match /admins/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;
       allow list: if false;
@@ -75,19 +84,36 @@ service cloud.firestore {
 
     match /site/{docId} {
       allow read: if true;
-      allow create, update: if isSuperAdmin()
-        && docId == 'main'
-        && request.resource.data.updatedBy == request.auth.uid;
       allow delete: if false;
-    }
 
-    // Asia/Seoul 달력일 (UTC+9 보정 후 year/month/day)
-    function pad2(n) {
-      return n < 10 ? '0' + string(n) : string(n);
-    }
-    function kstDateString() {
-      let t = request.time + duration.time(9, 0, 0, 0);
-      return string(t.year()) + '-' + pad2(t.month()) + '-' + pad2(t.day());
+      // 메인 CMS — 슈퍼만
+      allow create, update: if docId == 'main'
+        && isSuperAdmin()
+        && request.resource.data.updatedBy == request.auth.uid;
+
+      // 방문자 집계 — 누구나 +1 (브라우저당 하루 1회는 클라이언트가 제한)
+      allow create: if docId == 'stats'
+        && request.resource.data.keys().hasOnly(['total', 'day', 'dayCount', 'updatedAt'])
+        && request.resource.data.total == 1
+        && request.resource.data.dayCount == 1
+        && request.resource.data.day == kstDateString()
+        && request.resource.data.updatedAt is string
+        && request.resource.data.updatedAt.size() <= 40;
+
+      allow update: if docId == 'stats'
+        && request.resource.data.keys().hasOnly(['total', 'day', 'dayCount', 'updatedAt'])
+        && request.resource.data.total is int
+        && request.resource.data.dayCount is int
+        && request.resource.data.day == kstDateString()
+        && request.resource.data.updatedAt is string
+        && request.resource.data.updatedAt.size() <= 40
+        && request.resource.data.total == resource.data.get('total', 0) + 1
+        && (
+          (resource.data.get('day', '') == kstDateString()
+            && request.resource.data.dayCount == resource.data.get('dayCount', 0) + 1)
+          || (resource.data.get('day', '') != kstDateString()
+            && request.resource.data.dayCount == 1)
+        );
     }
 
     // 값 검증만 (문서에 여분 필드가 있어도 update 가능)
@@ -146,7 +172,7 @@ service cloud.firestore {
 
     match /users/{uid} {
       allow get: if signedIn();
-      allow list: if false;
+      allow list: if isSuperAdmin();
       allow create: if signedIn() && request.auth.uid == uid
         && validUserCreateKeys()
         && validUserFieldValues()

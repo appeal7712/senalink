@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSuperAdmin } from '../../context/SuperAdminContext';
-import { mergeSiteMain, saveSiteMain, useSiteMain } from '../../lib/siteMain';
+import { saveSiteMain, useSiteMain } from '../../lib/siteMain';
+import { subscribeSiteVisitStats } from '../../lib/siteVisitStats';
 import { heroes } from '../../data/heroes';
 import { pets } from '../../data/pets';
 import Icon from '../../components/icons/Icon';
@@ -85,6 +86,14 @@ export default function MainSiteEditor() {
   const [editingDeck, setEditingDeck] = useState(null);
   /** null | { index: number|null, item } — 게시판형 글쓰기/수정 (카드 무한 증식 방지) */
   const [newsComposer, setNewsComposer] = useState(null);
+  const [visits, setVisits] = useState({ total: 0, dayCount: 0 });
+
+  useEffect(() => {
+    return subscribeSiteVisitStats(
+      (data) => setVisits({ total: data.total, dayCount: data.dayCount }),
+      () => {},
+    );
+  }, []);
 
   const form = draft || content;
 
@@ -184,11 +193,13 @@ export default function MainSiteEditor() {
           <div style={{ fontSize: 12, color: '#fff', marginTop: 4, textShadow: '0 1px 6px rgba(0,0,0,0.7)' }}>
             {fromServer ? '저장본 사용 중' : '아직 저장본 없음 — 지금 저장해야 메인이 바뀝니다'}
           </div>
+          <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 8 }}>
+            오늘 방문자 {visits.dayCount.toLocaleString('ko-KR')}
+            <span aria-hidden="true"> · </span>
+            전체 {visits.total.toLocaleString('ko-KR')}
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button type="button" onClick={() => { setForm(mergeSiteMain(null)); setStatus('내용을 비웠습니다. 저장해야 반영됩니다.'); }} style={ghostBtn}>
-            비우기
-          </button>
           <button type="button" className="btn-ops" disabled={busy} onClick={onSave}>저장</button>
         </div>
       </div>

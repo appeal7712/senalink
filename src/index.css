@@ -2333,10 +2333,19 @@ h1, h2, h3 {
   font-size: 15px;
   color: #fff;
   line-height: 1.65;
-  margin-bottom: 22px;
+  margin-bottom: 10px;
   font-weight: 500;
   max-width: 520px;
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+}
+
+.hero-visit-stats {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.72);
+  letter-spacing: 0.02em;
+  margin: 0 0 22px;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.65);
 }
 
 .hero-highlight {
@@ -7000,6 +7009,7 @@ h1, h2, h3 {
   min-height: 88px;
   padding: 8px;
   border-radius: 14px;
+  overflow: visible;
 }
 .hub-tier-cell-empty {
   width: 100%;
@@ -7017,12 +7027,20 @@ h1, h2, h3 {
   align-items: center;
   gap: 2px;
   user-select: none;
+  overflow: visible;
+  z-index: 1;
 }
 .hub-tier-chip[draggable='true'] {
   cursor: grab;
 }
+.hub-tier-chip:hover,
+.hub-tier-chip:focus-within {
+  z-index: 8;
+}
 .hub-tier-chip-face {
   width: 48px;
+  position: relative;
+  z-index: 0;
 }
 .hub-tier-chip-name {
   width: 100%;
@@ -7039,16 +7057,22 @@ h1, h2, h3 {
   position: absolute;
   top: -4px;
   right: -4px;
-  width: 16px;
-  height: 16px;
-  border: none;
+  z-index: 12;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.88);
   color: #fff;
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 900;
   line-height: 1;
   cursor: pointer;
   padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.65);
 }
 .hub-tier-pool-panel {
   padding: 12px;

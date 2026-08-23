@@ -9,6 +9,7 @@ import { pets } from '../data/pets';
 import { backdropDismissProps } from '../utils/backdropDismiss';
 import { closeOverlayFromUI, collapseOverlayHistory, pushOverlay } from '../utils/overlayHistory';
 import ModalScrim from './ModalScrim';
+import { formatUpdateAtDisplay } from './PublicProfileModal';
 
 const emptyNames5 = () => ['', '', '', '', ''];
 const emptyGear5 = () => [emptyGearConfig(), emptyGearConfig(), emptyGearConfig(), emptyGearConfig(), emptyGearConfig()];
@@ -388,7 +389,7 @@ export default function GuildWarAttackPanel({
                     <span className="gw-attack-vs-pill">상대</span>
                     <h3>{selectedTarget.title}</h3>
                   </div>
-                  <div className="gw-attack-detail-meta">{selectedTarget.updatedAt}</div>
+                  <div className="gw-attack-detail-meta">{formatUpdateAtDisplay(selectedTarget.updatedAt)}</div>
                 </div>
               </div>
             </div>
@@ -510,7 +511,7 @@ export default function GuildWarAttackPanel({
               }}><Icon name="swords" size={16} color="var(--accent-cyan)" /> {inspectingCounter.title}</h3>
               <button onClick={closeInspectModal} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', flexShrink: 0, padding: 0 }}><Icon name="closeBtn" size={18} /></button>
             </div>
-            <div className="build-title-meta" style={{ width: '100%' }}>등록: <strong>{inspectingCounter.author}</strong> ({inspectingCounter.updatedAt})</div>
+            <div className="build-title-meta" style={{ width: '100%' }}>등록: <strong>{inspectingCounter.author}</strong> ({formatUpdateAtDisplay(inspectingCounter.updatedAt)})</div>
 
             <div className="gw-inspect-deck">
               <InGameDeckCard

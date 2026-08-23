@@ -1,0 +1,16 @@
+---
+description: Non-trivial work — read AGENTS.md handoff (senalink only)
+alwaysApply: true
+---
+
+# Read AGENTS.md first
+
+Before non-trivial patches, read **`AGENTS.md`** at the repo root (architecture, Firestore R/W, ops, encyclopedia update steps).
+
+Hard constraints (also in AGENTS.md):
+
+- Patch **only** `sevennight_guild_web_formal`. Live = `https://senalink.web.app` (Firebase **`senalink`**).
+- Deploy Hosting/rules/functions **only** when 밍봉/김봉 asks.
+- Do not open old copies (`sevennight_guild_web`, `*_backup*`) or other Firebase projects.
+- Deck editor: skill order list height fixed in px; scroll only in `.skill-timeline-scroller`.
+- Bump `src/config/appVersion.js` when shipping a deploy.

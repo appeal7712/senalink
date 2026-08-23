@@ -3,6 +3,7 @@ import { useSuperAdmin } from '../../context/SuperAdminContext';
 import Icon from '../../components/icons/Icon';
 import MainSiteEditor from './MainSiteEditor';
 import HubOversee from './HubOversee';
+import UserOversee from './UserOversee';
 
 export default function OpsPage({ onOpenHub }) {
   const {
@@ -91,7 +92,7 @@ export default function OpsPage({ onOpenHub }) {
         <span className="ops-tag"><Icon name="shield" size={13} /> 슈퍼관리자</span>
         <h1 style={{ fontSize: 24, fontWeight: 900, color: '#fff', margin: '10px 0 6px' }}>사이트 관리</h1>
         <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>
-          메인페이지·입장 배너·길드 허브 감독. 쓰기 권한은 Firestore <code style={{ color: 'var(--gold-light)' }}>admins/&#123;내UID&#125;</code> 의 role=super 만 통과합니다. 다른 구글 계정은 /ops 로그인 화면만 보고 데이터는 못 바꿉니다.
+          메인페이지·입장 배너·길드 허브·유저 감독. 쓰기 권한은 Firestore <code style={{ color: 'var(--gold-light)' }}>admins/&#123;내UID&#125;</code> 의 role=super 만 통과합니다. 다른 구글 계정은 /ops 로그인 화면만 보고 데이터는 못 바꿉니다.
         </p>
         <div style={{ marginTop: 14, fontSize: 11, color: '#64748b' }}>
           {usingEmulators ? '로컬 에뮬레이터' : (authUser?.email || authUser?.uid)}
@@ -102,6 +103,7 @@ export default function OpsPage({ onOpenHub }) {
         {[
           { id: 'main', label: '메인페이지' },
           { id: 'hubs', label: '길드 허브 감독' },
+          { id: 'users', label: '유저 감독' },
         ].map((item) => {
           const on = tab === item.id;
           return (
@@ -120,6 +122,7 @@ export default function OpsPage({ onOpenHub }) {
 
       {tab === 'main' && <MainSiteEditor />}
       {tab === 'hubs' && <HubOversee onOpenHub={onOpenHub} />}
+      {tab === 'users' && <UserOversee />}
     </div>
   );
 }

@@ -176,6 +176,32 @@ export default function PublicProfileModal({ uid, onClose }) {
   );
 }
 
+/** 업데이트 시각 표시: KST 24시 — 2026-08-23T06:34:23.331Z → 2026-08-23|15:34 */
+export function formatUpdateAtDisplay(raw) {
+  if (raw == null || raw === '') return '';
+  const s = String(raw).trim();
+  let input = s.replace('|', 'T').replace(' ', 'T');
+  // toISOString().slice 저장본(타임존 없음)은 UTC 시각 → Z 붙여 파싱
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(input) && !/[zZ]|[+-]\d{2}:?\d{2}$/.test(input)) {
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(input)) input += ':00';
+    input += 'Z';
+  }
+  const d = new Date(input);
+  if (Number.isNaN(d.getTime())) return s;
+
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(d);
+  const get = (type) => parts.find((p) => p.type === type)?.value || '';
+  return `${get('year')}-${get('month')}-${get('day')}|${get('hour')}:${get('minute')}`;
+}
+
 /** 작성자 아바타+닉 — authorId 있을 때만 클릭 가능 */
 export function AuthorMeta({
   author,
@@ -185,6 +211,7 @@ export function AuthorMeta({
   onOpenProfile,
 }) {
   const clickable = Boolean(authorId && onOpenProfile);
+  const stamp = formatUpdateAtDisplay(updatedAt);
   return (
     <div className="build-title-meta" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
       {prefix ? <span>{prefix}:</span> : null}
@@ -203,7 +230,7 @@ export function AuthorMeta({
         <AuthorAvatar uid={authorId} nickname={author} size={22} />
         <strong>{author || '알 수 없음'}</strong>
       </button>
-      {updatedAt ? <span>({updatedAt})</span> : null}
+      {stamp ? <span>({stamp})</span> : null}
     </div>
   );
 }
