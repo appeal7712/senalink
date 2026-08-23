@@ -1115,9 +1115,9 @@ h1, h2, h3 {
 
 .site-footer-inner {
   width: 100%;
-  max-width: none;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 0 clamp(12px, 3.5vw, 40px);
+  padding: 0 28px;
   position: relative;
   z-index: 1;
 }
@@ -1241,6 +1241,39 @@ h1, h2, h3 {
   flex-shrink: 0;
 }
 
+.site-footer-email-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: rgba(243, 246, 251, 0.55);
+  text-align: right;
+}
+
+.site-footer-email {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 800;
+  color: var(--gold-primary);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.site-footer-email:hover {
+  color: #fff;
+}
+
+.site-footer-email-note {
+  font-weight: 500;
+  color: rgba(243, 246, 251, 0.42);
+}
+
 .site-footer-link {
   appearance: none;
   -webkit-appearance: none;
@@ -1285,7 +1318,9 @@ h1, h2, h3 {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 12px 16px;
+  flex-wrap: wrap;
 }
 
 .site-footer-copy {
@@ -1294,20 +1329,67 @@ h1, h2, h3 {
   line-height: 1.45;
   color: rgba(243, 246, 251, 0.4);
   letter-spacing: -0.01em;
+  min-width: 0;
+  flex: 1 1 240px;
+}
+
+.site-footer-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.site-footer-version {
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(148, 163, 184, 0.95);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.site-footer-live {
+  padding: 5px 11px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.site-footer-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8fbfa5;
+  flex-shrink: 0;
 }
 
 .site-footer-peek {
   position: relative;
   z-index: 0;
   width: 100%;
+  max-width: 1180px;
+  margin: 2px auto 0;
+  padding: 0 28px;
   height: clamp(56px, 8.5vw, 110px);
-  margin-top: 2px;
   overflow: hidden;
   pointer-events: none;
   user-select: none;
   display: flex;
   align-items: flex-start;
   justify-content: center;
+  box-sizing: border-box;
 }
 
 .site-footer-peek-text {
@@ -1338,7 +1420,7 @@ h1, h2, h3 {
   }
 
   .site-footer-inner {
-    padding: 0 10px;
+    padding: 0 14px;
   }
 
   .site-footer-glass {
@@ -1409,9 +1491,29 @@ h1, h2, h3 {
     line-height: 1.35;
   }
 
+  .site-footer-email-hint {
+    text-align: left;
+    font-size: 11px;
+  }
+
+  .site-footer-bottom {
+    align-items: flex-start;
+  }
+
+  .site-footer-meta {
+    margin-left: 0;
+  }
+
+  .site-footer-version,
+  .site-footer-live {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
   .site-footer-peek {
     height: clamp(28px, 10vw, 44px);
     margin-top: 0;
+    padding: 0 14px;
   }
 
   .site-footer-peek-text {
@@ -1587,6 +1689,55 @@ h1, h2, h3 {
   gap: 8px;
 }
 
+.gnb-profile-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 5px 8px 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.gnb-profile-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.gnb-profile-label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.gnb-profile-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  background: #0a0e18;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gnb-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .gnb-live-chip {
   padding: 6px 12px;
   background: rgba(255, 255, 255, 0.06);
@@ -1623,6 +1774,55 @@ h1, h2, h3 {
   .ops-hub-grid {
     grid-template-columns: 1fr !important;
   }
+}
+
+.ops-hub-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.ops-hub-search {
+  flex: 1 1 200px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(8, 12, 22, 0.55);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ops-hub-search::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.ops-hub-search:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.ops-hub-pager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.ops-hub-pager-meta {
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(148, 163, 184, 0.95);
+  white-space: nowrap;
+}
+
+.ops-hub-pager button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .ops-pick-head,
@@ -1855,11 +2055,6 @@ h1, h2, h3 {
     width: 100%;
     justify-content: center;
   }
-
-  .gnb-version-chip,
-  .gnb-live-chip {
-    display: none;
-  }
 }
 
 @media (max-height: 720px) and (min-width: 1101px) {
@@ -2007,13 +2202,28 @@ h1, h2, h3 {
 
 .skill-reserve-row {
   display: grid;
-  width: max-content;
+  width: 100%;
   max-width: 100%;
-  margin-inline: auto;
+  box-sizing: border-box;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   background: rgba(255, 255, 255, 0.07);
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.skill-reserve-row--spread {
+  width: 100%;
+  justify-items: stretch;
+}
+
+.skill-reserve-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
   box-sizing: border-box;
 }
 
@@ -2929,6 +3139,19 @@ h1, h2, h3 {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.setting-overview-section .skill-reserve,
+.setting-overview-section .skill-reserve-row {
+  width: 100%;
+  max-width: 100%;
+}
+
+.setting-overview-section .skill-reserve-row {
+  background: transparent;
+  border: none;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .setting-overview-label {
@@ -3854,6 +4077,8 @@ h1, h2, h3 {
   border: none;
   height: auto;
   align-items: center;
+  width: 100%;
+  max-width: 100%;
 }
 
 .expedition-round-block {
@@ -4980,6 +5205,21 @@ h1, h2, h3 {
     flex-direction: column;
     overflow: hidden;
     z-index: 1;
+    /* inline flexShrink:0 이 남는 세로 공간을 못 먹게 막는 경우 대비 */
+    flex-shrink: 1 !important;
+  }
+
+  .editing-build-hero-picker .hero-grid-picker--fill {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: 100% !important;
+  }
+
+  .editing-build-hero-picker .hero-grid-picker--fill .hero-grid-picker-grid {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 64px !important;
+    max-height: none !important;
   }
 
   .editing-build-timeline-col {
@@ -5043,8 +5283,16 @@ h1, h2, h3 {
     height: auto !important;
     min-height: 64px;
     max-height: none;
-    grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)) !important;
     overflow-y: auto;
+  }
+
+  /* HeroGridPicker 래퍼: 그리드 강제 해제 → 안쪽 스크롤이 남는 높이를 먹음 */
+  .editing-build-hero-grid:has(.hero-grid-picker) {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: unset !important;
+    overflow: hidden !important;
   }
 
   /* 짧은 모니터: 패딩·버튼 더 압축 */
@@ -5469,8 +5717,15 @@ h1, h2, h3 {
 
   .build-panel-playbook .skill-reserve-row,
   .skill-reserve-row {
+    width: 100%;
+    max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  .skill-reserve-hero {
+    gap: 8px;
   }
 
   .build-panel-timeline {
@@ -7222,10 +7477,53 @@ h1, h2, h3 {
   background: rgba(255, 255, 255, 0.95);
 }
 .community-deck-kind-count {
-  margin-left: auto;
   font-size: 12px;
   font-weight: 800;
   color: rgba(255, 255, 255, 0.82);
+}
+.community-deck-kind-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.community-mine-guides-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(8, 12, 22, 0.45);
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.community-mine-guides-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.community-mine-guides-btn.is-on {
+  background: rgba(243, 240, 234, 0.92);
+  border-color: transparent;
+  color: #161616;
+}
+.community-add-guide-btn {
+  padding: 9px 14px;
+  font-size: 12px;
+  border-radius: 8px;
+}
+@media (max-width: 720px) {
+  .community-deck-kind-actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+  }
 }
 
 .community-raid-stack {
@@ -7302,8 +7600,9 @@ h1, h2, h3 {
 .community-dungeon-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px 14px;
+  gap: 14px 16px;
   margin-bottom: 22px;
+  width: 100%;
 }
 @media (max-width: 720px) {
   .community-dungeon-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -7312,9 +7611,9 @@ h1, h2, h3 {
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: flex-start;
-  gap: 8px;
+  gap: 0;
   padding: 0;
   margin: 0;
   cursor: pointer;
@@ -7337,9 +7636,11 @@ h1, h2, h3 {
   box-shadow: none;
 }
 .community-dungeon-tile-art {
+  position: relative;
   width: 100%;
   display: block;
   line-height: 0;
+  overflow: hidden;
 }
 .community-dungeon-tile-art img {
   width: 100%;
@@ -7356,16 +7657,32 @@ h1, h2, h3 {
     drop-shadow(0 10px 20px rgba(0, 0, 0, 0.35));
   transform: scale(1.02);
 }
-.community-dungeon-tile .label {
-  font-size: 14px;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.88);
-  text-align: center;
-  line-height: 1.25;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
-}
-.community-dungeon-tile.is-on .label {
+.community-dungeon-tile-caption {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 1;
+  max-width: calc(100% - 20px);
+  padding: 0;
+  margin: 0;
+  font-size: clamp(12px, 1.7vw, 14px);
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
   color: #fff;
+  text-align: left;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.95),
+    0 0 10px rgba(0, 0, 0, 0.75),
+    0 2px 12px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+.community-dungeon-tile.is-on .community-dungeon-tile-caption {
+  color: #fff;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.95),
+    0 0 12px rgba(0, 0, 0, 0.85),
+    0 0 8px rgba(243, 240, 234, 0.35);
 }
 
 /* 돌발: 이름 선택 넓게 + 보스 아트 여백 crop으로 박스 채움 */

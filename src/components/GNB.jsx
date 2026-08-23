@@ -3,9 +3,7 @@ import { createPortal } from 'react-dom';
 import Icon from './icons/Icon';
 import ProfileDropdown from './ProfileDropdown';
 import { PAGE } from '../config/routes';
-import { usingEmulators } from '../lib/firebase';
 import { TOOL_ITEMS } from '../data/tools';
-import { APP_VERSION_LABEL } from '../config/appVersion';
 
 function ToolsFlyout({ isActive, onOpenTools }) {
   const wrapRef = useRef(null);
@@ -135,13 +133,6 @@ export default function GNB({ activeTab, setActiveTab }) {
 
         <div className="gnb-status">
           <ProfileDropdown />
-          <span className="gnb-version-chip" title="패치 버전">{APP_VERSION_LABEL}</span>
-          <div className="gnb-live-chip">
-            <span className="gnb-live-dot" style={{
-              background: usingEmulators ? '#8eb8c4' : '#8fbfa5'
-            }} />
-            <span>{usingEmulators ? 'Local' : 'Live'}</span>
-          </div>
         </div>
       </div>
     </header>

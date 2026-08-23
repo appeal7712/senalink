@@ -14,7 +14,18 @@ const ROLE_FILTERS = [
 
 // currentSlotName: 현재 편집 중인 슬롯의 영웅은 목록에 남겨 교체를 허용하고,
 // 다른 슬롯에 이미 배치된 영웅은 숨겨 중복 선택을 막는다.
-export default function HeroGridPicker({ heroes, selectedNames = [], onPick, height = 200, currentSlotName = '', showSearch = false }) {
+export default function HeroGridPicker({
+  heroes,
+  selectedNames = [],
+  onPick,
+  height = 200,
+  currentSlotName = '',
+  showSearch = false,
+  /** 길드 허브 덱 수정과 동일: 부모 남는 높이를 채움 */
+  fillHeight = false,
+  /** 길드와 같은 초상·필터 밀도 */
+  loungeDensity = false,
+}) {
   const [roleFilter, setRoleFilter] = useState('all');
   const [q, setQ] = useState('');
   const needle = q.trim();
@@ -26,17 +37,33 @@ export default function HeroGridPicker({ heroes, selectedNames = [], onPick, hei
     return true;
   });
 
+  const portraitW = loungeDensity ? 58 : 62;
+  const cellMin = loungeDensity ? 62 : 68;
+  const gap = loungeDensity ? 6 : 8;
+  const filterPad = loungeDensity ? '8px 12px' : '5px 10px';
+  const filterFont = loungeDensity ? '13px' : '12px';
+  const filterIcon = loungeDensity ? 16 : 12;
+  const filterRadius = loungeDensity ? 8 : 6;
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+    <div
+      className={`hero-grid-picker${fillHeight ? ' hero-grid-picker--fill' : ''}`}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: loungeDensity ? 10 : 8,
+        ...(fillHeight ? { flex: '1 1 auto', minHeight: 0, height: '100%' } : null),
+      }}
+    >
+      <div style={{ display: 'flex', gap: loungeDensity ? 6 : 5, flexWrap: 'wrap', flexShrink: 0 }}>
         {ROLE_FILTERS.map(r => (
           <button key={r.id} type="button" onClick={() => setRoleFilter(r.id)}
             style={{
-              padding: '5px 10px', fontSize: '12px', fontWeight: 800, borderRadius: '6px', border: 'none', cursor: 'pointer',
-              background: roleFilter === r.id ? 'var(--gold-primary)' : 'rgba(8, 12, 22, 0.45)',
-              color: roleFilter === r.id ? '#000' : '#fff', display: 'flex', alignItems: 'center', gap: '4px'
+              padding: filterPad, fontSize: filterFont, fontWeight: 800, borderRadius: filterRadius, border: 'none', cursor: 'pointer',
+              background: roleFilter === r.id ? 'var(--gold-primary)' : 'rgba(255,255,255,0.06)',
+              color: roleFilter === r.id ? '#000' : '#94a3b8', display: 'flex', alignItems: 'center', gap: loungeDensity ? 6 : 4,
             }}>
-            {r.icon && <img src={r.icon} alt="" style={{ width: '12px', height: '12px' }} />}
+            {r.icon && <img src={r.icon} alt="" style={{ width: filterIcon, height: filterIcon, objectFit: 'contain' }} />}
             <span>{r.label}</span>
           </button>
         ))}
@@ -49,12 +76,24 @@ export default function HeroGridPicker({ heroes, selectedNames = [], onPick, hei
           placeholder="이름 검색 · 여포, 미호…"
           className="ops-glass-field"
           style={{
-            width: '100%', padding: '8px 10px',
+            width: '100%', padding: '8px 10px', flexShrink: 0,
           }}
         />
       )}
 
-      <div className="hero-grid-picker-grid" style={{ height: `${height}px`, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(68px, 1fr))', gap: '8px', overflowY: 'auto', paddingRight: '4px' }}>
+      <div
+        className="hero-grid-picker-grid"
+        style={{
+          ...(fillHeight
+            ? { flex: '1 1 auto', minHeight: 64, height: 'auto' }
+            : { height: `${height}px` }),
+          display: 'grid',
+          gridTemplateColumns: `repeat(auto-fill, minmax(${cellMin}px, 1fr))`,
+          gap: `${gap}px`,
+          overflowY: 'auto',
+          paddingRight: 4,
+        }}
+      >
         {filtered.map(h => {
           const cleanName = h.name.replace('(각성)', '');
           const isCurrent = cleanName === currentSlotName;
@@ -67,7 +106,7 @@ export default function HeroGridPicker({ heroes, selectedNames = [], onPick, hei
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'grab' }}
             >
               <div style={{
-                width: '62px',
+                width: portraitW,
                 outline: isCurrent ? '2.5px solid var(--accent-cyan)' : 'none',
                 outlineOffset: 1,
                 borderRadius: 8,
@@ -76,7 +115,10 @@ export default function HeroGridPicker({ heroes, selectedNames = [], onPick, hei
               }}>
                 <HeroPortraitCard hero={h} showStars showRole showName={false} />
               </div>
-              <div style={{ width: '62px', marginTop: '4px', textAlign: 'center', fontSize: '12px', color: '#fff', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{
+                width: portraitW, marginTop: 4, textAlign: 'center', fontSize: loungeDensity ? 11 : 12,
+                color: '#fff', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>
                 {cleanName}
               </div>
             </div>

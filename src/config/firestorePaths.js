@@ -7,9 +7,13 @@ export const COL = {
   INVITE_INDEX: 'inviteIndex',
   PUBLIC_GUILDS: 'publicGuilds',
   USERS: 'users',
+  PROFILE_DAILY_RECOMMENDS: 'profileDailyRecommends',
   COMMUNITY_GUIDES: 'communityGuides',
   COMMUNITY_TIER_LISTS: 'communityTierLists',
 };
+
+export const profileDailyRecommendDocId = (fromUid, day) => `${fromUid}_${day}`;
+
 
 export const communityGuideDoc = (guideId) => [COL.COMMUNITY_GUIDES, guideId];
 export const communityTierListDoc = (listId) => [COL.COMMUNITY_TIER_LISTS, listId];

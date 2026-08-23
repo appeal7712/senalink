@@ -182,6 +182,7 @@ export default function CommunityPvePanel() {
             >
               <span className="community-dungeon-tile-art">
                 <SafeImg src={c.iconUrl} alt={c.name} />
+                <span className="community-dungeon-tile-caption">{c.name}</span>
               </span>
             </button>
           ))}

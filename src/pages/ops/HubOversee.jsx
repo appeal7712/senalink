@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { listAllHubs, listHubMembers, superKickMember } from '../../lib/hubOversee';
 import { useLounge } from '../../context/LoungeContext';
 import Icon from '../../components/icons/Icon';
 
 const ROLE_LABEL = { master: '길드마스터', admin: '관리자', member: '길드원' };
+const PAGE_SIZE = 20;
 
 export default function HubOversee({ onOpenHub }) {
   const { enterHubAsSuperAdmin } = useLounge();
@@ -12,6 +13,8 @@ export default function HubOversee({ onOpenHub }) {
   const [members, setMembers] = useState([]);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
 
   const loadHubs = async (cancelled) => {
     setErr('');
@@ -19,9 +22,6 @@ export default function HubOversee({ onOpenHub }) {
       const list = await listAllHubs();
       if (cancelled?.current) return;
       setHubs(list);
-      if (list.length && !list.some((h) => h.id === selectedId)) {
-        setSelectedId(list[0].id);
-      }
     } catch (e) {
       if (cancelled?.current) return;
       setErr(e?.message || '허브 목록을 읽을 수 없습니다.');
@@ -33,6 +33,42 @@ export default function HubOversee({ onOpenHub }) {
     loadHubs(cancelled);
     return () => { cancelled.current = true; };
   }, []);
+
+  const filtered = useMemo(() => {
+    const q = String(query || '').trim().toLowerCase();
+    if (!q) return hubs;
+    return hubs.filter((h) => {
+      const name = String(h.name || '').toLowerCase();
+      const code = String(h.inviteCode || '').toLowerCase();
+      return name.includes(q) || code.includes(q);
+    });
+  }, [hubs, query]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageSafe = Math.min(page, totalPages);
+  const pageSlice = useMemo(() => {
+    const start = (pageSafe - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, pageSafe]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
+
+  useEffect(() => {
+    if (page !== pageSafe) setPage(pageSafe);
+  }, [page, pageSafe]);
+
+  // 검색/페이지 바뀌면 보이는 목록의 첫 허브로 재선택
+  useEffect(() => {
+    if (!pageSlice.length) {
+      setSelectedId(null);
+      return;
+    }
+    if (!pageSlice.some((h) => h.id === selectedId)) {
+      setSelectedId(pageSlice[0].id);
+    }
+  }, [pageSlice, selectedId]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -71,13 +107,16 @@ export default function HubOversee({ onOpenHub }) {
     onOpenHub?.();
   };
 
+  const rangeFrom = filtered.length ? (pageSafe - 1) * PAGE_SIZE + 1 : 0;
+  const rangeTo = Math.min(pageSafe * PAGE_SIZE, filtered.length);
+
   return (
     <div className="luxury-panel" style={{ padding: 22 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
         <h2 style={{ fontSize: 18, fontWeight: 900, color: 'var(--gold-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
           <Icon name="fortress" size={16} /> 길드 허브 감독
         </h2>
-        <button type="button" onClick={loadHubs} style={ghostBtn}>새로고침</button>
+        <button type="button" onClick={() => loadHubs({ current: false })} style={ghostBtn}>새로고침</button>
       </div>
       {err && <div style={{ color: 'var(--accent-red)', fontWeight: 800, marginBottom: 12 }}>{err}</div>}
 
@@ -85,9 +124,46 @@ export default function HubOversee({ onOpenHub }) {
         <p style={{ color: '#94a3b8', fontSize: 13 }}>아직 생성된 허브가 없습니다.</p>
       )}
 
+      {hubs.length > 0 && (
+        <div className="ops-hub-toolbar">
+          <input
+            type="search"
+            className="ops-hub-search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="허브 이름 · 초대코드 검색"
+            aria-label="허브 검색"
+          />
+          <div className="ops-hub-pager">
+            <span className="ops-hub-pager-meta">
+              {filtered.length
+                ? `${rangeFrom}–${rangeTo} / ${filtered.length}`
+                : '결과 없음'}
+              {filtered.length > 0 ? ` · ${pageSafe}/${totalPages}` : ''}
+            </span>
+            <button
+              type="button"
+              style={ghostBtn}
+              disabled={pageSafe <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              이전
+            </button>
+            <button
+              type="button"
+              style={ghostBtn}
+              disabled={pageSafe >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              다음
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="ops-hub-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, 280px) 1fr', gap: 16 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {hubs.map((hub) => {
+          {pageSlice.map((hub) => {
             const on = hub.id === selectedId;
             return (
               <button
@@ -106,6 +182,9 @@ export default function HubOversee({ onOpenHub }) {
               </button>
             );
           })}
+          {hubs.length > 0 && !pageSlice.length && (
+            <p style={{ color: '#94a3b8', fontSize: 13, margin: 0 }}>검색 결과가 없습니다.</p>
+          )}
         </div>
 
         {selected && (

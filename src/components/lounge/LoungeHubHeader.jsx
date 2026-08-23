@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Icon from '../icons/Icon';
 import {
   HUB_EMBLEMS,
   LOUNGE_AFFILIATIONS,
   LOUNGE_TAGS,
   MAX_LOUNGE_TAGS,
+  loungeTagLabel,
 } from '../../data/loungeMeta';
 import { useLounge } from '../../context/LoungeContext';
 import { formatJoinedAt, formatLastActive } from '../../lib/formatTime';
@@ -39,7 +40,7 @@ export default function LoungeHubHeader() {
 
   const affiliation = LOUNGE_AFFILIATIONS.find(a => a.id === activeLounge.affiliation);
   const emblemId = activeLounge.emblem || 'fortress';
-  const tagLabels = (activeLounge.tags || []).map(id => LOUNGE_TAGS.find(t => t.id === id)?.label || id);
+  const tagLabels = (activeLounge.tags || []).map((id) => loungeTagLabel(id));
   const masterNickname = activeLounge.members.find(m => m.role === 'master')?.nickname || '';
 
   const copyCode = async () => {
@@ -187,12 +188,6 @@ function HubSettingsModal({ onClose, lounge, isMaster, isAdmin, updateHubSetting
   useEffect(() => () => {
     if (markPreviewRef.current) URL.revokeObjectURL(markPreviewRef.current);
   }, []);
-
-  const groupedTags = useMemo(() => ({
-    content: LOUNGE_TAGS.filter(t => t.group === 'content'),
-    vibe: LOUNGE_TAGS.filter(t => t.group === 'vibe'),
-    age: LOUNGE_TAGS.filter(t => t.group === 'age'),
-  }), []);
 
   const toggleTag = (id) => {
     setTags(prev => {
@@ -350,24 +345,22 @@ function HubSettingsModal({ onClose, lounge, isMaster, isAdmin, updateHubSetting
           </Field>
 
           <Field label={`해시태그 (${tags.length}/${MAX_LOUNGE_TAGS})`}>
-            {Object.entries(groupedTags).map(([group, list]) => (
-              <div key={group} style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
-                {list.map(t => {
-                  const active = tags.includes(t.id);
-                  return (
-                    <button key={t.id} type="button" onClick={() => toggleTag(t.id)}
-                      style={{
-                        padding: '6px 10px', borderRadius: '999px', cursor: 'pointer', fontSize: '11px', fontWeight: 900,
-                        background: active ? 'rgba(255,255,255,0.86)' : 'rgba(255,255,255,0.06)',
-                        border: active ? '1px solid transparent' : '1px solid rgba(255,255,255,0.12)',
-                        color: active ? '#161616' : 'var(--text-muted)'
-                      }}>
-                      {t.label}
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {LOUNGE_TAGS.map(t => {
+                const active = tags.includes(t.id);
+                return (
+                  <button key={t.id} type="button" onClick={() => toggleTag(t.id)}
+                    style={{
+                      padding: '6px 10px', borderRadius: '999px', cursor: 'pointer', fontSize: '11px', fontWeight: 900,
+                      background: active ? 'rgba(255,255,255,0.86)' : 'rgba(255,255,255,0.06)',
+                      border: active ? '1px solid transparent' : '1px solid rgba(255,255,255,0.12)',
+                      color: active ? '#161616' : 'var(--text-muted)'
+                    }}>
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
           </Field>
 
           {isMaster && (

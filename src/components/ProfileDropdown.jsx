@@ -57,17 +57,19 @@ export default function ProfileDropdown() {
 
   return (
     <>
-      <div ref={wrapRef} style={{ position: 'relative' }}>
-        <button type="button" onClick={() => setOpen(v => !v)}
-          aria-label="프로필 메뉴"
-          style={{
-            width: 32, height: 32, borderRadius: '50%', overflow: 'hidden',
-            border: '1.5px solid rgba(255,255,255,0.25)', background: '#0a0e18',
-            cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-          {avatar
-            ? <img src={avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            : <Icon name="user" size={16} color="rgba(255,255,255,0.5)" />}
+      <div ref={wrapRef} className="gnb-profile" style={{ position: 'relative' }}>
+        <button
+          type="button"
+          className="gnb-profile-btn"
+          onClick={() => setOpen(v => !v)}
+          aria-label="마이프로필"
+        >
+          <span className="gnb-profile-label">마이프로필</span>
+          <span className="gnb-profile-avatar">
+            {avatar
+              ? <img src={avatar} alt="" />
+              : <Icon name="user" size={15} color="rgba(255,255,255,0.65)" />}
+          </span>
         </button>
         {open && pos && createPortal(
           <div ref={menuRef} style={{ ...menuStyle, top: pos.top, right: pos.right }}>

@@ -1828,7 +1828,7 @@ export default function GuildLounge() {
                     </div>
                   </div>
 
-                  <div className="editing-build-hero-grid" style={{ height: '168px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(58px, 1fr))', gap: '6px', overflowY: 'auto', paddingRight: '4px' }}>
+                  <div className="editing-build-hero-grid" style={{ height: '168px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(62px, 1fr))', gap: '6px', overflowY: 'auto', paddingRight: '4px' }}>
                     {filteredHeroesByRole.map(h => {
                       const cleanName = h.name.replace('(각성)', '');
                       return (
@@ -1839,10 +1839,10 @@ export default function GuildLounge() {
                           onClick={() => handleSelectHeroFromBottom(h)}
                           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'grab' }}
                         >
-                          <div style={{ width: '54px', outline: (editingHeroNames[targetSlotIdx] || '') === cleanName ? '2px solid var(--accent-cyan)' : 'none', outlineOffset: 1, borderRadius: 8 }}>
+                          <div style={{ width: '58px', outline: (editingHeroNames[targetSlotIdx] || '') === cleanName ? '2px solid var(--accent-cyan)' : 'none', outlineOffset: 1, borderRadius: 8 }}>
                             <HeroPortraitCard hero={h} showStars showRole showName={false} />
                           </div>
-                          <div style={{ width: '54px', marginTop: '2px', background: '#000', borderRadius: '3px', padding: '1px 0', textAlign: 'center', fontSize: '8px', color: '#fff', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <div style={{ width: '58px', marginTop: '2px', background: '#000', borderRadius: '3px', padding: '1px 0', textAlign: 'center', fontSize: '8px', color: '#fff', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {cleanName}
                           </div>
                         </div>

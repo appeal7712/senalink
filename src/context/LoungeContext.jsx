@@ -7,6 +7,7 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
+  deleteField,
   onSnapshot,
   query,
   orderBy,
@@ -378,8 +379,9 @@ export function LoungeProvider({ children }) {
       const patch = { lastActiveAt: nowIso() };
       try {
         const uSnap = await getDoc(doc(db, COL.USERS, authUser.uid));
-        const avatarUrl = uSnap.data()?.photoURL || authUser.photoURL || null;
-        if (avatarUrl) patch.avatarURL = avatarUrl;
+        // 마이페이지에서 올린 사진만 허브 아바타로 씀. 구글 계정 사진은 자동 반영하지 않음.
+        const customPhoto = uSnap.data()?.photoURL || null;
+        patch.avatarURL = customPhoto || deleteField();
       } catch { /* ignore */ }
       updateDoc(doc(db, 'hubs', loungeId, 'members', authUser.uid), patch).catch(() => {});
     };
@@ -461,7 +463,7 @@ export function LoungeProvider({ children }) {
     try {
       await updateDoc(ref, payload);
     } catch {
-      await setDoc(ref, payload);
+      await setDoc(ref, payload, { merge: true });
     }
   }, [authUser]);
 
@@ -561,7 +563,7 @@ export function LoungeProvider({ children }) {
       joinedAt: ts,
       lastActiveAt: ts,
     };
-    const masterAvatar = userData?.photoURL || authUser.photoURL || null;
+    const masterAvatar = userData?.photoURL || null;
     if (masterAvatar) masterData.avatarURL = masterAvatar;
     await setDoc(doc(db, 'hubs', hubId, 'members', authUser.uid), masterData);
 

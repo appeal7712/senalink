@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { COL } from '../config/firestorePaths';
+import { useUserProfile } from '../context/UserProfileContext';
+import { canRecommendToday, recommendProfile } from '../lib/profileRecommend';
 import Icon from './icons/Icon';
 import ModalScrim from './ModalScrim';
 import SafeImg from './icons/SafeImg';
@@ -20,11 +22,14 @@ function formatScore(n) {
 
 /**
  * 읽기 전용 공개 프로필 — 수정은 본인 마이페이지만.
+ * 프로필 추천은 덱 따봉과 별도(하루 1회, 취소 없음).
  */
 export default function PublicProfileModal({ uid, onClose }) {
+  const { authUser, profile: myProfile } = useUserProfile();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState('');
+  const [recommendBusy, setRecommendBusy] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,6 +61,36 @@ export default function PublicProfileModal({ uid, onClose }) {
 
   const tw = TW_ALL.find((t) => t.id === profile?.totalwarTier) || TW_ALL[0];
   const arena = arenaTierById(profile?.arenaTier);
+  const isSelf = Boolean(authUser?.uid && uid && authUser.uid === uid);
+  const alreadyToday = !canRecommendToday(myProfile?.lastProfileRecommendDate);
+  const recommendCount = Number(profile?.recommendCount) || 0;
+
+  async function handleRecommend() {
+    if (!authUser?.uid) {
+      alert('구글 로그인 후 이용해 주세요.');
+      return;
+    }
+    if (!myProfile?.nickname?.trim()) {
+      alert('마이페이지에서 닉네임을 먼저 설정해 주세요.');
+      return;
+    }
+    if (isSelf) return;
+    if (alreadyToday) {
+      alert('오늘은 이미 추천했습니다. 내일 다시 눌러 주세요.');
+      return;
+    }
+    try {
+      setRecommendBusy(true);
+      await recommendProfile({ fromUid: authUser.uid, toUid: uid });
+      setProfile((prev) => (prev
+        ? { ...prev, recommendCount: (Number(prev.recommendCount) || 0) + 1 }
+        : prev));
+    } catch (e) {
+      alert(e?.message || '추천에 실패했습니다.');
+    } finally {
+      setRecommendBusy(false);
+    }
+  }
 
   return (
     <ModalScrim style={{ zIndex: 9600 }} {...backdropDismissProps(onClose)}>
@@ -89,6 +124,24 @@ export default function PublicProfileModal({ uid, onClose }) {
                 : <Icon name="user" size={36} color="rgba(255,255,255,0.3)" />}
             </div>
             <div style={{ fontSize: 18, fontWeight: 900, color: '#fff' }}>{profile.nickname || '이름 없음'}</div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {!isSelf && (
+                <button
+                  type="button"
+                  className={`btn-like${alreadyToday ? ' is-on' : ''}`}
+                  disabled={recommendBusy || alreadyToday}
+                  onClick={handleRecommend}
+                  title={alreadyToday ? '오늘은 이미 추천함' : '프로필 추천 · 하루 1회'}
+                >
+                  <Icon name="thumbUp" size={15} />
+                  {alreadyToday ? '오늘 추천함' : '추천'}
+                </button>
+              )}
+              <span style={{ fontSize: 13, fontWeight: 800, color: '#94a3b8' }}>
+                추천 {recommendCount.toLocaleString('ko-KR')}
+              </span>
+            </div>
 
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div className="glass-inset" style={{ padding: '12px 14px', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10 }}>

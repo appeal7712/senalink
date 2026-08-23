@@ -21,6 +21,8 @@ import {
 import { useSuperAdmin } from '../../context/SuperAdminContext';
 import { useUserProfile } from '../../context/UserProfileContext';
 
+const ONE_GUIDE_MSG = '한 명당 한 개의 공략만 올릴 수 있습니다.\n기존 공략을 삭제하고 올려주세요.';
+
 export default function CommunityPvpPanel() {
   const [hubMode, setHubMode] = useState('arena'); // arena | arena_advanced | totalwar
   const activeMode = COMMUNITY_PVP_MODES.find((m) => m.id === hubMode) || COMMUNITY_PVP_MODES[0];
@@ -60,13 +62,16 @@ function CommunityArenaSection({ arenaKind, bannerUrl }) {
   const [editing, setEditing] = useState(null);
   const [profileUid, setProfileUid] = useState(null);
   const [filterDeckKind, setFilterDeckKind] = useState('all');
+  const [mineOnly, setMineOnly] = useState(false);
 
   const hasNickname = Boolean(String(profile.nickname || '').trim());
   const canCreate = canCreateCommunityGuide({ isSuperAdmin, section: 'pvp', hasNickname });
   const activeArena = COMMUNITY_ARENA_KINDS.find((k) => k.id === arenaKind) || COMMUNITY_ARENA_KINDS[0];
+  const myUid = authUser?.uid || '';
 
   useEffect(() => {
     setFilterDeckKind('all');
+    setMineOnly(false);
   }, [arenaKind]);
 
   useEffect(() => {
@@ -78,11 +83,19 @@ function CommunityArenaSection({ arenaKind, bannerUrl }) {
     );
   }, []);
 
+  const myGuidesHere = useMemo(
+    () => guides.filter((g) => g.arenaKind === arenaKind && g.authorId && g.authorId === myUid),
+    [guides, arenaKind, myUid],
+  );
+
   const filtered = useMemo(() => guides.filter((g) => {
     if (g.arenaKind !== arenaKind) return false;
     if (filterDeckKind !== 'all' && g.deckKind !== filterDeckKind) return false;
+    if (mineOnly) {
+      if (!myUid || g.authorId !== myUid) return false;
+    }
     return true;
-  }), [guides, arenaKind, filterDeckKind]);
+  }), [guides, arenaKind, filterDeckKind, mineOnly, myUid]);
 
   const openCreate = () => {
     if (!authUser) {
@@ -91,6 +104,10 @@ function CommunityArenaSection({ arenaKind, bannerUrl }) {
     }
     if (!hasNickname) {
       alert('마이페이지에서 닉네임을 먼저 설정해 주세요.');
+      return;
+    }
+    if (myGuidesHere.length > 0) {
+      alert(ONE_GUIDE_MSG);
       return;
     }
     setEditing(emptyCommunityGuide({
@@ -104,7 +121,20 @@ function CommunityArenaSection({ arenaKind, bannerUrl }) {
     }));
   };
 
+  const toggleMineOnly = () => {
+    if (!authUser) {
+      alert('구글 로그인 후 이용해 주세요.');
+      return;
+    }
+    setMineOnly((v) => !v);
+  };
+
   const handleSave = async (payload) => {
+    const isNew = !payload.id;
+    if (isNew && myGuidesHere.length > 0) {
+      alert(ONE_GUIDE_MSG);
+      return;
+    }
     await saveCommunityGuide({
       ...payload,
       section: 'pvp',
@@ -132,16 +162,8 @@ function CommunityArenaSection({ arenaKind, bannerUrl }) {
               <Icon name="swords" size={15} color="var(--gold-primary)" />
               {activeArena.label} 공략
             </div>
-            <div className="community-arena-action-hint">덱 유형 · 펫 · 장비 · 스킬 예약</div>
+            <div className="community-arena-action-hint">덱 유형 · 펫 · 장비 · 스킬 예약 · 1인 1공략</div>
           </div>
-          {canCreate && (
-            <div className="community-arena-action-cta">
-              <button type="button" onClick={openCreate} className="btn-ops" style={{ padding: '9px 14px', fontSize: 12 }}>
-                <Icon name="plus" size={13} />
-                공략 추가
-              </button>
-            </div>
-          )}
         </div>
         <div className="community-arena-action-art" aria-hidden>
           <SafeImg src={bannerUrl || activeArena.iconUrl} alt="" />
@@ -176,11 +198,30 @@ function CommunityArenaSection({ arenaKind, bannerUrl }) {
           );
         })}
         <span className="community-deck-kind-count">{filtered.length}개</span>
+        <div className="community-deck-kind-actions">
+          <button
+            type="button"
+            className={`community-mine-guides-btn${mineOnly ? ' is-on' : ''}`}
+            onClick={toggleMineOnly}
+          >
+            내가 올린 공략
+          </button>
+          {canCreate && (
+            <button type="button" onClick={openCreate} className="btn-ops community-add-guide-btn">
+              <Icon name="plus" size={13} />
+              공략 추가
+            </button>
+          )}
+        </div>
       </div>
 
       {loadError && <p style={{ color: '#f87171', fontWeight: 700, fontSize: 13 }}>{loadError}</p>}
       {filtered.length === 0 && !loadError && (
-        <div className="glass-inset community-empty">등록된 {activeArena.label} 공략이 없습니다.</div>
+        <div className="glass-inset community-empty">
+          {mineOnly
+            ? `내가 올린 ${activeArena.label} 공략이 없습니다.`
+            : `등록된 ${activeArena.label} 공략이 없습니다.`}
+        </div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

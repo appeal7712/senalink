@@ -1,5 +1,7 @@
 import { PAGE } from '../config/routes';
-import { FEEDBACK_URL } from '../config/siteContact';
+import { OPERATOR_EMAIL } from '../config/siteContact';
+import { APP_VERSION_LABEL } from '../config/appVersion';
+import { usingEmulators } from '../lib/firebase';
 import { showToast } from './Toast';
 
 const NAV_LINKS = [
@@ -10,13 +12,18 @@ const NAV_LINKS = [
   { id: PAGE.DEX, label: '도감' },
 ];
 
-function openExternal(url) {
-  const href = String(url || '').trim();
-  if (!href) {
-    showToast('링크 준비 중', 'info');
+async function copyOperatorEmail() {
+  const email = String(OPERATOR_EMAIL || '').trim();
+  if (!email) {
+    showToast('운영자 이메일이 아직 없습니다.', 'info');
     return;
   }
-  window.open(href, '_blank', 'noopener,noreferrer');
+  try {
+    await navigator.clipboard.writeText(email);
+    showToast(`운영자 이메일 ${email} 을 복사했습니다. 메일을 보내 주세요.`, 'success');
+  } catch {
+    showToast(`운영자 이메일: ${email} — 메일을 보내 주세요.`, 'info');
+  }
 }
 
 export default function SiteFooter({ onNavigate }) {
@@ -59,12 +66,25 @@ export default function SiteFooter({ onNavigate }) {
                     <button
                       type="button"
                       className="site-footer-link"
-                      onClick={() => openExternal(FEEDBACK_URL)}
+                      onClick={() => { void copyOperatorEmail(); }}
                     >
                       개선 사항 건의하기
                     </button>
                   </li>
                 </ul>
+                <p className="site-footer-email-hint">
+                  운영자 이메일
+                  {' '}
+                  <button
+                    type="button"
+                    className="site-footer-email"
+                    onClick={() => { void copyOperatorEmail(); }}
+                    title="클릭하면 복사됩니다"
+                  >
+                    {OPERATOR_EMAIL}
+                  </button>
+                  <span className="site-footer-email-note"> · 메일을 보내 주세요</span>
+                </p>
               </nav>
             </div>
           </div>
@@ -75,6 +95,16 @@ export default function SiteFooter({ onNavigate }) {
             <span className="site-footer-copy">
               © 2026 Senalink. All rights reserved. This website and its original content are the exclusive property of its creator.
             </span>
+            <div className="site-footer-meta">
+              <span className="site-footer-version" title="패치 버전">{APP_VERSION_LABEL}</span>
+              <div className="site-footer-live">
+                <span
+                  className="site-footer-live-dot"
+                  style={{ background: usingEmulators ? '#8eb8c4' : '#8fbfa5' }}
+                />
+                <span>{usingEmulators ? 'Local' : 'Live'}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

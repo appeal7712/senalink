@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { heroes } from '../../data/heroes';
 import { pets } from '../../data/pets';
+import { ROLE_ICONS } from '../../data/roleIcons';
 import InGameDeckCard from '../../components/InGameDeckCard';
 import HeroGridPicker from '../../components/HeroGridPicker';
+import HeroPortraitCard from '../../components/HeroPortraitCard';
 import HeroGearPanel, { emptyGearConfig, buildOptionCode } from '../../components/HeroGearPanel';
 import SkillReservationBoard from '../../components/SkillReservationBoard';
 import Icon from '../../components/icons/Icon';
@@ -13,6 +15,16 @@ import { ARENA_TIERS, normalizeArenaTier } from '../../data/arenaTiers';
 import { communitySkillMode } from '../../data/communityCatalog';
 import { emptyCommunityGuide } from '../../lib/communityGuides';
 import { backdropDismissProps } from '../../utils/backdropDismiss';
+import { setDeckDragData } from '../../utils/deckDrag';
+
+const ROLE_FILTERS = [
+  { id: 'all', label: '전체', icon: null },
+  { id: 'offensive', label: '공격형', icon: ROLE_ICONS.offensive },
+  { id: 'magic', label: '마법형', icon: ROLE_ICONS.magic },
+  { id: 'defensive', label: '방어형', icon: ROLE_ICONS.defensive },
+  { id: 'support', label: '지원형', icon: ROLE_ICONS.support },
+  { id: 'universal', label: '만능형', icon: ROLE_ICONS.universal },
+];
 
 const padNames5 = (names = []) => {
   const next = (names || []).map((n) => n || '');
@@ -83,9 +95,18 @@ export default function CommunityGuideEditor({
   const [newDir, setNewDir] = useState('upper');
   const [newNote, setNewNote] = useState('');
   const [saving, setSaving] = useState(false);
+  const [roleFilter, setRoleFilter] = useState('all');
 
   const petObj = useMemo(() => pets.find((p) => p.id === petId) || pets[0], [petId]);
   const filledNames = heroNames.filter(Boolean);
+
+  const filteredHeroesByRole = useMemo(() => heroes.filter((h) => {
+    if (roleFilter !== 'all' && h.role !== roleFilter) return false;
+    const cleanName = h.name.replace('(각성)', '');
+    // 다른 슬롯에 이미 배치된 영웅은 숨김(현재 슬롯은 교체 가능)
+    if (filledNames.includes(cleanName) && cleanName !== (heroNames[slot] || '')) return false;
+    return true;
+  }), [roleFilter, filledNames, heroNames, slot]);
 
   const setHeroAt = (idx, name) => {
     const next = padNames5(heroNames);
@@ -180,7 +201,9 @@ export default function CommunityGuideEditor({
           <div className="editing-build-modal-header-main" style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, flexWrap: 'wrap' }}>
             <div className="editing-build-modal-title-row">
               <h3 className="editing-build-title" style={{ fontSize: 17, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', margin: 0 }}>
-                {initial.id ? '공용 공략 수정' : '공용 공략 생성'}
+                {isArena
+                  ? `${lockedArenaKind === 'advanced' ? '상급결투장' : '결투장'} 공략 ${initial.id ? '수정' : '생성'}`
+                  : (initial.id ? '공용 공략 수정' : '공용 공략 생성')}
               </h3>
               <button type="button" className="editing-build-modal-close editing-build-modal-close--mobile" onClick={onClose} title="모달 닫기">
                 <Icon name="closeBtn" size={26} />
@@ -308,21 +331,85 @@ export default function CommunityGuideEditor({
             />
           </div>
 
-          <div className="glass-inset editing-build-hero-picker" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10, width: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-              <Icon name="user" size={14} /> 영웅 목록
+          {contentMode === 'pvp' ? (
+            <div className="glass-inset editing-build-hero-picker" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10, width: '100%', boxSizing: 'border-box', flexShrink: 0, minHeight: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', flexShrink: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Icon name="user" size={14} /> 영웅 목록
+                </div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {ROLE_FILTERS.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => setRoleFilter(r.id)}
+                      style={{
+                        padding: '8px 12px', fontSize: 13, fontWeight: 800, borderRadius: 8, border: 'none', cursor: 'pointer',
+                        background: roleFilter === r.id ? 'var(--gold-primary)' : 'rgba(255,255,255,0.06)',
+                        color: roleFilter === r.id ? '#000' : '#94a3b8', display: 'flex', alignItems: 'center', gap: 6,
+                      }}
+                    >
+                      {r.icon && <img src={r.icon} alt="" style={{ width: 16, height: 16, objectFit: 'contain' }} />}
+                      <span>{r.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div
+                className="editing-build-hero-grid"
+                style={{
+                  height: 168, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(62px, 1fr))',
+                  gap: 6, overflowY: 'auto', paddingRight: 4,
+                }}
+              >
+                {filteredHeroesByRole.map((h) => {
+                  const cleanName = h.name.replace('(각성)', '');
+                  const isCurrent = (heroNames[slot] || '') === cleanName;
+                  return (
+                    <div
+                      key={h.id}
+                      draggable
+                      onDragStart={(e) => setDeckDragData(e, { source: 'picker', name: cleanName })}
+                      onClick={() => setHeroAt(slot, cleanName)}
+                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'grab' }}
+                    >
+                      <div style={{
+                        width: 58,
+                        outline: isCurrent ? '2px solid var(--accent-cyan)' : 'none',
+                        outlineOffset: 1,
+                        borderRadius: 8,
+                      }}>
+                        <HeroPortraitCard hero={h} showStars showRole showName={false} />
+                      </div>
+                      <div style={{
+                        width: 58, marginTop: 2, background: '#000', borderRadius: 3, padding: '1px 0',
+                        textAlign: 'center', fontSize: 8, color: '#fff', fontWeight: 800,
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>
+                        {cleanName}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            <div className="editing-build-hero-grid" style={{ minHeight: 168 }}>
-              <HeroGridPicker
-                heroes={heroes}
-                selectedNames={filledNames}
-                currentSlotName={heroNames[slot] || ''}
-                onPick={(name) => setHeroAt(slot, name)}
-                height={168}
-                showSearch
-              />
+          ) : (
+            <div className="glass-inset editing-build-hero-picker" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10, width: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                <Icon name="user" size={14} /> 영웅 목록
+              </div>
+              <div className="editing-build-hero-grid" style={{ minHeight: 168 }}>
+                <HeroGridPicker
+                  heroes={heroes}
+                  selectedNames={filledNames}
+                  currentSlotName={heroNames[slot] || ''}
+                  onPick={(name) => setHeroAt(slot, name)}
+                  height={168}
+                  showSearch
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {skillMeta.layout === 'pve' && (
             <div className="editing-build-timeline-col" style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>

@@ -180,6 +180,8 @@ export default function SkillReservationBoard({
   const portraitSize = useCompact ? 58 : useBoard ? 68 : 78;
   const iconSize = useCompact ? 46 : useBoard ? 50 : 56;
   const badgeFont = useCompact ? '12px' : useBoard ? '12px' : '13px';
+  const colGap = useCompact ? '10px' : useBoard ? '14px' : '16px';
+  const rowPad = useCompact ? '8px 6px 14px' : useBoard ? '10px 8px 16px' : '12px 10px 18px';
 
   return (
     <div className="skill-reserve is-row">
@@ -194,15 +196,14 @@ export default function SkillReservationBoard({
       )}
 
       {names.length > 0 && (
-        <div className="skill-reserve-row" style={{
-          gridTemplateColumns: useBoard
-            ? `repeat(${names.length}, minmax(0, 1fr))`
-            : `repeat(${names.length}, max-content)`,
-          width: useBoard ? '100%' : undefined,
-          maxWidth: useBoard ? '100%' : undefined,
-          padding: useCompact ? '8px 10px 14px' : useBoard ? '10px 12px 16px' : '12px 12px 18px',
-          gap: useCompact ? '10px' : useBoard ? '12px' : '14px',
-        }}>
+        <div
+          className="skill-reserve-row skill-reserve-row--spread"
+          style={{
+            gridTemplateColumns: `repeat(${names.length}, minmax(max-content, 1fr))`,
+            padding: rowPad,
+            gap: colGap,
+          }}
+        >
           {names.map((name, i) => {
             const hero = resolveHeroByName ? resolveHeroByName(name) : null;
             const skills = getReservableSkills(hero);
@@ -213,9 +214,7 @@ export default function SkillReservationBoard({
             const stacked = [awaken, skill2, skill1].filter(Boolean);
 
             return (
-              <div key={`${name}_${i}`} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', minWidth: 0
-              }}>
+              <div key={`${name}_${i}`} className="skill-reserve-hero">
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '7px', flexShrink: 0, minWidth: 0 }}>
                   <div style={{ width: `${portraitSize}px`, flexShrink: 0 }}>
                     {hero ? <HeroPortraitCard hero={hero} showStars showRole showName={false} /> : null}
@@ -234,7 +233,7 @@ export default function SkillReservationBoard({
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '6px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '6px', flexShrink: 0 }}>
                   {stacked.length === 0 && (
                     <div style={{
                       width: `${iconSize}px`, height: `${iconSize}px`, borderRadius: '10px',

@@ -237,7 +237,15 @@ exports.joinHub = onCall({ region: REGION }, async (request) => {
 
       const currentHubId = userData.hubId || null;
       if (currentHubId && currentHubId !== hubId) {
-        throw new HttpsError('failed-precondition', ONE_HUB_MSG);
+        // 좀비 hubId(허브 없음·멤버십 없음)면 가입 허용 — 아래 user 쓰기가 덮어씀
+        const staleHubRef = db.doc(`hubs/${currentHubId}`);
+        const staleHubSnap = await tx.get(staleHubRef);
+        const staleMemberSnap = staleHubSnap.exists
+          ? await tx.get(staleHubRef.collection('members').doc(uid))
+          : null;
+        if (staleMemberSnap?.exists) {
+          throw new HttpsError('failed-precondition', ONE_HUB_MSG);
+        }
       }
 
       const memberRef = hubRef.collection('members').doc(uid);

@@ -28,8 +28,9 @@ export const PAGE_SEO = {
     description: '세븐나이츠 리버스 영웅·장비 정보를 한눈에 보는 도감입니다.',
   },
   [PAGE.OPS]: {
-    title: `운영 | ${SITE_NAME}`,
-    description: '세나링크 사이트 운영 페이지입니다.',
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    robots: 'noindex, nofollow',
   },
 };
 
@@ -64,4 +65,7 @@ export function applyPageSeo(page) {
   setMetaByProperty('og:description', seo.description);
   setMetaByName('twitter:title', seo.title);
   setMetaByName('twitter:description', seo.description);
+  const robots = seo.robots || 'index, follow';
+  setMetaByName('robots', robots);
+  setMetaByName('googlebot', robots);
 }

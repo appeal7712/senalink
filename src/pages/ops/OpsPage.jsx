@@ -42,40 +42,32 @@ export default function OpsPage({ onOpenHub }) {
     return (
       <div className="container fade-in page-section">
         <div className="luxury-panel" style={{ maxWidth: 560, margin: '40px auto', padding: 28 }}>
-          <span className="ops-tag"><Icon name="shield" size={13} /> 슈퍼관리자 전용</span>
-          <h1 style={{ fontSize: 26, fontWeight: 900, color: '#fff', margin: '14px 0 8px' }}>관리 화면</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: '#fff', margin: '0 0 12px' }}>로그인</h1>
 
           {usingEmulators ? (
             <>
               <p style={{ fontSize: 14, color: '#94a3b8', lineHeight: 1.6, marginBottom: 18 }}>
-                지금은 로컬 에뮬레이터입니다. 구글 팝업은 에뮬레이터에서 자주 깨집니다.
-                아래 버튼으로 이 브라우저 세션을 관리자로 열면 됩니다.
+                로컬 에뮬레이터 세션입니다. 아래 버튼으로 계속할 수 있습니다.
               </p>
               {loginError && (
                 <div style={{ color: 'var(--accent-red)', fontSize: 13, fontWeight: 800, marginBottom: 12 }}>{loginError}</div>
               )}
               <button type="button" className="btn-ops" disabled={busy || !authUser} onClick={onLocal}
                 style={{ fontSize: 15, padding: '12px 22px' }}>
-                {busy ? '들어가는 중…' : '로컬 관리자로 들어가기'}
+                {busy ? '들어가는 중…' : '계속하기'}
               </button>
-              <p style={{ fontSize: 12, color: '#64748b', marginTop: 14, lineHeight: 1.5 }}>
-                주소는 <code style={{ color: 'var(--gold-light)' }}>http://127.0.0.1:5173/ops</code> 를 쓰세요.
-                출시 뒤에만 구글 계정 + 콘솔 문서가 필요합니다.
-              </p>
             </>
           ) : (
             <>
               <p style={{ fontSize: 14, color: '#94a3b8', lineHeight: 1.6, marginBottom: 18 }}>
-                구글 창은 <strong style={{ color: '#fff' }}>작은 팝업</strong>으로 떠야 합니다.
-                주소가 firebaseapp.com 인 큰 탭이 열리면 닫고, 주소창 오른쪽에서 팝업을 허용한 뒤 다시 누르세요.
-                로그인되면 아래 UID가 나타납니다.
+                구글 계정으로 로그인해 주세요. 팝업이 막히면 주소창에서 허용한 뒤 다시 시도하세요.
               </p>
               {authUser && (
                 <div style={{
                   background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border-subtle)',
                   borderRadius: 12, padding: 14, marginBottom: 16, fontSize: 12, color: '#e2e8f0',
                 }}>
-                  <div style={{ color: '#94a3b8', marginBottom: 6 }}>현재 UID</div>
+                  <div style={{ color: '#94a3b8', marginBottom: 6 }}>UID</div>
                   <code style={{ wordBreak: 'break-all', color: 'var(--gold-light)' }}>{authUser.uid}</code>
                 </div>
               )}

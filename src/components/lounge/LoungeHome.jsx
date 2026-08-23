@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import Icon from '../icons/Icon';
-import { LOUNGE_AFFILIATIONS, LOUNGE_TAGS } from '../../data/loungeMeta';
+import { LOUNGE_AFFILIATIONS, loungeTagLabel } from '../../data/loungeMeta';
 import { useLounge } from '../../context/LoungeContext';
 import { formatJoinedAt, formatLastActive } from '../../lib/formatTime';
 import { backdropDismissProps } from '../../utils/backdropDismiss';
@@ -64,7 +64,7 @@ export default function LoungeHome() {
   if (!activeLounge || !me) return null;
 
   const affiliation = LOUNGE_AFFILIATIONS.find(a => a.id === activeLounge.affiliation);
-  const tagLabels = (activeLounge.tags || []).map(id => LOUNGE_TAGS.find(t => t.id === id)?.label || id);
+  const tagLabels = (activeLounge.tags || []).map((id) => loungeTagLabel(id));
   const sortedMembers = [...activeLounge.members].sort((a, b) => {
     const rank = { master: 0, admin: 1, member: 2 };
     return (rank[a.role] ?? 9) - (rank[b.role] ?? 9) || a.nickname.localeCompare(b.nickname, 'ko');

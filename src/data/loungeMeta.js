@@ -14,10 +14,23 @@ export const LOUNGE_TAGS = [
   { id: 'hardcore', label: '#하드코어', group: 'vibe' },
   { id: 'newbie', label: '#초보환영', group: 'vibe' },
   { id: 'freebuild', label: '#자유공략', group: 'vibe' },
-  { id: 'age20', label: '#20대', group: 'age' },
-  { id: 'age30', label: '#30대', group: 'age' },
-  { id: 'ageAny', label: '#연령무관', group: 'age' },
+  { id: 'care', label: '#요양길드', group: 'vibe' },
+  { id: 'light', label: '#라이트길드', group: 'vibe' },
+  { id: 'ddunya', label: '#뜌땨?', group: 'vibe' },
 ];
+
+/** 목록에서 뺀 예전 태그 — 표시용만 (선택 UI에는 안 나옴) */
+export const LOUNGE_TAG_LEGACY_LABELS = {
+  age20: '#20대',
+  age30: '#30대',
+  ageAny: '#연령무관',
+};
+
+export function loungeTagLabel(id) {
+  return LOUNGE_TAGS.find((t) => t.id === id)?.label
+    || LOUNGE_TAG_LEGACY_LABELS[id]
+    || id;
+}
 
 export const MAX_LOUNGE_TAGS = 5;
 export const MAX_ADMINS = 3; // master 포함
