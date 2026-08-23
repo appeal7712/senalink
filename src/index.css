@@ -5133,10 +5133,10 @@ h1, h2, h3 {
   .editing-build-grid.is-pve {
     display: grid !important;
     grid-template-columns: minmax(240px, 276px) minmax(260px, 1.1fr) minmax(280px, 1fr);
-    /* 상단(왼쪽 스택·장비)은 줄어들고, 영웅 목록은 최소 높이 확보 */
-    grid-template-rows: minmax(0, 1fr) minmax(120px, 0.75fr);
+    grid-template-rows: minmax(0, auto) minmax(0, auto) minmax(96px, 1fr);
     grid-template-areas:
-      "left gear timeline"
+      "deck gear timeline"
+      "detail gear timeline"
       "heroes heroes timeline";
     align-items: stretch;
   }
@@ -5144,36 +5144,20 @@ h1, h2, h3 {
   .editing-build-grid.is-pvp {
     display: grid !important;
     grid-template-columns: minmax(240px, 276px) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) minmax(120px, 0.75fr);
+    grid-template-rows: minmax(0, auto) minmax(0, auto) minmax(120px, 1fr);
     grid-template-areas:
-      "left gear"
+      "deck gear"
+      "detail gear"
       "heroes heroes";
     align-items: stretch;
   }
 
-  /* 덱 + 세팅 디테일 묶음 — 세로 짧으면 통째 스크롤 (디테일 안쪽 스크롤은 유지) */
-  .editing-build-left-stack {
-    grid-area: left;
-    min-width: 0;
-    min-height: 0;
-    max-height: 100%;
-    height: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
-  }
-
   .editing-build-deck-slot {
-    flex: 0 0 auto;
+    grid-area: deck;
     align-self: center;
     justify-self: center;
     width: min(276px, 100%);
     min-width: 0;
-    min-height: 0;
   }
 
   .editing-build-deck-slot .ingame-deck-card {
@@ -5181,23 +5165,19 @@ h1, h2, h3 {
   }
 
   .editing-build-detail-panel {
-    flex: 0 0 auto;
-    width: 100%;
-    box-sizing: border-box;
+    grid-area: detail;
     min-height: 0;
-    max-height: min(22vh, 160px);
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    overflow: auto;
   }
 
   .editing-build-detail-panel .editing-build-detail-textarea {
     min-height: 72px !important;
-    max-height: none;
+    max-height: 120px;
   }
 
   .editing-build-gear-panel {
     grid-area: gear;
+    grid-row: 1 / 3;
     align-self: stretch;
     /* 내용이 칸보다 커도 행을 키우지 않고 패널 안에서만 스크롤 */
     min-height: 0;
@@ -5209,18 +5189,23 @@ h1, h2, h3 {
     overscroll-behavior: contain;
     display: flex;
     flex-direction: column;
-    gap: 10px;
   }
 
   .editing-build-gear-panel .editing-build-gear-section {
-    flex: 0 0 auto !important;
+    flex: 0 1 auto !important;
     min-height: 0 !important;
   }
 
-  .editing-build-gear-panel .editing-build-gear-section--sets,
-  .editing-build-gear-panel .editing-build-gear-section--weapons,
+  .editing-build-gear-panel .editing-build-gear-section--sets {
+    flex: 1.1 1 auto !important;
+  }
+
+  .editing-build-gear-panel .editing-build-gear-section--weapons {
+    flex: 0.85 1 auto !important;
+  }
+
   .editing-build-gear-panel .editing-build-gear-section--accessories {
-    flex: 0 0 auto !important;
+    flex: 1 1 auto !important;
   }
 
   .editing-build-gear-panel .editing-build-gear-section--sets > div:nth-child(2),
@@ -5228,8 +5213,8 @@ h1, h2, h3 {
     height: auto !important;
     min-height: 0 !important;
     grid-template-rows: unset !important;
-    flex: 0 0 auto;
-    align-content: start;
+    flex: 1 1 auto;
+    align-content: stretch;
   }
 
   .editing-build-gear-panel .editing-build-gear-section--sets > div:nth-child(2) button {
@@ -5258,7 +5243,7 @@ h1, h2, h3 {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    z-index: 2;
+    z-index: 1;
     /* inline flexShrink:0 이 남는 세로 공간을 못 먹게 막는 경우 대비 */
     flex-shrink: 1 !important;
   }
@@ -5349,7 +5334,7 @@ h1, h2, h3 {
     overflow: hidden !important;
   }
 
-  /* 짧은 모니터: 패딩·버튼 더 압축 + 상단 패널 스크롤 강화 */
+  /* 짧은 모니터: 패딩·버튼 더 압축 */
   @media (max-height: 860px) {
     .editing-build-modal.glass-modal {
       max-height: 92vh !important;
@@ -5360,16 +5345,11 @@ h1, h2, h3 {
     .editing-build-grid.is-pvp {
       padding: 10px 14px !important;
       gap: 12px !important;
-      grid-template-rows: minmax(0, 1fr) minmax(110px, 0.85fr);
-    }
-
-    .editing-build-detail-panel {
-      max-height: min(20vh, 120px);
     }
 
     .editing-build-detail-panel .editing-build-detail-textarea {
       min-height: 56px !important;
-      max-height: none;
+      max-height: 88px;
     }
 
     .editing-build-gear-panel .editing-build-gear-section--sets > div:nth-child(2) button,
@@ -5970,18 +5950,8 @@ h1, h2, h3 {
     gap: 12px !important;
   }
 
-  .editing-build-left-stack {
-    order: 1;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    gap: 12px;
-    height: auto;
-    max-height: none;
-    overflow: visible;
-  }
-
   .editing-build-deck-slot {
+    order: 1;
     display: flex !important;
     flex-direction: column !important;
     width: 100% !important;
@@ -5991,9 +5961,9 @@ h1, h2, h3 {
   }
 
   .editing-build-detail-panel {
+    order: 2;
     width: 100%;
     box-sizing: border-box;
-    max-height: none;
   }
 
   .editing-build-hero-picker {

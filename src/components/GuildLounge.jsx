@@ -1648,7 +1648,6 @@ export default function GuildLounge() {
               className={`editing-build-grid editing-build-modal-body ${(CONTENT_META[editingCategory] || CONTENT_META.siege).mode === 'pvp' ? 'is-pvp' : 'is-pve'}`}
               style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px 20px', gap: '20px', alignItems: 'stretch', boxSizing: 'border-box' }}
             >
-              <div className="editing-build-left-stack">
               <div className="editing-build-deck-slot" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <InGameDeckCard
                       teamName={
@@ -1700,7 +1699,6 @@ export default function GuildLounge() {
                     boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', minHeight: '110px', flex: 1
                   }}
                 />
-              </div>
               </div>
 
               {/* 장비 세팅 */}

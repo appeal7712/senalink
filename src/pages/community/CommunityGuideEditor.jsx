@@ -271,7 +271,6 @@ export default function CommunityGuideEditor({
           className={`editing-build-grid editing-build-modal-body ${contentMode === 'pvp' ? 'is-pvp' : 'is-pve'}`}
           style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px 20px', gap: 20, alignItems: 'stretch', boxSizing: 'border-box' }}
         >
-          <div className="editing-build-left-stack">
           <div className="editing-build-deck-slot" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <InGameDeckCard
               teamName=""
@@ -320,7 +319,6 @@ export default function CommunityGuideEditor({
                 boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', minHeight: 110, flex: 1,
               }}
             />
-          </div>
           </div>
 
           <div
