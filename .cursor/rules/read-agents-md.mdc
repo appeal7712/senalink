@@ -12,5 +12,7 @@ Hard constraints (also in AGENTS.md):
 - Patch **only** `sevennight_guild_web_formal`. Live = `https://senalink.web.app` (Firebase **`senalink`**).
 - Deploy Hosting/rules/functions **only** when 밍봉/김봉 asks.
 - Do not open old copies (`sevennight_guild_web`, `*_backup*`) or other Firebase projects.
+- **Never damage live user/hub data** — no reckless rules loosening, no wipe `setDoc`, no bulk delete on senalink. See AGENTS.md **§2.1**.
 - Deck editor: skill order list height fixed in px; scroll only in `.skill-timeline-scroller`.
+- Hero pick lists: **각성 → 스페셜(소속순) → 준스페셜(아스가르드·아이샤) → 일반** via `src/data/heroes.js` (`sortHeroesForList` / `compareHeroesForList`). See AGENTS.md §12.1.
 - Bump `src/config/appVersion.js` when shipping a deploy.

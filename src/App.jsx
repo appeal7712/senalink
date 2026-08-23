@@ -73,7 +73,10 @@ export default function App() {
         ) : (
           <>
             {activeTab === PAGE.MAIN && (
-              <PublicMainPage onNavigateToLounge={() => go(PAGE.HUB)} />
+              <PublicMainPage
+                onNavigateToLounge={() => go(PAGE.HUB)}
+                onNavigateToCommunity={() => go(PAGE.COMMUNITY)}
+              />
             )}
             {activeTab === PAGE.HUB && <HubPage />}
             {activeTab === PAGE.COMMUNITY && (

@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
-import { heroes } from '../data/heroes';
+import { heroes, sortHeroesForList } from '../data/heroes';
 import InGameDeckCard from './InGameDeckCard';
 import GuildWarAttackPanel from './GuildWarAttackPanel';
 import GuildWarDefensePanel from './GuildWarDefensePanel';
@@ -889,13 +889,13 @@ export default function GuildLounge() {
     alert(`'${guildRoom.myNickname}' 닉네임으로 공략이 저장 고정되었습니다!`);
   };
 
-  const filteredHeroesByRole = heroes.filter(h => {
+  const filteredHeroesByRole = sortHeroesForList(heroes.filter(h => {
     if (roleFilter !== 'all' && h.role !== roleFilter) return false;
     const cleanName = h.name.replace('(각성)', '');
     // 다른 슬롯에 배치된 영웅은 목록에서 숨김
     if (editingHeroNames.some((n, i) => n === cleanName && i !== targetSlotIdx)) return false;
     return true;
-  });
+  }));
 
   // 공성전/강림원정대(PvE)와 결투장/총력전(PvP) 공략 게시판 카드 — 공통 렌더러
   const renderBuildPanel = (build, category) => {

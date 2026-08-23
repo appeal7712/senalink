@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { heroes } from '../../data/heroes';
+import { heroes, sortHeroesForList } from '../../data/heroes';
 import { pets } from '../../data/pets';
 import { ROLE_ICONS } from '../../data/roleIcons';
 import InGameDeckCard from '../../components/InGameDeckCard';
@@ -100,13 +100,13 @@ export default function CommunityGuideEditor({
   const petObj = useMemo(() => pets.find((p) => p.id === petId) || pets[0], [petId]);
   const filledNames = heroNames.filter(Boolean);
 
-  const filteredHeroesByRole = useMemo(() => heroes.filter((h) => {
+  const filteredHeroesByRole = useMemo(() => sortHeroesForList(heroes.filter((h) => {
     if (roleFilter !== 'all' && h.role !== roleFilter) return false;
     const cleanName = h.name.replace('(각성)', '');
     // 다른 슬롯에 이미 배치된 영웅은 숨김(현재 슬롯은 교체 가능)
     if (filledNames.includes(cleanName) && cleanName !== (heroNames[slot] || '')) return false;
     return true;
-  }), [roleFilter, filledNames, heroNames, slot]);
+  })), [roleFilter, filledNames, heroNames, slot]);
 
   const setHeroAt = (idx, name) => {
     const next = padNames5(heroNames);

@@ -17,7 +17,7 @@ const resolveHeroByName = (name) => {
     || null;
 };
 
-export default function PublicMainDashboard({ onNavigateToLounge }) {
+export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCommunity }) {
   const { content, loaded } = useSiteMain();
   const [visits, setVisits] = useState({ total: 0, dayCount: 0 });
   const metaDecks = (content.metaDecks || []).filter(
@@ -70,10 +70,14 @@ export default function PublicMainDashboard({ onNavigateToLounge }) {
             전체 {visits.total.toLocaleString('ko-KR')}
           </p>
 
-          <button className="btn-ops" onClick={onNavigateToLounge}
-            style={{ fontSize: '15px', padding: '12px 22px' }}>
-            <Icon name="fortress" size={16} color="#161616" /> 길드 허브 입장하기 <Icon name="arrowRight" size={15} color="#161616" />
-          </button>
+          <div className="hero-cta-row">
+            <button type="button" className="btn-ops" onClick={onNavigateToLounge}>
+              <Icon name="fortress" size={16} color="#161616" /> 길드 허브 입장하기 <Icon name="arrowRight" size={15} color="#161616" />
+            </button>
+            <button type="button" className="btn-ops" onClick={onNavigateToCommunity}>
+              <Icon name="users" size={16} color="#161616" /> 공용 허브 입장하기 <Icon name="arrowRight" size={15} color="#161616" />
+            </button>
+          </div>
         </div>
       </div>
 

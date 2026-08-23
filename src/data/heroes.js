@@ -4,7 +4,9 @@ import scrapedHeroes from './scraped_heroes.json';
 // scraped_heroes.json이 어셋 폴더에서 재생성된 112명 기준 단일 소스
 // 필드: id, name, title, group, category, role, attackType, rarity, isAwakened, baseStats, portraitUrl, skills
 //
-// 목록 표시 공통 순서: 각성 → (구)세븐나이츠 → 스페셜 지역별 → 일반/아스가르드/아이샤/기타
+// 목록 표시 공통 순서:
+// 각성 → 스페셜(소속·진영별) → 준 스페셜(아스가르드·아이샤) → 일반 → 기타
+// 스페셜 소속 첫 줄은 항상 (구)세븐나이츠
 
 export const HERO_FACTION_ORDER = {
   special: [
@@ -21,7 +23,6 @@ export const HERO_FACTION_ORDER = {
     '경계의 수호자',
     '????',
   ],
-  normal: ['에반 원정대', '그림자단', '모험가', '성십자단', '테라영지'],
   asgard: [
     '신비의 숲',
     '침묵의 광산',
@@ -31,10 +32,12 @@ export const HERO_FACTION_ORDER = {
     '복주자의 지옥',
   ],
   aisha: ['달빛의 섬', '천자의 땅', '어둠의 안식처', '신지', '삼국호걸'],
+  normal: ['에반 원정대', '그림자단', '모험가', '성십자단', '테라영지'],
   other: ['콜라보레이션', '기타 영웅'],
 };
 
-const CATEGORY_ORDER = ['special', 'normal', 'asgard', 'aisha', 'other'];
+/** special → 준스페셜(asgard/aisha) → normal → other */
+const CATEGORY_ORDER = ['special', 'asgard', 'aisha', 'normal', 'other'];
 
 const GROUP_ORDER = CATEGORY_ORDER.flatMap((cat) => HERO_FACTION_ORDER[cat] || []);
 
@@ -48,7 +51,13 @@ function categoryRank(category) {
   return i === -1 ? 9999 : i;
 }
 
-/** 영웅 목록 UI 공통 정렬 (각성 → (구)세븐나이츠 → 스페셜 지역별 → …) */
+/**
+ * 영웅 목록 UI 공통 정렬
+ * 1) 각성 영웅
+ * 2) 스페셜 — HERO_FACTION_ORDER.special 소속 순 ((구)세븐나이츠 우선)
+ * 3) 준 스페셜 — 아스가르드 → 아이샤 소속 순
+ * 4) 일반 → 기타
+ */
 export function compareHeroesForList(a, b) {
   const aw = Number(!!b?.isAwakened) - Number(!!a?.isAwakened);
   if (aw) return aw;
@@ -64,7 +73,12 @@ export function compareHeroesForList(a, b) {
   return String(a?.name || '').localeCompare(String(b?.name || ''), 'ko');
 }
 
-export const heroes = [...scrapedHeroes].sort(compareHeroesForList);
+/** 필터 후에도 목록 순서를 보장할 때 사용 */
+export function sortHeroesForList(list) {
+  return [...(list || [])].sort(compareHeroesForList);
+}
+
+export const heroes = sortHeroesForList(scrapedHeroes);
 
 // 진형 데이터는 formations.js로 분리됨
 export { formations } from './formations';

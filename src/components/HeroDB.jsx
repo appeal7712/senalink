@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { heroes, HERO_FACTION_ORDER } from '../data/heroes';
+import { heroes, HERO_FACTION_ORDER, sortHeroesForList } from '../data/heroes';
 import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
 import HeroPortraitCard from './HeroPortraitCard';
@@ -28,7 +28,7 @@ export default function HeroDB() {
     if (list.length > 0) setActiveFaction(list[0]);
   }, [activeTab]);
 
-  const filteredHeroes = heroes.filter(h => {
+  const filteredHeroes = sortHeroesForList(heroes.filter(h => {
     const q = searchTerm.toLowerCase().trim();
     if (q) return h.name.toLowerCase().includes(q) || (h.title || '').toLowerCase().includes(q);
     const matchesCategory = h.category === activeTab;
@@ -36,7 +36,7 @@ export default function HeroDB() {
     const role            = h.role || h.type || 'offensive';
     const matchesRole     = activeRoleFilter === 'all' ? true : role === activeRoleFilter;
     return matchesCategory && matchesFaction && matchesRole;
-  });
+  }));
 
   useEffect(() => {
     const first = filteredHeroes[0] || null;

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import HeroPortraitCard from './HeroPortraitCard';
 import { ROLE_ICONS } from '../data/roleIcons';
+import { sortHeroesForList } from '../data/heroes';
 import { setDeckDragData } from '../utils/deckDrag';
 
 const ROLE_FILTERS = [
@@ -29,13 +30,13 @@ export default function HeroGridPicker({
   const [roleFilter, setRoleFilter] = useState('all');
   const [q, setQ] = useState('');
   const needle = q.trim();
-  const filtered = heroes.filter(h => {
+  const filtered = sortHeroesForList(heroes.filter(h => {
     if (roleFilter !== 'all' && h.role !== roleFilter) return false;
     const cleanName = h.name.replace('(각성)', '');
     if (selectedNames.includes(cleanName) && cleanName !== currentSlotName) return false;
     if (needle && !cleanName.includes(needle) && !String(h.name || '').includes(needle)) return false;
     return true;
-  });
+  }));
 
   const portraitW = loungeDensity ? 58 : 62;
   const cellMin = loungeDensity ? 62 : 68;

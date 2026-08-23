@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>세나링크 이용 안내</title>
+  <style>
+    :root {
+      --bg: #0c0b0a;
+      --card: #161412;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --gold: #d4a853;
+      --line: rgba(212, 168, 83, 0.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+    .wrap { max-width: 820px; margin: 0 auto; padding: 32px 20px 64px; }
+    h1 { font-size: 1.75rem; margin: 0 0 8px; color: var(--gold); }
+    h2 { font-size: 1.25rem; margin: 2rem 0 0.75rem; border-bottom: 1px solid var(--line); padding-bottom: 0.4rem; }
+    h3 { font-size: 1.05rem; margin: 1.25rem 0 0.5rem; color: #e2e8f0; }
+    p, li { color: #e2e8f0; }
+    .lead { color: var(--muted); margin-bottom: 1.5rem; }
+    a { color: var(--gold); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; margin: 0.75rem 0 1.25rem; }
+    th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { background: var(--card); color: var(--gold); }
+    .note {
+      background: var(--card);
+      border-left: 3px solid var(--gold);
+      padding: 10px 14px;
+      margin: 1rem 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    .print-hint { color: var(--muted); font-size: 0.85rem; margin-top: 2.5rem; }
+    @media print {
+      body { background: #fff; color: #111; }
+      h1, h2, a, th { color: #8a6914; }
+      p, li, td { color: #222; }
+      .print-hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>세나링크 이용 안내</h1>
+    <p class="lead">
+      세븐나이츠 유저용 길드 허브 · 공략 · 도감 · 도구<br />
+      사이트: <a href="https://senalink.web.app" target="_blank" rel="noopener">https://senalink.web.app</a>
+    </p>
+
+    <h2>1. 상단 메뉴</h2>
+    <table>
+      <thead><tr><th>메뉴</th><th>하는 일</th></tr></thead>
+      <tbody>
+        <tr><td>메인</td><td>메타 덱·픽률·뉴스·입장 안내</td></tr>
+        <tr><td>길드 허브</td><td>길드원끼리 공략·길드전·공지 (구글 로그인)</td></tr>
+        <tr><td>공략 허브</td><td>공용 공략·티어리스트</td></tr>
+        <tr><td>도구</td><td>승확 계산기, 티어리스트 메이커 등</td></tr>
+        <tr><td>도감</td><td>영웅·장비·펫·시스템</td></tr>
+        <tr><td>마이프로필</td><td>닉네임·티어·아바타 (우측 상단)</td></tr>
+      </tbody>
+    </table>
+    <div class="note">첫 방문 시 닉네임을 정해야 합니다. 닉네임은 마이프로필에서만 변경합니다.</div>
+
+    <h2>2. 메인 「세팅 확인」</h2>
+    <ol>
+      <li>메타 덱 카드의 <strong>세팅 확인</strong>을 누릅니다.</li>
+      <li><strong>스킬 배치</strong> / <strong>디테일</strong> 탭으로 속공·장비·조건을 확인합니다.</li>
+    </ol>
+    <div class="note">메인 메타 덱은 관리자가 올린 공용 예시입니다. 길드 전용 공략은 길드 허브에 있습니다.</div>
+
+    <h2>3. 길드 허브</h2>
+    <h3>들어가기</h3>
+    <ol>
+      <li>상단 <strong>길드 허브</strong> (또는 메인 버튼).</li>
+      <li>구글 로그인 — 계정당 허브 <strong>하나</strong>만 소속.</li>
+      <li>다른 길드로 가려면 먼저 나가기. 약 60일 무활동 시 데이터 삭제될 수 있음.</li>
+    </ol>
+    <h3>허브 생성 (마스터)</h3>
+    <ol>
+      <li><strong>+ 허브 생성</strong></li>
+      <li>길드 이름 · 소속 · 해시태그 · 마스터 닉네임 입력 후 <strong>허브 개설</strong></li>
+      <li>초대 코드 / 링크를 길드원에게 공유</li>
+    </ol>
+    <h3>코드로 입장 (길드원)</h3>
+    <ol>
+      <li><strong>코드로 입장</strong></li>
+      <li><code>7K-XXXX-XXXX</code> 또는 초대 링크 입력</li>
+      <li>닉네임은 마이프로필 저장값을 사용</li>
+    </ol>
+
+    <h2>4. 공략 허브</h2>
+    <ul>
+      <li>닉네임 설정 후 PvP 공략을 올릴 수 있습니다.</li>
+      <li>다른 공략은 <strong>세팅 확인</strong>으로 동일하게 봅니다.</li>
+      <li>「수정 및 고정자」 시각은 한국 시간 24시 기준입니다.</li>
+    </ul>
+
+    <h2>5. 도감 · 도구 · 마이프로필</h2>
+    <ul>
+      <li><strong>도감</strong> — 영웅 / 장비 / 펫 / 시스템</li>
+      <li><strong>도구</strong> — 계산기·티어리스트 등 (준비 중 표시는 미개방)</li>
+      <li><strong>마이프로필</strong> — 닉·티어·아바타. 공개 프로필에서 하루 1회 추천 가능(취소 불가)</li>
+    </ul>
+
+    <h2>6. 기타</h2>
+    <ul>
+      <li>입장 배너 「오늘 하루 안 보기」는 그 브라우저에만 적용</li>
+      <li>메인 방문자 수는 브라우저당 하루 1회 집계</li>
+    </ul>
+
+    <p class="print-hint">
+      이 파일을 브라우저로 연 뒤 Ctrl+P → PDF로 저장하면 공유용 PDF가 됩니다.<br />
+      상세 Markdown: <code>세나링크-이용안내.md</code>
+    </p>
+  </div>
+</body>
+</html>

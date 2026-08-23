@@ -4,7 +4,8 @@
 라이브: https://senalink.web.app · Firebase 프로젝트 **`senalink`만**.
 
 > **금지:** `sevennight_guild_web`, `*_backup*`, `mingbong-web` / layro / `sevennight-guild-hub` 등 다른 사본·프로젝트 열기·배포.  
-> **배포:** 밍봉/김봉이 명시할 때만. `npm run build` 후 `npx firebase deploy --only … --project senalink`.
+> **배포:** 밍봉/김봉이 명시할 때만. `npm run build` 후 `npx firebase deploy --only … --project senalink`.  
+> **라이브 유저·허브 데이터:** 아래 **§2.1** — 손상·유실·권한 완화 금지. 규칙/스키마/Functions는 특히 조심.
 
 ---
 
@@ -25,6 +26,52 @@ React + Vite + Firebase (Auth / Firestore / Storage / Functions asia-northeast3)
 | `.cursor/rules/read-agents-md.mdc` | 비트리비얼 작업 전 이 문서 참고 |
 
 배포 시 관례: `src/config/appVersion.js`의 `APP_VERSION` bump → 푸터 `SiteFooter`에 표시.
+
+### 2.1 프로덕션 데이터 보호 (유저·허브) — 최우선
+
+실제 유저가 쓰는 **senalink** 이다. 패치·배포 시 **유저 문서·허브 문서·멤버십·공략·추천 등 기존 데이터가 절대 손상·유실·무단 노출되면 안 된다.**
+
+#### 보호 대상 (예시)
+
+| 영역 | 경로 |
+|------|------|
+| 프로필 | `users/{uid}` |
+| 일일 추천 claim | `profileDailyRecommends/…` |
+| 허브 본체 | `hubs/{hubId}` + `members` / `builds` / `notices` / `posts` / `history` / `scores` |
+| 초대 | `inviteIndex/{code}` |
+| 공개 길드 | `publicGuilds/{hubId}` |
+| 공용 공략·티어 | `communityGuides` / `communityTierLists` |
+| 아바타·엠블럼 | Storage `userAvatars` / `hubEmblems` |
+| (덜 민감) CMS·방문 | `site/main`, `site/stats` |
+
+#### 절대 하지 말 것
+
+- Firestore/Storage **규칙을 느슨하게** 만들기 (예: `allow write: if true`, list 전면 개방, 타인 프로필·허브 무단 수정 허용).
+- 기존 필드 **강제 삭제·이름 변경·타입 파괴** 마이그레이션을 무중단·무검증으로 배포.
+- 클라이언트/`setDoc`으로 허브·유저를 **통째로 덮어쓰기** (merge 없이 빈 객체·부분 스키마로 `set` → 데이터 증발).
+- Ops·스크립트·에뮬레이터 시드로 **라이브 프로젝트에 대량 delete / 시드**.
+- `purgeIdleHubs`·`disbandHub`·멤버 강퇴 로직을 “테스트”로 라이브에서 실행.
+- `users.hubId` / `members.role` / `masterId` / `inviteCode` 제약을 깨는 우회 쓰기.
+- 다른 Firebase 프로젝트 또는 옛 폴더 데이터를 senalink에 합치기.
+
+#### 규칙·스키마 변경 시 원칙
+
+1. **읽기/쓰기 정책은 좁히거나 동등 유지**가 기본. 완화는 밍봉 명시 + 영향 범위 설명 후에만.
+2. `firestore.rules` / `storage.rules` / Functions 변경은 **기존 문서가 새 규칙을 통과하는지** 먼저 생각 (필드 화이트리스트를 조이면 구형 문서 update가 전부 거절될 수 있음).
+3. 새 필드는 **optional + 기본값**으로 추가. 구 클라이언트·구 문서와 호환.
+4. 허브 `builds/main` 등 큰 문서는 **부분 merge / 기존 키 보존**. 카테고리 하나 저장한다고 다른 탭 공략을 지우지 말 것.
+5. 가입은 **`joinHub` Callable** 전제 — 클라이언트가 `members`를 직접 create 하게 풀지 말 것.
+6. 배포 전에: UI만인지 / **rules·Functions·스키마**인지 구분. 후자면 **이전 rules로 롤백할 수 있게** 인지한 뒤 배포.
+7. 데이터 삭제가 필요하면 **Ops에 안전한 확인 UI** 또는 밍봉 직접 콘솔 — 에이전트가 라이브에서 일괄 삭제 금지.
+
+#### 패치 전 자가 질문
+
+- 이 변경이 기존 `users` / `hubs/**` 문서를 **읽지 못하게** 하거나 **쓰지 못하게** 하나?
+- merge 없는 `setDoc` / 전체 교체 `update`가 있나?
+- rules diff에 `allow`가 늘었나? (늘었으면 특히 주의)
+- Functions가 허브·유저를 delete/update 하나?
+
+UI·CSS·도감 JSON·정렬만 바꾸는 패치는 데이터 위험이 낮다. **rules / Functions / LoungeContext 저장 경로 / communityGuides 스키마**는 위험이 높다.
 
 ---
 
@@ -268,6 +315,30 @@ App
 
 덱/장비 UI 공통: `InGameDeckCard`, `HeroGearPanel`, `HeroGridPicker`, `HeroPortraitCard`, `equipments.js` 옵션.
 
+### 12.1 영웅 목록 정렬 (전역 공통 규칙)
+
+**모든** 영웅 고르기·목록 UI는 아래 순서를 따른다. 단일 소스: `src/data/heroes.js`.
+
+1. **각성 영웅** (`isAwakened`)
+2. **스페셜** — `HERO_FACTION_ORDER.special` 소속 순 (첫 줄 `(구)세븐나이츠`)
+3. **준 스페셜** — 아스가르드 → 아이샤 소속 순
+4. **일반** → **기타(콜라보 등)**
+
+API:
+- `compareHeroesForList(a, b)` / `sortHeroesForList(list)`
+- `export const heroes` 는 이미 정렬됨
+
+| 화면 | 적용 방식 |
+|------|-----------|
+| `HeroGridPicker` | 필터 후 `sortHeroesForList` (길드전·ops·공용 PvE 에디터 등) |
+| `CommunityGuideEditor` PvP(결투장/상급) | **자체 그리드** — 예전엔 export 순서만 의존 → 필터 후 재정렬로 고정 |
+| `GuildLounge` 덱 수정 | 필터 후 `sortHeroesForList` |
+| `HeroDB` / 티어리스트 풀 | `sort` / `compareHeroesForList` |
+
+**왜 공용 결투장이 어긋나 보였나:** PvP 편집 UI가 `HeroGridPicker`를 안 쓰고 인라인 목록을 복제해 두었고, 카테고리 순서도 예전엔 `special → normal → asgard → aisha`라 **일반이 준 스페셜보다 앞**이었다. 지금은 `special → asgard → aisha → normal → other` + 목록마다 재정렬.
+
+새 영웅 추가 시 `group`/`category`/`isAwakened`를 맞추고, 새 스페셜 소속이면 `HERO_FACTION_ORDER`에만 넣으면 된다.
+
 ---
 
 ## 13. 도감 업데이트 유의 사항 (영웅 · 펫 · 장비)
@@ -281,7 +352,7 @@ App
 | 1 | `asset/영웅 목록/...`에 폴더·스킬 JSON·초상 원본 추가 |
 | 2 | `src/data/scraped_heroes.json`에 병합 (루트 `rebuild_heroes_json.py` 등은 **옛 경로**를 가리킬 수 있음 → 이 repo 기준으로 수정) |
 | 3 | `public/images/...` 초상; 카드는 `scripts/fetch_hero_cards.py` → `heroCardMeta.json` + `card.webp` |
-| 4 | `src/data/heroes.js` — `heroes` export, 새 진영이면 `HERO_FACTION_ORDER` 확인 |
+| 4 | `src/data/heroes.js` — `heroes` export, 새 진영이면 `HERO_FACTION_ORDER` 확인. **목록 순서는 §12.1** |
 | 5 | 빌드·배포 시 `APP_VERSION` bump |
 
 런타임: `scraped_heroes.json` ← `heroes.js` ← `HeroDB` / 피커 / 초상.
@@ -314,13 +385,14 @@ App
 ## 14. 업데이트·패치 시 일반 체크리스트
 
 1. **이 폴더만** 수정. 라이브 배포는 요청 있을 때만.
-2. Firestore/Storage **규칙 바꾸면** 해당 rules도 같이 배포.
-3. Functions 바꾸면 `functions` 배포 + Node 20 유지.
-4. 도감 추가 후 피커·초상·진영 누락 없는지 `/dex`와 덱 수정에서 확인.
-5. 허브 가입/역할은 클라이언트 직쓰기가 아니라 **rules + joinHub** 전제.
-6. 커뮤니티 PvE 공략·티어 = Super; PvP만 일반 유저 작성 가능.
-7. 레이아웃: 덱 수정 모달 타임라인 높이 규칙 위반하지 말 것.
-8. 커밋/푸시는 밍봉 요청 시. 시크릿(`.env*`) 커밋 금지.
+2. **§2.1** — 유저·허브 데이터·rules를 손상·완화하지 않는지 확인.
+3. Firestore/Storage **규칙 바꾸면** 해당 rules도 같이 배포 (완화인지 먼저 검토).
+4. Functions 바꾸면 `functions` 배포 + Node 20 유지. 허브/유저 삭제 경로 재확인.
+5. 도감 추가 후 피커·초상·진영 누락 없는지 `/dex`와 덱 수정에서 확인.
+6. 허브 가입/역할은 클라이언트 직쓰기가 아니라 **rules + joinHub** 전제.
+7. 커뮤니티 PvE 공략·티어 = Super; PvP만 일반 유저 작성 가능.
+8. 레이아웃: 덱 수정 모달 타임라인 높이 규칙 위반하지 말 것.
+9. 커밋/푸시는 밍봉 요청 시. 시크릿(`.env*`) 커밋 금지.
 
 ---
 
