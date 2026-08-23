@@ -1648,6 +1648,7 @@ export default function GuildLounge() {
               className={`editing-build-grid editing-build-modal-body ${(CONTENT_META[editingCategory] || CONTENT_META.siege).mode === 'pvp' ? 'is-pvp' : 'is-pve'}`}
               style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px 20px', gap: '20px', alignItems: 'stretch', boxSizing: 'border-box' }}
             >
+              <div className="editing-build-left-stack">
               <div className="editing-build-deck-slot" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <InGameDeckCard
                       teamName={
@@ -1684,21 +1685,23 @@ export default function GuildLounge() {
                     />
               </div>
 
-              <div className="glass-inset editing-build-detail-panel" style={{ padding: '12px 14px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div className="glass-inset editing-build-detail-panel" style={{ padding: '8px 12px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <div style={{ fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: 800 }}>
                   세팅 디테일{editingHeroNames[selectedHeroGearIdx] ? ` · ${editingHeroNames[selectedHeroGearIdx]}` : ''}
                 </div>
                 <textarea
                   className="editing-build-detail-textarea"
+                  rows={2}
                   value={heroGearConfigs[selectedHeroGearIdx]?.detailNote || ''}
                   onChange={e => handleUpdateSelectedHeroGear('detailNote', e.target.value)}
-                  placeholder={'예:\n치확 67%에 가깝게\n약공 46%에 가깝게\n치피 최대한 땡기기'}
+                  placeholder={'예: 치확 67% · 약공 46%에 가깝게'}
                   style={{
-                    width: '100%', padding: '10px 12px', background: '#07090e', border: '1px solid var(--border-gold)',
+                    width: '100%', padding: '8px 12px', background: '#07090e', border: '1px solid var(--border-gold)',
                     color: '#e2e8f0', borderRadius: '7px', fontSize: '14px', fontWeight: 700, lineHeight: 1.5,
-                    boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', minHeight: '110px', flex: 1
+                    boxSizing: 'border-box', resize: 'none', fontFamily: 'inherit'
                   }}
                 />
+              </div>
               </div>
 
               {/* 장비 세팅 */}
