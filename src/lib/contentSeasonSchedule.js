@@ -214,32 +214,40 @@ function evalAdvancedArena(nowMs, anchorYmd) {
  * 길드전 앞면 페이즈
  * 판정 순서 중요 — docs/content-season-schedule.md §2
  * 1) 일·화·목 00~02 → 전날 본게임 연장 →「길드전 진행 중」
- * 2) 목 02~ → 휴전
- * 3) 토·월·수: 배치(~08) / 매칭(08~09) / 진행 중(09~익일02)
- * 4) 금·일·화: 정산(02~09) / 설정(09~20) / 배치(20~)
- * @returns {string|null} null → 시즌 준비
+ * 2) 목 02~ / 금 ~09 →「휴전일」(목 휴전 + 금 오전 연장)
+ * 3) 토·월·수: 배치(~08) / 상대 길드 매칭(08~09) / 진행 중(09~익일02)
+ * 4) 일·화: 정산(02~09) / 설정(09~20) / 배치(20~)
+ * 5) 금 09~: 설정(09~20) / 배치(20~)  — 금 오전은 휴전, 정산 아님
+ * @returns {string|null} null → 시즌 준비 (시즌 사이 1주 쉼 등)
  */
 function guildWarFrontStatus(kst) {
   const { weekday: wd, hour } = kst;
 
-  // 본게임 연장: 일·화 00~02, 목 00~02(수 경기 연장 — 휴전일 새벽)
+  // 본게임 연장: 일·화 00~02, 목 00~02(수 경기 연장)
   if (hour < 2 && (wd === WEEKDAY.sun || wd === WEEKDAY.tue || wd === WEEKDAY.thu)) {
     return '길드전 진행 중';
   }
 
-  // 목 휴전 (02 이후)
-  if (wd === WEEKDAY.thu) return null;
+  // 목 휴전 (02 이후) + 금 09시 직전까지 휴전 연장
+  if (wd === WEEKDAY.thu) return '휴전일';
+  if (wd === WEEKDAY.fri && hour < 9) return '휴전일';
 
   // 경기일 월·수·토
   if (wd === WEEKDAY.sat || wd === WEEKDAY.mon || wd === WEEKDAY.wed) {
     if (hour < 8) return '방어덱 배치'; // 전날 배치 연장
-    if (hour < 9) return '길드 매칭';
+    if (hour < 9) return '상대 길드 매칭';
     return '길드전 진행 중';
   }
 
-  // 방어일 화·금·일
-  if (wd === WEEKDAY.fri || wd === WEEKDAY.sun || wd === WEEKDAY.tue) {
-    if (hour < 9) return '정산 중'; // 전투 종료 후 ~ 방어덱 설정 전
+  // 방어일 일·화 (토·월 전투 다음날) — 정산은 여기만
+  if (wd === WEEKDAY.sun || wd === WEEKDAY.tue) {
+    if (hour < 9) return '정산 중';
+    if (hour < 20) return '방어덱 설정';
+    return '방어덱 배치';
+  }
+
+  // 금요일 09시 이후 = 방어 준비
+  if (wd === WEEKDAY.fri) {
     if (hour < 20) return '방어덱 설정';
     return '방어덱 배치';
   }
