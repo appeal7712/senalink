@@ -216,7 +216,7 @@ function evalAdvancedArena(nowMs, anchorYmd) {
  * 1) 일·화·목 00~02 → 전날 본게임 연장 →「길드전 진행 중」
  * 2) 목 02~ → 휴전
  * 3) 토·월·수: 배치(~08) / 매칭(08~09) / 진행 중(09~익일02)
- * 4) 금·일·화: 공백(~09) / 설정(09~20) / 배치(20~)
+ * 4) 금·일·화: 정산(02~09) / 설정(09~20) / 배치(20~)
  * @returns {string|null} null → 시즌 준비
  */
 function guildWarFrontStatus(kst) {
@@ -239,7 +239,7 @@ function guildWarFrontStatus(kst) {
 
   // 방어일 화·금·일
   if (wd === WEEKDAY.fri || wd === WEEKDAY.sun || wd === WEEKDAY.tue) {
-    if (hour < 9) return null; // 02~09 공백 등
+    if (hour < 9) return '정산 중'; // 전투 종료 후 ~ 방어덱 설정 전
     if (hour < 20) return '방어덱 설정';
     return '방어덱 배치';
   }
