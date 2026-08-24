@@ -214,11 +214,11 @@ function evalAdvancedArena(nowMs, anchorYmd) {
  * 길드전 앞면 페이즈
  * 판정 순서 중요 — docs/content-season-schedule.md §2
  * 1) 일·화·목 00~02 → 전날 본게임 연장 →「길드전 진행 중」
- * 2) 목 02~08 →「정산」(수 전투 직후)
- * 3) 목 08:00 ~ 금 08:00 →「휴전일」(24시간)
+ * 2) 목 02~08 →「정산 중」(수 전투 직후)
+ * 3) 목 08:00 ~ 금 09:00 →「휴전일」(목 08~금 08이 본 24h, 금 08~09도 휴전일)
  * 4) 금 09~: 설정 → 배치 → (토) 매칭 → 전투 …
  * 5) 토·월·수: 배치(~08) / 상대 길드 매칭(08~09) / 진행 중(09~익일02)
- * 6) 일·화: 정산(02~09) / 설정(09~20) / 배치(20~)
+ * 6) 일·화: 정산 중(02~09) / 설정(09~20) / 배치(20~)
  * @returns {string|null} null → 시즌 준비 (시즌 사이 1주 쉼 등)
  */
 function guildWarFrontStatus(kst) {
@@ -229,12 +229,11 @@ function guildWarFrontStatus(kst) {
     return '길드전 진행 중';
   }
 
-  // 수 전투 직후: 목 02:00 ~ 08:00 정산
-  if (wd === WEEKDAY.thu && hour < 8) return '정산';
+  // 수 전투 직후: 목 02:00 ~ 08:00 정산 중
+  if (wd === WEEKDAY.thu && hour < 8) return '정산 중';
 
-  // 휴전일: 목 08:00 ~ 금 08:00 (24시간)
+  // 휴전일: 목 08:00 ~ 금 09:00 직전 (금 08~09 포함)
   if (wd === WEEKDAY.thu) return '휴전일';
-  if (wd === WEEKDAY.fri && hour < 8) return '휴전일';
 
   // 경기일 월·수·토
   if (wd === WEEKDAY.sat || wd === WEEKDAY.mon || wd === WEEKDAY.wed) {
@@ -245,15 +244,14 @@ function guildWarFrontStatus(kst) {
 
   // 방어일 일·화 (토·월 전투 다음날)
   if (wd === WEEKDAY.sun || wd === WEEKDAY.tue) {
-    if (hour < 9) return '정산';
+    if (hour < 9) return '정산 중';
     if (hour < 20) return '방어덱 설정';
     return '방어덱 배치';
   }
 
-  // 금요일: 08~09는 휴전 종료~방어 설정 직전(1시간).
-  // 금 09시부터 방어덱 설정 → 배치 → (토) 매칭 → 길드전 진행
+  // 금요일: ~09 휴전일 → 09 방어덱 설정 → 배치 → (토) 매칭 → 길드전 진행
   if (wd === WEEKDAY.fri) {
-    if (hour < 9) return '휴전일'; // 금 08~09: 멘트 공백 방지(본 휴전은 ~금 08:00)
+    if (hour < 9) return '휴전일';
     if (hour < 20) return '방어덱 설정';
     return '방어덱 배치';
   }
