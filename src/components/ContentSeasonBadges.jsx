@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getContentSeasonStatuses } from '../lib/contentSeasonSchedule';
 
 const THEME_CLASS = {
@@ -16,17 +16,27 @@ const SEASON_ICON_SRC = {
   expedition: '/images/content-season/expedition.png',
 };
 
+const MOBILE_FLIP_MQ = '(max-width: 760px)';
+const MOBILE_FLIP_HOLD_MS = 3000;
+
 function msUntilNextMinute() {
   const now = Date.now();
   return 60_000 - (now % 60_000);
 }
 
+function isMobileFlipViewport() {
+  return typeof window !== 'undefined' && window.matchMedia(MOBILE_FLIP_MQ).matches;
+}
+
 /**
  * 히어로 아래 — 플립 시즌 카드
  * 앞: 아이콘 + 시간대 상태 / 뒤: 이름 + 시즌 종료일 + 게이지
+ * PC: hover · 모바일: 탭 + 3초 후 앞면 복귀
  */
 export default function ContentSeasonBadges() {
   const [items, setItems] = useState(() => getContentSeasonStatuses());
+  const [flippedId, setFlippedId] = useState(null);
+  const flipTimerRef = useRef(0);
 
   useEffect(() => {
     const tick = () => setItems(getContentSeasonStatuses());
@@ -50,6 +60,41 @@ export default function ContentSeasonBadges() {
     };
   }, []);
 
+  useEffect(() => () => {
+    if (flipTimerRef.current) {
+      window.clearTimeout(flipTimerRef.current);
+      flipTimerRef.current = 0;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (flippedId == null) return undefined;
+
+    const onOutsidePointer = (e) => {
+      if (!isMobileFlipViewport()) return;
+      const t = e.target;
+      if (t instanceof Element && t.closest('.season-card')) return;
+      if (flipTimerRef.current) {
+        window.clearTimeout(flipTimerRef.current);
+        flipTimerRef.current = 0;
+      }
+      setFlippedId(null);
+    };
+
+    document.addEventListener('pointerdown', onOutsidePointer);
+    return () => document.removeEventListener('pointerdown', onOutsidePointer);
+  }, [flippedId]);
+
+  const flipCardMobile = (id) => {
+    if (!isMobileFlipViewport()) return;
+    setFlippedId(id);
+    if (flipTimerRef.current) window.clearTimeout(flipTimerRef.current);
+    flipTimerRef.current = window.setTimeout(() => {
+      setFlippedId(null);
+      flipTimerRef.current = 0;
+    }, MOBILE_FLIP_HOLD_MS);
+  };
+
   if (!items.length) return null;
 
   return (
@@ -60,12 +105,14 @@ export default function ContentSeasonBadges() {
           const pct = Math.round((item.progress || 0) * 100);
           const iconSrc = SEASON_ICON_SRC[item.id];
           const frontStatus = item.frontStatus || item.status || '시즌 준비';
+          const isFlipped = flippedId === item.id;
 
           return (
             <article
               key={item.id}
-              className={`season-card ${theme}${item.burning ? ' is-live' : ' is-prep'}`}
+              className={`season-card ${theme}${item.burning ? ' is-live' : ' is-prep'}${isFlipped ? ' is-flipped' : ''}`}
               tabIndex={0}
+              onClick={() => flipCardMobile(item.id)}
             >
               <div className="season-card-inner">
                 <div className="season-card-face season-card-face--front">

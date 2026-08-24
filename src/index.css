@@ -2506,7 +2506,6 @@ h1, h2, h3 {
   --season-bar-glow-b: rgba(109, 40, 217, 0.4);
 }
 .season-card.is-prep {
-  opacity: 0.92;
   --season-spin: #94a3b8;
 }
 /*
@@ -2534,6 +2533,17 @@ h1, h2, h3 {
 .season-card:hover .season-card-inner,
 .season-card:focus-within .season-card-inner {
   transform: rotateY(180deg);
+}
+
+/* 모바일만: 호버/포커스 플립 끄고 탭(is-flipped) + JS 3초 복귀 */
+@media (max-width: 760px) {
+  .season-card:hover .season-card-inner,
+  .season-card:focus-within .season-card-inner {
+    transform: none;
+  }
+  .season-card.is-flipped .season-card-inner {
+    transform: rotateY(180deg);
+  }
 }
 
 .season-card-face {
