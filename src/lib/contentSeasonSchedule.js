@@ -214,7 +214,7 @@ function evalAdvancedArena(nowMs, anchorYmd) {
  * 길드전 앞면 페이즈
  * 판정 순서 중요 — docs/content-season-schedule.md §2
  * 1) 일·화·목 00~02 → 전날 본게임 연장 →「길드전 진행 중」
- * 2) 목 02~08 →「정산 중」(수 전투 직후)
+ * 2) 목 02~08 →「정산」(수 전투 직후)
  * 3) 목 08:00 ~ 금 08:00 →「휴전일」(24시간)
  * 4) 금 09~: 설정 → 배치 → (토) 매칭 → 전투 …
  * 5) 토·월·수: 배치(~08) / 상대 길드 매칭(08~09) / 진행 중(09~익일02)
@@ -230,7 +230,7 @@ function guildWarFrontStatus(kst) {
   }
 
   // 수 전투 직후: 목 02:00 ~ 08:00 정산
-  if (wd === WEEKDAY.thu && hour < 8) return '정산 중';
+  if (wd === WEEKDAY.thu && hour < 8) return '정산';
 
   // 휴전일: 목 08:00 ~ 금 08:00 (24시간)
   if (wd === WEEKDAY.thu) return '휴전일';
@@ -245,7 +245,7 @@ function guildWarFrontStatus(kst) {
 
   // 방어일 일·화 (토·월 전투 다음날)
   if (wd === WEEKDAY.sun || wd === WEEKDAY.tue) {
-    if (hour < 9) return '정산 중';
+    if (hour < 9) return '정산';
     if (hour < 20) return '방어덱 설정';
     return '방어덱 배치';
   }
