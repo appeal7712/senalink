@@ -6,6 +6,7 @@ import { useSiteMain } from '../lib/siteMain';
 import { recordSiteVisitOnce, subscribeSiteVisitStats } from '../lib/siteVisitStats';
 import GuildRankBoard from './GuildRankBoard';
 import MetaDeckCarousel, { MetaDeckCard } from './MetaDeckCarousel';
+import ContentSeasonBadges from './ContentSeasonBadges';
 
 const ROLE_LABEL_KR = { offensive: '공격형', magic: '마법형', defensive: '방어형', support: '지원형', universal: '만능형' };
 
@@ -80,6 +81,8 @@ export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCo
           </div>
         </div>
       </div>
+
+      <ContentSeasonBadges />
 
       <div className="luxury-panel meta-deck-board">
         <h3 className="meta-deck-board-title">

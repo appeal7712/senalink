@@ -85,18 +85,18 @@ export default function SystemDB() {
             <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--gold-primary)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Icon name="flask" size={16} /> 효과 적중 & 저항 공식
             </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-              <div style={{ background: 'rgba(255,255,255,0.07)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <div style={{ fontSize: '14px', fontWeight: 900, color: 'var(--gold-primary)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}><Icon name="target" size={13} /> 효과 적중</div>
-                <div style={{ fontSize: '14px', color: '#f8fafc', lineHeight: '1.6', fontWeight: 700 }}>{system_rules.effect_probability.effect_hit}</div>
+            <div className="system-effect-prob-grid">
+              <div className="system-effect-prob-card">
+                <div className="system-effect-prob-title system-effect-prob-title--hit"><Icon name="target" size={13} /> 효과 적중</div>
+                <div className="system-effect-prob-body">{system_rules.effect_probability.effect_hit}</div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.07)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <div style={{ fontSize: '14px', fontWeight: 900, color: 'var(--accent-cyan)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}><Icon name="shield" size={13} /> 효과 저항</div>
-                <div style={{ fontSize: '14px', color: '#f8fafc', lineHeight: '1.6', fontWeight: 700 }}>{system_rules.effect_probability.effect_res}</div>
+              <div className="system-effect-prob-card">
+                <div className="system-effect-prob-title system-effect-prob-title--res"><Icon name="shield" size={13} /> 효과 저항</div>
+                <div className="system-effect-prob-body">{system_rules.effect_probability.effect_res}</div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.07)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <div style={{ fontSize: '14px', fontWeight: 900, color: '#c084fc', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}><Icon name="sparkle" size={13} /> 효과 적용 확률</div>
-                <div style={{ fontSize: '14px', color: '#f8fafc', lineHeight: '1.6', fontWeight: 700 }}>{system_rules.effect_probability.effect_apply}</div>
+              <div className="system-effect-prob-card">
+                <div className="system-effect-prob-title system-effect-prob-title--apply"><Icon name="sparkle" size={13} /> 효과 적용 확률</div>
+                <div className="system-effect-prob-body">{system_rules.effect_probability.effect_apply}</div>
               </div>
             </div>
           </div>

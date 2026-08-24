@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { skillKeywords, EFFECT_KEYWORDS } from '../data/keywords';
 import Icon from './icons/Icon';
@@ -13,7 +13,6 @@ function matchAliases(term) {
 
 function buildTooltipEntries(skillTooltips = {}) {
   const map = new Map();
-  // 전역 사전 먼저, 스킬별 툴팁이 덮어씀 (수치가 더 정확)
   Object.entries(skillKeywords).forEach(([k, v]) => {
     if (k && v) map.set(k, v);
   });
@@ -27,7 +26,6 @@ function buildTooltipEntries(skillTooltips = {}) {
       entries.push({ alias, key, def });
     });
   });
-  // 긴 키워드 우선
   entries.sort((a, b) => b.alias.length - a.alias.length);
   return entries;
 }
@@ -36,14 +34,48 @@ function findTooltip(part, entries) {
   return entries.find((e) => e.alias === part) || null;
 }
 
+function resolveActiveDef(openKey, entries) {
+  if (!openKey) return '';
+  return entries.find((e) => e.key === openKey || e.alias === openKey)?.def || skillKeywords[openKey] || '';
+}
+
+function clampTipStyle(anchor, tipEl) {
+  const pad = 10;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const tipW = tipEl.offsetWidth || Math.min(280, vw * 0.82);
+  const tipH = tipEl.offsetHeight || 80;
+  let left = anchor.left;
+  let top = anchor.top;
+  let place = 'above';
+
+  if (top - tipH - 16 < pad) {
+    place = 'below';
+    top = anchor.bottom != null ? anchor.bottom : (anchor.top + 18);
+  }
+
+  const half = tipW / 2;
+  left = Math.min(Math.max(left, pad + half), vw - pad - half);
+
+  if (place === 'above') {
+    top = Math.max(pad + tipH + 4, top);
+  } else {
+    top = Math.min(top, vh - pad - tipH);
+  }
+
+  return { left, top, place };
+}
+
 /**
  * negi-lab 식: 설명 본문에 효과를 하이라이트하고, 호버/탭 시 작은 툴팁.
  */
 export default function SkillRichText({ text, skillTooltips = {}, className = '' }) {
   const tipId = useId();
   const rootRef = useRef(null);
+  const tipRef = useRef(null);
   const [openKey, setOpenKey] = useState(null);
   const [anchor, setAnchor] = useState(null);
+  const [tipPos, setTipPos] = useState(null);
 
   const entries = useMemo(() => buildTooltipEntries(skillTooltips), [skillTooltips]);
   const aliasList = useMemo(() => entries.map((e) => e.alias), [entries]);
@@ -55,23 +87,30 @@ export default function SkillRichText({ text, skillTooltips = {}, className = ''
     return new RegExp(`(${all.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'g');
   }, [aliasList]);
 
+  const activeDef = resolveActiveDef(openKey, entries);
+
   useEffect(() => {
     if (!openKey) return undefined;
     const onDoc = (e) => {
       if (rootRef.current && !rootRef.current.contains(e.target)) {
+        const tip = tipRef.current;
+        if (tip && tip.contains(e.target)) return;
         setOpenKey(null);
         setAnchor(null);
+        setTipPos(null);
       }
     };
     const onKey = (e) => {
       if (e.key === 'Escape') {
         setOpenKey(null);
         setAnchor(null);
+        setTipPos(null);
       }
     };
     const onScroll = () => {
       setOpenKey(null);
       setAnchor(null);
+      setTipPos(null);
     };
     document.addEventListener('pointerdown', onDoc);
     document.addEventListener('keydown', onKey);
@@ -83,17 +122,25 @@ export default function SkillRichText({ text, skillTooltips = {}, className = ''
     };
   }, [openKey]);
 
+  useLayoutEffect(() => {
+    if (!openKey || !anchor || !tipRef.current) {
+      return;
+    }
+    setTipPos(clampTipStyle(anchor, tipRef.current));
+  }, [openKey, anchor, activeDef]);
+
   if (!text) return null;
 
   const openTip = (key, el) => {
     setOpenKey(key);
     if (el) {
       const br = el.getBoundingClientRect();
-      // fixed — 스크롤 패널 overflow에 안 잘리게 뷰포트 좌표
       setAnchor({
         left: br.left + br.width / 2,
         top: br.top,
+        bottom: br.bottom,
       });
+      setTipPos(null);
     }
   };
 
@@ -101,14 +148,12 @@ export default function SkillRichText({ text, skillTooltips = {}, className = ''
     if (openKey === key) {
       setOpenKey(null);
       setAnchor(null);
+      setTipPos(null);
       return;
     }
     openTip(key, el);
   };
 
-  const activeDef = openKey
-    ? (entries.find((e) => e.key === openKey || e.alias === openKey)?.def || skillKeywords[openKey] || '')
-    : '';
   const activeLabel = openKey
     ? (entries.find((e) => e.key === openKey || e.alias === openKey)?.key || openKey)
     : '';
@@ -117,6 +162,7 @@ export default function SkillRichText({ text, skillTooltips = {}, className = ''
   const numTestRegex = /^(?:\d+%(?:\s*확률)?|\d+회|\d+턴|\d+중첩|\d+명|\d+개|\d+초|\d+마다|\d+레벨)$/;
 
   const lines = String(text).split('\n');
+  const place = tipPos?.place || 'above';
 
   return (
     <div className={`skill-rich-text ${className}`.trim()} ref={rootRef}>
@@ -167,6 +213,7 @@ export default function SkillRichText({ text, skillTooltips = {}, className = ''
                       if (typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches) {
                         setOpenKey(null);
                         setAnchor(null);
+                        setTipPos(null);
                       }
                     }}
                     onClick={(e) => {
@@ -199,10 +246,15 @@ export default function SkillRichText({ text, skillTooltips = {}, className = ''
       {openKey && activeDef && anchor && typeof document !== 'undefined'
         ? createPortal(
           <div
+            ref={tipRef}
             id={tipId}
             role="tooltip"
-            className="skill-tip-pop"
-            style={{ left: anchor.left, top: anchor.top }}
+            className={`skill-tip-pop${place === 'below' ? ' skill-tip-pop--below' : ''}`}
+            style={{
+              left: tipPos?.left ?? anchor.left,
+              top: tipPos?.top ?? anchor.top,
+              visibility: tipPos ? 'visible' : 'hidden',
+            }}
           >
             <div className="skill-tip-pop-title">{activeLabel}</div>
             <div className="skill-tip-pop-body">{activeDef}</div>

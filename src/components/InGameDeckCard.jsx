@@ -348,19 +348,14 @@ export default function InGameDeckCard({
 
   useEffect(() => {
     if (!isGearOverviewOpen) return undefined;
-    const run = () => warmSettingCapture(settingCaptureRef.current);
-    let idleId = 0;
-    let timeoutId = 0;
-    if (typeof window.requestIdleCallback === 'function') {
-      idleId = window.requestIdleCallback(run, { timeout: 1500 });
-    } else {
-      timeoutId = window.setTimeout(run, 500);
-    }
+    let cancelled = false;
+    // 모달이 그린 직후 폰트·이미지·초상 합성 워밍 (첫 공유 지연 완화)
+    const timeoutId = window.setTimeout(() => {
+      if (!cancelled) warmSettingCapture(settingCaptureRef.current);
+    }, 120);
     return () => {
-      if (idleId && typeof window.cancelIdleCallback === 'function') {
-        window.cancelIdleCallback(idleId);
-      }
-      if (timeoutId) window.clearTimeout(timeoutId);
+      cancelled = true;
+      window.clearTimeout(timeoutId);
     };
   }, [isGearOverviewOpen]);
 
@@ -389,10 +384,10 @@ export default function InGameDeckCard({
       const result = await shareSettingPng(settingCaptureRef.current);
       if (result.method === 'clipboard') {
         setShareNotice('세팅이 복사 되었습니다\n붙여넣기로 공유 해보세요');
+      } else if (result.method === 'download') {
+        setShareNotice('이 환경에선 클립보드 복사가 안 되어\nPNG로 저장했습니다');
       } else if (result.method === 'share') {
         setShareNotice('세팅 이미지를 공유했습니다');
-      } else if (result.method === 'download') {
-        setShareNotice('이미지 복사를 지원하지 않아\nPC 포맷 PNG로 저장했습니다');
       }
       /* cancelled: 안내 없이 종료 */
     } catch {

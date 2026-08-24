@@ -1,5 +1,5 @@
 import {
-  collection, deleteDoc, doc, limit, onSnapshot, query, setDoc, where,
+  collection, deleteDoc, doc, limit, onSnapshot, orderBy, query, setDoc, where,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { COL, communityGuideDoc } from '../config/firestorePaths';
@@ -9,7 +9,7 @@ import { normalizeMetaDeckKind } from '../components/ArenaDeckKind';
 import { normalizePvpMode } from '../components/PvpModeToggle';
 import { normalizeArenaTier } from '../data/arenaTiers';
 
-/** 섹션(또는 카테고리)당 실시간 구독 상한. 복합 인덱스 없이 section(+category)만 사용. */
+/** 섹션당 실시간 구독 상한. section + updatedAt desc (복합 인덱스). */
 const GUIDE_LISTEN_LIMIT = 100;
 
 const padNames5 = (names = []) => {
@@ -99,23 +99,53 @@ export function normalizeCommunityGuide(raw = {}, id = '') {
 }
 
 export function subscribeCommunityGuides({ section, category, contentKey }, onData, onError) {
-  // section + limit 만 사용(복합 인덱스·배포 대기 없음). category/contentKey·정렬은 클라.
-  const q = query(
+  const applySnap = (snap) => {
+    let list = snap.docs.map((d) => normalizeCommunityGuide(d.data(), d.id));
+    if (category) list = list.filter((g) => g.category === category);
+    if (contentKey) list = list.filter((g) => g.contentKey === contentKey);
+    // 서버 orderBy가 있으면 이미 최신순. 클라 sort는 동일 결과·폴백 쿼리용.
+    list.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+    onData(list);
+  };
+
+  const orderedQ = query(
     collection(db, COL.COMMUNITY_GUIDES),
     where('section', '==', section),
+    orderBy('updatedAt', 'desc'),
     limit(GUIDE_LISTEN_LIMIT),
   );
-  return onSnapshot(
-    q,
+
+  let fallbackUnsub = null;
+  const unsubOrdered = onSnapshot(
+    orderedQ,
     (snap) => {
-      let list = snap.docs.map((d) => normalizeCommunityGuide(d.data(), d.id));
-      if (category) list = list.filter((g) => g.category === category);
-      if (contentKey) list = list.filter((g) => g.contentKey === contentKey);
-      list.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
-      onData(list);
+      if (fallbackUnsub) {
+        fallbackUnsub();
+        fallbackUnsub = null;
+      }
+      applySnap(snap);
     },
-    (err) => onError?.(err),
+    (err) => {
+      // 인덱스 빌드 중이거나 미배포 시 구 쿼리로 폴백 (서비스 중단 방지)
+      const needIndex = err?.code === 'failed-precondition'
+        || /index/i.test(String(err?.message || ''));
+      if (!needIndex) {
+        onError?.(err);
+        return;
+      }
+      const legacyQ = query(
+        collection(db, COL.COMMUNITY_GUIDES),
+        where('section', '==', section),
+        limit(GUIDE_LISTEN_LIMIT),
+      );
+      fallbackUnsub = onSnapshot(legacyQ, applySnap, (e2) => onError?.(e2));
+    },
   );
+
+  return () => {
+    unsubOrdered();
+    if (fallbackUnsub) fallbackUnsub();
+  };
 }
 
 export async function saveCommunityGuide(guide) {

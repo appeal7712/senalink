@@ -102,9 +102,15 @@ async function wipeHub(hubId) {
   await hubRef.delete();
 
   try {
-    await getStorage().bucket().file(`hubEmblems/${hubId}/mark.jpg`).delete({ ignoreNotFound: true });
+    // 신규 경로 byUser/{uid}/mark.jpg + 레거시 mark.jpg 포함 전부 삭제
+    await getStorage().bucket().deleteFiles({ prefix: `hubEmblems/${hubId}/` });
   } catch (err) {
-    logger.warn('emblem delete', hubId, err);
+    logger.warn('emblem prefix delete', hubId, err);
+    try {
+      await getStorage().bucket().file(`hubEmblems/${hubId}/mark.jpg`).delete({ ignoreNotFound: true });
+    } catch (err2) {
+      logger.warn('emblem legacy delete', hubId, err2);
+    }
   }
 
   return { ok: true, members: memberUids.length };
@@ -190,8 +196,50 @@ exports.disbandHub = onCall({ region: REGION }, async (request) => {
 
 /**
  * 로그인 계정이 실제 멤버인 허브를 찾아 users.hubId 를 복구한다.
- * (기기 로컬 세션 / hubId 포인터가 비어 있어도 소속 허브로 입장 가능하게)
+ * 1) members.uid 컬렉션 그룹 조회 (신규·백필된 문서)
+ * 2) 없으면 허브 페이지 단위 멤버십 확인 (구형 문서 폴백)
  */
+async function findHubIdForMember(uid) {
+  try {
+    const cg = await db.collectionGroup('members').where('uid', '==', uid).limit(3).get();
+    for (const d of cg.docs) {
+      const parts = d.ref.path.split('/');
+      // hubs/{hubId}/members/{uid}
+      if (parts.length >= 4 && parts[0] === 'hubs' && parts[2] === 'members' && parts[3] === uid) {
+        return parts[1];
+      }
+    }
+  } catch (err) {
+    logger.warn('resolveMyHub collectionGroup', uid, err);
+  }
+
+  let last = null;
+  for (;;) {
+    let q = db.collection('hubs').orderBy('__name__').limit(40).select();
+    if (last) q = q.startAfter(last);
+    const snap = await q.get();
+    if (snap.empty) break;
+
+    const checks = await Promise.all(snap.docs.map(async (hubDoc) => {
+      const memberSnap = await db.doc(`hubs/${hubDoc.id}/members/${uid}`).get();
+      return memberSnap.exists ? hubDoc.id : null;
+    }));
+    const found = checks.find(Boolean);
+    if (found) {
+      try {
+        await db.doc(`hubs/${found}/members/${uid}`).set({ uid }, { merge: true });
+      } catch (err) {
+        logger.warn('resolveMyHub uid backfill', found, uid, err);
+      }
+      return found;
+    }
+
+    last = snap.docs[snap.docs.length - 1];
+    if (snap.size < 40) break;
+  }
+  return null;
+}
+
 exports.resolveMyHub = onCall({ region: REGION }, async (request) => {
   if (!request.auth?.uid) {
     throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
@@ -204,16 +252,19 @@ exports.resolveMyHub = onCall({ region: REGION }, async (request) => {
   if (pointed) {
     const memberSnap = await db.doc(`hubs/${pointed}/members/${uid}`).get();
     if (memberSnap.exists) {
+      if (memberSnap.data()?.uid !== uid) {
+        try {
+          await memberSnap.ref.set({ uid }, { merge: true });
+        } catch (err) {
+          logger.warn('resolveMyHub pointed uid backfill', pointed, err);
+        }
+      }
       return { hubId: pointed, restored: false };
     }
   }
 
-  // 사이트 허브 수가 작다는 전제 — 멤버 문서로 소속 허브 스캔
-  const hubsSnap = await db.collection('hubs').select('name').get();
-  for (const hubDoc of hubsSnap.docs) {
-    const memberSnap = await db.doc(`hubs/${hubDoc.id}/members/${uid}`).get();
-    if (!memberSnap.exists) continue;
-    const hubId = hubDoc.id;
+  const hubId = await findHubIdForMember(uid);
+  if (hubId) {
     await userRef.set({ hubId, updatedAt: nowIso() }, { merge: true });
     logger.info('resolveMyHub restored', { uid, hubId });
     return { hubId, restored: true };
@@ -317,6 +368,7 @@ exports.joinHub = onCall({ region: REGION }, async (request) => {
       }
 
       const joinData = {
+        uid,
         nickname: nick,
         role: 'member',
         joinedAt: ts,

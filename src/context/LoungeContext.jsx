@@ -635,6 +635,7 @@ export function LoungeProvider({ children }) {
     });
 
     const masterData = {
+      uid: authUser.uid,
       nickname: nick,
       role: 'master',
       joinedAt: ts,

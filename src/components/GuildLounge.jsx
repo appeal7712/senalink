@@ -240,7 +240,10 @@ const applyBuildBundle = (saved, setters) => {
   setters.setTotalwarBuilds(totalwar);
   setters.setGwAttacks(gwAttacks);
   setters.setGwDefenses(gwDefenses);
-  setters.setSelectedGwAttackId(gwAttacks[0]?.id || null);
+  // 기본은 접힘. 이미 열어 둔 덱이 목록에 있으면 유지(실시간 동기화 시 강제 접힘 방지)
+  setters.setSelectedGwAttackId((prev) => (
+    prev && gwAttacks.some((g) => g.id === prev) ? prev : null
+  ));
   if (setters.setExpeditionAssignments) {
     setters.setExpeditionAssignments(data.expeditionAssignments || EMPTY_ASSIGNMENTS);
   }

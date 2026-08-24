@@ -42,7 +42,7 @@ React + Vite + Firebase (Auth / Firestore / Storage / Functions asia-northeast3)
 | 공개 길드 | `publicGuilds/{hubId}` |
 | 공용 공략·티어 | `communityGuides` / `communityTierLists` |
 | 아바타·엠블럼 | Storage `userAvatars` / `hubEmblems` |
-| (덜 민감) CMS·방문 | `site/main`, `site/stats` |
+| (덜 민감) CMS·방문 | `site/main`, `site/stats`(+ `visitShards/*` 분산 카운터) |
 
 #### 절대 하지 말 것
 
@@ -188,7 +188,7 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 |------|------|------|
 | `admins/{uid}` | 본인 get | 클라이언트 불가 |
 | `site/main` | 공개 | Super만 (`updatedBy` = 본인) |
-| `site/stats` | 공개 | 누구나 create/update — total·dayCount **정확히 +1**, day=오늘 KST |
+| `site/stats` | 공개 | 레거시 +1 (구 클라). 신규는 `site/stats/visitShards/{0–31}` 동일 +1 규칙 |
 | `users/{uid}` | signed-in get / **list=Super** | 본인 화이트리스트; 타인 recommend +1은 claim과 함께만 |
 | `profileDailyRecommends/…` | 본인 claim | 본인 create만 |
 | `communityGuides/{id}` | 공개 | Super 전부; signed-in은 PvP(arena/totalwar) 본인 글 |
@@ -204,7 +204,7 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 
 **슈퍼관리자:** `admins/{uid}.role == 'super'`.
 
-`firestore.indexes.json`은 현재 비어 있음(복합 인덱스 없음).
+`firestore.indexes.json`: `communityGuides` (section + updatedAt desc), `members.uid` collectionGroup (resolveMyHub용).
 
 ---
 
@@ -245,7 +245,8 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | Ops 편집 | `/ops` → **메인페이지** → `MainSiteEditor.jsx` (저장만, 「비우기」없음) |
 | 필드 | headline, subhead, highlight, metaDecks(4), pickRates(5), news[], entranceBanner, updatedAt/By |
 | 입장 배너 UI | `SiteEntranceBanner.jsx` (오늘 안 보기: localStorage) |
-| 방문 집계 | `site/stats` + `src/lib/siteVisitStats.js` — 브라우저당 **KST 하루 1회** (`localStorage` 키 `senalink_site_visit_day`). 히어로·ops에 `오늘 · 전체` 표시. 블로그급(시크릿 창 어뷰징 완전차단 불가) |
+| 방문 집계 | `siteVisitStats.js` — 쓰기: **32 샤드** `site/stats/visitShards/{id}` 랜덤 +1(충돌 시 다른 샤드). 읽기: 레거시 `site/stats` + 샤드 합산. 브라우저당 KST 하루 1회(`senalink_site_visit_day`). 히어로·ops 표시. 시크릿 창 어뷰징 완전차단 불가 |
+| 기용률·뉴스 2열 | PC: 기용률 패널이 행 높이 기준, 뉴스(`.main-news-scroller`)만 내부 스크롤. 모바일(≤900px): 1열, 뉴스 `max-height` 후 스크롤 |
 
 ### 10.2 길드 허브 vs 커뮤니티 (빌드 분리)
 
@@ -289,6 +290,33 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 - 모바일(≤760px) 세팅 개요: 장비 1열, `.setting-overview-deck`는 `height:auto` — **배치·펫 잘림 방지**. PC·`.setting-capture-pc`(공유 PNG 980px)와 분리.
 - **모달 뒤 블러:** body portal이라 스크림 `backdrop-filter`만으로는 뒤가 비침. **`body:has(> .modal-scrim) .app-shell` / `#root::before` 의 `filter: blur(22px)`는 의도된 것 — 성능 핑계로 제거하지 말 것.**
 - 서브모달 오픈: 아래에 스크림이 있을 때만 `flushSync`+cover(길드전 카운터 등). **단독 오픈은 rAF 양보** 후 열어 버튼 `:active`가 보이게. 데이터 로딩 경로와 무관.
+
+### 10.7 컨텐츠 시즌 카드 (메인)
+
+메인 히어로 아래 플립 카드 4장. Firestore 없음 · KST만 계산.
+
+| 파일 | 역할 |
+|------|------|
+| **`docs/content-season-schedule.md`** | **정본** (일정·멘트·예시·함정) |
+| `src/config/contentSeasonAnchors.js` | 라이브 앵커일 |
+| `src/lib/contentSeasonSchedule.js` | `frontStatus` · `burning` · `endsAtLabel` · progress |
+| `src/components/ContentSeasonBadges.jsx` | UI |
+| `public/images/content-season/` | 아이콘 |
+
+**표시 순서:** 길드전 → 상급결투장 → 총력전 → 강림원정대  
+
+**앞면:** 아이콘 + `frontStatus` · **뒷면:** 이름 + `YYYY.MM.DD 종료` + 게이지  
+
+**테두리 (`burning` → `is-live` 스핀 / 아니면 `is-prep` 회색 고정)**  
+
+| 컨텐츠 | 스핀 (색 테두리 회전) | 회색 고정 |
+|--------|----------------------|-----------|
+| 길드전 | `길드전 진행 중` 만 | 설정·배치·매칭·시즌 준비·1주 쉼 등 전부 |
+| 총력전 | `전투 진행` 만 | 라운드 준비·결산·시즌 준비·화~목 휴식 등 |
+| 상급·원정대 | `시즌 진행 중` | `시즌 준비` (교대 공백 포함) |
+
+**길드전 시각 함정:** 화 **01시** = 진행 중(월 본게임 ~02:00) / 화 **낮** = 방어덱 설정. 자세한 표는 정본 §2.  
+패치 시 정본 먼저 읽고 코드 맞출 것.
 
 ---
 
@@ -433,7 +461,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.08.23.57** 전후 (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.08.25.68** 전후 (푸터 `APP_VERSION` 확인)
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 
 ---
@@ -443,6 +471,28 @@ API:
 ---
 
 ## 17. 패치 내역
+
+### 2026-08-25 (`v2026.08.25.68`) — 시즌 보드 · 모바일 · 세팅 공유
+- **모바일 UI:** 세팅 공유 캡처(초상/스킬 아이콘), 길드전 공격 접힘·카운터 행, 도감 시스템 공식·스킬 툴팁 등 다수 손봄 (PC 레이아웃·권한 스키마 무변경 원칙 유지).
+- **메인 시즌 진행판:** 길드전·상급결투장·총력전·강림원정대 플립 카드 (`ContentSeasonBadges` + `contentSeasonSchedule` · 앵커·정본 `docs/content-season-schedule.md`). Firestore 없음, KST 자동 사이클.
+- **세팅 공유 캡처:** 모바일에서 이미지 누락 완화 (`copyNodeImage` dataURL 이식 + 뷰포트 안 캡처 호스트).
+- **메인 기용률/뉴스:** PC 2열 높이 맞춤 — 기용률 기준, 뉴스만 내부 스크롤.
+- **인프라(동봉):** `visitShards` 분산 방문 카운터(rules), `communityGuides` 인덱스, `resolveMyHub` collectionGroup·허브 엠블럼 prefix 삭제.
+
+### 2026-08-24 (`v2026.08.24.64`) — 모바일 UI 안정 (PC 레이아웃·권한 무변경)
+- **세팅 공유:** 이미지 fetch→dataURL 이식 + 캡처 호스트를 뷰포트 안(투명)에 두어 모바일에서 초상/스킬 아이콘 누락 완화.
+- **길드전 공격:** 진입 시 상대 덱 접힘(`selectedGwAttackId=null`). 모바일 카운터 행은 수정·삭제를 오른쪽 세로 배치(아래 줄 공백 제거).
+- **도감 시스템:** 효과 적중/저항 공식 모바일 1열. 스킬 툴팁 뷰포트 clamp(좌우·위아래).
+
+### 2026-08-24 (`v2026.08.24.63`) — 방문자 분산 카운터
+- **site/stats:** Firestore distributed counter — `visitShards/{0–31}`에만 신규 +1. 표시는 레거시 `site/stats` + 샤드 합산(기존 total 보존). rules는 레거시와 동일하게 **정확히 +1**만 허용(완화 없음). **rules+hosting 동시 배포 필요.**
+
+### 2026-08-24 (`v2026.08.24.62`) — 운영 안정성 (권한·데이터 스키마 파괴 없음)
+- **communityGuides:** `/community` 공용 공략(`section` pve·pvp 각각) `orderBy(updatedAt desc)` + limit 100. 길드 허브 `builds`와 무관. 인덱스 미준비 시 구 쿼리 폴백.
+- **site/stats:** (63에서 샤딩으로 대체) 재시도만으로는 단일 문서 한계 미해소.
+- **resolveMyHub:** `members.uid` collectionGroup 우선 + 구형 문서는 허브 페이지 스캔 폴백·uid 백필. 가입/개설 시 `members.uid` 기록.
+- **허브 해체 Storage:** `hubEmblems/{hubId}/` prefix 전체 삭제(byUser 경로 포함).
+- **보류:** Ops 전체 로딩 페이지네이션, builds/main 카테고리 분리, 인앱 구글 로그인 UX — 추후.
 
 ### 2026-08-24 (`v2026.08.24.61`)
 - **메인페이지 길드 순위 모바일 최적화**: 모바일(`@media (max-width: 760px)`)에서 길드 순위 행의 1열 폭(`32px`), 순위 뱃지(`22px`), 길드마크(`24px`) 축소 및 소속 뱃지(`font-size: 10px`, `padding: 2px 7px`), 리그 칩(`font-size: 9px`, `padding: 2px 6px`) 컴팩트화로 좁은 화면(iPhone 등)에서 길드명과 뱃지가 겹치는 문제 해결 (PC 스타일 무영향).

@@ -91,7 +91,7 @@ service cloud.firestore {
         && isSuperAdmin()
         && request.resource.data.updatedBy == request.auth.uid;
 
-      // 방문자 집계 — 누구나 +1 (브라우저당 하루 1회는 클라이언트가 제한)
+      // 방문자 집계(레거시 단일 문서) — 구 클라이언트 호환. 신규는 visitShards 사용.
       allow create: if docId == 'stats'
         && request.resource.data.keys().hasOnly(['total', 'day', 'dayCount', 'updatedAt'])
         && request.resource.data.total == 1
@@ -114,6 +114,39 @@ service cloud.firestore {
           || (resource.data.get('day', '') != kstDateString()
             && request.resource.data.dayCount == 1)
         );
+
+      // 분산 카운터 — 권한은 레거시와 동일(정확히 +1만). 샤드 ID 0–31.
+      match /visitShards/{shardId} {
+        allow read: if true;
+        allow delete: if false;
+        allow create: if docId == 'stats'
+          && shardId.matches('^[0-9]{1,2}$')
+          && int(shardId) >= 0
+          && int(shardId) < 32
+          && request.resource.data.keys().hasOnly(['total', 'day', 'dayCount', 'updatedAt'])
+          && request.resource.data.total == 1
+          && request.resource.data.dayCount == 1
+          && request.resource.data.day == kstDateString()
+          && request.resource.data.updatedAt is string
+          && request.resource.data.updatedAt.size() <= 40;
+        allow update: if docId == 'stats'
+          && shardId.matches('^[0-9]{1,2}$')
+          && int(shardId) >= 0
+          && int(shardId) < 32
+          && request.resource.data.keys().hasOnly(['total', 'day', 'dayCount', 'updatedAt'])
+          && request.resource.data.total is int
+          && request.resource.data.dayCount is int
+          && request.resource.data.day == kstDateString()
+          && request.resource.data.updatedAt is string
+          && request.resource.data.updatedAt.size() <= 40
+          && request.resource.data.total == resource.data.get('total', 0) + 1
+          && (
+            (resource.data.get('day', '') == kstDateString()
+              && request.resource.data.dayCount == resource.data.get('dayCount', 0) + 1)
+            || (resource.data.get('day', '') != kstDateString()
+              && request.resource.data.dayCount == 1)
+          );
+      }
     }
 
     // 값 검증만 (문서에 여분 필드가 있어도 update 가능)
