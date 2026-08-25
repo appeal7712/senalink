@@ -194,6 +194,7 @@ export default function InGameDeckCard({
   const isPvp = contentMode === 'pvp';
   const isInspectView = !isEditMode && !onSlotClick;
   const canDragSlots = !!(onHeroDrop && (isEditMode || onSlotClick));
+  const settingDeckTitle = String(overviewTitle || teamName || '').trim();
 
   useEffect(() => {
     if (petObj) setSelectedPet(petObj);
@@ -1161,8 +1162,12 @@ export default function InGameDeckCard({
                   {isPvp ? '스킬 예약 · 장비 · 장신구 · 디테일' : '속공 순서 · 장비 · 장신구 · 디테일'}
                 </div>
               </div>
-              {String(overviewTitle || '').trim() ? (
-                <div className="setting-overview-head-title">{String(overviewTitle).trim()}</div>
+              {settingDeckTitle ? (
+                <div className="setting-overview-head-title">
+                  <span className="setting-overview-head-title-label">덱 이름</span>
+                  <span className="setting-overview-head-title-sep">:</span>
+                  <span className="setting-overview-head-title-value">{settingDeckTitle}</span>
+                </div>
               ) : (
                 <div className="setting-overview-head-title setting-overview-head-title--empty" aria-hidden />
               )}

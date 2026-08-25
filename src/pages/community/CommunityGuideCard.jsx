@@ -94,7 +94,7 @@ export default function CommunityGuideCard({
           speedOrderNames={guide.speedOrderNames}
           speedIgnoredNames={guide.speedIgnoredNames}
           pvpMode={isPvpLayout ? guide.mode : null}
-          headerSlot={isPvpLayout ? (
+          headerSlot={isPvpLayout && !useCollapse ? (
             <div style={{ display: 'flex', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
               {arenaKind ? <ArenaDeckKindBadge kind={guide.deckKind} /> : null}
               <PvpModeBadge mode={guide.mode} size="sm" />
