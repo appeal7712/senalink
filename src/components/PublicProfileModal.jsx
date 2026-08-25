@@ -213,24 +213,21 @@ export function AuthorMeta({
   const clickable = Boolean(authorId && onOpenProfile);
   const stamp = formatUpdateAtDisplay(updatedAt);
   return (
-    <div className="build-title-meta" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-      {prefix ? <span>{prefix}:</span> : null}
-      <button
-        type="button"
-        disabled={!clickable}
-        onClick={() => clickable && onOpenProfile(authorId)}
-        style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          padding: 0, border: 'none', background: 'none',
-          cursor: clickable ? 'pointer' : 'default',
-          color: 'inherit', font: 'inherit',
-        }}
-        title={clickable ? '프로필 보기' : undefined}
-      >
-        <AuthorAvatar uid={authorId} nickname={author} size={22} />
-        <strong>{author || '알 수 없음'}</strong>
-      </button>
-      {stamp ? <span>({stamp})</span> : null}
+    <div className="author-meta build-title-meta">
+      <div className="author-meta-line">
+        {prefix ? <span>{prefix}:</span> : null}
+        <button
+          type="button"
+          className="author-meta-who"
+          disabled={!clickable}
+          onClick={() => clickable && onOpenProfile(authorId)}
+          title={clickable ? '프로필 보기' : undefined}
+        >
+          <AuthorAvatar uid={authorId} nickname={author} size={22} />
+          <strong>{author || '알 수 없음'}</strong>
+        </button>
+      </div>
+      {stamp ? <div className="author-meta-stamp">({stamp})</div> : null}
     </div>
   );
 }

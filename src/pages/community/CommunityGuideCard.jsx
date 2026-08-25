@@ -253,24 +253,25 @@ export default function CommunityGuideCard({
           })}
         </div>
         <span className="community-pvp-card-rule" aria-hidden>|</span>
-        <div className="community-pvp-card-meta">
-          {arenaKind ? <ArenaDeckKindBadge kind={guide.deckKind} /> : null}
-          <PvpModeBadge mode={guide.mode} size="sm" />
-          {tier ? (
-            <span className="community-pvp-card-tier">
-              <img src={tier.iconUrl} alt="" />
-              {tier.label}
-            </span>
-          ) : null}
-        </div>
-        <span className="community-pvp-card-rule" aria-hidden>|</span>
-        <div className="community-pvp-card-author" onClick={(e) => e.stopPropagation()}>
-          <AuthorMeta
-            author={guide.author}
-            authorId={guide.authorId}
-            updatedAt={guide.updatedAt}
-            onOpenProfile={onOpenProfile}
-          />
+        <div className="community-pvp-card-mid">
+          <div className="community-pvp-card-meta">
+            {arenaKind ? <ArenaDeckKindBadge kind={guide.deckKind} /> : null}
+            <PvpModeBadge mode={guide.mode} size="sm" />
+            {tier ? (
+              <span className="community-pvp-card-tier">
+                <img src={tier.iconUrl} alt="" />
+                {tier.label}
+              </span>
+            ) : null}
+          </div>
+          <div className="community-pvp-card-author" onClick={(e) => e.stopPropagation()}>
+            <AuthorMeta
+              author={guide.author}
+              authorId={guide.authorId}
+              updatedAt={guide.updatedAt}
+              onOpenProfile={onOpenProfile}
+            />
+          </div>
         </div>
         {actions}
       </div>

@@ -4618,6 +4618,53 @@ h1, h2, h3 {
   font-weight: 800;
 }
 
+/* 수정 및 고정자: 이름 한 줄 · 시간은 그 블록 가운데 아래 */
+.author-meta {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  margin-top: 0;
+}
+.author-meta-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  min-width: 0;
+  max-width: 100%;
+}
+.author-meta-who {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.author-meta-who:disabled {
+  cursor: default;
+}
+.author-meta-who strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.author-meta-stamp {
+  width: 100%;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
 .build-panel-timeline {
   flex: 1;
   background: var(--glass-inset);
@@ -8021,6 +8068,10 @@ h1, h2, h3 {
   height: 24px;
   object-fit: contain;
 }
+/* PC: mid는 contents → meta·author가 헤더 flex 한 줄에 참여 */
+.community-pvp-card-mid {
+  display: contents;
+}
 .community-pvp-card-author {
   flex: 1 1 auto;
   min-width: 0;
@@ -8060,30 +8111,59 @@ h1, h2, h3 {
   flex-shrink: 0;
 }
 @media (max-width: 900px) {
+  /* 길드전 방어 접힌 카드와 동일 골격: 제목 / 영웅 / (뱃지+작성자 | 수정·삭제 세로중앙) */
   .community-pvp-card-head {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title title"
+      "heroes heroes"
+      "mid actions";
     align-items: center;
+    column-gap: 10px;
+    row-gap: 8px;
+    flex-wrap: unset;
   }
   .community-pvp-card-rule {
     display: none;
   }
   .community-pvp-card-title {
-    flex: 1 1 100%;
+    grid-area: title;
+    flex: unset;
     max-width: none;
+    min-width: 0;
+    width: 100%;
   }
-  /* 수정·삭제: 작성자 아래 한 줄(width:100%)로 밀지 말고 — 오른쪽 세로 (길드전 카운터와 동일) */
-  .community-pvp-card-author {
-    flex: 1 1 0;
+  .community-pvp-card-heroes {
+    grid-area: heroes;
+  }
+  .community-pvp-card-mid {
+    grid-area: mid;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 6px;
     min-width: 0;
   }
-  .community-pvp-card-actions {
+  .community-pvp-card-meta {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .community-pvp-card-author {
+    flex: 0 1 auto;
     width: auto;
-    margin-left: auto;
+    max-width: 100%;
+  }
+  .community-pvp-card-actions {
+    grid-area: actions;
+    width: auto;
+    margin-left: 0;
     flex-direction: column;
     justify-content: center;
     align-items: stretch;
+    align-self: center;
     gap: 4px;
-    flex-shrink: 0;
   }
   .community-pvp-card-actions .btn-edit,
   .community-pvp-card-actions .btn-danger-solid {
