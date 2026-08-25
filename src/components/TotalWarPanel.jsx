@@ -91,6 +91,7 @@ export default function TotalWarPanel({
               <InGameDeckCard
                 key={i}
                 teamName={`${i + 1}팀`}
+                overviewTitle={b.title ? `${b.title} · ${i + 1}팀` : `${i + 1}팀`}
                 formationId={d.formationId || 'protect'}
                 heroList={(d.heroNames || []).map((name, idx) => {
                   const baseHero = resolveHeroByName?.(name);

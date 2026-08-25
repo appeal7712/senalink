@@ -3597,6 +3597,36 @@ h1, h2, h3 {
   min-width: 0;
 }
 
+.setting-overview-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  align-items: center;
+  gap: 10px 12px;
+  flex-shrink: 0;
+}
+.setting-overview-head-lead {
+  min-width: 0;
+}
+.setting-overview-head-title {
+  margin: 0;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.75);
+}
+.setting-overview-head-title--empty {
+  visibility: hidden;
+}
+.setting-overview-head-close {
+  justify-self: end;
+}
+
 .setting-overview-actions {
   display: flex;
   align-items: stretch;
@@ -3936,6 +3966,17 @@ h1, h2, h3 {
   }
 
   /* 세팅 확인 모바일: 1열 + 이름/옵션 글자 가독성 (PC·캡처 레이아웃 무관) */
+  .setting-overview-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "lead close"
+      "title title";
+  }
+  .setting-overview-head-lead { grid-area: lead; }
+  .setting-overview-head-title { grid-area: title; white-space: normal; }
+  .setting-overview-head-title--empty { display: none; }
+  .setting-overview-head-close { grid-area: close; }
+
   .gear-block-compact {
     padding: 10px 12px;
     gap: 8px;
@@ -8016,9 +8057,10 @@ h1, h2, h3 {
   background: rgba(236, 232, 224, 0.08);
 }
 .community-pvp-card-title {
-  flex: 0 1 200px;
-  min-width: 120px;
-  max-width: 220px;
+  /* PC: ~10글자 폭만 — flex-basis 200px로 초상화가 밀리지 않게 */
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 10em;
   font-size: 14px;
   font-weight: 900;
   color: #fff;
@@ -8205,7 +8247,7 @@ h1, h2, h3 {
     flex: unset;
     width: auto;
     max-width: 100%;
-    justify-self: start;
+    justify-self: center;
   }
   .community-pvp-card-tier--beside {
     display: none;

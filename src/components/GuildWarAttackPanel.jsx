@@ -516,6 +516,7 @@ export default function GuildWarAttackPanel({
             <div className="gw-inspect-deck">
               <InGameDeckCard
                 teamName="카운터 덱"
+                overviewTitle={inspectingCounter.title || '카운터 덱'}
                 formationId={normalizeFormationId(inspectingCounter.formationId)}
                 heroList={padNames5(inspectingCounter.heroNames).map((name, idx) => {
                   const baseHero = resolveHeroByName(name);

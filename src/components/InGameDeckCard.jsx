@@ -162,6 +162,8 @@ export default function InGameDeckCard({
   overviewNotes = null,
   accentColor = null,
   compact = false,
+  /** 세팅 확인·공유 캡처에 표시할 공략 제목 */
+  overviewTitle = '',
   /** 부모 모달(카운터 덱 조회 등)을 세팅 확인과 같은 틱에 숨길 때 */
   onUnderlyingCover = null,
 }) {
@@ -1149,8 +1151,8 @@ export default function InGameDeckCard({
             maxHeight: '90vh', padding: '12px 14px', borderRadius: '16px',
             display: 'flex', flexDirection: 'column', gap: '10px', boxSizing: 'border-box'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-              <div>
+            <div className="setting-overview-head">
+              <div className="setting-overview-head-lead">
                 <div style={{ fontSize: '17px', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                   <Icon name="swords" size={16} /> 세팅 확인
                   {isPvp && pvpMode ? <PvpModeBadge mode={pvpMode} size="sm" /> : null}
@@ -1159,7 +1161,12 @@ export default function InGameDeckCard({
                   {isPvp ? '스킬 예약 · 장비 · 장신구 · 디테일' : '속공 순서 · 장비 · 장신구 · 디테일'}
                 </div>
               </div>
-              <button type="button" className="no-capture" onClick={() => dismissSubModal(closeGearOverview)}
+              {String(overviewTitle || '').trim() ? (
+                <div className="setting-overview-head-title">{String(overviewTitle).trim()}</div>
+              ) : (
+                <div className="setting-overview-head-title setting-overview-head-title--empty" aria-hidden />
+              )}
+              <button type="button" className="no-capture setting-overview-head-close" onClick={() => dismissSubModal(closeGearOverview)}
                 style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 0, display: 'flex', flexShrink: 0 }}>
                 <Icon name="closeBtn" size={28} />
               </button>

@@ -965,6 +965,7 @@ export default function GuildLounge() {
           <InGameDeckCard
             embedded
             teamName=""
+            overviewTitle={build.title || ''}
             formationId={build.formationId}
             petObj={resolvePetById(build.petId)}
             heroList={(build.heroNames || []).map((name, idx) => {
@@ -1086,10 +1087,11 @@ export default function GuildLounge() {
 
   const expTheme = EXPEDITION_BOSS_THEMES[expeditionBoss] || EXPEDITION_BOSS_THEMES.taeho;
 
-  const renderExpeditionRoundDeck = (round) => (
+  const renderExpeditionRoundDeck = (round, guideTitle = '') => (
     <div className="expedition-round-deck">
       <InGameDeckCard
         teamName=""
+        overviewTitle={guideTitle}
         formationId={round.formationId}
         petObj={resolvePetById(round.petId)}
         heroList={(round.heroNames || []).map((name, idx) => {
@@ -1184,7 +1186,7 @@ export default function GuildLounge() {
             1라운드
           </div>
           <div className="expedition-round-row">
-            {renderExpeditionRoundDeck(rounds[1])}
+            {renderExpeditionRoundDeck(rounds[1], build.title || '')}
             {renderExpeditionRoundGuide(1, rounds[1])}
           </div>
         </div>
@@ -1195,7 +1197,7 @@ export default function GuildLounge() {
             2라운드
           </div>
           <div className="expedition-round-row">
-            {renderExpeditionRoundDeck(rounds[2])}
+            {renderExpeditionRoundDeck(rounds[2], build.title || '')}
             {renderExpeditionRoundGuide(2, rounds[2])}
           </div>
         </div>

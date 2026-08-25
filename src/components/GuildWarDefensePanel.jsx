@@ -382,6 +382,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
             <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', alignSelf: 'stretch' }}>
               <InGameDeckCard
                 teamName=""
+                overviewTitle={d.title || ''}
                 compact
                 formationId={normalizeFormationId(d.formationId)}
                 heroList={heroNames5.map((name, idx) => {

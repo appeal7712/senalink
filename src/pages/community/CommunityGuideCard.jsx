@@ -81,6 +81,7 @@ export default function CommunityGuideCard({
         <InGameDeckCard
           embedded
           teamName=""
+          overviewTitle={guide.title || ''}
           formationId={guide.formationId}
           petObj={resolvePetById(guide.petId)}
           heroList={heroNames.map((name, idx) => {
@@ -141,18 +142,6 @@ export default function CommunityGuideCard({
               />
             </div>
             {actions}
-          </div>
-        )}
-
-        {useCollapse && (
-          <div className="community-pvp-card-expanded-meta">
-            <h3 className="build-title-name">{guide.title}</h3>
-            <AuthorMeta
-              author={guide.author}
-              authorId={guide.authorId}
-              updatedAt={guide.updatedAt}
-              onOpenProfile={onOpenProfile}
-            />
           </div>
         )}
 
