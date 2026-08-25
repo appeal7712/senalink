@@ -148,8 +148,9 @@ Provider 순서 (`main.jsx`): **SuperAdmin → UserProfile → Lounge → App**.
 
 ### 6.2 사이트 유저 프로필 (`UserProfileContext.jsx`)
 - 문서: `users/{uid}` 실시간 구독 + `saveProfile`.
-- 필드: `nickname`(2–12), `photoURL`, `totalwarTier`, `arenaTier`, `destructionScore`, `hubId`, `recommendCount`, `lastProfileRecommendDate`, `updatedAt`.
+- 필드: `nickname`(2–12), `photoURL`, `totalwarTier`, `arenaTier`, `destructionScore`, `hubId`, `recommendCount`, `lastProfileRecommendDate`, `dailyTarotPeriodId`(선택, KST 09:00 주기 일일 타로 클릭), `updatedAt`.
 - **마이페이지:** GNB `ProfileDropdown` → `MyPageModal` (본인만 수정).
+- **일일 타로카드:** GNB `DailyTarotButton` — 외부 링크 + `dailyTarotPeriodId` / localStorage. 규칙 화이트리스트 필드(완화 아님).
 - **닉네임 게이트:** `NicknameGate` — 닉 없을 때 강제 모달 (`/ops` 제외).
 - **공개 프로필:** `PublicProfileModal` — 읽기 전용 + 일일 추천.
 - 아바타 Storage: `userAvatars/{uid}/avatar.jpg` (`avatarUpload.js`).
@@ -311,9 +312,9 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 
 | 컨텐츠 | 스핀 | 회색 고정 (요지) |
 |--------|------|------------------|
-| 길드전 | `길드전 진행`만 | 매칭·정산·휴전일·설정·배치·시즌 준비 |
-| 총력전 | `전투 진행`만 | 라운드 준비·결산·시즌 준비 |
-| 상급·원정 | `시즌 진행` | `시즌 준비` |
+| 길드전 | `길드전 진행 중`만 | 매칭·정산·휴전일·설정·배치·시즌 준비 |
+| 총력전 | `전투 진행 중`만 | 라운드 준비·결산·시즌 준비 |
+| 상급·원정 | `시즌 진행 중` | `시즌 준비` |
 
 **길드전 핵심 (수→토):** 목 02~08 `정산` → 목 08~금 09 `휴전일`(금 08~09 포함) → 금 09 방어덱 설정 → 배치 → 토 08~09 `상대 길드 매칭` → 전투.  
 **총력전:** 목~금 14:00 = `시즌 준비`(입장 멘트 없음) · R1~22 = 금 14:00 기점.  

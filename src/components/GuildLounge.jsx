@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { heroes, sortHeroesForList } from '../data/heroes';
 import InGameDeckCard from './InGameDeckCard';
@@ -12,6 +12,7 @@ import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
 import AwakenMark from './AwakenMark';
 import HeroPortraitCard from './HeroPortraitCard';
+import SkillTimelineSteps from './SkillTimelineSteps';
 import { setDeckDragData } from '../utils/deckDrag';
 import { useLounge } from '../context/LoungeContext';
 import { db } from '../lib/firebase';
@@ -52,17 +53,30 @@ function resolveHeroByName(name) {
 }
 
 function parseRoundNumber(round) {
-  const m = String(round || '').match(/(\d+)/);
+  const s = String(round || '');
+  // 0-1 합침 버튼 — 잠금·정렬은 1턴으로 취급
+  if (/0\s*[-~∼]\s*1/.test(s)) return 1;
+  const m = s.match(/(\d+)/);
   return m ? Number(m[1]) : 0;
 }
 
-/** 스킬 시전 순서 턴 라벨 표시 (저장값이 1라여도 1턴으로 보이게 · 0턴 포함) */
+/** 스킬 시전 순서 턴 라벨 표시 (저장값이 1라여도 1턴으로 보이게 · 0-1턴 포함) */
 function formatSkillTurnLabel(round) {
   const s = String(round || '').trim();
   if (!s) return '';
+  if (/0\s*[-~∼]\s*1/.test(s)) return '0-1턴';
   const m = s.match(/(\d+)/);
   if (m) return `${Number(m[1])}턴`;
   return s.replace(/라/g, '턴');
+}
+
+/** 덱 수정 · 스킬 시전 순서 추가 — 턴 고르기 (4턴 간격 · 6×3) */
+const SKILL_TURN_PICKS = [0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68];
+
+function snapSkillTurnPick(minRound) {
+  const n = Math.max(0, Number(minRound) || 0);
+  const hit = SKILL_TURN_PICKS.find((t) => t >= n);
+  return `${hit != null ? hit : SKILL_TURN_PICKS[SKILL_TURN_PICKS.length - 1]}턴`;
 }
 
 function SkillDirBadge({ dir }) {
@@ -269,10 +283,19 @@ const buildsContentKey = ({ siege, expedition, arena, totalwar, gwAttacks, gwDef
 
 export default function GuildLounge() {
   const {
-    activeLounge, me, session, myRole, canEditBuilds,
+    activeLounge, me, session, canEditBuilds, isAdmin,
     logBuildHistory, freshInvite, dismissFreshInvite,
     authReady, authUser, hubRecovering,
   } = useLounge();
+
+  /** 공략 삭제: 마스터·관리자(슈퍼 포함) 또는 작성자만. 수정은 멤버 전원. */
+  const canDeleteBuild = (build) => {
+    if (!me || !canEditBuilds || !build) return false;
+    if (isAdmin) return true;
+    if (build.authorId && build.authorId === me.id) return true;
+    if (!build.authorId && build.author && build.author === me.nickname) return true;
+    return false;
+  };
 
   const [activeTab, setActiveTab]           = useState('home');
   const [siegeDay, setSiegeDay]             = useState('mon');
@@ -419,7 +442,7 @@ export default function GuildLounge() {
   const [editingSkillTimeline, setEditingSkillTimeline] = useState([]);
   const [editingPvpMode, setEditingPvpMode]             = useState('속공');
   const [editingArenaKind, setEditingArenaKind]         = useState('attack');
-  const [turnNumberInput, setTurnNumberInput]           = useState('1턴');
+  const [turnNumberInput, setTurnNumberInput]           = useState('0턴');
   const [newSkillHero, setNewSkillHero]               = useState('미호');
   const [newSkillDir, setNewSkillDir]                 = useState('upper');
   const [newSkillText, setNewSkillText]               = useState('');
@@ -441,7 +464,7 @@ export default function GuildLounge() {
 
   useEffect(() => {
     if (lastReservedRound > 0 && parseRoundNumber(turnNumberInput) < lastReservedRound) {
-      setTurnNumberInput(`${lastReservedRound}턴`);
+      setTurnNumberInput(snapSkillTurnPick(lastReservedRound));
     }
   }, [lastReservedRound, turnNumberInput]);
   
@@ -812,11 +835,12 @@ export default function GuildLounge() {
 
   const handleAddSkillStep = () => {
     if (!newSkillHero) return;
-    const turnMatch = String(turnNumberInput || '').match(/(\d+)/);
-    const picked = turnMatch ? Number(turnMatch[1]) : 1;
+    const raw = String(turnNumberInput || '').trim();
+    const turnMatch = raw.match(/(\d+)/);
+    const picked = turnMatch ? Number(turnMatch[1]) : 0;
     if (lastReservedRound > 0 && picked < lastReservedRound) {
       alert(`${lastReservedRound}턴 이전은 선택할 수 없습니다. ${lastReservedRound}턴부터 추가해 주세요.`);
-      setTurnNumberInput(`${lastReservedRound}턴`);
+      setTurnNumberInput(snapSkillTurnPick(lastReservedRound));
       return;
     }
     const roundStr = `${picked}턴`;
@@ -947,14 +971,28 @@ export default function GuildLounge() {
       handleStartEditBuild(build, category);
     };
 
+    const deleteLabel = category === 'arena'
+      ? '이 결투장&상급 결투장 공략을 삭제할까요?'
+      : category === 'siege'
+        ? '이 공성전 공략을 삭제할까요?'
+        : '이 공략을 삭제할까요?';
+
     const requestDelete = () => {
-      if (!canEditBuilds) {
-        alert('허브에 입장한 멤버만 공략을 삭제할 수 있습니다.');
+      if (!canDeleteBuild(build)) {
+        alert('공략 삭제는 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
         return;
       }
-      if (!confirm('이 결투장&상급 결투장 공략을 삭제할까요?')) return;
-      setArenaBuilds((prev) => prev.filter((b) => b.id !== build.id));
-      logBuildHistory('delete_build', build.title || build.id, 'arena 공략');
+      if (!confirm(deleteLabel)) return;
+      if (category === 'arena') {
+        setArenaBuilds((prev) => prev.filter((b) => b.id !== build.id));
+        logBuildHistory('delete_build', build.title || build.id, 'arena 공략');
+      } else if (category === 'siege') {
+        setSiegeBuilds((prev) => ({
+          ...prev,
+          [siegeDay]: (prev[siegeDay] || []).filter((b) => b.id !== build.id),
+        }));
+        logBuildHistory('delete_build', build.title || build.id, `siege ${siegeDay}`);
+      }
     };
 
     return (
@@ -991,11 +1029,9 @@ export default function GuildLounge() {
           <div className="build-title-strip" style={{
             borderLeft: `3px solid ${arenaKind ? arenaKind.text : 'var(--gold-primary)'}`
           }}>
-            <div style={{ minWidth: 0, flex: '1 1 180px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                {arenaKind ? <ArenaDeckKindBadge kind={build.deckKind} /> : null}
-                <h3 className="build-title-name">{build.title}</h3>
-              </div>
+            <div className="build-title-heading" style={{ minWidth: 0, flex: '1 1 180px' }}>
+              {arenaKind ? <ArenaDeckKindBadge kind={build.deckKind} /> : null}
+              <h3 className="build-title-name">{build.title}</h3>
               <AuthorMeta
                 author={build.author}
                 authorId={build.authorId}
@@ -1020,7 +1056,7 @@ export default function GuildLounge() {
                   <Icon name="edit" size={14} /> 수정
                 </button>
               )}
-              {category === 'arena' && canEditBuilds && (
+              {canDeleteBuild(build) && (
                 <button
                   type="button"
                   onClick={requestDelete}
@@ -1051,33 +1087,14 @@ export default function GuildLounge() {
                 <Icon name="clock" size={15} />
                 스킬 시전 순서 타임라인 (최대 70턴)
               </div>
-              <div className="timeline-steps">
-                {(build.skillSequence || []).length === 0 && (
-                  <span style={{ fontSize: '13px', color: '#fff' }}>등록된 스킬 순서가 없습니다.</span>
-                )}
-                {(build.skillSequence || []).map((seq, sIdx) => {
-                  const heroData = resolveHeroByName(seq.heroName);
-                  const dirLabel = seq.dir === 'upper' ? '위 스킬' : seq.dir === 'down' ? '아래 스킬' : (seq.dir === 'awaken' ? '각성' : '');
-                  return (
-                    <Fragment key={sIdx}>
-                      <div className={`timeline-step${seq.text?.trim() ? '' : ' timeline-step--no-note'}`}>
-                        <div className="timeline-step-body">
-                          <div className="timeline-step-face">
-                            {heroData ? <HeroPortraitCard hero={heroData} showStars showRole showName={false} /> : null}
-                          </div>
-                          <div className="timeline-step-round">
-                            <RoundMark round={seq.round} />
-                          </div>
-                          <div className="timeline-step-name">{seq.heroName}</div>
-                          {dirLabel ? <div className="timeline-step-dir"><SkillDirBadge dir={seq.dir} /></div> : null}
-                        </div>
-                        {seq.text?.trim() ? <span className="timeline-step-note">{seq.text}</span> : null}
-                      </div>
-                      {sIdx < build.skillSequence.length - 1 && <Icon name="arrowRight" size={13} className="timeline-arrow" color="var(--gold-primary)" style={{ filter: 'drop-shadow(0 0 6px var(--gold-primary))' }} />}
-                    </Fragment>
-                  );
-                })}
-              </div>
+              <SkillTimelineSteps
+                steps={build.skillSequence || []}
+                resolveHeroByName={resolveHeroByName}
+                formatRound={(round) => <RoundMark round={round} />}
+                renderDir={(dir) => <SkillDirBadge dir={dir} />}
+                arrowColor="var(--gold-primary)"
+                arrowSize={13}
+              />
             </div>
           )}
         </div>
@@ -1114,33 +1131,14 @@ export default function GuildLounge() {
           <Icon name="clock" size={15} color={expTheme.text} />
           {roundNo}라운드 스킬 시전 순서
         </div>
-        <div className="timeline-steps">
-          {seq.length === 0 && (
-            <span style={{ fontSize: '13px', color: '#fff', fontWeight: 700 }}>등록된 스킬 순서가 없습니다.</span>
-          )}
-          {seq.map((step, idx) => {
-            const heroData = resolveHeroByName(step.heroName);
-            const dirLabel = step.dir === 'upper' ? '위 스킬' : step.dir === 'down' ? '아래 스킬' : (step.dir === 'awaken' ? '각성' : '');
-            return (
-              <Fragment key={`${roundNo}_${idx}`}>
-                <div className={`timeline-step${step.text?.trim() ? '' : ' timeline-step--no-note'}`}>
-                  <div className="timeline-step-body">
-                    <div className="timeline-step-face">
-                      {heroData ? <HeroPortraitCard hero={heroData} showStars showRole showName={false} /> : null}
-                    </div>
-                    <div className="timeline-step-round">
-                      <RoundMark round={step.round} />
-                    </div>
-                    <div className="timeline-step-name">{step.heroName}</div>
-                    {dirLabel ? <div className="timeline-step-dir"><SkillDirBadge dir={step.dir} /></div> : null}
-                  </div>
-                  {step.text?.trim() ? <span className="timeline-step-note">{step.text}</span> : null}
-                </div>
-                {idx < seq.length - 1 && <Icon name="arrowRight" size={16} className="timeline-arrow" color={expTheme.text} style={{ filter: `drop-shadow(0 0 6px ${expTheme.text})` }} />}
-              </Fragment>
-            );
-          })}
-        </div>
+        <SkillTimelineSteps
+          steps={seq}
+          resolveHeroByName={resolveHeroByName}
+          formatRound={(round) => <RoundMark round={round} />}
+          renderDir={(dir) => <SkillDirBadge dir={dir} />}
+          arrowColor={expTheme.text}
+          arrowSize={16}
+        />
       </div>
     );
   };
@@ -1154,6 +1152,18 @@ export default function GuildLounge() {
       }
       handleStartEditBuild(build, 'expedition');
     };
+    const requestDelete = () => {
+      if (!canDeleteBuild(build)) {
+        alert('공략 삭제는 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+        return;
+      }
+      if (!confirm('이 강림원정대 공략을 삭제할까요?')) return;
+      setExpeditionBuilds((prev) => ({
+        ...prev,
+        [expeditionBoss]: (prev[expeditionBoss] || []).filter((b) => b.id !== build.id),
+      }));
+      logBuildHistory('delete_build', build.title || build.id, `expedition ${expeditionBoss}`);
+    };
 
     return (
       <div key={build.id} className="luxury-panel expedition-tint expedition-build-panel" style={{
@@ -1162,7 +1172,7 @@ export default function GuildLounge() {
         <div className="build-title-strip" style={{
           borderLeft: `3px solid ${expTheme.text}`
         }}>
-          <div style={{ minWidth: 0, flex: '1 1 180px' }}>
+          <div className="build-title-heading" style={{ minWidth: 0, flex: '1 1 180px' }}>
             <h3 className="build-title-name">{build.title}</h3>
             <AuthorMeta
               author={build.author}
@@ -1171,13 +1181,24 @@ export default function GuildLounge() {
               onOpenProfile={setProfileUid}
             />
           </div>
-          <button
-            type="button"
-            onClick={requestEdit}
-            className="btn-edit"
-          >
-            <Icon name="edit" size={14} /> 수정
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: 'auto' }}>
+            <button
+              type="button"
+              onClick={requestEdit}
+              className="btn-edit"
+            >
+              <Icon name="edit" size={14} /> 수정
+            </button>
+            {canDeleteBuild(build) && (
+              <button
+                type="button"
+                onClick={requestDelete}
+                className="btn-danger-solid"
+              >
+                <Icon name="close" size={14} /> 삭제
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="expedition-round-block">
@@ -1447,6 +1468,7 @@ export default function GuildLounge() {
           totalwarBuilds={totalwarBuilds}
           resolveHeroByName={resolveHeroByName}
           likeUserId={me?.id}
+          canDeleteBuild={canDeleteBuild}
           onToggleLike={(id, tierId) => toggleShareLike('totalwar', id, tierId)}
           onCreate={handleOpenCreateTotalwar}
           onEdit={handleStartEditTotalwar}
@@ -1685,6 +1707,7 @@ export default function GuildLounge() {
                         : editingCategory === 'totalwar' ? `${editingTotalwarTeam + 1}팀`
                         : ''
                       }
+                      overviewTitle={buildTitle || ''}
                       formationId={editingBuild.formationId || 'protect'}
                       onFormationChange={(fid) => setEditingBuild(prev => prev ? { ...prev, formationId: fid } : prev)}
                       petObj={resolvePetById(editingPetId)}
@@ -1945,18 +1968,18 @@ export default function GuildLounge() {
                   <div className="glass-inset editing-build-timeline-add" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
                     <div style={{ fontSize: '12px', fontWeight: 800, color: '#fff' }}>+ 스킬 시전 순서 추가</div>
 
-                    {/* 턴 선택 버튼 */}
+                    {/* 턴 선택 버튼 — 4턴 간격 · 6×3 (이 그리드만 변경) */}
                     <div>
                       <div style={{ fontSize: '10px', color: '#fff', marginBottom: '3px', fontWeight: 800 }}>
-                        턴 선택 (0~70턴)
+                        턴 선택 (0·4·8…68)
                         {lastReservedRound > 0 ? ` · ${lastReservedRound}턴 이전 잠금` : ''}
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '2px' }}>
-                        {Array.from({ length: 71 }, (_, i) => {
-                          const n = i;
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px' }}>
+                        {SKILL_TURN_PICKS.map((n) => {
                           const r = `${n}턴`;
+                          const picked = parseRoundNumber(turnNumberInput);
                           const isLocked = lastReservedRound > 0 && n < lastReservedRound;
-                          const isSelected = turnNumberInput === r || parseRoundNumber(turnNumberInput) === n;
+                          const isSelected = turnNumberInput === r || picked === n;
                           return (
                             <button
                               key={r}
@@ -1965,7 +1988,7 @@ export default function GuildLounge() {
                               onClick={() => setTurnNumberInput(r)}
                               title={isLocked ? `${lastReservedRound}턴 이전은 선택할 수 없습니다` : undefined}
                               style={{
-                                padding: '3px 0', fontSize: '9px', fontWeight: 800, borderRadius: '3px',
+                                padding: '8px 0', fontSize: '13px', fontWeight: 800, borderRadius: '6px',
                                 border: isSelected ? '1px solid var(--gold-light)' : '1px solid rgba(255,255,255,0.08)',
                                 cursor: isLocked ? 'not-allowed' : 'pointer',
                                 background: isLocked

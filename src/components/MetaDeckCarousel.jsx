@@ -38,6 +38,7 @@ export function MetaDeckCard({ deck }) {
         <InGameDeckCard
           embedded
           teamName=""
+          overviewTitle={deck.title || ''}
           formationId={deck.formationId}
           petObj={resolvePetById(deck.petId)}
           heroList={(deck.heroNames || []).map((name, idx) => {

@@ -1157,18 +1157,18 @@ export default function InGameDeckCard({
                 <div className="setting-overview-head-kicker">
                   <Icon name="swords" size={16} /> 세팅 확인
                   {isPvp && pvpMode ? <PvpModeBadge mode={pvpMode} size="sm" /> : null}
+                  {settingDeckTitle ? (
+                    <div className="setting-overview-head-title">
+                      <span className="setting-overview-head-title-label">덱 이름</span>
+                      <span className="setting-overview-head-title-sep">:</span>
+                      <span className="setting-overview-head-title-value">{settingDeckTitle}</span>
+                    </div>
+                  ) : null}
                 </div>
                 <div className="setting-overview-head-sub">
                   {isPvp ? '스킬 예약 · 장비 · 장신구 · 디테일' : '속공 순서 · 장비 · 장신구 · 디테일'}
                 </div>
               </div>
-              {settingDeckTitle ? (
-                <div className="setting-overview-head-title">
-                  <span className="setting-overview-head-title-label">덱 이름</span>
-                  <span className="setting-overview-head-title-sep">:</span>
-                  <span className="setting-overview-head-title-value">{settingDeckTitle}</span>
-                </div>
-              ) : null}
               <button type="button" className="no-capture setting-overview-head-close" onClick={() => dismissSubModal(closeGearOverview)}
                 style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 0, display: 'flex', flexShrink: 0 }}>
                 <Icon name="closeBtn" size={28} />

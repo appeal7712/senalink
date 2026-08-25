@@ -149,7 +149,7 @@ export default function ContentSeasonBadges() {
                       aria-valuenow={pct}
                       aria-valuemin={0}
                       aria-valuemax={100}
-                      aria-label={`${item.name} 시즌 진행`}
+                      aria-label={`${item.name} 시즌 진행 중`}
                     >
                       <div
                         className="season-card-meter-fill"

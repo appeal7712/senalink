@@ -18,6 +18,7 @@ export default function TotalWarPanel({
   likeUserId,
   onToggleLike,
   onOpenProfile,
+  canDeleteBuild,
 }) {
   const [activeTier, setActiveTier] = useState('legend');
   const tier = TOTALWAR_TIERS.find(t => t.id === activeTier) || TOTALWAR_TIERS[0];
@@ -63,8 +64,8 @@ export default function TotalWarPanel({
       {builds.map(b => (
         <div key={b.id} className="luxury-panel totalwar-build-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div className="totalwar-build-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <div>
-              <div style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>{b.title}</div>
+            <div className="build-title-heading" style={{ minWidth: 0, flex: '1 1 180px' }}>
+              <div className="build-title-name" style={{ fontSize: '16px' }}>{b.title}</div>
               <AuthorMeta
                 author={b.author}
                 authorId={b.authorId}
@@ -73,17 +74,19 @@ export default function TotalWarPanel({
                 onOpenProfile={onOpenProfile}
               />
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexShrink: 0, marginLeft: 'auto' }}>
               <DeckLikeButton
                 likedBy={b.likedBy}
                 myId={likeUserId}
                 onToggle={() => onToggleLike?.(b.id, activeTier)}
               />
               <button type="button" onClick={() => onEdit?.(b, activeTier, tier.deckCount)} className="btn-edit">수정</button>
-              <button type="button" onClick={() => {
-                if (!confirm('이 총력전 공략을 삭제할까요?')) return;
-                onDelete?.(b.id, b.title, activeTier);
-              }} className="btn-danger-solid">삭제</button>
+              {canDeleteBuild?.(b) && (
+                <button type="button" onClick={() => {
+                  if (!confirm('이 총력전 공략을 삭제할까요?')) return;
+                  onDelete?.(b.id, b.title, activeTier);
+                }} className="btn-danger-solid">삭제</button>
+              )}
             </div>
           </div>
           <div className="totalwar-deck-row">

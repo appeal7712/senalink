@@ -186,6 +186,7 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
             <div style={{ width: 300, flexShrink: 0 }}>
               <InGameDeckCard
                 teamName=""
+                overviewTitle={title || ''}
                 formationId={formationId}
                 onFormationChange={setFormationId}
                 petObj={petObj}

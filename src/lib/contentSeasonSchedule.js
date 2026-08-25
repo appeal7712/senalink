@@ -104,7 +104,7 @@ function totalWarFrontStatus(kst) {
   // 세팅·공백 → 라운드 준비
   if ((hour >= 9 && hour < 17) || hour >= 21 || hour < 5) return '라운드 준비';
   // 전투
-  if ((hour >= 17 && hour < 20) || (hour >= 5 && hour < 8)) return '전투 진행';
+  if ((hour >= 17 && hour < 20) || (hour >= 5 && hour < 8)) return '전투 진행 중';
   // 결산 20~21, 08~09
   if ((hour >= 20 && hour < 21) || (hour >= 8 && hour < 9)) return '라운드 결산';
   return '라운드 준비';
@@ -113,7 +113,7 @@ function totalWarFrontStatus(kst) {
 /**
  * 총력전
  * 오픈 목 → R1 금 14:00 → 마감 다다음주 화 09:00
- * 테두리 스핀(burning) = 「전투 진행」일 때만. 그 외·시즌 휴식 = 회색 고정
+ * 테두리 스핀(burning) = 「전투 진행 중」일 때만. 그 외·시즌 휴식 = 회색 고정
  */
 function evalTotalWar(nowMs, anchorYmd) {
   const start = cycleStartMs(anchorYmd, 14, nowMs);
@@ -152,7 +152,7 @@ function evalTotalWar(nowMs, anchorYmd) {
   const frontStatus = totalWarFrontStatus(kst);
   return baseItem({
     id, name, icon: 'totalwar',
-    burning: frontStatus === '전투 진행',
+    burning: frontStatus === '전투 진행 중',
     frontStatus,
     detail: `R${round}/22`,
     round,
@@ -163,7 +163,7 @@ function evalTotalWar(nowMs, anchorYmd) {
   });
 }
 
-/** 상급 결투장 — 2주, 마감 목 02:00 / 앞면: 시즌 진행 */
+/** 상급 결투장 — 2주, 마감 목 02:00 / 앞면: 시즌 진행 중 */
 function evalAdvancedArena(nowMs, anchorYmd) {
   const start = cycleStartMs(anchorYmd, 14, nowMs);
   if (start == null) return null;
@@ -191,11 +191,11 @@ function evalAdvancedArena(nowMs, anchorYmd) {
     if (live) {
       return baseItem({
         id, name, icon: 'swords', burning: true,
-        frontStatus: '시즌 진행',
+        frontStatus: '시즌 진행 중',
         endsAtMs: seasonEnd,
         endsAtLabel: formatEndsAtLabel(seasonEnd),
         progress: progressBetween(seasonStart, seasonEnd, nowMs),
-        status: '시즌 진행',
+        status: '시즌 진행 중',
       });
     }
   }
@@ -213,11 +213,11 @@ function evalAdvancedArena(nowMs, anchorYmd) {
 /**
  * 길드전 앞면 페이즈
  * 판정 순서 중요 — docs/content-season-schedule.md §2
- * 1) 일·화·목 00~02 → 전날 본게임 연장 →「길드전 진행」
+ * 1) 일·화·목 00~02 → 전날 본게임 연장 →「길드전 진행 중」
  * 2) 목 02~08 →「정산」(수 전투 직후)
  * 3) 목 08:00 ~ 금 09:00 →「휴전일」(목 08~금 08이 본 24h, 금 08~09도 휴전일)
  * 4) 금 09~: 설정 → 배치 → (토) 매칭 → 전투 …
- * 5) 토·월·수: 배치(~08) / 상대 길드 매칭(08~09) / 길드전 진행(09~익일02)
+ * 5) 토·월·수: 배치(~08) / 상대 길드 매칭(08~09) / 길드전 진행 중(09~익일02)
  * 6) 일·화: 정산(02~09) / 설정(09~20) / 배치(20~)
  * @returns {string|null} null → 시즌 준비 (시즌 사이 1주 쉼 등)
  */
@@ -226,7 +226,7 @@ function guildWarFrontStatus(kst) {
 
   // 본게임 연장: 일·화 00~02, 목 00~02(수 경기 연장)
   if (hour < 2 && (wd === WEEKDAY.sun || wd === WEEKDAY.tue || wd === WEEKDAY.thu)) {
-    return '길드전 진행';
+    return '길드전 진행 중';
   }
 
   // 수 전투 직후: 목 02:00 ~ 08:00 정산
@@ -239,7 +239,7 @@ function guildWarFrontStatus(kst) {
   if (wd === WEEKDAY.sat || wd === WEEKDAY.mon || wd === WEEKDAY.wed) {
     if (hour < 8) return '방어덱 배치';
     if (hour < 9) return '상대 길드 매칭';
-    return '길드전 진행';
+    return '길드전 진행 중';
   }
 
   // 방어일 일·화 (토·월 전투 다음날)
@@ -249,7 +249,7 @@ function guildWarFrontStatus(kst) {
     return '방어덱 배치';
   }
 
-  // 금요일: ~09 휴전일 → 09 방어덱 설정 → 배치 → (토) 매칭 → 길드전 진행
+  // 금요일: ~09 휴전일 → 09 방어덱 설정 → 배치 → (토) 매칭 → 길드전 진행 중
   if (wd === WEEKDAY.fri) {
     if (hour < 9) return '휴전일';
     if (hour < 20) return '방어덱 설정';
@@ -275,8 +275,8 @@ function evalGuildWar(nowMs, anchorYmd) {
     : 1;
   const front = inSeason ? guildWarFrontStatus(kst) : null;
   const frontStatus = front || '시즌 준비';
-  // 테두리 스핀 = 본게임(길드전 진행)일 때만
-  const burning = frontStatus === '길드전 진행';
+  // 테두리 스핀 = 본게임(길드전 진행 중)일 때만
+  const burning = frontStatus === '길드전 진행 중';
 
   return baseItem({
     id, name, icon: 'guildwar', burning,
@@ -309,7 +309,7 @@ function countGuildWarRound(seasonStartMs, nowMs) {
 
 /**
  * 강림 원정대 — 월 09:00 재시작 ~ 다음 월 02:00 마감
- * 앞면: 시즌 진행
+ * 앞면: 시즌 진행 중
  */
 function evalExpedition(nowMs, anchorYmd) {
   const start00 = cycleStartMs(anchorYmd, 14, nowMs);
@@ -333,11 +333,11 @@ function evalExpedition(nowMs, anchorYmd) {
   if (nowMs < endMs) {
     return baseItem({
       id, name, icon: 'orb', burning: true,
-      frontStatus: '시즌 진행',
+      frontStatus: '시즌 진행 중',
       endsAtMs: endMs,
       endsAtLabel: formatEndsAtLabel(endMs),
       progress: progressBetween(openMs, endMs, nowMs),
-      status: '시즌 진행',
+      status: '시즌 진행 중',
     });
   }
   return baseItem({

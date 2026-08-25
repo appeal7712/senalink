@@ -46,10 +46,11 @@ function resolveHeroByName(name) {
     || null;
 }
 
-/** 스킬 시전 순서 턴 라벨 (저장값이 1라여도 1턴으로 표시) */
+/** 스킬 시전 순서 턴 라벨 (저장값이 1라여도 1턴으로 표시 · 0-1턴 포함) */
 function formatSkillTurnLabel(round) {
   const s = String(round || '').trim();
   if (!s) return '';
+  if (/0\s*[-~∼]\s*1/.test(s)) return '0-1턴';
   const m = s.match(/(\d+)/);
   return m ? `${Number(m[1])}턴` : s.replace(/라/g, '턴');
 }
@@ -98,7 +99,7 @@ export default function CommunityGuideEditor({
   const [speedIgnored, setSpeedIgnored] = useState(initial.speedIgnoredNames || []);
   const [petId, setPetId] = useState(initial.petId || pets[0]?.id || '');
   const [slot, setSlot] = useState(0);
-  const [turnInput, setTurnInput] = useState('1턴');
+  const [turnInput, setTurnInput] = useState('0턴');
   const [newHero, setNewHero] = useState('');
   const [newDir, setNewDir] = useState('upper');
   const [newNote, setNewNote] = useState('');
@@ -275,6 +276,7 @@ export default function CommunityGuideEditor({
           <div className="editing-build-deck-slot" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <InGameDeckCard
               teamName=""
+              overviewTitle={title || ''}
               formationId={formationId}
               onFormationChange={setFormationId}
               petObj={petObj}
@@ -467,19 +469,19 @@ export default function CommunityGuideEditor({
                   </div>
                   <div className="glass-inset editing-build-timeline-add" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>+ 스킬 시전 순서 추가</div>
-                    <div style={{ fontSize: 10, color: '#fff', marginBottom: 3, fontWeight: 800 }}>턴 선택 (0~70턴)</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 2 }}>
-                      {Array.from({ length: 71 }, (_, i) => {
-                        const n = i;
+                    <div style={{ fontSize: 10, color: '#fff', marginBottom: 3, fontWeight: 800 }}>턴 선택 (0·4·8…68)</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4 }}>
+                      {[0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68].map((n) => {
                         const r = `${n}턴`;
-                        const selected = turnInput === r || Number(String(turnInput).match(/(\d+)/)?.[1]) === n;
+                        const picked = Number(String(turnInput).match(/(\d+)/)?.[1]);
+                        const selected = turnInput === r || picked === n;
                         return (
                           <button
                             key={r}
                             type="button"
                             onClick={() => setTurnInput(r)}
                             style={{
-                              padding: '3px 0', fontSize: 9, fontWeight: 800, borderRadius: 3,
+                              padding: '8px 0', fontSize: 13, fontWeight: 800, borderRadius: 6,
                               border: selected ? '1px solid var(--gold-light)' : '1px solid rgba(255,255,255,0.08)',
                               cursor: 'pointer',
                               background: selected ? 'var(--gold-primary)' : 'rgba(255,255,255,0.04)',

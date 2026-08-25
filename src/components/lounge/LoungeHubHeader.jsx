@@ -412,43 +412,62 @@ function HubMembersModal({
 
   return (
     <ModalShell title="길드원 관리" onClose={onClose} wide>
-      <div style={{ fontSize: '12px', color: '#fff', fontWeight: 700, marginBottom: '4px' }}>
-        {lounge.members.length}/{maxMembers}명 · 관리자 {lounge.members.filter(m => m.role === 'master' || m.role === 'admin').length}/{maxAdmins}
+      <div style={{ marginBottom: '4px' }}>
+        <div style={{ fontSize: '12px', color: '#fff', fontWeight: 700 }}>
+          {lounge.members.length}/{maxMembers}명 · 관리자 {lounge.members.filter(m => m.role === 'master' || m.role === 'admin').length}/{maxAdmins}
+          <span style={{ marginLeft: '10px', fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>
+            마스터 = 전체 권한 · 관리자 = 공지·추방·점수 (위임·다른 관리자 추방 불가)
+          </span>
+        </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '60vh', overflowY: 'auto' }}>
-        {sorted.map(m => (
-          <div key={m.id} className="glass-inset" style={{
-            display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap',
-            padding: '11px 12px',
-          }}>
-            <strong style={{ color: '#fff', fontSize: '14px' }}>{m.nickname}</strong>
-            <span style={{
-              fontSize: '11px', fontWeight: 900, padding: '3px 8px', borderRadius: '999px',
-              background: m.role === 'master' ? 'var(--gold-primary)' : m.role === 'admin' ? 'rgba(56,189,248,0.2)' : 'rgba(255,255,255,0.08)',
-              color: m.role === 'master' ? '#000' : m.role === 'admin' ? '#7dd3fc' : '#fff'
-            }}>{ROLE_LABEL[m.role]}</span>
-            <span style={{ fontSize: '11px', color: '#fff' }}>
-              {m.googleEmail || m.googleName || `입장 ${formatJoinedAt(m.joinedAt)}`}
-            </span>
-            <span style={{ fontSize: '11px', color: '#fff' }}>
-              {m.googleEmail || m.googleName ? `입장 ${formatJoinedAt(m.joinedAt)} · ` : ''}{formatLastActive(m.lastActiveAt)}
-            </span>
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              {canAppointAdmin && m.id !== me.id && m.role !== 'master' && (
-                <MiniBtn onClick={() => onTransfer(m.id, m.nickname)} label="마스터 위임" tone="gold" />
-              )}
-              {canAppointAdmin && m.role === 'member' && (
-                <MiniBtn onClick={async () => { try { await appointAdmin(m.id); } catch (e) { alert(e.message); } }} label="관리자 임명" tone="cyan" />
-              )}
-              {canAppointAdmin && m.role === 'admin' && (
-                <MiniBtn onClick={async () => { try { await revokeAdmin(m.id); } catch (e) { alert(e.message); } }} label="관리자 해제" tone="muted" />
-              )}
-              {canManageMembers && m.id !== me.id && m.role !== 'master' && (
-                <MiniBtn onClick={() => onKick(m.id)} label="추방" tone="red" />
+        {sorted.map(m => {
+          const showTransfer = canAppointAdmin && m.id !== me.id && m.role !== 'master';
+          const showAppoint = canAppointAdmin && m.role === 'member';
+          const showRevoke = canAppointAdmin && m.role === 'admin';
+          const showKick = canManageMembers && m.id !== me.id && m.role !== 'master';
+          const hasActions = showTransfer || showAppoint || showRevoke || showKick;
+          return (
+            <div key={m.id} className="glass-inset" style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
+              padding: '12px', textAlign: 'center',
+            }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                gap: '8px 10px', flexWrap: 'wrap',
+              }}>
+                <strong style={{ color: '#fff', fontSize: '14px' }}>{m.nickname}</strong>
+                <span style={{
+                  fontSize: '11px', fontWeight: 900, padding: '3px 8px', borderRadius: '999px',
+                  background: m.role === 'master' ? 'var(--gold-primary)' : m.role === 'admin' ? 'rgba(56,189,248,0.2)' : 'rgba(255,255,255,0.08)',
+                  color: m.role === 'master' ? '#000' : m.role === 'admin' ? '#7dd3fc' : '#fff'
+                }}>{ROLE_LABEL[m.role]}</span>
+                <span style={{ fontSize: '11px', color: '#fff' }}>
+                  {m.googleEmail || m.googleName || `입장 ${formatJoinedAt(m.joinedAt)}`}
+                </span>
+                <span style={{ fontSize: '11px', color: '#fff' }}>
+                  {m.googleEmail || m.googleName ? `입장 ${formatJoinedAt(m.joinedAt)} · ` : ''}{formatLastActive(m.lastActiveAt)}
+                </span>
+              </div>
+              {hasActions && (
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  {showTransfer && (
+                    <MiniBtn onClick={() => onTransfer(m.id, m.nickname)} label="마스터 위임" tone="gold" />
+                  )}
+                  {showAppoint && (
+                    <MiniBtn onClick={async () => { try { await appointAdmin(m.id); } catch (e) { alert(e.message); } }} label="관리자 임명" tone="cyan" />
+                  )}
+                  {showRevoke && (
+                    <MiniBtn onClick={async () => { try { await revokeAdmin(m.id); } catch (e) { alert(e.message); } }} label="관리자 해제" tone="muted" />
+                  )}
+                  {showKick && (
+                    <MiniBtn onClick={() => onKick(m.id)} label="추방" tone="red" />
+                  )}
+                </div>
               )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </ModalShell>
   );

@@ -215,7 +215,7 @@ export function AuthorMeta({
   return (
     <div className="author-meta build-title-meta">
       <div className="author-meta-line">
-        {prefix ? <span>{prefix}:</span> : null}
+        {prefix ? <span className="author-meta-prefix">{prefix}:</span> : null}
         <button
           type="button"
           className="author-meta-who"

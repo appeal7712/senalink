@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from './icons/Icon';
 import ProfileDropdown from './ProfileDropdown';
+import DailyTarotButton from './DailyTarotButton';
 import { PAGE } from '../config/routes';
 import { TOOL_ITEMS } from '../data/tools';
 
@@ -134,6 +135,7 @@ export default function GNB({ activeTab, setActiveTab, onOpenTools }) {
         </nav>
 
         <div className="gnb-status">
+          <DailyTarotButton />
           <ProfileDropdown />
         </div>
       </div>

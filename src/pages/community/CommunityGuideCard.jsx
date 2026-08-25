@@ -1,7 +1,8 @@
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
 import InGameDeckCard from '../../components/InGameDeckCard';
 import SkillReservationBoard from '../../components/SkillReservationBoard';
 import HeroPortraitCard from '../../components/HeroPortraitCard';
+import SkillTimelineSteps from '../../components/SkillTimelineSteps';
 import Icon from '../../components/icons/Icon';
 import { AuthorMeta } from '../../components/PublicProfileModal';
 import { ArenaDeckKindBadge, metaDeckKindTheme } from '../../components/ArenaDeckKind';
@@ -24,10 +25,11 @@ function resolvePetById(petId) {
   return pets.find((p) => p.id === petId) || pets[0];
 }
 
-/** 스킬 시전 순서 턴 라벨 (저장값이 1라여도 1턴으로 표시) */
+/** 스킬 시전 순서 턴 라벨 (저장값이 1라여도 1턴으로 표시 · 0-1턴 포함) */
 function formatSkillTurnLabel(round) {
   const s = String(round || '').trim();
   if (!s) return '';
+  if (/0\s*[-~∼]\s*1/.test(s)) return '0-1턴';
   const m = s.match(/(\d+)/);
   return m ? `${Number(m[1])}턴` : s.replace(/라/g, '턴');
 }
@@ -151,33 +153,17 @@ export default function CommunityGuideCard({
               <Icon name="clock" size={15} />
               스킬 시전 순서 타임라인
             </div>
-            <div className="timeline-steps">
-              {timeline.length === 0 && (
-                <span style={{ fontSize: 13, color: '#fff' }}>등록된 스킬 순서가 없습니다.</span>
-              )}
-              {timeline.map((seq, sIdx) => {
-                const heroData = resolveHeroByName(seq.heroName);
-                const dirLabel = seq.dir === 'upper' ? '위 스킬' : seq.dir === 'down' ? '아래 스킬' : (seq.dir === 'awaken' ? '각성' : '');
-                return (
-                  <Fragment key={sIdx}>
-                    <div className={`timeline-step${seq.text?.trim() ? '' : ' timeline-step--no-note'}`}>
-                      <div className="timeline-step-body">
-                        <div className="timeline-step-face">
-                          {heroData ? <HeroPortraitCard hero={heroData} showStars showRole showName={false} /> : null}
-                        </div>
-                        <div className="timeline-step-round">{formatSkillTurnLabel(seq.round)}</div>
-                        <div className="timeline-step-name">{seq.heroName}</div>
-                        {dirLabel ? <div className="timeline-step-dir">{dirLabel}</div> : null}
-                      </div>
-                      {seq.text?.trim() ? <span className="timeline-step-note">{seq.text}</span> : null}
-                    </div>
-                    {sIdx < timeline.length - 1 && (
-                      <Icon name="arrowRight" size={13} className="timeline-arrow" color="var(--gold-primary)" />
-                    )}
-                  </Fragment>
-                );
-              })}
-            </div>
+            <SkillTimelineSteps
+              steps={timeline}
+              resolveHeroByName={resolveHeroByName}
+              formatRound={formatSkillTurnLabel}
+              renderDir={(dir) => {
+                const dirLabel = dir === 'upper' ? '위 스킬' : dir === 'down' ? '아래 스킬' : (dir === 'awaken' ? '각성' : '');
+                return dirLabel || null;
+              }}
+              arrowColor="var(--gold-primary)"
+              arrowSize={13}
+            />
           </div>
         ) : (
           <div className="build-panel-playbook">
@@ -226,49 +212,54 @@ export default function CommunityGuideCard({
           }
         }}
       >
-        <div className="community-pvp-card-title">{guide.title || '이름 없는 공략'}</div>
-        <span className="community-pvp-card-rule" aria-hidden>|</span>
-        <div className="community-pvp-card-stage">
-          <div className="community-pvp-card-heroes-row">
-            <div className="community-pvp-card-heroes">
-              {heroNames.filter(Boolean).map((name, i) => {
-                const h = resolveHeroByName(name);
-                return (
-                  <div key={`${name}-${i}`} className="community-pvp-card-hero">
-                    <div className="community-pvp-card-hero-face">
-                      {h ? <HeroPortraitCard hero={h} showStars showRole showName={false} /> : null}
+        {/* main | actions — 버튼은 항상 오른쪽 칸(잘림 방지) */}
+        <div className="community-pvp-card-main">
+          <div className="community-pvp-card-title">{guide.title || '이름 없는 공략'}</div>
+          <span className="community-pvp-card-rule" aria-hidden>|</span>
+          <div className="community-pvp-card-stage">
+            <div className="community-pvp-card-heroes-row">
+              <div className="community-pvp-card-heroes">
+                {heroNames.filter(Boolean).map((name, i) => {
+                  const h = resolveHeroByName(name);
+                  return (
+                    <div key={`${name}-${i}`} className="community-pvp-card-hero">
+                      <div className="community-pvp-card-hero-face">
+                        {h ? <HeroPortraitCard hero={h} showStars showRole showName={false} /> : null}
+                      </div>
+                      <span className="community-pvp-card-hero-name">{String(name).replace('(각성)', '').trim()}</span>
                     </div>
-                    <span className="community-pvp-card-hero-name">{String(name).replace('(각성)', '').trim()}</span>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+              {tier ? (
+                <span className="community-pvp-card-tier community-pvp-card-tier--beside">
+                  <img src={tier.iconUrl} alt="" />
+                  {tier.label}
+                </span>
+              ) : null}
             </div>
-            {tier ? (
-              <span className="community-pvp-card-tier community-pvp-card-tier--beside">
-                <img src={tier.iconUrl} alt="" />
-                {tier.label}
-              </span>
-            ) : null}
+            <div className="community-pvp-card-meta">
+              {arenaKind ? <ArenaDeckKindBadge kind={guide.deckKind} /> : null}
+              <PvpModeBadge mode={guide.mode} size="sm" />
+              {tier ? (
+                <span className="community-pvp-card-tier community-pvp-card-tier--with-meta">
+                  <img src={tier.iconUrl} alt="" />
+                  {tier.label}
+                </span>
+              ) : null}
+            </div>
           </div>
-          <div className="community-pvp-card-meta">
-            {arenaKind ? <ArenaDeckKindBadge kind={guide.deckKind} /> : null}
-            <PvpModeBadge mode={guide.mode} size="sm" />
-            {tier ? (
-              <span className="community-pvp-card-tier community-pvp-card-tier--with-meta">
-                <img src={tier.iconUrl} alt="" />
-                {tier.label}
-              </span>
-            ) : null}
+          <span className="community-pvp-card-rule" aria-hidden>|</span>
+          <div className="community-pvp-card-author">
+            <div className="community-pvp-card-author-hit" onClick={(e) => e.stopPropagation()}>
+              <AuthorMeta
+                author={guide.author}
+                authorId={guide.authorId}
+                updatedAt={guide.updatedAt}
+                onOpenProfile={onOpenProfile}
+              />
+            </div>
           </div>
-        </div>
-        <span className="community-pvp-card-rule" aria-hidden>|</span>
-        <div className="community-pvp-card-author" onClick={(e) => e.stopPropagation()}>
-          <AuthorMeta
-            author={guide.author}
-            authorId={guide.authorId}
-            updatedAt={guide.updatedAt}
-            onOpenProfile={onOpenProfile}
-          />
         </div>
         {actions}
       </div>
