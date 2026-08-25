@@ -239,39 +239,47 @@ export default function CommunityGuideCard({
       >
         <div className="community-pvp-card-title">{guide.title || '이름 없는 공략'}</div>
         <span className="community-pvp-card-rule" aria-hidden>|</span>
-        <div className="community-pvp-card-heroes">
-          {heroNames.filter(Boolean).map((name, i) => {
-            const h = resolveHeroByName(name);
-            return (
-              <div key={`${name}-${i}`} className="community-pvp-card-hero">
-                <div className="community-pvp-card-hero-face">
-                  {h ? <HeroPortraitCard hero={h} showStars showRole showName={false} /> : null}
-                </div>
-                <span className="community-pvp-card-hero-name">{String(name).replace('(각성)', '').trim()}</span>
-              </div>
-            );
-          })}
-        </div>
-        <span className="community-pvp-card-rule" aria-hidden>|</span>
-        <div className="community-pvp-card-mid">
-          <div className="community-pvp-card-meta">
-            {arenaKind ? <ArenaDeckKindBadge kind={guide.deckKind} /> : null}
-            <PvpModeBadge mode={guide.mode} size="sm" />
+        <div className="community-pvp-card-stage">
+          <div className="community-pvp-card-heroes-row">
+            <div className="community-pvp-card-heroes">
+              {heroNames.filter(Boolean).map((name, i) => {
+                const h = resolveHeroByName(name);
+                return (
+                  <div key={`${name}-${i}`} className="community-pvp-card-hero">
+                    <div className="community-pvp-card-hero-face">
+                      {h ? <HeroPortraitCard hero={h} showStars showRole showName={false} /> : null}
+                    </div>
+                    <span className="community-pvp-card-hero-name">{String(name).replace('(각성)', '').trim()}</span>
+                  </div>
+                );
+              })}
+            </div>
             {tier ? (
-              <span className="community-pvp-card-tier">
+              <span className="community-pvp-card-tier community-pvp-card-tier--beside">
                 <img src={tier.iconUrl} alt="" />
                 {tier.label}
               </span>
             ) : null}
           </div>
-          <div className="community-pvp-card-author" onClick={(e) => e.stopPropagation()}>
-            <AuthorMeta
-              author={guide.author}
-              authorId={guide.authorId}
-              updatedAt={guide.updatedAt}
-              onOpenProfile={onOpenProfile}
-            />
+          <div className="community-pvp-card-meta">
+            {arenaKind ? <ArenaDeckKindBadge kind={guide.deckKind} /> : null}
+            <PvpModeBadge mode={guide.mode} size="sm" />
+            {tier ? (
+              <span className="community-pvp-card-tier community-pvp-card-tier--with-meta">
+                <img src={tier.iconUrl} alt="" />
+                {tier.label}
+              </span>
+            ) : null}
           </div>
+        </div>
+        <span className="community-pvp-card-rule" aria-hidden>|</span>
+        <div className="community-pvp-card-author" onClick={(e) => e.stopPropagation()}>
+          <AuthorMeta
+            author={guide.author}
+            authorId={guide.authorId}
+            updatedAt={guide.updatedAt}
+            onOpenProfile={onOpenProfile}
+          />
         </div>
         {actions}
       </div>

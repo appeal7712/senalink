@@ -8068,9 +8068,16 @@ h1, h2, h3 {
   height: 24px;
   object-fit: contain;
 }
-/* PC: mid는 contents → meta·author가 헤더 flex 한 줄에 참여 */
-.community-pvp-card-mid {
+/* PC: stage/heroes-row는 contents → 한 줄 flex 유지. 티어는 meta 쪽만 */
+.community-pvp-card-stage,
+.community-pvp-card-heroes-row {
   display: contents;
+}
+.community-pvp-card-tier--beside {
+  display: none;
+}
+.community-pvp-card-tier--with-meta {
+  display: inline-flex;
 }
 .community-pvp-card-author {
   flex: 1 1 auto;
@@ -8111,16 +8118,22 @@ h1, h2, h3 {
   flex-shrink: 0;
 }
 @media (max-width: 900px) {
-  /* 길드전 방어 접힌 카드와 동일 골격: 제목 / 영웅 / (뱃지+작성자 | 수정·삭제 세로중앙) */
+  /*
+   * 모바일 접힌 카드:
+   * 1) 제목 | 수정·삭제(가로)
+   * 2) 초상화 줄 + 덱유형/세팅은 초상화 중앙 기준
+   * 3) 티어: 좁으면 세팅 오른쪽 / 넓으면 초상화 옆
+   * 4) 수정 및 고정자 (위치 유지)
+   */
   .community-pvp-card-head {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-      "title title"
-      "heroes heroes"
-      "mid actions";
+      "title actions"
+      "stage stage"
+      "author author";
     align-items: center;
-    column-gap: 10px;
+    column-gap: 8px;
     row-gap: 8px;
     flex-wrap: unset;
   }
@@ -8134,43 +8147,71 @@ h1, h2, h3 {
     min-width: 0;
     width: 100%;
   }
-  .community-pvp-card-heroes {
-    grid-area: heroes;
+  .community-pvp-card-actions {
+    grid-area: actions;
+    margin-left: 0;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
   }
-  .community-pvp-card-mid {
-    grid-area: mid;
+  .community-pvp-card-actions .btn-edit,
+  .community-pvp-card-actions .btn-danger-solid {
+    padding: 6px 8px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .community-pvp-card-stage {
+    grid-area: stage;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
     gap: 6px;
+    width: 100%;
+    min-width: 0;
+  }
+  .community-pvp-card-heroes-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .community-pvp-card-heroes {
+    flex-shrink: 1;
     min-width: 0;
   }
   .community-pvp-card-meta {
+    justify-content: center;
     flex-wrap: wrap;
     gap: 6px;
   }
   .community-pvp-card-author {
-    flex: 0 1 auto;
+    grid-area: author;
+    flex: unset;
     width: auto;
     max-width: 100%;
+    justify-self: start;
   }
-  .community-pvp-card-actions {
-    grid-area: actions;
-    width: auto;
-    margin-left: 0;
-    flex-direction: column;
-    justify-content: center;
-    align-items: stretch;
-    align-self: center;
-    gap: 4px;
+  /* 좁은 폭: 티어는 속공/내실 오른쪽(meta) */
+  .community-pvp-card-tier--beside {
+    display: none;
   }
-  .community-pvp-card-actions .btn-edit,
-  .community-pvp-card-actions .btn-danger-solid {
-    width: auto;
-    padding: 6px 8px;
-    font-size: 11px;
-    white-space: nowrap;
+  .community-pvp-card-tier--with-meta {
+    display: inline-flex;
+  }
+}
+
+/* 가로·넓은 폰: 티어를 초상화 옆으로 */
+@media (max-width: 900px) and (min-width: 520px) {
+  .community-pvp-card-tier--beside {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+  .community-pvp-card-tier--with-meta {
+    display: none;
   }
 }
 
