@@ -462,7 +462,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.08.25.68** 전후 (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.08.25.77** 전후 (푸터 `APP_VERSION` 확인)
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 
 ---
@@ -472,6 +472,11 @@ API:
 ---
 
 ## 17. 패치 내역
+
+### 2026-08-25 (`v2026.08.25.77`) — 태블릿 구글 로그인 복구
+- **원인:** `firebase@12.17.x` Auth IndexedDB가 팝업/탭 로그인 시 opener `hidden`이면 `Database is closing/hidden`으로 실패 ([firebase-js-sdk#10264](https://github.com/firebase/firebase-js-sdk/issues/10264)).
+- **조치:** 클라이언트 `firebase`를 **`12.16.0` 고정**(caret 없음). 앱 로직·rules·Functions 무변경. Hosting만 재배포.
+- **임시 핀:** 공식 Auth 픽스 버전이 안정되면 재검토 후 올리기.
 
 ### 2026-08-25 (`v2026.08.25.68`) — 시즌 보드 · 모바일 · 세팅 공유
 - **모바일 UI:** 세팅 공유 캡처(초상/스킬 아이콘), 길드전 공격 접힘·카운터 행, 도감 시스템 공식·스킬 툴팁 등 다수 손봄 (PC 레이아웃·권한 스키마 무변경 원칙 유지).
