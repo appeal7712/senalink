@@ -197,9 +197,9 @@ service cloud.firestore {
         || request.resource.data.dailyTarotPeriodId >= resource.data.dailyTarotPeriodId;
     }
 
-    // +1 은 같은 배치에서 오늘(KST) claim 이 새로 만들어질 때만
+    // +1 은 같은 배치에서 (추천자×대상×오늘 KST) claim 이 새로 만들어질 때만
     function onlyProfileRecommendIncrement(targetUid) {
-      let claimId = request.auth.uid + '_' + kstDateString();
+      let claimId = request.auth.uid + '_' + targetUid + '_' + kstDateString();
       let claimPath = /databases/$(database)/documents/profileDailyRecommends/$(claimId);
       return signedIn()
         && request.auth.uid != targetUid
@@ -232,18 +232,18 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // 추천자당 KST 하루 1장. docId = {uid}_{YYYY-MM-DD}
+    // 추천자×대상당 KST 하루 1장. docId = {fromUid}_{toUid}_{YYYY-MM-DD}
     match /profileDailyRecommends/{claimId} {
       allow get: if signedIn() && claimId.matches('^' + request.auth.uid + '_.*');
       allow list: if false;
       allow create: if signedIn()
-        && claimId == request.auth.uid + '_' + kstDateString()
         && request.resource.data.keys().hasOnly(['day', 'toUid', 'createdAt'])
         && request.resource.data.day == kstDateString()
         && request.resource.data.toUid is string
         && request.resource.data.toUid.size() > 0
         && request.resource.data.toUid.size() <= 128
         && request.resource.data.toUid != request.auth.uid
+        && claimId == request.auth.uid + '_' + request.resource.data.toUid + '_' + kstDateString()
         && request.resource.data.createdAt is string
         && request.resource.data.createdAt.size() <= 40;
       allow update, delete: if false;

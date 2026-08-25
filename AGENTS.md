@@ -166,8 +166,10 @@ Provider 순서 (`main.jsx`): **SuperAdmin → UserProfile → Lounge → App**.
 
 ### 6.4 프로필 일일 추천
 - 클라이언트: `src/lib/profileRecommend.js`
-- Claim: `profileDailyRecommends/{fromUid_YYYY-MM-DD}` + `users`의 `recommendCount` +1 (같은 배치, KST 하루 1회).
-- 취소 없음. 어뷰징은 ops에서 감시만 (삭제 UI 없음).
+- Claim: `profileDailyRecommends/{fromUid}_{toUid}_{YYYY-MM-DD}` + 대상 `users.recommendCount` +1 (같은 배치).
+- **추천자×대상**당 KST 하루 1회. 같은 날 다른 사람은 추가 추천 가능. 같은 사람은 다음 KST 자정 이후 다시 가능. 취소 없음.
+- `users.lastProfileRecommendDate`는 마지막 추천일 참고용(전체 하루 1회 게이트 아님).
+- 어뷰징은 ops에서 감시만 (삭제 UI 없음).
 
 ---
 
@@ -191,7 +193,7 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | `site/main` | 공개 | Super만 (`updatedBy` = 본인) |
 | `site/stats` | 공개 | 레거시 +1 (구 클라). 신규는 `site/stats/visitShards/{0–31}` 동일 +1 규칙 |
 | `users/{uid}` | signed-in get / **list=Super** | 본인 화이트리스트; 타인 recommend +1은 claim과 함께만 |
-| `profileDailyRecommends/…` | 본인 claim | 본인 create만 |
+| `profileDailyRecommends/…` | 본인 claim | 본인 create만 (`from_to_date`, 대상당 하루 1) |
 | `communityGuides/{id}` | 공개 | Super 전부; signed-in은 PvP(arena/totalwar) 본인 글 |
 | `communityTierLists/{pve\|pvp}` | 공개 | Super만 |
 | `inviteIndex/{code}` | signed-in get | 허브 admin 생성; master/super 삭제 |

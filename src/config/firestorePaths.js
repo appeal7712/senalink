@@ -12,7 +12,7 @@ export const COL = {
   COMMUNITY_TIER_LISTS: 'communityTierLists',
 };
 
-export const profileDailyRecommendDocId = (fromUid, day) => `${fromUid}_${day}`;
+export const profileDailyRecommendDocId = (fromUid, toUid, day) => `${fromUid}_${toUid}_${day}`;
 
 
 export const communityGuideDoc = (guideId) => [COL.COMMUNITY_GUIDES, guideId];

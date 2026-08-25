@@ -3,7 +3,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { COL } from '../config/firestorePaths';
 import { useUserProfile } from '../context/UserProfileContext';
-import { canRecommendToday, recommendProfile } from '../lib/profileRecommend';
+import { hasRecommendedTargetToday, recommendProfile } from '../lib/profileRecommend';
 import Icon from './icons/Icon';
 import ModalScrim from './ModalScrim';
 import SafeImg from './icons/SafeImg';
@@ -22,7 +22,7 @@ function formatScore(n) {
 
 /**
  * 읽기 전용 공개 프로필 — 수정은 본인 마이페이지만.
- * 프로필 추천은 덱 따봉과 별도(하루 1회, 취소 없음).
+ * 프로필 추천은 덱 따봉과 별도(대상당 KST 하루 1회, 취소 없음).
  */
 export default function PublicProfileModal({ uid, onClose }) {
   const { authUser, profile: myProfile } = useUserProfile();
@@ -30,6 +30,7 @@ export default function PublicProfileModal({ uid, onClose }) {
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState('');
   const [recommendBusy, setRecommendBusy] = useState(false);
+  const [alreadyToday, setAlreadyToday] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,6 +42,7 @@ export default function PublicProfileModal({ uid, onClose }) {
       }
       try {
         setLoading(true);
+        setAlreadyToday(false);
         const snap = await getDoc(doc(db, COL.USERS, uid));
         if (cancelled) return;
         if (!snap.exists()) {
@@ -50,6 +52,10 @@ export default function PublicProfileModal({ uid, onClose }) {
           setProfile(snap.data());
           setError('');
         }
+        if (authUser?.uid && authUser.uid !== uid) {
+          const done = await hasRecommendedTargetToday(authUser.uid, uid);
+          if (!cancelled) setAlreadyToday(done);
+        }
       } catch (e) {
         if (!cancelled) setError(e?.message || '프로필을 불러오지 못했습니다. 로그인이 필요할 수 있습니다.');
       } finally {
@@ -57,12 +63,11 @@ export default function PublicProfileModal({ uid, onClose }) {
       }
     })();
     return () => { cancelled = true; };
-  }, [uid]);
+  }, [uid, authUser?.uid]);
 
   const tw = TW_ALL.find((t) => t.id === profile?.totalwarTier) || TW_ALL[0];
   const arena = arenaTierById(profile?.arenaTier);
   const isSelf = Boolean(authUser?.uid && uid && authUser.uid === uid);
-  const alreadyToday = !canRecommendToday(myProfile?.lastProfileRecommendDate);
   const recommendCount = Number(profile?.recommendCount) || 0;
 
   async function handleRecommend() {
@@ -76,12 +81,13 @@ export default function PublicProfileModal({ uid, onClose }) {
     }
     if (isSelf) return;
     if (alreadyToday) {
-      alert('오늘은 이미 추천했습니다. 내일 다시 눌러 주세요.');
+      alert('오늘은 이미 이 유저를 추천했습니다. 내일 다시 눌러 주세요.');
       return;
     }
     try {
       setRecommendBusy(true);
       await recommendProfile({ fromUid: authUser.uid, toUid: uid });
+      setAlreadyToday(true);
       setProfile((prev) => (prev
         ? { ...prev, recommendCount: (Number(prev.recommendCount) || 0) + 1 }
         : prev));
@@ -132,7 +138,7 @@ export default function PublicProfileModal({ uid, onClose }) {
                   className={`btn-like${alreadyToday ? ' is-on' : ''}`}
                   disabled={recommendBusy || alreadyToday}
                   onClick={handleRecommend}
-                  title={alreadyToday ? '오늘은 이미 추천함' : '프로필 추천 · 하루 1회'}
+                  title={alreadyToday ? '오늘은 이미 이 유저를 추천함' : '프로필 추천 · 대상당 하루 1회'}
                 >
                   <Icon name="thumbUp" size={15} />
                   {alreadyToday ? '오늘 추천함' : '추천'}

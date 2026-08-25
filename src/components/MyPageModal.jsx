@@ -105,12 +105,27 @@ export default function MyPageModal({ onClose, mandatory = false }) {
       <div className="glass-modal" onClick={e => e.stopPropagation()}
         style={{ width: '100%', maxWidth: 420, borderRadius: 20, padding: 28, maxHeight: 'min(92dvh, 92vh)', overflowY: 'auto' }}>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: mandatory ? 10 : 20 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: '#fff' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: mandatory ? 10 : 20, gap: 10 }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: '#fff', flexShrink: 0 }}>
             {mandatory ? '닉네임 설정' : '마이페이지'}
           </h2>
           {!mandatory && (
-            <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 4 }}>
+            <div
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                padding: '5px 10px', borderRadius: 999,
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                fontSize: 12, fontWeight: 800, color: '#fff',
+                marginLeft: 'auto', marginRight: 4,
+              }}
+              title="다른 유저가 내 공개 프로필에서 누른 추천 수"
+            >
+              <Icon name="thumbUp" size={13} color="var(--accent-cyan)" />
+              받은 추천 {(Number(profile.recommendCount) || 0).toLocaleString('ko-KR')}
+            </div>
+          )}
+          {!mandatory && (
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 4, flexShrink: 0 }}>
               <Icon name="closeBtn" size={18} />
             </button>
           )}
