@@ -467,9 +467,10 @@ export default function CommunityGuideEditor({
                   </div>
                   <div className="glass-inset editing-build-timeline-add" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>+ 스킬 시전 순서 추가</div>
+                    <div style={{ fontSize: 10, color: '#fff', marginBottom: 3, fontWeight: 800 }}>턴 선택 (0~70턴)</div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 2 }}>
-                      {Array.from({ length: 70 }, (_, i) => {
-                        const n = i + 1;
+                      {Array.from({ length: 71 }, (_, i) => {
+                        const n = i;
                         const r = `${n}턴`;
                         const selected = turnInput === r || Number(String(turnInput).match(/(\d+)/)?.[1]) === n;
                         return (

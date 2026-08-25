@@ -56,12 +56,12 @@ function parseRoundNumber(round) {
   return m ? Number(m[1]) : 0;
 }
 
-/** 스킬 시전 순서 턴 라벨 표시 (저장값이 1라여도 1턴으로 보이게) */
+/** 스킬 시전 순서 턴 라벨 표시 (저장값이 1라여도 1턴으로 보이게 · 0턴 포함) */
 function formatSkillTurnLabel(round) {
   const s = String(round || '').trim();
   if (!s) return '';
-  const n = parseRoundNumber(s);
-  if (n > 0) return `${n}턴`;
+  const m = s.match(/(\d+)/);
+  if (m) return `${Number(m[1])}턴`;
   return s.replace(/라/g, '턴');
 }
 
@@ -812,7 +812,8 @@ export default function GuildLounge() {
 
   const handleAddSkillStep = () => {
     if (!newSkillHero) return;
-    const picked = parseRoundNumber(turnNumberInput) || 1;
+    const turnMatch = String(turnNumberInput || '').match(/(\d+)/);
+    const picked = turnMatch ? Number(turnMatch[1]) : 1;
     if (lastReservedRound > 0 && picked < lastReservedRound) {
       alert(`${lastReservedRound}턴 이전은 선택할 수 없습니다. ${lastReservedRound}턴부터 추가해 주세요.`);
       setTurnNumberInput(`${lastReservedRound}턴`);
@@ -1945,12 +1946,12 @@ export default function GuildLounge() {
                     {/* 턴 선택 버튼 */}
                     <div>
                       <div style={{ fontSize: '10px', color: '#fff', marginBottom: '3px', fontWeight: 800 }}>
-                        턴 선택 (1~70턴)
+                        턴 선택 (0~70턴)
                         {lastReservedRound > 0 ? ` · ${lastReservedRound}턴 이전 잠금` : ''}
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '2px' }}>
-                        {Array.from({ length: 70 }, (_, i) => {
-                          const n = i + 1;
+                        {Array.from({ length: 71 }, (_, i) => {
+                          const n = i;
                           const r = `${n}턴`;
                           const isLocked = lastReservedRound > 0 && n < lastReservedRound;
                           const isSelected = turnNumberInput === r || parseRoundNumber(turnNumberInput) === n;

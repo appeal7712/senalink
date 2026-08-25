@@ -6192,6 +6192,44 @@ h1, h2, h3 {
   .expedition-round-guide .timeline-arrow {
     display: none !important;
   }
+
+  /* 가로 PC만: 초상·턴 왼쪽 / 이름 중앙 / 스킬(·메모) 오른쪽 */
+  @media (orientation: landscape) {
+    .build-panel-timeline .timeline-step,
+    .expedition-round-guide .timeline-step {
+      justify-content: flex-start;
+    }
+
+    .build-panel-timeline .timeline-step-body,
+    .expedition-round-guide .timeline-step-body {
+      flex: 1 1 auto;
+      min-width: 0;
+      justify-content: flex-start;
+    }
+
+    .build-panel-timeline .timeline-step-face,
+    .expedition-round-guide .timeline-step-face,
+    .build-panel-timeline .timeline-step-round,
+    .expedition-round-guide .timeline-step-round,
+    .build-panel-timeline .timeline-step-dir,
+    .expedition-round-guide .timeline-step-dir {
+      flex-shrink: 0;
+    }
+
+    .build-panel-timeline .timeline-step-name,
+    .expedition-round-guide .timeline-step-name {
+      flex: 1 1 auto;
+      min-width: 0;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .build-panel-timeline .timeline-step-note,
+    .expedition-round-guide .timeline-step-note {
+      flex: 0 0 auto;
+      flex-shrink: 0;
+    }
+  }
 }
 
 @media (max-width: 980px) {
@@ -8024,7 +8062,7 @@ h1, h2, h3 {
 @media (max-width: 900px) {
   .community-pvp-card-head {
     flex-wrap: wrap;
-    align-items: flex-start;
+    align-items: center;
   }
   .community-pvp-card-rule {
     display: none;
@@ -8033,10 +8071,26 @@ h1, h2, h3 {
     flex: 1 1 100%;
     max-width: none;
   }
+  /* 수정·삭제: 작성자 아래 한 줄(width:100%)로 밀지 말고 — 오른쪽 세로 (길드전 카운터와 동일) */
+  .community-pvp-card-author {
+    flex: 1 1 0;
+    min-width: 0;
+  }
   .community-pvp-card-actions {
-    width: 100%;
-    margin-left: 0;
-    justify-content: flex-end;
+    width: auto;
+    margin-left: auto;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .community-pvp-card-actions .btn-edit,
+  .community-pvp-card-actions .btn-danger-solid {
+    width: auto;
+    padding: 6px 8px;
+    font-size: 11px;
+    white-space: nowrap;
   }
 }
 
