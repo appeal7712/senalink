@@ -4694,6 +4694,28 @@ h1, h2, h3 {
   min-width: 0;
 }
 
+/* PC·큰 태블릿 세로만: 한 줄 유지 + 이름 말줄임 (가로 PC·모바일 ≤980 무변경) */
+@media (orientation: portrait) and (min-width: 981px) {
+  .build-panel-timeline .timeline-step,
+  .expedition-round-guide .timeline-step {
+    max-width: 100%;
+  }
+  .build-panel-timeline .timeline-step-body,
+  .expedition-round-guide .timeline-step-body {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .build-panel-timeline .timeline-step-name,
+  .expedition-round-guide .timeline-step-name {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+  }
+}
+
 .timeline-step-round,
 .timeline-step-dir {
   display: flex;
