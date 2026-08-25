@@ -2673,7 +2673,7 @@ h1, h2, h3 {
   inset: 0;
   z-index: 3;
   border-radius: 18px;
-  padding: 2px;
+  padding: 3px;
   overflow: hidden;
   pointer-events: none;
   -webkit-mask:
