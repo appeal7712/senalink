@@ -339,7 +339,7 @@ export default function GuildWarAttackPanel({
         <div className="gw-counter-toolbar">
           <div className="gw-counter-toolbar-copy">
             <span>아군 공격 · 카운터 덱</span>
-            <em className="gw-counter-drag-hint">왼쪽 순번을 잡고 끌어 우선순위 변경</em>
+            <em className="gw-counter-drag-hint">왼쪽 그립을 잡고 끌어 우선순위 변경</em>
           </div>
           <button type="button" onClick={openCreateCounter} className="btn-ops gw-counter-add">
             <Icon name="plus" size={13} /> 카운터 공략 추가
@@ -378,87 +378,99 @@ export default function GuildWarAttackPanel({
               reorderCounters(target.id, fromId, c.id);
             }}
           >
-            <button
-              type="button"
-              className="gw-counter-priority"
-              draggable
-              title="끌어 옮겨 우선순위 변경"
-              aria-label={`${idx + 1}순위 · 드래그로 순서 변경`}
-              onClick={(e) => e.stopPropagation()}
-              onPointerDown={(e) => {
-                if (e.pointerType === 'mouse') return;
-                e.stopPropagation();
-                e.preventDefault();
-                const row = e.currentTarget.closest('.gw-counter-row');
-                if (!row) return;
-                const rect = row.getBoundingClientRect();
-                e.currentTarget.setPointerCapture(e.pointerId);
-                setPrioGhost({
-                  targetId: target.id,
-                  fromId: c.id,
-                  title: c.title || '카운터 덱',
-                  rank: idx + 1,
-                  x: rect.left,
-                  y: rect.top,
-                  w: rect.width,
-                  h: rect.height,
-                  ox: e.clientX - rect.left,
-                  oy: e.clientY - rect.top,
-                });
-              }}
-              onPointerMove={(e) => {
-                if (e.pointerType === 'mouse') return;
-                if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
-                setPrioGhost((g) => {
-                  if (!g) return null;
-                  return {
-                    ...g,
-                    x: e.clientX - g.ox,
-                    y: e.clientY - g.oy,
-                  };
-                });
-                clearPrioDropHighlight();
-                const under = document.elementFromPoint(e.clientX, e.clientY);
-                under?.closest?.('.gw-counter-row:not(.is-dragging-source)')?.classList.add('is-drop-target');
-              }}
-              onPointerUp={(e) => {
-                if (e.pointerType === 'mouse') return;
-                finishPrioPointerDrag(e.clientX, e.clientY, prioGhostRef.current);
-              }}
-              onPointerCancel={() => {
-                clearPrioDropHighlight();
-                document.querySelectorAll('.gw-counter-row.is-dragging-source').forEach((el) => {
-                  el.classList.remove('is-dragging-source');
-                });
-                setPrioGhost(null);
-              }}
-              onDragStart={(e) => {
-                e.stopPropagation();
-                e.dataTransfer.setData('application/x-gw-counter-id', c.id);
-                e.dataTransfer.setData('text/plain', c.id);
-                e.dataTransfer.effectAllowed = 'move';
-                const row = e.currentTarget.closest('.gw-counter-row');
-                if (row) {
-                  try {
-                    e.dataTransfer.setDragImage(row, Math.min(56, row.offsetWidth / 4), row.offsetHeight / 2);
-                  } catch { /* ignore */ }
-                  row.classList.add('is-dragging-source');
-                }
-              }}
-              onDragEnd={() => {
-                clearPrioDropHighlight();
-                document.querySelectorAll('.gw-counter-row.is-dragging-source').forEach((el) => {
-                  el.classList.remove('is-dragging-source');
-                });
-              }}
-            >
-              <span className="gw-counter-priority-rank">{idx + 1}</span>
-              <span className="gw-counter-priority-grip" aria-hidden="true" />
-            </button>
+            <div className="gw-counter-lead">
+              <button
+                type="button"
+                className="gw-defense-drag-handle"
+                draggable
+                title="끌어 옮겨 우선순위 변경"
+                aria-label={`${idx + 1}순위 · 드래그로 순서 변경`}
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => {
+                  if (e.pointerType === 'mouse') return;
+                  e.stopPropagation();
+                  e.preventDefault();
+                  const row = e.currentTarget.closest('.gw-counter-row');
+                  if (!row) return;
+                  const rect = row.getBoundingClientRect();
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                  setPrioGhost({
+                    targetId: target.id,
+                    fromId: c.id,
+                    title: c.title || '카운터 덱',
+                    rank: idx + 1,
+                    x: rect.left,
+                    y: rect.top,
+                    w: rect.width,
+                    h: rect.height,
+                    ox: e.clientX - rect.left,
+                    oy: e.clientY - rect.top,
+                  });
+                }}
+                onPointerMove={(e) => {
+                  if (e.pointerType === 'mouse') return;
+                  if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+                  setPrioGhost((g) => {
+                    if (!g) return null;
+                    return {
+                      ...g,
+                      x: e.clientX - g.ox,
+                      y: e.clientY - g.oy,
+                    };
+                  });
+                  clearPrioDropHighlight();
+                  const under = document.elementFromPoint(e.clientX, e.clientY);
+                  under?.closest?.('.gw-counter-row:not(.is-dragging-source)')?.classList.add('is-drop-target');
+                }}
+                onPointerUp={(e) => {
+                  if (e.pointerType === 'mouse') return;
+                  finishPrioPointerDrag(e.clientX, e.clientY, prioGhostRef.current);
+                }}
+                onPointerCancel={() => {
+                  clearPrioDropHighlight();
+                  document.querySelectorAll('.gw-counter-row.is-dragging-source').forEach((el) => {
+                    el.classList.remove('is-dragging-source');
+                  });
+                  setPrioGhost(null);
+                }}
+                onDragStart={(e) => {
+                  e.stopPropagation();
+                  e.dataTransfer.setData('application/x-gw-counter-id', c.id);
+                  e.dataTransfer.setData('text/plain', c.id);
+                  e.dataTransfer.effectAllowed = 'move';
+                  const row = e.currentTarget.closest('.gw-counter-row');
+                  if (row) {
+                    try {
+                      e.dataTransfer.setDragImage(row, Math.min(56, row.offsetWidth / 4), row.offsetHeight / 2);
+                    } catch { /* ignore */ }
+                    row.classList.add('is-dragging-source');
+                  }
+                }}
+                onDragEnd={() => {
+                  clearPrioDropHighlight();
+                  document.querySelectorAll('.gw-counter-row.is-dragging-source').forEach((el) => {
+                    el.classList.remove('is-dragging-source');
+                  });
+                }}
+              >
+                <span className="gw-defense-drag-grip" aria-hidden="true" />
+              </button>
+              <span className="gw-counter-rule" aria-hidden>|</span>
+              <div className="gw-counter-prio-block">
+                <span className="gw-counter-prio-label">우선순위</span>
+                <span className="gw-counter-prio-num">{idx + 1}</span>
+              </div>
+              <span className="gw-counter-rule" aria-hidden>|</span>
+            </div>
             <MiniHeroTrio heroNames={c.heroNames} resolveHeroByName={resolveHeroByName} size={38} />
             <div className="gw-counter-copy">
               <div className="gw-counter-title">{c.title}</div>
-              <div className="gw-counter-meta">스킬 예약 {c.reservedSkills?.length || 0}개 · <span className="gw-author">{c.author}</span></div>
+              {c.author ? (
+                <>
+                  <span className="gw-counter-meta-rule" aria-hidden>|</span>
+                  <div className="gw-counter-meta"><span className="gw-author">{c.author}</span></div>
+                </>
+              ) : null}
             </div>
             <span className="gw-counter-detail">상세 <Icon name="chevronRight" size={12} /></span>
             <div className="gw-counter-actions">
@@ -664,33 +676,35 @@ export default function GuildWarAttackPanel({
             </div>
             <div className="build-title-meta" style={{ width: '100%' }}>등록: <strong>{inspectingCounter.author}</strong> ({formatUpdateAtDisplay(inspectingCounter.updatedAt)})</div>
 
-            <div className="gw-inspect-deck">
-              <InGameDeckCard
-                teamName="카운터 덱"
-                overviewTitle={inspectingCounter.title || '카운터 덱'}
-                formationId={normalizeFormationId(inspectingCounter.formationId)}
-                heroList={padNames5(inspectingCounter.heroNames).map((name, idx) => {
-                  const baseHero = resolveHeroByName(name);
-                  return baseHero ? { hero: baseHero, gearConfig: (inspectingCounter.heroGearConfigs || [])[idx] } : name;
-                })}
-                slotCount={5}
-                maxHeroes={3}
-                petObj={resolvePet(inspectingCounter.petId)}
-                contentMode="pvp"
-                reservedSkills={inspectingCounter.reservedSkills}
-                overviewNotes={inspectingCounter.gearNote ? [{ text: inspectingCounter.gearNote }] : []}
-                onUnderlyingCover={setSuppressInspectPaint}
-              />
-            </div>
-
-            {inspectingCounter.gearNote && (
-              <div className="setting-overview-section">
-                <div className="setting-overview-label">
-                  <Icon name="bolt" size={14} /> 메모
-                </div>
-                <div style={{ fontSize: '14px', color: '#e2e8f0', whiteSpace: 'pre-line', lineHeight: '1.6' }}>{inspectingCounter.gearNote}</div>
+            <div className="gw-inspect-stack">
+              <div className="gw-inspect-deck">
+                <InGameDeckCard
+                  teamName="카운터 덱"
+                  overviewTitle={inspectingCounter.title || '카운터 덱'}
+                  formationId={normalizeFormationId(inspectingCounter.formationId)}
+                  heroList={padNames5(inspectingCounter.heroNames).map((name, idx) => {
+                    const baseHero = resolveHeroByName(name);
+                    return baseHero ? { hero: baseHero, gearConfig: (inspectingCounter.heroGearConfigs || [])[idx] } : name;
+                  })}
+                  slotCount={5}
+                  maxHeroes={3}
+                  petObj={resolvePet(inspectingCounter.petId)}
+                  contentMode="pvp"
+                  reservedSkills={inspectingCounter.reservedSkills}
+                  overviewNotes={inspectingCounter.gearNote ? [{ text: inspectingCounter.gearNote }] : []}
+                  onUnderlyingCover={setSuppressInspectPaint}
+                />
               </div>
-            )}
+
+              {inspectingCounter.gearNote && (
+                <div className="gw-inspect-memo">
+                  <div className="setting-overview-label">
+                    <Icon name="bolt" size={14} /> 메모
+                  </div>
+                  <div className="gw-inspect-memo-text">{inspectingCounter.gearNote}</div>
+                </div>
+              )}
+            </div>
           </div>
         </ModalScrim>
       )}
@@ -704,8 +718,8 @@ export default function GuildWarAttackPanel({
           }}
           aria-hidden="true"
         >
-          <span className="gw-counter-prio-ghost-rank">{prioGhost.rank}</span>
-          <span className="gw-counter-prio-ghost-title">{prioGhost.title}</span>
+          <span className="gw-defense-drag-grip" style={{ color: 'rgba(125,211,252,0.9)' }} />
+          <span className="gw-counter-prio-ghost-title">{prioGhost.rank}순위 · {prioGhost.title}</span>
         </div>,
         document.body,
       )}

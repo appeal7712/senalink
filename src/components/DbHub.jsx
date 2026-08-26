@@ -8,8 +8,8 @@ import { backdropDismissProps } from '../utils/backdropDismiss';
 import ModalScrim from './ModalScrim';
 
 const HUB_TABS = [
-  { id: 'hero', icon: 'user', label: '영웅 도감', desc: '역할 · 세력 · 스킬', accent: '#ece8e0' },
-  { id: 'pet', icon: 'paw', label: '펫 도감', desc: '스페셜 펫 스킬', accent: '#d4c4a8' },
+  { id: 'hero', icon: 'hero', label: '영웅 도감', desc: '역할 · 세력 · 스킬', accent: '#ece8e0' },
+  { id: 'pet', icon: 'pet', label: '펫 도감', desc: '스페셜 펫 스킬', accent: '#d4c4a8' },
   { id: 'equip', icon: 'shield', label: '장비 / 장신구', desc: '세트 · 실전 장비 · 반지', accent: '#8eb8c4' },
   { id: 'system', icon: 'flask', label: '시스템', desc: '전투 규칙 · 잠재능력', accent: '#9a9388' },
 ];
@@ -68,7 +68,7 @@ export default function DbHub() {
         <div className="container fade-in" style={{ paddingBottom: 60 }}>
           <div className="luxury-panel" style={{ padding: '16px 20px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--gold-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Icon name="paw" size={17} /> 펫 도감
+              <Icon name="pet" size={17} /> 펫 도감
               <span style={{ fontSize: 13, color: '#e2e8f0' }}>{pets.length}종</span>
             </div>
             <input
@@ -99,7 +99,7 @@ export default function DbHub() {
                   {p.portraitUrl ? (
                     <img src={p.portraitUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
-                    <Icon name="paw" size={32} color="#1a1204" />
+                    <Icon name="pet" size={32} />
                   )}
                 </div>
                 <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', marginBottom: 4 }}>{p.name}</div>
@@ -135,7 +135,7 @@ export default function DbHub() {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.14)', paddingBottom: 12 }}>
                   <h3 style={{ fontSize: 20, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
-                    <Icon name="paw" size={18} /> {selectedPet.name}
+                    <Icon name="pet" size={18} /> {selectedPet.name}
                   </h3>
                   <button type="button" onClick={() => setSelectedPet(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="closeBtn" size={20} /></button>
                 </div>
@@ -145,7 +145,7 @@ export default function DbHub() {
                     border: '2px solid #fde047', background: 'linear-gradient(180deg, #facc15 0%, #ca8a04 100%)', flexShrink: 0,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    {selectedPet.portraitUrl ? <img src={selectedPet.portraitUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="paw" size={28} color="#1a1204" />}
+                    {selectedPet.portraitUrl ? <img src={selectedPet.portraitUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="pet" size={28} />}
                   </div>
                   <div>
                     <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>{selectedPet.name}</div>

@@ -13,7 +13,7 @@ import SafeImg from './icons/SafeImg';
 import AwakenMark from './AwakenMark';
 import HeroPortraitCard from './HeroPortraitCard';
 import SkillTimelineSteps from './SkillTimelineSteps';
-import { setDeckDragData } from '../utils/deckDrag';
+import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, shouldSuppressDeckClick } from '../utils/deckDrag';
 import { useLounge } from '../context/LoungeContext';
 import { db } from '../lib/firebase';
 import { showToast } from './Toast';
@@ -1646,12 +1646,13 @@ export default function GuildLounge() {
                     </div>
                   </div>
                 ) : (CONTENT_META[editingCategory] || CONTENT_META.siege).mode === 'pvp' ? (
-                  <div style={{ width: '220px', flexShrink: 0 }}>
+                  <div className="editing-build-arena-toggle-col" style={{ width: '220px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ fontSize: '10px', fontWeight: 800, color: '#fff', letterSpacing: '0.4px' }}>세팅</div>
                     <PvpModeToggle mode={editingPvpMode} onChange={setEditingPvpMode} />
                   </div>
                 ) : null}
                 {editingCategory === 'totalwar' && (
-                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                  <div className="editing-build-round-toggles" style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                     {Array.from({ length: editingTotalwarDeckCount }, (_, i) => (
                       <button
                         key={i}
@@ -1682,7 +1683,7 @@ export default function GuildLounge() {
                   </div>
                 )}
                 {editingCategory === 'expedition' && (
-                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                  <div className="editing-build-round-toggles" style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                     {[1, 2].map(r => (
                       <button
                         key={r}
@@ -1888,7 +1889,7 @@ export default function GuildLounge() {
               <div className="glass-inset editing-build-hero-picker" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap', flexShrink: 0 }}>
                     <div style={{ fontSize: '14px', fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Icon name="user" size={14} /> 영웅 목록
+                      <Icon name="hero" size={14} /> 영웅 목록
                     </div>
 
                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -1920,9 +1921,22 @@ export default function GuildLounge() {
                         <div
                           key={h.id}
                           draggable
-                          onDragStart={e => setDeckDragData(e, { source: 'picker', name: cleanName })}
-                          onClick={() => handleSelectHeroFromBottom(h)}
-                          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'grab' }}
+                          onPointerDown={e => {
+                            markDeckPointerDown(e);
+                            startDeckPointerDrag(e, { source: 'picker', name: cleanName }, { label: cleanName });
+                          }}
+                          onDragStart={e => {
+                            if (!allowHtml5DeckDrag()) {
+                              e.preventDefault();
+                              return;
+                            }
+                            setDeckDragData(e, { source: 'picker', name: cleanName });
+                          }}
+                          onClick={() => {
+                            if (shouldSuppressDeckClick()) return;
+                            handleSelectHeroFromBottom(h);
+                          }}
+                          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'grab', touchAction: 'none' }}
                         >
                           <div style={{ width: '58px', outline: (editingHeroNames[targetSlotIdx] || '') === cleanName ? '2px solid var(--accent-cyan)' : 'none', outlineOffset: 1, borderRadius: 8 }}>
                             <HeroPortraitCard hero={h} showStars showRole showName={false} />

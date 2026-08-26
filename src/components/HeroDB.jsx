@@ -67,7 +67,9 @@ export default function HeroDB() {
       
       {/* 1. 대분류 탭 & 검색바 */}
       <div className="luxury-panel dex-hero-toolbar" style={{ padding: '16px 24px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-        <div className="dex-hero-toolbar-title" style={{ fontSize: '18px', fontWeight: 900, color: 'var(--gold-primary)', marginRight: '8px' }}>영웅 도감</div>
+        <div className="dex-hero-toolbar-title" style={{ fontSize: '18px', fontWeight: 900, color: 'var(--gold-primary)', marginRight: '8px', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Icon name="hero" size={17} /> 영웅 도감
+        </div>
         <div className="dex-hero-tabs" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', flex: 1 }}>
           {[
             { id: 'special', label: '스페셜 영웅' },

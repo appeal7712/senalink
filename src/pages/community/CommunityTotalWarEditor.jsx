@@ -224,7 +224,7 @@ export default function CommunityTotalWarEditor({
 
           <div className="glass-inset editing-build-hero-picker" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10, width: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-              <Icon name="user" size={14} /> 영웅 목록
+              <Icon name="hero" size={14} /> 영웅 목록
             </div>
             <div className="editing-build-hero-grid" style={{ minHeight: 168 }}>
               <HeroGridPicker

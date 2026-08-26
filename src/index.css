@@ -194,10 +194,14 @@ body {
   margin-top: 4px;
 }
 
-/* 세팅 확인 등 body로 올린 모달: backdrop-filter가 배경 레이어를 못 잡을 때 대비 */
-body:has(> .modal-scrim) .app-shell,
-body:has(> .modal-scrim) #root::before {
+/*
+  세팅 확인 등 body portal 모달: 뒤 가림은 .app-shell 블러 + 스크림 딤.
+  #root::before 라이브 filter는 GPU 이중 비용이라 제외 — 대신 스크림을 더 짙게.
+  (블러 자체 삭제 금지, AGENTS §10.6)
+*/
+body:has(> .modal-scrim) .app-shell {
   filter: blur(22px) saturate(130%);
+  will-change: filter;
 }
 
 /* 모달 열린 동안 뒤 페이지 스크롤 잠금 (PC·모바일 공통, ModalScrim ref-count) */
@@ -227,7 +231,7 @@ body > .modal-scrim:has(~ .modal-scrim),
   position: fixed;
   inset: 0;
   z-index: 8000;
-  background: rgba(8, 12, 22, 0.28);
+  background: rgba(8, 12, 22, 0.48);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -239,7 +243,7 @@ body > .modal-scrim:has(~ .modal-scrim),
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: rgba(8, 12, 22, 0.22);
+  background: rgba(8, 12, 22, 0.32);
   backdrop-filter: blur(24px) saturate(140%);
   -webkit-backdrop-filter: blur(24px) saturate(140%);
 }
@@ -544,108 +548,337 @@ h1, h2, h3 {
 }
 
 /* 좌·우 열 독립 높이 — 오른쪽 카드 펼쳐도 왼쪽 열은 안 밀림 */
-.gw-defense-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  align-items: start;
-}
-
-.gw-defense-col {
+/* 길드전 방어: 공용 PvP community-pvp-card 헤더 재사용 + 속공배지·대체덱 */
+.gw-defense-grid,
+.gw-defense-grid--stack {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-width: 0;
-}
-
-.gw-defense-grid--stack {
-  display: none;
-  flex-direction: column;
-  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .gw-defense-card {
   min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-.gw-defense-head {
-  display: flex;
+.gw-defense-speed-badge {
+  display: inline-flex;
   align-items: center;
-  flex-wrap: nowrap;
-  gap: 8px 10px;
-  padding: 12px 14px;
-  cursor: pointer;
-}
-
-.gw-defense-head.is-on {
-  background: rgba(236, 232, 224, 0.08);
-}
-
-.gw-defense-heroes {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-  align-items: flex-start;
-}
-
-.gw-defense-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
-.gw-defense-title {
-  font-size: 15px;
+  font-size: 11px;
   font-weight: 900;
-  color: #fff;
-  line-height: 1.3;
+  letter-spacing: 0.12px;
+  color: #041018;
+  background: linear-gradient(135deg, #5eead4, #22d3ee);
+  padding: 4px 8px;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 1px 6px rgba(34, 211, 238, 0.22);
+  line-height: 1.2;
   white-space: nowrap;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.gw-defense-body-note {
+  flex: 1;
   min-width: 0;
+  max-width: 280px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: stretch;
 }
 
-.gw-defense-rule {
-  color: rgba(148, 163, 184, 0.45);
-  font-weight: 800;
-  flex-shrink: 0;
+/* 펼침 본문: 스킬 예약 아래 기타 디테일 — 박스 폭은 스킬 예약과 동일(본문 열 100%) */
+.gw-defense-other-detail {
+  flex: 0 0 auto;
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+  margin-top: 4px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-sizing: border-box;
 }
 
-.gw-defense-actions {
+.gw-defense-note-label {
   display: flex;
   align-items: center;
-  flex-wrap: nowrap;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.2px;
+}
+
+.gw-defense-note-text {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: pre-line;
+  color: #e2e8f0;
+  max-height: 4.2em;
+  overflow-y: auto;
+}
+
+.gw-defense-note-text.is-empty {
+  color: #64748b;
+}
+
+/* 터치 영웅 드래그 고스트 */
+.deck-ptr-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 99999;
+  pointer-events: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(8, 14, 24, 0.94);
+  border: 1px solid rgba(125, 211, 252, 0.55);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+  will-change: transform;
+}
+.deck-hero-slot-face.is-ptr-drop {
+  outline: 2px solid var(--accent-cyan) !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.55) !important;
+}
+
+/* 대체 덱: btn-ops 베이스 + 열림 강조만 */
+.gw-defense-alt-btn.is-on {
+  background: #e8e8e8;
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 3px 0 0 #737373;
+}
+.gw-defense-alt-btn.is-on:hover {
+  box-shadow:
+    0 3px 0 0 rgba(0, 0, 0, 0.25),
+    0 5px 0 0 #737373;
+}
+.gw-defense-alt-btn.is-on:active {
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #737373;
+}
+
+.gw-defense-card .community-pvp-card-meta {
   gap: 6px;
+}
+
+/* 접힌 배너: 덱 티어 두 줄 (라벨 + 별) */
+.gw-defense-lead {
   flex: 0 0 auto;
-  margin-left: auto;
-  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
-
-.gw-defense-actions .kind-pill {
+.gw-defense-drag-handle {
   flex-shrink: 0;
-  height: 32px;
-  padding: 0 12px;
-  font-size: 12px;
-  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 8px 4px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.42);
+  cursor: grab;
+  touch-action: none;
+  border-radius: 6px;
+  line-height: 0;
 }
-
-.gw-defense-actions .btn-edit,
-.gw-defense-actions .btn-danger-solid {
-  height: 32px;
-  padding: 0 10px;
-  font-size: 12px;
-  box-sizing: border-box;
+.gw-defense-drag-handle:hover,
+.gw-defense-drag-handle:focus-visible {
+  color: rgba(125, 211, 252, 0.95);
+  outline: none;
 }
-
-.gw-defense-mode-tier {
+.gw-defense-drag-handle:active {
+  cursor: grabbing;
+  color: #7dd3fc;
+}
+.gw-defense-drag-grip {
+  display: block;
+  width: 11px;
+  height: 14px;
+  flex-shrink: 0;
+  opacity: 0.9;
+  background-image: radial-gradient(circle, currentColor 1.15px, transparent 1.3px);
+  background-size: 5.5px 4.5px;
+  background-position: 0 0;
+  background-repeat: repeat;
+}
+.gw-defense-card.is-dragging-source {
+  opacity: 0.42;
+}
+.gw-defense-card.is-drop-target {
+  outline: 2px solid rgba(125, 211, 252, 0.55);
+  outline-offset: 2px;
+}
+.gw-defense-tier-block {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 5px;
+  min-width: 3.5em;
+}
+.gw-defense-tier-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.72);
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.gw-alt-layer {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 12px 14px;
+  padding: 12px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+
+.gw-alt-layer > * {
+  position: relative;
+  z-index: 1;
+}
+
+.gw-alt-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-height: 32px;
+}
+
+.gw-alt-toolbar-copy {
+  display: flex;
+  flex-direction: column;
   gap: 2px;
+  min-width: 0;
+}
+
+.gw-alt-toolbar-copy span {
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.78);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gw-alt-toolbar-copy em {
+  font-size: 11px;
+  font-weight: 700;
+  font-style: normal;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gw-alt-add {
+  padding: 5px 9px !important;
+  font-size: 11px !important;
+  gap: 5px !important;
+  border-radius: 12px;
   flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.gw-alt-empty {
+  padding: 20px 12px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.gw-alt-card {
+  margin: 0;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+.gw-alt-card.is-expanded {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+@media (max-width: 900px) {
+  .gw-defense-body-note,
+  .gw-defense-other-detail {
+    max-width: none;
+    width: 100%;
+  }
+
+  .gw-defense-speed-badge {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+
+  .gw-alt-layer {
+    margin: 0 10px 12px;
+  }
+
+  .gw-defense-card .community-pvp-card-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 100%;
+  }
+
+  .gw-defense-alt-btn {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 380px) {
+  .gw-defense-card .community-pvp-card-actions .btn-edit,
+  .gw-defense-card .community-pvp-card-actions .btn-danger-solid {
+    height: 26px;
+    padding: 0 6px;
+    font-size: 10px;
+    gap: 2px;
+  }
+  .gw-defense-card .community-pvp-card-actions .gw-defense-alt-btn {
+    padding: 0 6px;
+    font-size: 10px;
+    gap: 2px;
+  }
 }
 
 .hero-gear-panel-set-grid {
@@ -659,95 +892,6 @@ h1, h2, h3 {
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(2, auto);
   gap: 6px;
-}
-
-@media (max-width: 900px) {
-  .gw-defense-grid--cols {
-    display: none;
-  }
-
-  .gw-defense-grid--stack {
-    display: flex;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  /* 모바일 방어 리스트: 화면 폭에 맞춰 유동 (PC 2열은 위 cols만 사용) */
-  .gw-defense-card {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  .gw-defense-head {
-    width: 100%;
-    box-sizing: border-box;
-    align-items: center;
-    gap: clamp(6px, 2vw, 10px);
-  }
-
-  /* 접힌 카드: 초상화 | 속공·별(중앙) | 수정·삭제
-     1fr|auto|1fr 은 좁은 폰에서 초상화 칸이 반으로 잘려 겹침 → auto|1fr|auto */
-  .gw-defense-head:not(.is-on) {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    column-gap: clamp(4px, 1.5vw, 10px);
-  }
-
-  .gw-defense-head:not(.is-on) .gw-defense-rule {
-    display: none;
-  }
-
-  .gw-defense-head:not(.is-on) .gw-defense-heroes {
-    justify-self: start;
-    min-width: 0;
-    gap: clamp(3px, 1.2vw, 8px);
-  }
-
-  .gw-defense-head:not(.is-on) .gw-defense-mode-tier {
-    justify-self: center;
-    align-self: center;
-    margin: 0;
-    min-width: 0;
-    max-width: 100%;
-  }
-
-  .gw-defense-head:not(.is-on) .gw-defense-actions {
-    justify-self: end;
-    margin-left: 0;
-  }
-
-  .gw-defense-heroes > .gw-defense-hero-slot {
-    width: clamp(36px, 10.5vw, 48px) !important;
-  }
-
-  .gw-defense-heroes > .gw-defense-hero-slot > .gw-defense-hero-face {
-    width: 100% !important;
-  }
-}
-
-/* 아주 좁은 폰: 초상·버튼 더 줄여 속공 뱃지와 겹침 방지 */
-@media (max-width: 380px) {
-  .gw-defense-head:not(.is-on) {
-    column-gap: 4px;
-  }
-
-  .gw-defense-heroes > .gw-defense-hero-slot {
-    width: clamp(32px, 9.5vw, 40px) !important;
-  }
-
-  .gw-defense-head:not(.is-on) .gw-defense-actions .btn-edit,
-  .gw-defense-head:not(.is-on) .gw-defense-actions .btn-danger-solid {
-    height: 26px;
-    padding: 0 6px;
-    font-size: 10px;
-    gap: 2px;
-  }
-
-  .gw-defense-head:not(.is-on) .gw-defense-mode-tier .kind-pill--sm {
-    font-size: 11px;
-    padding: 5px 8px;
-  }
 }
 
 .deck-card-compact .deck-stage {
@@ -780,29 +924,64 @@ h1, h2, h3 {
   border-radius: 0;
 }
 
-/* Frosted action pills */
+/* Frosted action pills → 흰 솔리드 푸시 (대체 덱과 동일 계열, 살짝 콤팩트) */
 .btn-ops {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 11px 20px;
-  font-size: 14px;
-  font-weight: 600;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 800;
   letter-spacing: 0;
   color: #161616;
-  background: rgba(255, 255, 255, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  border-radius: 999px;
+  background: #fff;
+  border: none;
+  border-radius: 12px;
   cursor: pointer;
-  box-shadow: none;
-  transition: background 0.15s ease, transform 0.15s ease;
+  white-space: nowrap;
+  line-height: 1.15;
+  position: relative;
+  outline-offset: 4px;
+  user-select: none;
+  touch-action: manipulation;
+  transform: translateY(-3px);
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 3px 0 0 #a3a3a3;
+  transition:
+    transform 600ms cubic-bezier(.3, .7, .4, 1),
+    filter 250ms,
+    box-shadow 600ms cubic-bezier(.3, .7, .4, 1);
 }
-.btn-ops:hover { background: #fff; transform: translateY(-1px); }
+.btn-ops:hover {
+  filter: brightness(110%);
+  transform: translateY(-5px);
+  box-shadow:
+    0 3px 0 0 rgba(0, 0, 0, 0.25),
+    0 5px 0 0 #a3a3a3;
+  transition:
+    transform 250ms cubic-bezier(.3, .7, .4, 1.5),
+    filter 250ms,
+    box-shadow 250ms cubic-bezier(.3, .7, .4, 1.5);
+}
 .btn-ops:active {
-  background: #e8e8e8;
-  transform: scale(0.97);
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #a3a3a3;
+  transition: transform 34ms, box-shadow 34ms;
 }
-.btn-ops:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+.btn-ops:focus:not(:focus-visible) {
+  outline: none;
+}
+.btn-ops:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}
 
 .btn-edit,
 .btn-danger-solid,
@@ -814,29 +993,114 @@ h1, h2, h3 {
   padding: 8px 12px;
   font-size: 13px;
   font-weight: 900;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   border: none;
   white-space: nowrap;
   line-height: 1;
+  position: relative;
+  outline-offset: 4px;
+  user-select: none;
+  touch-action: manipulation;
+  /* Uiverse push — 색은 기존 유지, 입체만 */
+  transform: translateY(-4px);
+  transition:
+    transform 600ms cubic-bezier(.3, .7, .4, 1),
+    filter 250ms,
+    box-shadow 600ms cubic-bezier(.3, .7, .4, 1);
+}
+.btn-edit:hover,
+.btn-danger-solid:hover,
+.btn-like:hover {
+  filter: brightness(110%);
+  transform: translateY(-6px);
+  transition:
+    transform 250ms cubic-bezier(.3, .7, .4, 1.5),
+    filter 250ms,
+    box-shadow 250ms cubic-bezier(.3, .7, .4, 1.5);
+}
+.btn-edit:active,
+.btn-danger-solid:active,
+.btn-like:active {
+  transform: translateY(-2px);
+  transition: transform 34ms, box-shadow 34ms;
+}
+.btn-edit:focus:not(:focus-visible),
+.btn-danger-solid:focus:not(:focus-visible),
+.btn-like:focus:not(:focus-visible) {
+  outline: none;
 }
 .btn-edit {
   background: #38bdf8;
   color: #04202b;
+  min-width: 4.75em;
+  box-sizing: border-box;
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 4px 0 0 #0369a1;
 }
-.btn-edit:hover { background: #7dd3fc; }
+.btn-edit:hover {
+  box-shadow:
+    0 4px 0 0 rgba(0, 0, 0, 0.25),
+    0 6px 0 0 #0369a1;
+}
+.btn-edit:active {
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #0369a1;
+}
 .btn-danger-solid {
   background: #ef4444;
   color: #fff;
+  min-width: 4.75em;
+  box-sizing: border-box;
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 4px 0 0 #991b1b;
 }
-.btn-danger-solid:hover { background: #f87171; }
+.btn-danger-solid:hover {
+  box-shadow:
+    0 4px 0 0 rgba(0, 0, 0, 0.25),
+    0 6px 0 0 #991b1b;
+}
+.btn-danger-solid:active {
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #991b1b;
+}
 .btn-like {
   background: #fff;
   color: #161616;
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 4px 0 0 #a3a3a3;
+}
+.btn-like:hover {
+  box-shadow:
+    0 4px 0 0 rgba(0, 0, 0, 0.25),
+    0 6px 0 0 #a3a3a3;
+}
+.btn-like:active {
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #a3a3a3;
 }
 .btn-like.is-on {
   background: #38bdf8;
   color: #04202b;
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 4px 0 0 #0369a1;
+}
+.btn-like.is-on:hover {
+  box-shadow:
+    0 4px 0 0 rgba(0, 0, 0, 0.25),
+    0 6px 0 0 #0369a1;
+}
+.btn-like.is-on:active {
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #0369a1;
 }
 
 /* 공덱/마덱/속공/내실 — 유리 대신 공략추가처럼 불투명 색 알약 */
@@ -903,18 +1167,59 @@ h1, h2, h3 {
 .btn-steel {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  font-size: 14px;
-  font-weight: 600;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 800;
   color: #fff;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 999px;
+  background: #3f3f46;
+  border: none;
+  border-radius: 12px;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+  line-height: 1.15;
+  position: relative;
+  outline-offset: 4px;
+  user-select: none;
+  touch-action: manipulation;
+  transform: translateY(-3px);
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.35),
+    0 3px 0 0 #18181b;
+  transition:
+    transform 600ms cubic-bezier(.3, .7, .4, 1),
+    filter 250ms,
+    box-shadow 600ms cubic-bezier(.3, .7, .4, 1);
 }
-.btn-steel:hover { background: rgba(8, 10, 16, 0.45); }
+.btn-steel:hover {
+  filter: brightness(110%);
+  transform: translateY(-5px);
+  box-shadow:
+    0 3px 0 0 rgba(0, 0, 0, 0.35),
+    0 5px 0 0 #18181b;
+  transition:
+    transform 250ms cubic-bezier(.3, .7, .4, 1.5),
+    filter 250ms,
+    box-shadow 250ms cubic-bezier(.3, .7, .4, 1.5);
+}
+.btn-steel:active {
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.35),
+    0 2px 0 0 #18181b;
+  transition: transform 34ms, box-shadow 34ms;
+}
+.btn-steel:focus:not(:focus-visible) {
+  outline: none;
+}
+.btn-steel:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}
 
 /* ── Hero portrait card (negi-lab identical layer stack) ── */
 .hero-portrait-card {
@@ -2910,8 +3215,8 @@ h1, h2, h3 {
 }
 
 .hero-cta-row .btn-ops {
-  font-size: 15px;
-  padding: 12px 22px;
+  font-size: 14px;
+  padding: 10px 18px;
 }
 
 .hero-highlight {
@@ -3801,18 +4106,53 @@ h1, h2, h3 {
   font-weight: 800;
   color: #161616;
   background: #f0c14b;
-  border: 1px solid rgba(22, 22, 22, 0.12);
+  border: none;
   border-radius: 12px;
   cursor: pointer;
+  position: relative;
+  outline-offset: 4px;
+  user-select: none;
+  touch-action: manipulation;
+  transform: translateY(-4px);
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 4px 0 0 #a16207;
+  transition:
+    transform 600ms cubic-bezier(.3, .7, .4, 1),
+    filter 250ms,
+    box-shadow 600ms cubic-bezier(.3, .7, .4, 1);
 }
 
 .btn-share-setting:hover {
-  background: #f6d06a;
+  filter: brightness(110%);
+  transform: translateY(-6px);
+  box-shadow:
+    0 4px 0 0 rgba(0, 0, 0, 0.25),
+    0 6px 0 0 #a16207;
+  transition:
+    transform 250ms cubic-bezier(.3, .7, .4, 1.5),
+    filter 250ms,
+    box-shadow 250ms cubic-bezier(.3, .7, .4, 1.5);
+}
+
+.btn-share-setting:active {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #a16207;
+  transition: transform 34ms, box-shadow 34ms;
+}
+
+.btn-share-setting:focus:not(:focus-visible) {
+  outline: none;
 }
 
 .btn-share-setting:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  filter: none;
 }
 
 /* 세팅 공유: 캡처 호스트 — 화면 안(투명)에 두어 모바일 WebKit 이미지 스킵 완화 */
@@ -5292,6 +5632,14 @@ h1, h2, h3 {
   display: flex;
   align-items: center;
   gap: 7px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.gw-attack-list-head-label {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .gw-attack-list-head .btn-ops {
   padding: 8px 12px;
@@ -5299,6 +5647,7 @@ h1, h2, h3 {
   justify-content: center;
   width: auto;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 /* 상대 덱 12개까지는 스크롤 없이 보이게 (행≈78px + gap 8) */
 .gw-attack-list-body {
@@ -5394,7 +5743,7 @@ h1, h2, h3 {
   padding: 7px 10px;
   font-size: 12px;
   font-weight: 900;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   background: #38bdf8;
   border: none;
@@ -5403,13 +5752,75 @@ h1, h2, h3 {
   align-items: center;
   justify-content: center;
   gap: 3px;
+  position: relative;
+  outline-offset: 4px;
+  user-select: none;
+  touch-action: manipulation;
+  transform: translateY(-4px);
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 4px 0 0 #0369a1;
+  transition:
+    transform 600ms cubic-bezier(.3, .7, .4, 1),
+    filter 250ms,
+    box-shadow 600ms cubic-bezier(.3, .7, .4, 1);
+}
+.gw-attack-target-actions button:hover,
+.gw-counter-actions button:hover {
+  filter: brightness(110%);
+  transform: translateY(-6px);
+  box-shadow:
+    0 4px 0 0 rgba(0, 0, 0, 0.25),
+    0 6px 0 0 #0369a1;
+  transition:
+    transform 250ms cubic-bezier(.3, .7, .4, 1.5),
+    filter 250ms,
+    box-shadow 250ms cubic-bezier(.3, .7, .4, 1.5);
+}
+.gw-attack-target-actions button:active,
+.gw-counter-actions button:active {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #0369a1;
+  transition: transform 34ms, box-shadow 34ms;
+}
+.gw-attack-target-actions button:focus:not(:focus-visible),
+.gw-counter-actions button:focus:not(:focus-visible) {
+  outline: none;
 }
 .gw-attack-target-actions button.is-danger,
 .gw-counter-actions button.is-danger {
   background: #ef4444;
   border: none;
   color: #fff;
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 4px 0 0 #991b1b;
 }
+.gw-attack-target-actions button.is-danger:hover,
+.gw-counter-actions button.is-danger:hover {
+  box-shadow:
+    0 4px 0 0 rgba(0, 0, 0, 0.25),
+    0 6px 0 0 #991b1b;
+}
+.gw-attack-target-actions button.is-danger:active,
+.gw-counter-actions button.is-danger:active {
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #991b1b;
+}
+
+/* PC 가로(≥1021): 상대 덱·카운터 수정/삭제만 살짝 축소 */
+@media (min-width: 1021px) and (orientation: landscape) {
+  .gw-attack-target-actions button,
+  .gw-counter-actions button {
+    min-width: 58px;
+    padding: 4px 7px;
+    font-size: 11px;
+  }
+}
+
 .gw-attack-inline-counters {
   display: none;
   flex-shrink: 0;
@@ -5420,8 +5831,20 @@ h1, h2, h3 {
   max-width: min(340px, calc(100vw - 24px));
   align-items: center;
 }
+/* 덱 카드 폭에 메모를 묶음 — 카드가 줄면 메모도 같이 줄음 */
+.gw-inspect-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  gap: 10px;
+  box-sizing: border-box;
+}
 .gw-inspect-deck {
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   display: flex;
   justify-content: center;
 }
@@ -5431,6 +5854,22 @@ h1, h2, h3 {
 .gw-inspect-deck .deck-stage {
   margin-left: auto;
   margin-right: auto;
+}
+.gw-inspect-memo {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.gw-inspect-memo-text {
+  font-size: 14px;
+  color: #e2e8f0;
+  white-space: pre-line;
+  line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 .gw-attack-detail {
   flex: 1;
@@ -5525,22 +5964,31 @@ h1, h2, h3 {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  flex: 1 1 auto;
 }
 .gw-counter-toolbar span {
   font-size: 12px;
   font-weight: 800;
   color: #93c5fd;
   letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .gw-counter-drag-hint {
   font-size: 11px;
   font-weight: 700;
   font-style: normal;
   color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .gw-counter-add {
   padding: 7px 12px;
   font-size: 12px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .gw-target-note {
   background: rgba(255, 255, 255, 0.07);
@@ -5584,59 +6032,45 @@ h1, h2, h3 {
   transform: scale(1.01);
   background: rgba(255, 255, 255, 0.1);
 }
-/* 우선순위: 밝은 시안 기본 · 숫자 위 / 그립 아래 · 가로 슬림 */
-.gw-counter-priority {
+/* 카운터: 그립 | 우선순위 | 초상 … (박스 순번 제거) */
+.gw-counter-lead {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.gw-counter-rule {
+  color: rgba(255, 255, 255, 0.22);
+  font-weight: 700;
   flex-shrink: 0;
-  width: 36px;
-  min-width: 36px;
-  height: 46px;
-  padding: 5px 4px 6px;
-  border-radius: 11px;
-  border: 1px solid rgba(125, 211, 252, 0.45);
-  background: rgba(125, 211, 252, 0.18);
-  color: #7dd3fc;
-  cursor: grab;
-  display: inline-flex;
+  user-select: none;
+}
+.gw-counter-prio-block {
+  flex: 0 0 auto;
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  touch-action: none;
-  box-shadow: none;
-  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  gap: 3px;
+  min-width: 3.2em;
 }
-.gw-counter-priority:hover,
-.gw-counter-priority:focus-visible {
-  background: rgba(125, 211, 252, 0.26);
-  border-color: rgba(125, 211, 252, 0.55);
-  color: #bae6fd;
-  outline: none;
+.gw-counter-prio-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.72);
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  white-space: nowrap;
 }
-.gw-counter-priority:active {
-  cursor: grabbing;
-  background: rgba(125, 211, 252, 0.32);
-}
-.gw-counter-priority-rank {
-  font-size: 15px;
+.gw-counter-prio-num {
+  font-size: 16px;
   font-weight: 900;
   line-height: 1;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
+  color: #7dd3fc;
   text-align: center;
-}
-.gw-counter-priority-grip {
-  width: 10px;
-  height: 7px;
-  flex-shrink: 0;
-  opacity: 0.55;
-  background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.25px);
-  background-size: 5px 3.5px;
-  background-position: 0 0;
-  background-repeat: repeat;
-}
-.gw-counter-priority:hover .gw-counter-priority-grip,
-.gw-counter-priority:active .gw-counter-priority-grip {
-  opacity: 0.85;
 }
 .gw-counter-prio-ghost {
   position: fixed;
@@ -5657,21 +6091,6 @@ h1, h2, h3 {
   -webkit-backdrop-filter: blur(12px);
   will-change: transform;
 }
-.gw-counter-prio-ghost-rank {
-  flex-shrink: 0;
-  min-width: 34px;
-  height: 34px;
-  border-radius: 11px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
-  color: #7dd3fc;
-  background: rgba(125, 211, 252, 0.18);
-  border: 1px solid rgba(125, 211, 252, 0.45);
-}
 .gw-counter-prio-ghost-title {
   font-size: 15px;
   font-weight: 900;
@@ -5684,16 +6103,36 @@ h1, h2, h3 {
 .gw-counter-copy {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 6px;
+  row-gap: 2px;
 }
 .gw-counter-title {
   font-size: 14px;
   font-weight: 900;
   color: #fff;
+  /* 늘어나지 않음 — 짧은 제목이면 수정자가 바로 옆에 붙음 */
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .gw-counter-meta {
+  flex: 0 0 auto;
   font-size: 12px;
   color: #fff;
   font-weight: 700;
+  white-space: nowrap;
+}
+.gw-counter-meta-rule {
+  color: rgba(255, 255, 255, 0.28);
+  font-weight: 700;
+  flex-shrink: 0;
+  user-select: none;
 }
 .gw-counter-detail {
   font-size: 12px;
@@ -5706,6 +6145,156 @@ h1, h2, h3 {
 }
 .gw-counter-row .gw-counter-actions {
   flex-direction: row;
+}
+
+/* 길드전 공격 모바일: 기본 스타일(.gw-attack-detail display:flex 등)보다 아래에 둬야 덮어씀 */
+@media (max-width: 1020px) {
+  .gw-attack-layout {
+    flex-direction: column;
+  }
+  .gw-attack-list {
+    width: 100%;
+  }
+  .gw-attack-list-body {
+    max-height: none;
+    overflow-y: visible;
+  }
+  .gw-attack-detail {
+    display: none;
+  }
+  .gw-attack-inline-counters {
+    display: block;
+    margin: 2px 4px 10px 12px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .gw-attack-inline-counters .gw-counter-layer {
+    margin: 0;
+  }
+  .gw-counter-toolbar span {
+    color: #93c5fd;
+  }
+  /*
+   * 카운터 행: 제목·메타를 위 줄로 (초상과 한 칸 싸워 글자씩 세로 깨짐 방지)
+   * lead | copy | actions
+   * lead | heroes | actions
+   */
+  .gw-counter-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "lead copy actions"
+      "lead heroes actions";
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 4px;
+    flex-wrap: nowrap;
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    padding: 8px 10px;
+  }
+  .gw-counter-row > .gw-counter-rule {
+    display: none;
+  }
+  .gw-counter-row > .gw-counter-lead {
+    grid-area: lead;
+    align-self: center;
+  }
+  .gw-counter-row > .gw-counter-copy {
+    grid-area: copy;
+    min-width: 0;
+  }
+  .gw-counter-row > .gw-mini-trio {
+    grid-area: heroes;
+    justify-self: start;
+  }
+  .gw-counter-row > .gw-counter-actions {
+    grid-area: actions;
+    align-self: center;
+  }
+  .gw-counter-row .gw-counter-title {
+    font-size: 13px;
+    line-height: 1.25;
+  }
+  .gw-counter-row .gw-counter-meta {
+    font-size: 11px;
+    overflow: visible;
+    /* 한 줄일 땐 제목 옆 · wrap 되면 아래 (margin으로 강제 개행하지 않음) */
+    margin-top: 0;
+  }
+  .gw-counter-row .gw-counter-prio-label,
+  .gw-counter-row .gw-counter-prio-num {
+    white-space: nowrap;
+  }
+  .gw-counter-detail {
+    display: none;
+  }
+  .gw-counter-row .gw-counter-actions {
+    width: auto;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    gap: 4px;
+  }
+  .gw-attack-target-actions {
+    flex-direction: row;
+  }
+  .gw-attack-target-actions button,
+  .gw-counter-actions button {
+    width: auto;
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  /* 상대 덱 제목도 좁은 폭에서 한 글자씩 세로로 깨지지 않게 */
+  .gw-attack-target-title {
+    white-space: nowrap;
+    display: block;
+    -webkit-line-clamp: unset;
+    -webkit-box-orient: unset;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: normal;
+    overflow-wrap: normal;
+  }
+  .gw-attack-target-meta {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* 헤더·툴바 라벨: 폭이 줄어도 글자씩 세로로 안 찢기게 */
+  .gw-attack-list-head h3 {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .gw-attack-list-head-label {
+    min-width: 0;
+    flex: 1 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .gw-counter-toolbar-copy {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .gw-counter-toolbar span,
+  .gw-counter-drag-hint {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .gw-counter-prio-label {
+    white-space: nowrap;
+  }
+  .gw-attack-target-actions button,
+  .gw-counter-actions button {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
 }
 
 .tools-page {
@@ -7032,10 +7621,13 @@ h1, h2, h3 {
     margin-top: 2px;
   }
 
-  .build-title-strip .btn-edit {
+  .build-title-strip .btn-edit,
+  .build-title-strip .btn-danger-solid {
     align-self: center;
     padding: 6px 10px;
     font-size: 11px;
+    min-width: 4.5em;
+    box-sizing: border-box;
   }
 
   .expedition-build-panel {
@@ -7095,6 +7687,14 @@ h1, h2, h3 {
   .build-panel-timeline {
     order: 3;
     width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* display:contents 때문에 order 없으면 기타 디테일이 맨 위로 감 → 세팅확인(덱)·스킬예약 아래 */
+  .gw-defense-other-detail {
+    order: 4;
+    width: 100%;
+    max-width: none;
     box-sizing: border-box;
   }
 
@@ -7574,6 +8174,7 @@ h1, h2, h3 {
     min-width: 0;
     font-size: 15px !important;
     margin: 0 !important;
+    text-align: center;
   }
 
   .editing-build-title-input-row {
@@ -7581,15 +8182,52 @@ h1, h2, h3 {
     width: 100% !important;
     flex: 1 1 100% !important;
     flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .editing-build-title-input-row > span {
+    width: 100%;
+    text-align: center;
   }
 
   .editing-build-arena-toggles {
     flex-direction: column !important;
     width: 100% !important;
+    align-items: stretch !important;
   }
+
   .editing-build-arena-toggle-col {
     min-width: 0 !important;
     width: 100% !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  .editing-build-arena-toggle-col > div:first-child {
+    text-align: center;
+    width: 100%;
+  }
+
+  .editing-build-arena-toggle-col .kind-toggle,
+  .editing-build-modal-header-main .kind-toggle {
+    justify-content: center;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .editing-build-round-toggles {
+    display: flex !important;
+    justify-content: center !important;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .editing-build-modal-header-main {
+    text-align: center;
   }
 
   .editing-build-detail-textarea {
@@ -7786,66 +8424,6 @@ h1, h2, h3 {
 
   .hub-header-actions {
     width: 100%;
-  }
-
-  .gw-attack-layout {
-    flex-direction: column;
-  }
-  .gw-attack-list {
-    width: 100%;
-  }
-  .gw-attack-list-body {
-    /* 모바일: 내부 스크롤 함정 제거 — 카운터/목록 쓸면 페이지가 스크롤 */
-    max-height: none;
-    overflow-y: visible;
-  }
-  .gw-attack-detail {
-    display: none;
-  }
-  .gw-attack-inline-counters {
-    display: block;
-    margin: 2px 4px 10px 12px;
-    padding: 0;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-  .gw-attack-inline-counters .gw-counter-layer {
-    margin: 0;
-  }
-  .gw-counter-toolbar span {
-    color: #93c5fd;
-  }
-  /* 카운터 행: 순번 | 초상 | 제목·메타 | 수정·삭제(세로) */
-  .gw-counter-row {
-    display: grid;
-    grid-template-columns: auto auto minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 8px 10px;
-    flex-wrap: nowrap;
-    background: rgba(255, 255, 255, 0.09);
-    border: 1px solid rgba(255, 255, 255, 0.22);
-  }
-  .gw-counter-detail {
-    display: none;
-  }
-  .gw-counter-row .gw-counter-actions {
-    width: auto;
-    flex-direction: column;
-    justify-content: center;
-    align-items: stretch;
-    gap: 4px;
-  }
-  .gw-attack-target-actions {
-    flex-direction: row;
-  }
-  .gw-attack-target-actions button,
-  .gw-counter-actions button {
-    width: auto;
-    padding: 6px 8px;
-    font-size: 11px;
   }
 
   .gw-defense-head {
@@ -8048,8 +8626,8 @@ h1, h2, h3 {
   }
 }
 
-/* 아주 좁은 폰(≤380): 제목+버튼 한 줄 찌그러짐만 → 제목 위 / 버튼 아래 (그 위 폭은 기존 유지) */
-@media (max-width: 380px) {
+/* 좁은 폰(≤480): 상대 덱 목록·카운터 툴바 — 제목/버튼 세로 분리 (한 줄 압착 방지) */
+@media (max-width: 480px) {
   .gw-attack-list-head {
     flex-direction: column;
     align-items: stretch;
@@ -8066,7 +8644,6 @@ h1, h2, h3 {
     gap: 7px;
     width: 100%;
     min-width: 0;
-    flex-shrink: 0;
   }
 
   .gw-attack-list-head-label {
@@ -8108,6 +8685,104 @@ h1, h2, h3 {
     justify-content: center;
     box-sizing: border-box;
   }
+
+  /* 방어 대체 덱 툴바도 동일하게 제목/버튼 분리 */
+  .gw-alt-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .gw-alt-add {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+}
+
+/*
+ * ≤400 (초소형만): 길드전 공격 목록/카운터
+ * — 제목은 초상 옆에 유지(세로 버튼으로 폭 확보). 강제 위 배치 없음.
+ * — 카운터: 라벨만 숨기고 숫자는 살짝만 줄임 · 초상은 크게·가운데.
+ */
+@media (max-width: 400px) {
+  .gw-attack-target-row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .gw-attack-target-row > .gw-mini-trio {
+    flex-shrink: 0;
+  }
+  .gw-attack-target-copy {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .gw-attack-target-actions {
+    flex-direction: column;
+    flex-shrink: 0;
+    margin-left: 0;
+    gap: 4px;
+  }
+  .gw-attack-target-actions button {
+    min-width: 0;
+    padding: 5px 7px;
+    font-size: 10px;
+  }
+
+  .gw-counter-drag-hint {
+    display: none;
+  }
+  .gw-counter-prio-label {
+    display: none;
+  }
+  .gw-counter-lead {
+    gap: 4px;
+    flex: 0 0 auto;
+  }
+  .gw-counter-lead .gw-defense-drag-handle {
+    flex-shrink: 0;
+  }
+  .gw-counter-prio-block {
+    flex: 0 0 auto;
+    min-width: 1.25em;
+    gap: 0;
+  }
+  /* 숫자: 확 줄이지 않음 (기본 16 → 14 정도) */
+  .gw-counter-prio-num {
+    font-size: 14px;
+    letter-spacing: -0.02em;
+  }
+  .gw-counter-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: 6px;
+  }
+  /* 제목|작성자 · 초상 모두 가운데 (초상 위쪽 정렬) */
+  .gw-counter-row > .gw-counter-copy {
+    justify-self: center;
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+  }
+  .gw-counter-row > .gw-mini-trio {
+    justify-self: center;
+  }
+}
+
+/* 아주 좁은 폰(≤380): 대체 덱 버튼 등만 추가 타이트 (목록 헤더는 480에서 이미 분리) */
+@media (max-width: 380px) {
+  .gw-defense-card .community-pvp-card-actions .btn-edit,
+  .gw-defense-card .community-pvp-card-actions .btn-danger-solid {
+    height: 26px;
+    padding: 0 6px;
+    font-size: 10px;
+    gap: 2px;
+  }
+  .gw-defense-card .community-pvp-card-actions .gw-defense-alt-btn {
+    padding: 0 6px;
+    font-size: 10px;
+    gap: 2px;
+  }
 }
 
 /* 좁은 폰(≤430): 길드전 공격 행·버튼만 더 타이트 */
@@ -8124,9 +8799,6 @@ h1, h2, h3 {
 
   .gw-attack-target-title {
     font-size: 13px;
-    -webkit-line-clamp: 2;
-    word-break: keep-all;
-    overflow-wrap: break-word;
   }
 
   .gw-attack-target-meta {
@@ -8141,22 +8813,17 @@ h1, h2, h3 {
   }
 
   .gw-counter-row {
-    gap: 6px 8px;
     padding: 10px;
+    column-gap: 6px;
+    row-gap: 5px;
   }
 
   .gw-counter-title {
     font-size: 13px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .gw-counter-meta {
     font-size: 11px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .gw-attack-inline-counters {
@@ -8900,6 +9567,9 @@ h1, h2, h3 {
     max-width: none;
     min-width: 0;
     width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .community-pvp-card-actions {
     grid-area: actions;
@@ -8909,7 +9579,8 @@ h1, h2, h3 {
     gap: 6px;
   }
   .community-pvp-card-actions .btn-edit,
-  .community-pvp-card-actions .btn-danger-solid {
+  .community-pvp-card-actions .btn-danger-solid,
+  .community-pvp-card-actions .gw-defense-alt-btn {
     padding: 6px 8px;
     font-size: 11px;
     white-space: nowrap;
@@ -8957,14 +9628,190 @@ h1, h2, h3 {
   }
 }
 
-/* 중간~폰 가로: 티어를 초상화 옆 (≤1024 스택일 때만) */
-@media (max-width: 1024px) and (min-width: 520px) {
-  .community-pvp-card-tier--beside {
-    display: inline-flex;
-    flex-shrink: 0;
+/* 길드전 방어: 공용 PvP 카드와 동일 헤더, 작성자 칸 없이 내용 밀착 */
+.gw-defense-card > .community-pvp-card-head > .community-pvp-card-main,
+.gw-alt-card > .community-pvp-card-head > .community-pvp-card-main {
+  flex: 0 1 auto;
+}
+.gw-defense-card > .community-pvp-card-head > .community-pvp-card-actions,
+.gw-alt-card > .community-pvp-card-head > .community-pvp-card-actions {
+  margin-left: auto;
+}
+
+/* 981~1024: 공용 PvP는 스택이지만 길드전 방어만 PC 한 줄 유지 */
+@media (min-width: 981px) and (max-width: 1024px) {
+  .gw-defense-card > .community-pvp-card-head,
+  .gw-alt-card > .community-pvp-card-head {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px 10px;
+    grid-template-columns: none;
+    grid-template-areas: none;
   }
-  .community-pvp-card-tier--with-meta {
-    display: none;
+  .gw-defense-card .community-pvp-card-main,
+  .gw-alt-card .community-pvp-card-main {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 8px 10px;
+    overflow: hidden;
+  }
+  .gw-defense-card .community-pvp-card-rule,
+  .gw-alt-card .community-pvp-card-rule {
+    display: revert;
+  }
+  .gw-defense-card .community-pvp-card-stage,
+  .gw-alt-card .community-pvp-card-stage {
+    display: contents;
+    width: auto;
+  }
+  .gw-defense-card .community-pvp-card-heroes-row,
+  .gw-alt-card .community-pvp-card-heroes-row {
+    display: contents;
+  }
+  .gw-defense-card .community-pvp-card-meta,
+  .gw-alt-card .community-pvp-card-meta {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+  }
+  .gw-defense-card .community-pvp-card-actions,
+  .gw-alt-card .community-pvp-card-actions {
+    grid-area: auto;
+    margin-left: auto;
+  }
+  .gw-defense-card .gw-defense-lead,
+  .gw-alt-card .gw-defense-lead {
+    grid-area: auto;
+    justify-self: auto;
+  }
+}
+
+/* 길드전 방어 모바일(≤980): 한 줄 — 그립·티어 | 초상·메타 | 버튼 (세로 2단 제거) */
+@media (max-width: 980px) {
+  .gw-defense-card > .community-pvp-card-head,
+  .gw-alt-card > .community-pvp-card-head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "tier stage actions";
+    align-items: center;
+    column-gap: 6px;
+    row-gap: 0;
+    padding: 8px 10px;
+  }
+  .gw-defense-card .gw-defense-lead,
+  .gw-alt-card .gw-defense-lead {
+    grid-area: tier;
+    justify-self: center;
+    gap: 4px;
+  }
+  /* 모바일에서도 그립 | 덱티어 | 초상 구분선 유지 (공용 PvP rule 숨김 덮어씀) */
+  .gw-defense-card .gw-defense-lead .community-pvp-card-rule,
+  .gw-alt-card .gw-defense-lead .community-pvp-card-rule {
+    display: inline;
+  }
+  .gw-defense-card .gw-defense-drag-handle {
+    padding: 4px 2px;
+  }
+  .gw-defense-card .gw-defense-tier-block,
+  .gw-alt-card .gw-defense-tier-block {
+    min-width: 0;
+    gap: 1px;
+  }
+  .gw-defense-card .gw-defense-tier-label,
+  .gw-alt-card .gw-defense-tier-label {
+    font-size: 9px;
+  }
+  .gw-defense-card .gw-defense-tier-block span,
+  .gw-alt-card .gw-defense-tier-block span {
+    font-size: 12px !important;
+  }
+  .gw-defense-card .community-pvp-card-stage,
+  .gw-alt-card .community-pvp-card-stage {
+    grid-area: stage;
+    /* 속공 배지 유무와 무관하게 메타는 항상 초상 아래 (덱마다 wrap 타이밍 통일) */
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+    min-width: 0;
+  }
+  .gw-defense-card .community-pvp-card-heroes-row,
+  .gw-alt-card .community-pvp-card-heroes-row {
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+  .gw-defense-card .community-pvp-card-hero,
+  .gw-alt-card .community-pvp-card-hero {
+    width: 40px;
+  }
+  .gw-defense-card .community-pvp-card-hero-face,
+  .gw-alt-card .community-pvp-card-hero-face {
+    width: 40px;
+  }
+  .gw-defense-card .community-pvp-card-hero-name,
+  .gw-alt-card .community-pvp-card-hero-name {
+    font-size: 9px;
+    margin-top: 2px;
+  }
+  .gw-defense-card .community-pvp-card-meta,
+  .gw-alt-card .community-pvp-card-meta {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    width: 100%;
+  }
+  /* 뱃지·라벨 좁은 칸에서 한 글자씩 세로 깨짐 방지 */
+  .gw-defense-card .gw-defense-tier-label,
+  .gw-alt-card .gw-defense-tier-label,
+  .gw-defense-card .gw-defense-speed-badge,
+  .gw-alt-card .gw-defense-speed-badge {
+    white-space: nowrap;
+  }
+  .gw-defense-card .community-pvp-card-actions,
+  .gw-alt-card .community-pvp-card-actions {
+    grid-area: actions;
+    margin-left: 0;
+    gap: 4px;
+  }
+  .gw-defense-card .community-pvp-card-actions .btn-edit,
+  .gw-defense-card .community-pvp-card-actions .btn-danger-solid,
+  .gw-defense-card .community-pvp-card-actions .gw-defense-alt-btn,
+  .gw-alt-card .community-pvp-card-actions .btn-edit,
+  .gw-alt-card .community-pvp-card-actions .btn-danger-solid {
+    padding: 5px 7px;
+    font-size: 10px;
+  }
+}
+
+/* ≤550: 수정·삭제 세로로 붙이고, 삭제 아래 한 칸 띄워 대체 덱 */
+@media (max-width: 550px) {
+  .gw-defense-card > .community-pvp-card-head > .community-pvp-card-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+  .gw-defense-card .community-pvp-card-actions .btn-edit {
+    order: 1;
+  }
+  .gw-defense-card .community-pvp-card-actions .btn-danger-solid {
+    order: 2;
+  }
+  .gw-defense-card .community-pvp-card-actions .gw-defense-alt-btn {
+    order: 3;
+    margin-top: 6px;
+    height: auto;
+    justify-content: center;
+  }
+  .gw-alt-card > .community-pvp-card-head > .community-pvp-card-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
   }
 }
 
@@ -9220,31 +10067,72 @@ h1, h2, h3 {
   appearance: none;
   -webkit-appearance: none;
   margin: 0;
-  padding: 9px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 12px;
   font: inherit;
   font-size: 12px;
   font-weight: 800;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: rgba(8, 12, 22, 0.45);
-  color: #fff;
+  border-radius: 12px;
+  border: none;
+  background: #fff;
+  color: #161616;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  line-height: 1.15;
+  position: relative;
+  outline-offset: 4px;
+  user-select: none;
+  touch-action: manipulation;
+  transform: translateY(-3px);
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 3px 0 0 #a3a3a3;
+  transition:
+    transform 600ms cubic-bezier(.3, .7, .4, 1),
+    filter 250ms,
+    box-shadow 600ms cubic-bezier(.3, .7, .4, 1);
 }
 .community-mine-guides-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.4);
+  filter: brightness(110%);
+  transform: translateY(-5px);
+  box-shadow:
+    0 3px 0 0 rgba(0, 0, 0, 0.25),
+    0 5px 0 0 #a3a3a3;
+  transition:
+    transform 250ms cubic-bezier(.3, .7, .4, 1.5),
+    filter 250ms,
+    box-shadow 250ms cubic-bezier(.3, .7, .4, 1.5);
+}
+.community-mine-guides-btn:active {
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #a3a3a3;
+  transition: transform 34ms, box-shadow 34ms;
+}
+.community-mine-guides-btn:focus:not(:focus-visible) {
+  outline: none;
 }
 .community-mine-guides-btn.is-on {
-  background: rgba(243, 240, 234, 0.92);
+  background: #e8e8e8;
   border-color: transparent;
   color: #161616;
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 3px 0 0 #737373;
+}
+.community-mine-guides-btn.is-on:hover {
+  box-shadow:
+    0 3px 0 0 rgba(0, 0, 0, 0.25),
+    0 5px 0 0 #737373;
 }
 .community-add-guide-btn {
-  padding: 9px 14px;
+  padding: 7px 12px;
   font-size: 12px;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 @media (max-width: 720px) {
   .community-deck-kind-actions {

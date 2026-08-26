@@ -9,12 +9,21 @@ import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
 import SkillReservationBoard from './SkillReservationBoard';
 import { PvpModeBadge } from './PvpModeToggle';
-import { setDeckDragData, getDeckDragData, hasDeckDrag } from '../utils/deckDrag';
+import {
+  setDeckDragData,
+  getDeckDragData,
+  hasDeckDrag,
+  startDeckPointerDrag,
+  registerDeckPointerDropTarget,
+  markDeckPointerDown,
+  allowHtml5DeckDrag,
+} from '../utils/deckDrag';
+
 import { buildOptionCode } from './HeroGearPanel';
 import { backdropDismissProps } from '../utils/backdropDismiss';
 import { closeOverlayFromUI, pushOverlay } from '../utils/overlayHistory';
 import CopyNotice from './lounge/CopyNotice';
-import { shareSettingPng, warmSettingCapture } from '../lib/copyNodeImage';
+import { shareSettingPng } from '../lib/copyNodeImage';
 import HeroPortraitCard from './HeroPortraitCard';
 
 /** 이미 body에 떠 있는 modal-scrim을 동기적으로 숨김 (다음 페인트 전에 처리) */
@@ -350,19 +359,6 @@ export default function InGameDeckCard({
   }, [subModalOpen]);
 
   useEffect(() => {
-    if (!isGearOverviewOpen) return undefined;
-    let cancelled = false;
-    // 모달이 그린 직후 폰트·이미지·초상 합성 워밍 (첫 공유 지연 완화)
-    const timeoutId = window.setTimeout(() => {
-      if (!cancelled) warmSettingCapture(settingCaptureRef.current);
-    }, 120);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timeoutId);
-    };
-  }, [isGearOverviewOpen]);
-
-  useEffect(() => {
     if (!subModalOpen) return;
     pushOverlay(() => {
       setIsFormationModalOpen(false);
@@ -586,6 +582,28 @@ export default function InGameDeckCard({
     if (dropHoverIdx !== idx) setDropHoverIdx(idx);
   };
 
+  const applyHeroDrop = (payload, toIdx) => {
+    if (!canDragSlots || !onHeroDrop || !payload) return;
+    if (payload.source === 'slot' && payload.fromIdx === toIdx) return;
+    if (payload.source === 'picker' && maxHeroes && !displayHeroes[toIdx]
+      && displayHeroes.filter(Boolean).length >= maxHeroes) {
+      return;
+    }
+    onHeroDrop(payload, toIdx);
+  };
+
+  const applyHeroDropRef = useRef(applyHeroDrop);
+  applyHeroDropRef.current = applyHeroDrop;
+
+  useEffect(() => {
+    if (!canDragSlots) return undefined;
+    return registerDeckPointerDropTarget((payload, toIdx) => {
+      setDropHoverIdx(null);
+      setDragSlotIdx(null);
+      applyHeroDropRef.current(payload, toIdx);
+    });
+  }, [canDragSlots]);
+
   const handleSlotDrop = (e, toIdx) => {
     if (!canDragSlots || !onHeroDrop) return;
     e.preventDefault();
@@ -593,13 +611,7 @@ export default function InGameDeckCard({
     const payload = getDeckDragData(e);
     setDropHoverIdx(null);
     setDragSlotIdx(null);
-    if (!payload) return;
-    if (payload.source === 'slot' && payload.fromIdx === toIdx) return;
-    if (payload.source === 'picker' && maxHeroes && !displayHeroes[toIdx]
-      && displayHeroes.filter(Boolean).length >= maxHeroes) {
-      return;
-    }
-    onHeroDrop(payload, toIdx);
+    applyHeroDrop(payload, toIdx);
   };
 
   const renderSingleHeroSlot = (h, idx) => {
@@ -616,6 +628,7 @@ export default function InGameDeckCard({
         <div key={idx} className="deck-hero-slot">
           <div
             className="deck-hero-slot-face"
+            data-deck-drop-idx={idx}
             onClick={() => handleSlotClickInternal(null, idx)}
             onDragOver={e => handleSlotDragOver(e, idx)}
             onDragLeave={() => { if (dropHoverIdx === idx) setDropHoverIdx(null); }}
@@ -640,13 +653,20 @@ export default function InGameDeckCard({
       );
     }
 
+    const cleanLabel = h.name ? h.name.replace('(각성)', '').trim() : '';
+
     return (
       <div key={idx} className="deck-hero-slot" style={{ opacity: isDragging ? 0.45 : 1 }}>
         <div
           className={`deck-hero-slot-face${selected ? ' is-selected' : ''}`}
+          data-deck-drop-idx={idx}
           draggable={canDragSlots}
           onDragStart={e => {
             if (!canDragSlots) return;
+            if (!allowHtml5DeckDrag()) {
+              e.preventDefault();
+              return;
+            }
             setDeckDragData(e, { source: 'slot', fromIdx: idx });
             setDragSlotIdx(idx);
           }}
@@ -654,10 +674,17 @@ export default function InGameDeckCard({
           onDragOver={e => handleSlotDragOver(e, idx)}
           onDragLeave={() => { if (dropHoverIdx === idx) setDropHoverIdx(null); }}
           onDrop={e => handleSlotDrop(e, idx)}
+          onPointerDown={e => {
+            if (!canDragSlots) return;
+            markDeckPointerDown(e);
+            const started = startDeckPointerDrag(e, { source: 'slot', fromIdx: idx }, { label: cleanLabel });
+            if (started) setDragSlotIdx(idx);
+          }}
           onClick={() => handleSlotClickInternal(h, idx)}
-          title={h.name ? h.name.replace('(각성)', '') : undefined}
+          title={cleanLabel || undefined}
           style={{
             cursor: canDragSlots ? 'grab' : 'pointer', transition: 'outline 0.15s ease',
+            touchAction: canDragSlots ? 'none' : undefined,
             ...dropStyle,
           }}
         >
@@ -844,7 +871,7 @@ export default function InGameDeckCard({
               {selectedPet?.portraitUrl ? (
                 <img src={selectedPet.portraitUrl} alt={selectedPet.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <Icon name="paw" size={compact ? 18 : 20} color="#1a1204" />
+                <Icon name="pet" size={compact ? 18 : 20} />
               )}
             </div>
           )}
@@ -878,7 +905,7 @@ export default function InGameDeckCard({
       )}
     </div>
 
-    {createPortal(
+    {(subModalOpen || !!shareNotice) && createPortal(
       <>
       {/* 펫 도감 선택 모달 (위아래 삐져나감 방지 콤팩트 핏팅) */}
       {isPetModalOpen && (
@@ -889,7 +916,7 @@ export default function InGameDeckCard({
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-gold)', paddingBottom: '10px', flexShrink: 0 }}>
               <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--gold-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Icon name="paw" size={17} /> 펫 도감 장착 선택 ({pets.length}종)
+                <Icon name="pet" size={17} /> 펫 도감 장착 선택 ({pets.length}종)
               </h3>
               <button onClick={() => dismissSubModal(closePetModal)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="closeBtn" size={18} /></button>
             </div>
@@ -910,7 +937,7 @@ export default function InGameDeckCard({
                     border: '1.5px solid #fde047', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '24px'
                   }}>
-                    {p.portraitUrl ? <img src={p.portraitUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="paw" size={22} />}
+                    {p.portraitUrl ? <img src={p.portraitUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="pet" size={22} />}
                   </div>
                   <div style={{ fontSize: '11px', fontWeight: 900, color: '#fff', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: '100%' }}>{p.name}</div>
                   <span style={{ fontSize: '9px', color: 'var(--gold-primary)', fontWeight: 800 }}>스페셜 펫</span>
@@ -1265,7 +1292,7 @@ export default function InGameDeckCard({
                               {selectedPet?.portraitUrl ? (
                                 <img src={selectedPet.portraitUrl} alt={selectedPet.name} />
                               ) : (
-                                <Icon name="paw" size={20} color="#1a1204" />
+                                <Icon name="pet" size={20} />
                               )}
                             </div>
                           )}

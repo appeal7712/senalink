@@ -217,7 +217,7 @@ export default function TierListMaker() {
         <div className="luxury-panel tierlist-pool-panel no-capture" ref={poolPanelRef}>
           <div className="tierlist-pool-head">
             <h2>
-              <Icon name="user" size={15} /> 영웅 목록
+              <Icon name="hero" size={15} /> 영웅 목록
             </h2>
             <input
               className="tierlist-search"

@@ -296,7 +296,7 @@ export default function CommunityTierPanel() {
           >
             <div className="hub-tier-pool-head">
               <h3>
-                <Icon name="user" size={14} /> 영웅 목록
+                <Icon name="hero" size={14} /> 영웅 목록
               </h3>
               <input
                 className="tierlist-search"

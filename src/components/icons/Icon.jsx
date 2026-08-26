@@ -282,6 +282,8 @@ const IMAGE_ICONS = {
   speed: { src: '/images/ui/speed.png', w: 44, h: 31 },
   transcend2: { src: '/images/ui/transcend-2.png', w: 128, h: 128 },
   transcend6: { src: '/images/ui/transcend-6.png', w: 128, h: 128 },
+  hero: { src: '/images/ui/hero-icon.png', w: 64, h: 64 },
+  pet: { src: '/images/ui/pet-icon.png', w: 64, h: 64 },
 };
 
 export default function Icon({ name, size = 16, color = 'currentColor', strokeWidth = 2, style, className }) {

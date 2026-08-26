@@ -254,7 +254,11 @@ function capturePixelRatio() {
   return 1.5;
 }
 
-/** 세팅 확인 열 때: 폰트·이미지·초상 합성을 미리 준비 → 첫 공유 체감 속도↑ */
+/**
+ * 세팅 공유 클릭 시(또는 테스트용) 폰트·이미지·초상 합성 준비.
+ * 모달 오픈 경로에서는 호출하지 않음 — 오픈 직후 메인 스레드 멈춤 방지.
+ * captureNodePng도 동일 작업을 하므로, 미리 부르면 awaitWarm으로 중복만 줄인다.
+ */
 export function warmSettingCapture(node) {
   if (!node) return;
   warmPromise = (async () => {
@@ -433,6 +437,8 @@ export async function downloadNodePng(node, filename = 'tierlist.png') {
  * (모바일은 보통 클립보드 이미지 미지원 → 다운로드/공유 시트로 가는 것이 정상)
  */
 export async function shareSettingPng(node) {
+  // 오픈 시 워밍을 안 하므로, 공유 클릭 때 한 번 준비(캡처와 겹치면 awaitWarm으로 합류)
+  warmSettingCapture(node);
   const blobPromise = captureNodePng(node);
 
   try {

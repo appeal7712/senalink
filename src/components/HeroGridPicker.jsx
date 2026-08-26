@@ -2,7 +2,7 @@ import { useState } from 'react';
 import HeroPortraitCard from './HeroPortraitCard';
 import { ROLE_ICONS } from '../data/roleIcons';
 import { sortHeroesForList } from '../data/heroes';
-import { setDeckDragData } from '../utils/deckDrag';
+import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, shouldSuppressDeckClick } from '../utils/deckDrag';
 
 const ROLE_FILTERS = [
   { id: 'all',       label: '전체',   icon: null },
@@ -102,9 +102,22 @@ export default function HeroGridPicker({
             <div
               key={h.id}
               draggable
-              onDragStart={e => setDeckDragData(e, { source: 'picker', name: cleanName })}
-              onClick={() => onPick(cleanName)}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'grab' }}
+              onPointerDown={e => {
+                markDeckPointerDown(e);
+                startDeckPointerDrag(e, { source: 'picker', name: cleanName }, { label: cleanName });
+              }}
+              onDragStart={e => {
+                if (!allowHtml5DeckDrag()) {
+                  e.preventDefault();
+                  return;
+                }
+                setDeckDragData(e, { source: 'picker', name: cleanName });
+              }}
+              onClick={() => {
+                if (shouldSuppressDeckClick()) return;
+                onPick(cleanName);
+              }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'grab', touchAction: 'none' }}
             >
               <div style={{
                 width: portraitW,

@@ -15,7 +15,7 @@ import { ARENA_TIERS, normalizeArenaTier } from '../../data/arenaTiers';
 import { communitySkillMode } from '../../data/communityCatalog';
 import { emptyCommunityGuide } from '../../lib/communityGuides';
 import { backdropDismissProps } from '../../utils/backdropDismiss';
-import { setDeckDragData } from '../../utils/deckDrag';
+import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, shouldSuppressDeckClick } from '../../utils/deckDrag';
 
 const ROLE_FILTERS = [
   { id: 'all', label: '전체', icon: null },
@@ -236,7 +236,7 @@ export default function CommunityGuideEditor({
                 background: 'rgba(255,255,255,0.05)', flexWrap: 'wrap',
               }}>
                 <div className="editing-build-arena-toggle-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 140 }}>
-                  <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>티어</div>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>덱 티어</div>
                   <select
                     value={arenaTier}
                     onChange={(e) => setArenaTier(e.target.value)}
@@ -348,7 +348,7 @@ export default function CommunityGuideEditor({
             <div className="glass-inset editing-build-hero-picker" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10, width: '100%', boxSizing: 'border-box', flexShrink: 0, minHeight: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', flexShrink: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Icon name="user" size={14} /> 영웅 목록
+                  <Icon name="hero" size={14} /> 영웅 목록
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {ROLE_FILTERS.map((r) => (
@@ -382,9 +382,22 @@ export default function CommunityGuideEditor({
                     <div
                       key={h.id}
                       draggable
-                      onDragStart={(e) => setDeckDragData(e, { source: 'picker', name: cleanName })}
-                      onClick={() => setHeroAt(slot, cleanName)}
-                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'grab' }}
+                      onPointerDown={(e) => {
+                        markDeckPointerDown(e);
+                        startDeckPointerDrag(e, { source: 'picker', name: cleanName }, { label: cleanName });
+                      }}
+                      onDragStart={(e) => {
+                        if (!allowHtml5DeckDrag()) {
+                          e.preventDefault();
+                          return;
+                        }
+                        setDeckDragData(e, { source: 'picker', name: cleanName });
+                      }}
+                      onClick={() => {
+                        if (shouldSuppressDeckClick()) return;
+                        setHeroAt(slot, cleanName);
+                      }}
+                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'grab', touchAction: 'none' }}
                     >
                       <div style={{
                         width: 58,
@@ -409,7 +422,7 @@ export default function CommunityGuideEditor({
           ) : (
             <div className="glass-inset editing-build-hero-picker" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10, width: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
               <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                <Icon name="user" size={14} /> 영웅 목록
+                <Icon name="hero" size={14} /> 영웅 목록
               </div>
               <div className="editing-build-hero-grid" style={{ minHeight: 168 }}>
                 <HeroGridPicker
