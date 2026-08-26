@@ -467,7 +467,7 @@ export default function GuildWarAttackPanel({
               <div className="gw-counter-title">{c.title}</div>
               {c.author ? (
                 <>
-                  <span className="gw-counter-meta-rule" aria-hidden>|</span>
+                  <span className="gw-counter-meta-rule" aria-hidden>·</span>
                   <div className="gw-counter-meta"><span className="gw-author">{c.author}</span></div>
                 </>
               ) : null}

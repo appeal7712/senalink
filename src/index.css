@@ -6129,10 +6129,12 @@ h1, h2, h3 {
   white-space: nowrap;
 }
 .gw-counter-meta-rule {
-  color: rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.4);
   font-weight: 700;
   flex-shrink: 0;
   user-select: none;
+  padding: 0 1px;
+  line-height: 1;
 }
 .gw-counter-detail {
   font-size: 12px;
@@ -6179,16 +6181,13 @@ h1, h2, h3 {
     color: #93c5fd;
   }
   /*
-   * 카운터 행: 제목·메타를 위 줄로 (초상과 한 칸 싸워 글자씩 세로 깨짐 방지)
-   * lead | copy | actions
-   * lead | heroes | actions
+   * 카운터 행 (1020~671): 초상 오른쪽에 제목·작성자 (빈 공간 줄임)
+   * lead | heroes | copy | actions
    */
   .gw-counter-row {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-areas:
-      "lead copy actions"
-      "lead heroes actions";
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    grid-template-areas: "lead heroes copy actions";
     align-items: center;
     column-gap: 8px;
     row-gap: 4px;
@@ -6204,13 +6203,13 @@ h1, h2, h3 {
     grid-area: lead;
     align-self: center;
   }
-  .gw-counter-row > .gw-counter-copy {
-    grid-area: copy;
-    min-width: 0;
-  }
   .gw-counter-row > .gw-mini-trio {
     grid-area: heroes;
     justify-self: start;
+  }
+  .gw-counter-row > .gw-counter-copy {
+    grid-area: copy;
+    min-width: 0;
   }
   .gw-counter-row > .gw-counter-actions {
     grid-area: actions;
@@ -8696,6 +8695,23 @@ h1, h2, h3 {
     width: 100%;
     justify-content: center;
     box-sizing: border-box;
+  }
+}
+
+/*
+ * ≤670: 카운터 행 — 제목·작성자 위 / 초상 아래 (좁아지면 옆 배치가 답답해짐)
+ * lead | copy | actions
+ * lead | heroes | actions
+ */
+@media (max-width: 670px) {
+  .gw-counter-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "lead copy actions"
+      "lead heroes actions";
+  }
+  .gw-counter-row > .gw-mini-trio {
+    justify-self: start;
   }
 }
 
