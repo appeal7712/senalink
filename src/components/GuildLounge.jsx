@@ -31,6 +31,8 @@ import { closeOverlayFromUI, collapseOverlayHistory, pushHubTab, pushOverlay } f
 import { parseInviteCode } from '../lib/invite';
 import ModalScrim from './ModalScrim';
 import PublicProfileModal, { AuthorMeta } from './PublicProfileModal';
+import { useUserProfile } from '../context/UserProfileContext';
+import { LOUNGE_STORAGE_KEYS } from '../data/loungeMeta';
 
 // 정확 일치 우선 탐색 — 짧은 이름(예: '린')이 다른 영웅 이름(예: '카린', '아일린')의
 // 부분 문자열로 오탐되는 것을 방지하기 위해 느슨한 부분일치는 최후 수단으로만 사용
@@ -287,6 +289,7 @@ export default function GuildLounge() {
     logBuildHistory, freshInvite, dismissFreshInvite,
     authReady, authUser, hubRecovering,
   } = useLounge();
+  const { profile, profileReady } = useUserProfile();
 
   /** 공략 삭제: 마스터·관리자(슈퍼 포함) 또는 작성자만. 수정은 멤버 전원. */
   const canDeleteBuild = (build) => {
@@ -312,8 +315,26 @@ export default function GuildLounge() {
   const [assignModalBoss, setAssignModalBoss] = useState(null);
   const [inspectingCounter, setInspectingCounter]   = useState(null);
   const [profileUid, setProfileUid] = useState(null);
-  const [inviteJoinOpen, setInviteJoinOpen] = useState(() => !!parseInviteCode(window.location.search));
-  const pendingInvite = useMemo(() => parseInviteCode(window.location.search), []);
+  const [inviteJoinOpen, setInviteJoinOpen] = useState(false);
+  const pendingInvite = useMemo(() => {
+    const fromUrl = parseInviteCode(window.location.search);
+    if (fromUrl) {
+      try { localStorage.setItem(LOUNGE_STORAGE_KEYS.inviteHint, fromUrl); } catch { /* ignore */ }
+      return fromUrl;
+    }
+    return '';
+  }, []);
+
+  // 이미 다른 허브에 있는 채 초대 링크로 들어온 경우만 Join 모달 (미로그인·닉 없음은 LoungeLanding)
+  useEffect(() => {
+    if (!pendingInvite) return;
+    if (!authReady || !authUser || !profileReady) return;
+    if (!String(profile?.nickname || '').trim()) return;
+    if (!activeLounge) return;
+    if (pendingInvite === activeLounge.inviteCode) return;
+    setInviteJoinOpen(true);
+  }, [pendingInvite, authReady, authUser, profileReady, profile?.nickname, activeLounge, activeLounge?.inviteCode]);
+
   const buildsReady = useRef(false);
   /** 원격 스냅샷 반영 직후 1회 저장 스킵 (다른 사람 최신본을 옛 데이터로 덮는 레이스 방지) */
   const skipNextSave = useRef(true);

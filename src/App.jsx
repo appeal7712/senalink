@@ -10,6 +10,7 @@ import { PAGE, navigateTo, navigateToTools, pathToPage } from './config/routes';
 import { handleOverlayPopState, readHubTabFromState } from './utils/overlayHistory';
 import { useSuperAdmin } from './context/SuperAdminContext';
 import { applyPageSeo } from './lib/seo';
+import { redirectInviteToHubIfNeeded } from './lib/invite';
 
 const OpsPage = lazy(() => import('./pages/ops/OpsPage'));
 const CommunityPage = lazy(() => import('./pages/community/CommunityPage'));
@@ -30,7 +31,16 @@ function RouteFallback() {
 
 export default function App() {
   const { isSuperAdmin, authReady, adminReady } = useSuperAdmin();
-  const [activeTab, setActiveTab] = useState(() => pathToPage(window.location.pathname));
+  const [activeTab, setActiveTab] = useState(() => {
+    redirectInviteToHubIfNeeded();
+    return pathToPage(window.location.pathname);
+  });
+
+  useEffect(() => {
+    if (redirectInviteToHubIfNeeded()) {
+      setActiveTab(PAGE.HUB);
+    }
+  }, []);
 
   useEffect(() => {
     const sync = () => {

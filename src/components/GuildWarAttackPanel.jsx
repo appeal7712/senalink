@@ -1,4 +1,5 @@
-import { Fragment, useState, useEffect } from 'react';
+import { Fragment, useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
 import HeroPortraitCard from './HeroPortraitCard';
@@ -29,12 +30,13 @@ const padNames5 = (names = []) => {
 
 function MiniHeroTrio({ heroNames = [], resolveHeroByName, size = 34 }) {
   const filled = heroNames.filter(Boolean).slice(0, 3);
+  const width = size * 3 + 4;
   return (
-    <div style={{ display: 'flex' }}>
+    <div className="gw-mini-trio" style={{ width: `${width}px`, flexShrink: 0 }}>
       {[0, 1, 2].map(i => {
         const h = filled[i] ? resolveHeroByName(filled[i]) : null;
         return (
-          <div key={i} style={{
+          <div key={i} className="gw-mini-trio-slot" style={{
             width: `${size}px`, marginLeft: i === 0 ? 0 : '2px',
             flexShrink: 0, zIndex: 3 - i
           }}>
@@ -163,6 +165,12 @@ export default function GuildWarAttackPanel({
   const [isCounterModalOpen, setIsCounterModalOpen] = useState(false);
   const [counterForm, setCounterForm] = useState({ id: null, title: '', heroNames: emptyNames5(), reservedSkills: [], gearNote: '', formationId: 'protect', petId: pets[0]?.id, heroGearConfigs: emptyGear5() });
   const [suppressInspectPaint, setSuppressInspectPaint] = useState(false);
+  /** 터치 우선순위 드래그 고스트 { targetId, fromId, title, rank, x, y, w, h, ox, oy } */
+  const [prioGhost, setPrioGhost] = useState(null);
+  const prioGhostRef = useRef(null);
+  useEffect(() => {
+    prioGhostRef.current = prioGhost;
+  }, [prioGhost]);
 
   const closeTargetModal = () => closeOverlayFromUI(() => setIsTargetModalOpen(false));
   const closeCounterModal = () => closeOverlayFromUI(() => setIsCounterModalOpen(false));
@@ -288,40 +296,182 @@ export default function GuildWarAttackPanel({
     onBuildHistory?.('delete_build', c?.title || counterId, '길드전 카운터');
   };
 
+  const clearPrioDropHighlight = () => {
+    document.querySelectorAll('.gw-counter-row.is-drop-target').forEach((el) => {
+      el.classList.remove('is-drop-target');
+    });
+  };
+
+  const finishPrioPointerDrag = (clientX, clientY, ghost) => {
+    clearPrioDropHighlight();
+    document.querySelectorAll('.gw-counter-row.is-dragging-source').forEach((el) => {
+      el.classList.remove('is-dragging-source');
+    });
+    if (!ghost) {
+      setPrioGhost(null);
+      return;
+    }
+    const under = document.elementFromPoint(clientX, clientY);
+    const row = under?.closest?.('.gw-counter-row');
+    const toId = row?.getAttribute('data-counter-id');
+    if (toId) reorderCounters(ghost.targetId, ghost.fromId, toId);
+    setPrioGhost(null);
+  };
+
+  const reorderCounters = (targetId, fromId, toId) => {
+    if (!targetId || !fromId || !toId || fromId === toId) return;
+    setGwAttacks((prev) => prev.map((t) => {
+      if (t.id !== targetId) return t;
+      const list = [...(t.counters || [])];
+      const fromIdx = list.findIndex((c) => c.id === fromId);
+      const toIdx = list.findIndex((c) => c.id === toId);
+      if (fromIdx < 0 || toIdx < 0) return t;
+      const [item] = list.splice(fromIdx, 1);
+      list.splice(toIdx, 0, item);
+      onBuildHistory?.('update_build', t.title || targetId, '길드전 카운터 우선순위');
+      return { ...t, counters: list };
+    }));
+  };
+
   const renderCounters = (target) => (
-    <div className="gw-counter-list">
-      <div className="gw-counter-toolbar">
-        <span>아군 공격 · 카운터 덱</span>
-        <button type="button" onClick={openCreateCounter} className="btn-ops gw-counter-add">
-          <Icon name="plus" size={13} /> 카운터 공략 추가
-        </button>
+    <div className="gw-counter-layer">
+      <div className="gw-counter-list">
+        <div className="gw-counter-toolbar">
+          <div className="gw-counter-toolbar-copy">
+            <span>아군 공격 · 카운터 덱</span>
+            <em className="gw-counter-drag-hint">왼쪽 순번을 잡고 끌어 우선순위 변경</em>
+          </div>
+          <button type="button" onClick={openCreateCounter} className="btn-ops gw-counter-add">
+            <Icon name="plus" size={13} /> 카운터 공략 추가
+          </button>
+        </div>
+        {target.note && (
+          <div className="gw-target-note">
+            <Icon name="warning" size={13} /> {target.note}
+          </div>
+        )}
+        {(target.counters || []).length === 0 && (
+          <div className="gw-counter-empty">등록된 카운터 덱이 없습니다.</div>
+        )}
+        {(target.counters || []).map((c, idx) => (
+          <div
+            key={c.id}
+            className={`gw-counter-row${prioGhost?.fromId === c.id ? ' is-dragging-source' : ''}`}
+            data-counter-id={c.id}
+            onClick={() => {
+              if (prioGhost) return;
+              setInspectingCounter(c);
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              e.currentTarget.classList.add('is-drop-target');
+            }}
+            onDragLeave={(e) => {
+              e.currentTarget.classList.remove('is-drop-target');
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              clearPrioDropHighlight();
+              const fromId = e.dataTransfer.getData('application/x-gw-counter-id') || e.dataTransfer.getData('text/plain');
+              reorderCounters(target.id, fromId, c.id);
+            }}
+          >
+            <button
+              type="button"
+              className="gw-counter-priority"
+              draggable
+              title="끌어 옮겨 우선순위 변경"
+              aria-label={`${idx + 1}순위 · 드래그로 순서 변경`}
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => {
+                if (e.pointerType === 'mouse') return;
+                e.stopPropagation();
+                e.preventDefault();
+                const row = e.currentTarget.closest('.gw-counter-row');
+                if (!row) return;
+                const rect = row.getBoundingClientRect();
+                e.currentTarget.setPointerCapture(e.pointerId);
+                setPrioGhost({
+                  targetId: target.id,
+                  fromId: c.id,
+                  title: c.title || '카운터 덱',
+                  rank: idx + 1,
+                  x: rect.left,
+                  y: rect.top,
+                  w: rect.width,
+                  h: rect.height,
+                  ox: e.clientX - rect.left,
+                  oy: e.clientY - rect.top,
+                });
+              }}
+              onPointerMove={(e) => {
+                if (e.pointerType === 'mouse') return;
+                if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+                setPrioGhost((g) => {
+                  if (!g) return null;
+                  return {
+                    ...g,
+                    x: e.clientX - g.ox,
+                    y: e.clientY - g.oy,
+                  };
+                });
+                clearPrioDropHighlight();
+                const under = document.elementFromPoint(e.clientX, e.clientY);
+                under?.closest?.('.gw-counter-row:not(.is-dragging-source)')?.classList.add('is-drop-target');
+              }}
+              onPointerUp={(e) => {
+                if (e.pointerType === 'mouse') return;
+                finishPrioPointerDrag(e.clientX, e.clientY, prioGhostRef.current);
+              }}
+              onPointerCancel={() => {
+                clearPrioDropHighlight();
+                document.querySelectorAll('.gw-counter-row.is-dragging-source').forEach((el) => {
+                  el.classList.remove('is-dragging-source');
+                });
+                setPrioGhost(null);
+              }}
+              onDragStart={(e) => {
+                e.stopPropagation();
+                e.dataTransfer.setData('application/x-gw-counter-id', c.id);
+                e.dataTransfer.setData('text/plain', c.id);
+                e.dataTransfer.effectAllowed = 'move';
+                const row = e.currentTarget.closest('.gw-counter-row');
+                if (row) {
+                  try {
+                    e.dataTransfer.setDragImage(row, Math.min(56, row.offsetWidth / 4), row.offsetHeight / 2);
+                  } catch { /* ignore */ }
+                  row.classList.add('is-dragging-source');
+                }
+              }}
+              onDragEnd={() => {
+                clearPrioDropHighlight();
+                document.querySelectorAll('.gw-counter-row.is-dragging-source').forEach((el) => {
+                  el.classList.remove('is-dragging-source');
+                });
+              }}
+            >
+              <span className="gw-counter-priority-rank">{idx + 1}</span>
+              <span className="gw-counter-priority-grip" aria-hidden="true" />
+            </button>
+            <MiniHeroTrio heroNames={c.heroNames} resolveHeroByName={resolveHeroByName} size={38} />
+            <div className="gw-counter-copy">
+              <div className="gw-counter-title">{c.title}</div>
+              <div className="gw-counter-meta">스킬 예약 {c.reservedSkills?.length || 0}개 · <span className="gw-author">{c.author}</span></div>
+            </div>
+            <span className="gw-counter-detail">상세 <Icon name="chevronRight" size={12} /></span>
+            <div className="gw-counter-actions">
+              <button type="button" onClick={e => { e.stopPropagation(); openEditCounter(c); }}>
+                <Icon name="edit" size={13} /> 수정
+              </button>
+              <button type="button" className="is-danger" onClick={e => { e.stopPropagation(); deleteCounter(c.id); }}>
+                <Icon name="close" size={13} /> 삭제
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
-      {target.note && (
-        <div className="gw-target-note">
-          <Icon name="warning" size={13} /> {target.note}
-        </div>
-      )}
-      {(target.counters || []).length === 0 && (
-        <div className="gw-counter-empty">등록된 카운터 덱이 없습니다.</div>
-      )}
-      {(target.counters || []).map(c => (
-        <div key={c.id} className="gw-counter-row" onClick={() => setInspectingCounter(c)}>
-          <MiniHeroTrio heroNames={c.heroNames} resolveHeroByName={resolveHeroByName} />
-          <div className="gw-counter-copy">
-            <div className="gw-counter-title">{c.title}</div>
-            <div className="gw-counter-meta">스킬 예약 {c.reservedSkills?.length || 0}개 · <span className="gw-author">{c.author}</span></div>
-          </div>
-          <span className="gw-counter-detail">상세 <Icon name="chevronRight" size={12} /></span>
-          <div className="gw-counter-actions">
-            <button type="button" onClick={e => { e.stopPropagation(); openEditCounter(c); }}>
-              <Icon name="edit" size={13} /> 수정
-            </button>
-            <button type="button" className="is-danger" onClick={e => { e.stopPropagation(); deleteCounter(c.id); }}>
-              <Icon name="close" size={13} /> 삭제
-            </button>
-          </div>
-        </div>
-      ))}
     </div>
   );
 
@@ -331,7 +481,8 @@ export default function GuildWarAttackPanel({
       <div className="luxury-panel tint-red gw-attack-list">
         <div className="gw-attack-list-head">
           <h3>
-            <Icon name="guildwar" size={16} color="var(--accent-red)" /> 상대 덱 목록
+            <Icon name="guildwar" size={16} color="var(--accent-red)" />
+            <span className="gw-attack-list-head-label">상대 덱 목록</span>
           </h3>
           <button onClick={openCreateTarget} className="btn-ops" type="button">
             <Icon name="plus" size={13} /> 상대 덱 추가
@@ -542,6 +693,21 @@ export default function GuildWarAttackPanel({
             )}
           </div>
         </ModalScrim>
+      )}
+      {prioGhost && createPortal(
+        <div
+          className="gw-counter-prio-ghost"
+          style={{
+            width: prioGhost.w,
+            minHeight: prioGhost.h,
+            transform: `translate3d(${prioGhost.x}px, ${prioGhost.y}px, 0)`,
+          }}
+          aria-hidden="true"
+        >
+          <span className="gw-counter-prio-ghost-rank">{prioGhost.rank}</span>
+          <span className="gw-counter-prio-ghost-title">{prioGhost.title}</span>
+        </div>,
+        document.body,
       )}
     </>
   );

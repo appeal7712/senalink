@@ -265,8 +265,12 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 
 길드전 공격/방어 패널: `GuildWarAttackPanel.jsx`, `GuildWarDefensePanel.jsx`.
 
+- **공격 상대 목록:** 최대 ~12행 높이에서 내부 스크롤(`.gw-attack-list-body`). 선택 카드는 더 진한 테두리·배경. 카운터는 별도 레이어(`.gw-counter-layer`).
+- **카운터 우선순위:** `counters[]` **배열 순서 = 1위부터**. 왼쪽 순번 드래그로 재정렬(스키마 추가 없음).
 - **방어 리스트 PC:** `.gw-defense-grid--cols` 좌·우 독립 열 (2번 펼쳐도 3번 안 밀림). **PC 레이아웃 함부로 바꾸지 말 것.**
 - **방어 리스트 모바일(≤900px):** `.gw-defense-grid--stack` 1열. 접힌 헤더는 `auto minmax(0,1fr) auto` — 초상화 | 속공·별(중앙) | 수정·삭제. 좁은 폰(≤380px)에서 초상·버튼만 더 축소. **상하 간격·PC는 유지, 가로 유동만.**
+
+초대 링크: 항상 **`/hub?lounge={code}`** (`inviteLink`). `?lounge=`가 `/` 등에 있으면 `/hub`로 리다이렉트. 미로그인 시 Join 모달 자동 오픈 금지 → 구글 로그인 → `NicknameGate` → Join.
 
 ### 10.3 Ops 관리자 (`/ops`)
 

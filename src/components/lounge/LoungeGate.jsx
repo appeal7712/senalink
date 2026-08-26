@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Icon from '../icons/Icon';
 import { useLounge } from '../../context/LoungeContext';
 import { useUserProfile } from '../../context/UserProfileContext';
@@ -13,14 +13,38 @@ const inputStyle = {
   color: '#fff', borderRadius: '8px', fontSize: '14px', fontWeight: 800, boxSizing: 'border-box'
 };
 
+function readInviteHint() {
+  try { return parseInviteCode(localStorage.getItem(LOUNGE_STORAGE_KEYS.inviteHint) || ''); } catch { return ''; }
+}
+
 export function LoungeLanding() {
   const {
     authReady, bootError, authUser, usingEmulators, useGoogleAuth,
     signInWithGoogle, signOutAccount,
   } = useLounge();
-  const queryCode = useMemo(() => parseInviteCode(window.location.search) || '', []);
-  const [mode, setMode] = useState(queryCode ? 'join' : null);
+  const { profile, profileReady } = useUserProfile();
+  const queryCode = useMemo(() => {
+    const fromUrl = parseInviteCode(window.location.search) || '';
+    if (fromUrl) {
+      try { localStorage.setItem(LOUNGE_STORAGE_KEYS.inviteHint, fromUrl); } catch { /* ignore */ }
+      return fromUrl;
+    }
+    return readInviteHint();
+  }, []);
+  // 미로그인 시 Join 모달 자동 오픈 금지 — 로그인+닉 준비된 뒤에만
+  const [mode, setMode] = useState(null);
   const [loginError, setLoginError] = useState('');
+
+  const hasNickname = Boolean(String(profile?.nickname || '').trim());
+  const canEnter = authReady && !!authUser;
+
+  useEffect(() => {
+    if (!queryCode) return;
+    if (!authReady || !authUser) return;
+    if (!profileReady) return;
+    if (!hasNickname) return; // NicknameGate가 닉 받을 때까지 대기
+    setMode('join');
+  }, [queryCode, authReady, authUser, profileReady, hasNickname]);
 
   const onGoogle = () => {
     setLoginError('');
@@ -28,8 +52,6 @@ export function LoungeLanding() {
       setLoginError(e.message || '구글 로그인에 실패했습니다.');
     });
   };
-
-  const canEnter = authReady && !!authUser;
 
   return (
     <div className="container fade-in lounge-gate">
@@ -42,11 +64,27 @@ export function LoungeLanding() {
       }}>
         <span className="ops-tag">Guild Hub</span>
         <h1 className="hero-headline" style={{ margin: '18px 0 12px' }}>길드 허브</h1>
-        <p className="hero-subhead" style={{ margin: '0 auto 28px' }}>
-          {useGoogleAuth
-            ? `구글 계정으로 한 번 로그인하면, 초대 코드로 길드에 들어갑니다. 계정은 허브 하나에만 소속됩니다. 다른 길드로 가려면 먼저 나가야 합니다. 길드 기록이 ${HUB_IDLE_DAYS}일 동안 없으면 허브와 관련 데이터가 삭제됩니다.`
-            : '길드마스터가 허브를 만들면 초대 코드로 길드원이 입장합니다. (테스트 중: 구글 로그인 없이 진행)'}
-        </p>
+        {queryCode && useGoogleAuth && !authUser ? (
+          <p className="hero-subhead" style={{ margin: '0 auto 20px' }}>
+            초대받은 길드에 들어가려면 구글 로그인이 필요합니다.
+            로그인 후 닉네임을 정하면 바로 입장할 수 있습니다.
+          </p>
+        ) : (
+          <p className="hero-subhead" style={{ margin: '0 auto 28px' }}>
+            {useGoogleAuth
+              ? `구글 계정으로 한 번 로그인하면, 초대 코드로 길드에 들어갑니다. 계정은 허브 하나에만 소속됩니다. 다른 길드로 가려면 먼저 나가야 합니다. 길드 기록이 ${HUB_IDLE_DAYS}일 동안 없으면 허브와 관련 데이터가 삭제됩니다.`
+              : '길드마스터가 허브를 만들면 초대 코드로 길드원이 입장합니다. (테스트 중: 구글 로그인 없이 진행)'}
+          </p>
+        )}
+        {queryCode && (
+          <div style={{
+            marginBottom: '18px', padding: '10px 14px', borderRadius: 12,
+            background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.35)',
+            fontSize: 13, fontWeight: 800, color: '#7dd3fc',
+          }}>
+            초대 코드 · {queryCode}
+          </div>
+        )}
         {usingEmulators && (
           <div style={{ marginBottom: '14px', fontSize: '12px', color: 'var(--gold-light)', fontWeight: 800 }}>
             로컬 연습장 · 구글 없이 허브를 만들어 화면만 보면 됩니다. 라이브 길드 데이터와는 별개입니다.
@@ -65,7 +103,7 @@ export function LoungeLanding() {
         {useGoogleAuth && !authUser ? (
           <button type="button" className="btn-ops" disabled={!authReady} onClick={onGoogle}
             style={{ padding: '12px 18px', fontSize: '14px' }}>
-            <Icon name="key" size={15} /> Google로 계속
+            <Icon name="key" size={15} /> {queryCode ? 'Google로 로그인하고 입장' : 'Google로 계속'}
           </button>
         ) : (
           <>
@@ -80,6 +118,11 @@ export function LoungeLanding() {
                   로그아웃
                 </button>
               </div>
+            )}
+            {authUser && !hasNickname && profileReady && (
+              <p style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 700, color: '#fde68a' }}>
+                닉네임 설정 창에서 이름을 저장하면 초대 입장이 이어집니다.
+              </p>
             )}
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button type="button" className="btn-ops" disabled={!canEnter} onClick={() => setMode('create')} style={{ padding: '12px 18px', fontSize: '14px' }}>
@@ -99,7 +142,12 @@ export function LoungeLanding() {
           onClose={() => setMode(null)}
         />
       )}
-      {mode === 'join' && <LoungeJoinModal onClose={() => setMode(null)} />}
+      {mode === 'join' && (
+        <LoungeJoinModal
+          initialCode={queryCode}
+          onClose={() => setMode(null)}
+        />
+      )}
     </div>
   );
 }

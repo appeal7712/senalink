@@ -11,6 +11,7 @@ import {
 /**
  * GNB 일일 타로카드 — 마이프로필과 같은 알약 크기.
  * KST 09:00 주기. 로그인 유저는 users.dailyTarotPeriodId, 비로그인은 localStorage.
+ * 프로필 로딩 중에는 is-live(빛남)를 켜지 않음 — claim 여부를 알기 전 flash 방지.
  */
 export default function DailyTarotButton() {
   const { authUser, profile, profileReady, saveProfile } = useUserProfile();
@@ -30,20 +31,23 @@ export default function DailyTarotButton() {
     };
   }, []);
 
+  // 로그인 유저는 Firestore 프로필이 올 때까지 claim 판정 보류
+  const claimReady = !authUser || profileReady;
+
   const storedPeriod = authUser
     ? (profile?.dailyTarotPeriodId || localPeriod || '')
     : localPeriod;
 
   const claimed = useMemo(
-    () => isDailyTarotClaimed(storedPeriod),
+    () => (claimReady ? isDailyTarotClaimed(storedPeriod) : false),
     // periodTick: 09시 경계 넘김 반영
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [storedPeriod, periodTick],
+    [storedPeriod, periodTick, claimReady],
   );
 
   const onClick = async () => {
     window.open(DAILY_TAROT_URL, '_blank', 'noopener,noreferrer');
-    if (isDailyTarotClaimed(storedPeriod)) return;
+    if (!claimReady || isDailyTarotClaimed(storedPeriod)) return;
 
     const periodId = getDailyTarotPeriodId();
     writeLocalDailyTarotPeriod(periodId);
@@ -58,13 +62,25 @@ export default function DailyTarotButton() {
     }
   };
 
+  const toneClass = !claimReady
+    ? ' is-pending'
+    : claimed
+      ? ' is-claimed'
+      : ' is-live';
+
   return (
     <button
       type="button"
-      className={`gnb-daily-tarot${claimed ? ' is-claimed' : ' is-live'}`}
+      className={`gnb-daily-tarot${toneClass}`}
       onClick={onClick}
       aria-label="일일 타로카드"
-      title={claimed ? '오늘은 이미 열었습니다 · 내일 오전 9시에 다시 빛나요' : '일일 타로카드 열기'}
+      title={
+        !claimReady
+          ? '일일 타로카드'
+          : claimed
+            ? '오늘은 이미 열었습니다 · 내일 오전 9시에 다시 빛나요'
+            : '일일 타로카드 열기'
+      }
     >
       <span className="gnb-daily-tarot-glow" aria-hidden="true" />
       <span className="gnb-daily-tarot-label">일일 타로카드</span>

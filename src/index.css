@@ -298,28 +298,28 @@ option {
   background:
     linear-gradient(180deg, rgba(248, 113, 113, 0.22) 0%, transparent 48%),
     var(--glass-bg);
-  border-color: rgba(248, 113, 113, 0.32);
-  box-shadow: inset 3px 0 0 #f87171, var(--shadow-main);
+  border: 1px solid rgba(252, 165, 165, 0.38);
+  box-shadow: var(--shadow-main);
 }
 .luxury-panel.tint-red:hover {
   background:
     linear-gradient(180deg, rgba(248, 113, 113, 0.28) 0%, transparent 48%),
     var(--glass-bg-hover);
-  border-color: rgba(248, 113, 113, 0.42);
+  border-color: rgba(252, 165, 165, 0.48);
 }
 
 .luxury-panel.tint-blue {
   background:
-    linear-gradient(180deg, rgba(94, 176, 255, 0.22) 0%, transparent 48%),
+    linear-gradient(180deg, rgba(96, 165, 250, 0.22) 0%, transparent 48%),
     var(--glass-bg);
-  border-color: rgba(94, 176, 255, 0.32);
-  box-shadow: inset 3px 0 0 #5eb0ff, var(--shadow-main);
+  border: 1px solid rgba(147, 197, 253, 0.32);
+  box-shadow: var(--shadow-main);
 }
 .luxury-panel.tint-blue:hover {
   background:
-    linear-gradient(180deg, rgba(94, 176, 255, 0.28) 0%, transparent 48%),
+    linear-gradient(180deg, rgba(96, 165, 250, 0.28) 0%, transparent 48%),
     var(--glass-bg-hover);
-  border-color: rgba(94, 176, 255, 0.42);
+  border-color: rgba(147, 197, 253, 0.42);
 }
 
 .luxury-panel.expedition-tint {
@@ -341,7 +341,7 @@ option {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  min-width: 34px;
+  min-width: 3.4em;
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 12px;
@@ -351,6 +351,8 @@ option {
   background: #fff;
   border: 1px solid rgba(22, 22, 22, 0.12);
   white-space: nowrap;
+  box-sizing: border-box;
+  font-variant-numeric: tabular-nums;
 }
 
 .skill-timeline-scroller {
@@ -1869,6 +1871,16 @@ h1, h2, h3 {
 .gnb-daily-tarot.is-live:hover {
   transform: scale(1.04);
   background: rgba(255, 255, 255, 0.1);
+}
+/* 프로필 로딩 중 — 빛남 없음 (claim 확정 전 flash 방지) */
+.gnb-daily-tarot.is-pending {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  opacity: 0.72;
+  cursor: default;
+}
+.gnb-daily-tarot.is-pending::before {
+  display: none;
 }
 .gnb-daily-tarot.is-claimed {
   border: 1px solid rgba(148, 163, 184, 0.35);
@@ -5288,24 +5300,53 @@ h1, h2, h3 {
   width: auto;
   flex-shrink: 0;
 }
+/* 상대 덱 12개까지는 스크롤 없이 보이게 (행≈78px + gap 8) */
 .gw-attack-list-body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 640px;
+  gap: 10px;
+  max-height: calc(12 * 78px + 11 * 8px);
+  overflow-x: hidden;
   overflow-y: auto;
+  padding-right: 2px;
 }
-.gw-attack-target {
-  border-radius: 12px;
-  background: rgba(239, 68, 68, 0.05);
-  border: 1px solid rgba(248, 113, 113, 0.22);
+.gw-mini-trio {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+.gw-mini-trio-slot {
+  flex-shrink: 0;
   overflow: hidden;
 }
+/* A안: 안쪽 = 중성 글라스 · 구분 = 테두리·살짝 더 선명 */
+.gw-attack-target {
+  position: relative;
+  isolation: isolate;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.gw-attack-target:hover {
+  border-color: rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.12);
+}
 .gw-attack-target.is-on {
-  background: rgba(239, 68, 68, 0.16);
-  border-color: rgba(248, 113, 113, 0.7);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(252, 165, 165, 0.58);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 0 0 1px rgba(248, 113, 113, 0.14);
 }
 .gw-attack-target-row {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -5371,6 +5412,7 @@ h1, h2, h3 {
 }
 .gw-attack-inline-counters {
   display: none;
+  flex-shrink: 0;
   padding: 0 10px 10px;
 }
 .gw-inspect-modal {
@@ -5436,6 +5478,35 @@ h1, h2, h3 {
 .gw-attack-detail-meta .gw-author {
   color: var(--accent-gold);
 }
+/* A안: 카운터 = 글라스 + 태오 연한 틴트 (모바일에서 빨간 패널에 묻히지 않게) */
+.gw-counter-layer {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(96, 165, 250, 0.16) 0%, transparent 50%),
+    rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(147, 197, 253, 0.36);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.gw-counter-layer:hover {
+  border-color: rgba(147, 197, 253, 0.48);
+  background:
+    linear-gradient(180deg, rgba(96, 165, 250, 0.2) 0%, transparent 50%),
+    rgba(255, 255, 255, 0.1);
+}
+.gw-counter-layer > * {
+  position: relative;
+  z-index: 1;
+}
 .gw-counter-list {
   display: flex;
   flex-direction: column;
@@ -5449,11 +5520,23 @@ h1, h2, h3 {
   flex-wrap: nowrap;
   min-height: 40px;
 }
+.gw-counter-toolbar-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
 .gw-counter-toolbar span {
   font-size: 12px;
   font-weight: 800;
-  color: #7dd3fc;
+  color: #93c5fd;
   letter-spacing: 0.3px;
+}
+.gw-counter-drag-hint {
+  font-size: 11px;
+  font-weight: 700;
+  font-style: normal;
+  color: rgba(255, 255, 255, 0.55);
 }
 .gw-counter-add {
   padding: 7px 12px;
@@ -5479,12 +5562,124 @@ h1, h2, h3 {
 .gw-counter-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 12px;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
   cursor: pointer;
-  background: rgba(94, 176, 255, 0.12);
-  border: 1px solid rgba(94, 176, 255, 0.32);
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+}
+.gw-counter-row.is-dragging-source {
+  opacity: 0.35;
+  border-style: dashed;
+}
+.gw-counter-row.is-drop-target {
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+  transform: scale(1.01);
+  background: rgba(255, 255, 255, 0.1);
+}
+/* 우선순위: 밝은 시안 기본 · 숫자 위 / 그립 아래 · 가로 슬림 */
+.gw-counter-priority {
+  flex-shrink: 0;
+  width: 36px;
+  min-width: 36px;
+  height: 46px;
+  padding: 5px 4px 6px;
+  border-radius: 11px;
+  border: 1px solid rgba(125, 211, 252, 0.45);
+  background: rgba(125, 211, 252, 0.18);
+  color: #7dd3fc;
+  cursor: grab;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  touch-action: none;
+  box-shadow: none;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+.gw-counter-priority:hover,
+.gw-counter-priority:focus-visible {
+  background: rgba(125, 211, 252, 0.26);
+  border-color: rgba(125, 211, 252, 0.55);
+  color: #bae6fd;
+  outline: none;
+}
+.gw-counter-priority:active {
+  cursor: grabbing;
+  background: rgba(125, 211, 252, 0.32);
+}
+.gw-counter-priority-rank {
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.gw-counter-priority-grip {
+  width: 10px;
+  height: 7px;
+  flex-shrink: 0;
+  opacity: 0.55;
+  background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.25px);
+  background-size: 5px 3.5px;
+  background-position: 0 0;
+  background-repeat: repeat;
+}
+.gw-counter-priority:hover .gw-counter-priority-grip,
+.gw-counter-priority:active .gw-counter-priority-grip {
+  opacity: 0.85;
+}
+.gw-counter-prio-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 9800;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(15, 28, 42, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+  color: #fff;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  will-change: transform;
+}
+.gw-counter-prio-ghost-rank {
+  flex-shrink: 0;
+  min-width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: #7dd3fc;
+  background: rgba(125, 211, 252, 0.18);
+  border: 1px solid rgba(125, 211, 252, 0.45);
+}
+.gw-counter-prio-ghost-title {
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 70vw;
 }
 .gw-counter-copy {
   flex: 1;
@@ -6531,75 +6726,51 @@ h1, h2, h3 {
     box-sizing: border-box;
     flex-direction: row;
     align-items: center;
-    justify-content: center;
+    /* 이름·배지 폭이 달라도 초상 시작점 고정 (예전 center → 칸마다 밀림) */
+    justify-content: flex-start;
   }
 
   .build-panel-timeline .timeline-step-body,
   .expedition-round-guide .timeline-step-body {
     flex-direction: row;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     min-width: 0;
-    flex: 0 1 auto;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+
+  .build-panel-timeline .timeline-step-face,
+  .expedition-round-guide .timeline-step-face,
+  .build-panel-timeline .timeline-step-round,
+  .expedition-round-guide .timeline-step-round,
+  .build-panel-timeline .timeline-step-dir,
+  .expedition-round-guide .timeline-step-dir {
+    flex-shrink: 0;
   }
 
   .build-panel-timeline .timeline-step-name,
   .expedition-round-guide .timeline-step-name {
-    flex: 0 1 auto;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 100%;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+    line-height: 1.3;
   }
 
   .build-panel-timeline .timeline-step-note,
   .expedition-round-guide .timeline-step-note {
-    flex: 0 1 auto;
+    flex: 0 0 auto;
+    flex-shrink: 0;
   }
 
   .build-panel-timeline .timeline-arrow,
   .expedition-round-guide .timeline-arrow {
     display: none !important;
-  }
-
-  /* 가로 PC만: 초상·턴 왼쪽 / 이름 중앙 / 스킬 오른쪽 — 좁으면 이름만 … */
-  @media (orientation: landscape) {
-    .build-panel-timeline .timeline-step,
-    .expedition-round-guide .timeline-step {
-      justify-content: flex-start;
-    }
-
-    .build-panel-timeline .timeline-step-body,
-    .expedition-round-guide .timeline-step-body {
-      flex: 1 1 auto;
-      min-width: 0;
-      justify-content: flex-start;
-      overflow: hidden;
-    }
-
-    .build-panel-timeline .timeline-step-face,
-    .expedition-round-guide .timeline-step-face,
-    .build-panel-timeline .timeline-step-round,
-    .expedition-round-guide .timeline-step-round,
-    .build-panel-timeline .timeline-step-dir,
-    .expedition-round-guide .timeline-step-dir {
-      flex-shrink: 0;
-    }
-
-    .build-panel-timeline .timeline-step-name,
-    .expedition-round-guide .timeline-step-name {
-      flex: 1 1 0;
-      min-width: 0;
-      max-width: 100%;
-      display: block;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      text-align: center;
-      line-height: 1.3;
-    }
-
-    .build-panel-timeline .timeline-step-note,
-    .expedition-round-guide .timeline-step-note {
-      flex: 0 0 auto;
-      flex-shrink: 0;
-    }
   }
 }
 
@@ -6768,9 +6939,9 @@ h1, h2, h3 {
 
   .meta-deck-nav {
     flex: 0 0 auto;
-    width: 40px;
-    height: 40px;
-    border-radius: 14px;
+    width: 34px;
+    height: 64px;
+    border-radius: 12px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -7029,8 +7200,10 @@ h1, h2, h3 {
 
   .timeline-step--no-note .timeline-step-body {
     flex: 1 1 auto;
-    justify-content: center;
+    /* 배지·이름 유무로 세로 중앙 잡으면 초상이 칸마다 위아래로 어긋남 → 위에서부터 고정 */
+    justify-content: flex-start;
     gap: 6px;
+    padding-top: 2px;
   }
 
   .timeline-step-face {
@@ -7622,7 +7795,9 @@ h1, h2, h3 {
     width: 100%;
   }
   .gw-attack-list-body {
+    /* 모바일: 내부 스크롤 함정 제거 — 카운터/목록 쓸면 페이지가 스크롤 */
     max-height: none;
+    overflow-y: visible;
   }
   .gw-attack-detail {
     display: none;
@@ -7630,28 +7805,28 @@ h1, h2, h3 {
   .gw-attack-inline-counters {
     display: block;
     margin: 2px 4px 10px 12px;
-    padding: 12px 10px 10px;
-    border-radius: 14px;
-    background:
-      linear-gradient(180deg, rgba(94, 176, 255, 0.22) 0%, transparent 48%),
-      var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: 1px solid rgba(94, 176, 255, 0.32);
-    box-shadow: inset 3px 0 0 #5eb0ff, var(--shadow-main);
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .gw-attack-inline-counters .gw-counter-layer {
+    margin: 0;
   }
   .gw-counter-toolbar span {
-    color: #7dd3fc;
+    color: #93c5fd;
   }
-  /* 카운터 행: 초상 | 제목·메타 | 수정·삭제(세로) — 아래 줄 밀림·공백 제거 */
+  /* 카운터 행: 순번 | 초상 | 제목·메타 | 수정·삭제(세로) */
   .gw-counter-row {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 8px 10px;
     flex-wrap: nowrap;
-    background: rgba(56, 189, 248, 0.14);
-    border: 1px solid rgba(56, 189, 248, 0.38);
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.22);
   }
   .gw-counter-detail {
     display: none;
@@ -7870,6 +8045,176 @@ h1, h2, h3 {
 
   .hero-subhead {
     font-size: 12px !important;
+  }
+}
+
+/* 아주 좁은 폰(≤380): 제목+버튼 한 줄 찌그러짐만 → 제목 위 / 버튼 아래 (그 위 폭은 기존 유지) */
+@media (max-width: 380px) {
+  .gw-attack-list-head {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 8px;
+    min-height: 0;
+  }
+
+  .gw-attack-list-head h3 {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 7px;
+    width: 100%;
+    min-width: 0;
+    flex-shrink: 0;
+  }
+
+  .gw-attack-list-head-label {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .gw-attack-list-head .btn-ops {
+    width: 100%;
+    flex-shrink: 0;
+  }
+
+  .gw-counter-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 8px;
+    min-height: 0;
+  }
+
+  .gw-counter-toolbar-copy {
+    width: 100%;
+    flex-shrink: 0;
+  }
+
+  .gw-counter-toolbar span,
+  .gw-counter-drag-hint {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .gw-counter-add {
+    width: 100%;
+    flex-shrink: 0;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+}
+
+/* 좁은 폰(≤430): 길드전 공격 행·버튼만 더 타이트 */
+@media (max-width: 430px) {
+  .gw-attack-list {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .gw-attack-target-row {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .gw-attack-target-title {
+    font-size: 13px;
+    -webkit-line-clamp: 2;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  .gw-attack-target-meta {
+    font-size: 11px;
+  }
+
+  .gw-attack-target-actions button,
+  .gw-counter-actions button {
+    min-width: 0;
+    padding: 6px 7px;
+    font-size: 10.5px;
+  }
+
+  .gw-counter-row {
+    gap: 6px 8px;
+    padding: 10px;
+  }
+
+  .gw-counter-title {
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .gw-counter-meta {
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .gw-attack-inline-counters {
+    margin: 2px 2px 8px 8px;
+  }
+
+  .gw-counter-layer {
+    padding: 10px;
+  }
+}
+
+/* ≤500: 영웅도감 상단 「스페셜/일반/…」탭만 가로 스크롤 (PC·FACTIONS 무변경) */
+@media (max-width: 500px) {
+  .dex-hero-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px !important;
+  }
+
+  .dex-hero-toolbar-title {
+    flex-shrink: 0;
+  }
+
+  .dex-hero-tabs {
+    display: flex;
+    flex-wrap: nowrap !important;
+    flex: 0 0 auto !important;
+    width: 100%;
+    min-width: 0;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 2px;
+  }
+
+  .dex-hero-tabs::-webkit-scrollbar {
+    display: none;
+    height: 0;
+  }
+
+  .dex-hero-tabs .nav-tab-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+
+  .dex-hero-toolbar-search {
+    width: 100%;
+  }
+
+  .dex-hero-toolbar .dex-hero-search {
+    width: 100% !important;
+    max-width: none !important;
+    box-sizing: border-box;
   }
 }
 
