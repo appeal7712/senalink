@@ -42,19 +42,28 @@ export function SuperAdminProvider({ children }) {
       return undefined;
     }
 
+    let gotSnap = false;
     setAdminReady(false);
     const unsub = onSnapshot(doc(db, ...adminDoc(authUser.uid)), (snap) => {
+      gotSnap = true;
       setIsSuperAdmin(snap.exists() && snap.data()?.role === 'super');
       setAdminReady(true);
+      setLoginError(null);
     }, (err) => {
       console.error('admin snapshot', err);
-      setIsSuperAdmin(false);
-      setAdminReady(true);
+      // 토큰 갱신 중 일시 거부 등으로 슈퍼 플래그를 바로 내리면 /ops가 로그인 화면으로 튕김
+      if (!gotSnap) {
+        setIsSuperAdmin(false);
+        setAdminReady(true);
+      }
       setLoginError(err?.code === 'permission-denied'
         ? '관리자 문서를 읽지 못했습니다. Firestore 규칙이 senalink에 배포됐는지 확인해 주세요.'
         : (err?.message || '권한 확인에 실패했습니다.'));
     });
-    const timer = window.setTimeout(() => setAdminReady(true), 4000);
+    const timer = window.setTimeout(() => {
+      // 첫 스냅샷이 오기 전에는 로그인 화면으로 떨어뜨리지 않음(권한 확인 중 유지)
+      if (!gotSnap) setAdminReady(true);
+    }, 8000);
     return () => {
       window.clearTimeout(timer);
       unsub();

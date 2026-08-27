@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { SITE_MAIN_DOC } from '../config/firestorePaths';
 import { SITE_MAIN_DEFAULTS } from '../data/siteMain.defaults';
@@ -122,6 +122,24 @@ export function useSiteMain() {
 export async function saveSiteMain(partial, uid) {
   if (!uid) throw new Error('슈퍼관리자 로그인이 필요합니다.');
   const merged = mergeSiteMain(partial);
+  const ref = doc(db, ...SITE_MAIN_DOC);
+  // 전체 setDoc 이라 구형 탭/빈 draft로 저장하면 news가 통째로 날아감 → 저장 직전 서버본과 비교
+  const remoteSnap = await getDoc(ref);
+  const remoteNews = Array.isArray(remoteSnap.data()?.news) ? remoteSnap.data().news : [];
+  const localNews = Array.isArray(merged.news) ? merged.news : [];
+  if (localNews.length === 0 && remoteNews.length > 0) {
+    const ok = typeof window !== 'undefined'
+      ? window.confirm(`서버에 패치 브리핑/뉴스 ${remoteNews.length}개가 있는데, 지금 저장본은 비어 있습니다.\n기존 글을 모두 지울까요?\n(취소하면 서버 글을 유지한 채 나머지 필드만 저장합니다.)`)
+      : false;
+    if (!ok) merged.news = remoteNews.map((n, i) => ({
+      id: n.id || `n_${i}`,
+      title: n.title || '',
+      body: n.body || n.content || '',
+      url: n.url || n.link || '',
+      date: n.date || '',
+      tag: n.tag || '라운지',
+    }));
+  }
   const payload = JSON.parse(JSON.stringify({
     ...merged,
     news: (merged.news || []).map((n) => ({
@@ -131,6 +149,6 @@ export async function saveSiteMain(partial, uid) {
     updatedAt: new Date().toISOString(),
     updatedBy: uid,
   }));
-  await setDoc(doc(db, ...SITE_MAIN_DOC), payload);
+  await setDoc(ref, payload);
   return payload;
 }

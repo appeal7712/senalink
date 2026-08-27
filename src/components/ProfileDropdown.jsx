@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import Icon from './icons/Icon';
 import MyPageModal from './MyPageModal';
 import { useUserProfile } from '../context/UserProfileContext';
+import { useLounge } from '../context/LoungeContext';
 import { auth } from '../lib/firebase';
 
 const googleProvider = new GoogleAuthProvider();
 
 export default function ProfileDropdown() {
   const { authUser, profile } = useUserProfile();
+  const { signOutAccount } = useLounge();
   const [open, setOpen] = useState(false);
   const [myPage, setMyPage] = useState(false);
   const wrapRef = useRef(null);
@@ -79,7 +81,7 @@ export default function ProfileDropdown() {
                   style={{ ...btnStyle, color: '#fff' }}>
                   <Icon name="user" size={14} /> 마이페이지
                 </button>
-                <button type="button" onClick={() => { setOpen(false); signOut(auth); }}
+                <button type="button" onClick={() => { setOpen(false); void signOutAccount(); }}
                   style={{ ...btnStyle, color: '#fca5a5' }}>
                   <Icon name="close" size={14} /> 로그아웃
                 </button>

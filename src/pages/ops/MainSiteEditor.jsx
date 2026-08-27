@@ -350,7 +350,8 @@ export default function MainSiteEditor() {
               <Icon name="news" size={16} /> 세나리 뉴스 & 패치 브리핑
             </h3>
             <div style={{ fontSize: 12, color: '#fff', marginTop: 4, textShadow: '0 1px 6px rgba(0,0,0,0.7)' }}>
-              슈퍼 관리자 전용 게시판입니다. 본문만 써도 되고(패치노트), 라운지 링크만 넣어도 됩니다. 「목록에 넣기」후 위쪽 「저장」으로 메인에 반영하세요.
+              슈퍼 관리자 전용 게시판입니다. 본문만 써도 되고(패치노트), 라운지 링크만 넣어도 됩니다.
+              「목록에 넣기」는 편집 초안에만 반영되고, <strong style={{ color: '#fff' }}>위쪽 「저장」</strong>을 눌러야 라이브 메인에 올라갑니다.
             </div>
           </div>
           <button

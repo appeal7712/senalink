@@ -11,10 +11,11 @@ import {
 /**
  * GNB 일일 타로카드 — 마이프로필과 같은 알약 크기.
  * KST 09:00 주기. 로그인 유저는 users.dailyTarotPeriodId, 비로그인은 localStorage.
- * 프로필 로딩 중에는 is-live(빛남)를 켜지 않음 — claim 여부를 알기 전 flash 방지.
+ * Auth·프로필 로딩 중에는 is-live(빛남)를 켜지 않음 — claim 여부를 알기 전 flash 방지.
+ * (PC/모바일 동일 컴포넌트 · CSS는 버튼 순서만 다름)
  */
 export default function DailyTarotButton() {
-  const { authUser, profile, profileReady, saveProfile } = useUserProfile();
+  const { authUser, authReady, profile, profileReady, saveProfile } = useUserProfile();
   const [localPeriod, setLocalPeriod] = useState(() => readLocalDailyTarotPeriod());
   const [periodTick, setPeriodTick] = useState(0);
 
@@ -31,8 +32,9 @@ export default function DailyTarotButton() {
     };
   }, []);
 
-  // 로그인 유저는 Firestore 프로필이 올 때까지 claim 판정 보류
-  const claimReady = !authUser || profileReady;
+  // Auth 복원 전엔 게스트처럼 보이며 빛이 깜빡일 수 있음 → authReady 필수.
+  // 로그인 유저는 Firestore 프로필이 올 때까지 claim 판정 보류.
+  const claimReady = authReady && (!authUser || profileReady);
 
   const storedPeriod = authUser
     ? (profile?.dailyTarotPeriodId || localPeriod || '')

@@ -104,7 +104,7 @@ function SpeedBadge({ text, className = '' }) {
   );
 }
 
-export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildRoom, onBuildHistory, resolveHeroByName, heroes }) {
+export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildRoom, onBuildHistory, resolveHeroByName, heroes, canDeleteBuild }) {
   const [expandedId, setExpandedId] = useState(null);
   const [altsOpenId, setAltsOpenId] = useState(null);
   const [expandedAltId, setExpandedAltId] = useState(null);
@@ -231,6 +231,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
       speedMax: form.speedMax || '',
       heroGearConfigs: form.heroGearConfigs || emptyGear5(),
       author: guildRoom.myNickname,
+      authorId: guildRoom.myMemberId || '',
       updatedAt: now,
     };
     const histLabel = defenseHistoryLabel(form.heroSlots);
@@ -277,8 +278,12 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
   };
 
   const remove = (id) => {
-    if (!confirm('이 방어 세팅과 등록된 대체 덱을 모두 삭제할까요?')) return;
     const target = gwDefenses.find(d => d.id === id);
+    if (!canDeleteBuild?.(target)) {
+      alert('삭제는 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+      return;
+    }
+    if (!confirm('이 방어 세팅과 등록된 대체 덱을 모두 삭제할까요?')) return;
     setGwDefenses(prev => prev.filter(d => d.id !== id));
     if (expandedId === id) setExpandedId(null);
     if (altsOpenId === id) setAltsOpenId(null);
@@ -286,9 +291,13 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
   };
 
   const removeAlt = (parentId, altId) => {
-    if (!confirm('이 대체 덱을 삭제할까요?')) return;
     const parent = gwDefenses.find(d => d.id === parentId);
     const alt = (parent?.altDecks || []).find(a => a.id === altId);
+    if (!canDeleteBuild?.(alt)) {
+      alert('삭제는 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+      return;
+    }
+    if (!confirm('이 대체 덱을 삭제할까요?')) return;
     setGwDefenses(prev => prev.map(d => (
       d.id !== parentId
         ? d
@@ -644,9 +653,11 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                     <button type="button" className="btn-edit" onClick={() => openEditAlt(parent.id, rawAlt)}>
                       <Icon name="edit" size={13} /> 수정
                     </button>
-                    <button type="button" className="btn-danger-solid" onClick={() => removeAlt(parent.id, a.id)}>
-                      <Icon name="close" size={13} /> 삭제
-                    </button>
+                    {canDeleteBuild?.(a) ? (
+                      <button type="button" className="btn-danger-solid" onClick={() => removeAlt(parent.id, a.id)}>
+                        <Icon name="close" size={13} /> 삭제
+                      </button>
+                    ) : null}
                   </>
                 ),
               })}
@@ -723,9 +734,11 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
               <button type="button" className="btn-edit" onClick={() => openEdit(raw)}>
                 <Icon name="edit" size={13} /> 수정
               </button>
-              <button type="button" className="btn-danger-solid" onClick={() => remove(d.id)}>
-                <Icon name="close" size={13} /> 삭제
-              </button>
+              {canDeleteBuild?.(d) ? (
+                <button type="button" className="btn-danger-solid" onClick={() => remove(d.id)}>
+                  <Icon name="close" size={13} /> 삭제
+                </button>
+              ) : null}
             </>
           ),
         })}

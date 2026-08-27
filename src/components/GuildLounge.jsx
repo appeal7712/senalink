@@ -217,6 +217,27 @@ const EXPEDITION_BOSS_THEMES = {
   god:     { id: 'god',     label: '파괴신', kind: 'god',    accent: '#94a3b8', soft: 'rgba(148,163,184,0.18)', border: 'rgba(148,163,184,0.38)', text: '#cbd5e1' },
 };
 
+const SIEGE_DAY_HISTORY_LABEL = {
+  mon: '월·루디', tue: '화·아일린', wed: '수·레이첼', thu: '목·델론즈',
+  fri: '금·제이브', sat: '토·스파이크', sun: '일·크리스',
+};
+
+const buildHistoryScopeLabel = (category, { siegeDay, expeditionBoss, totalwarTier } = {}) => {
+  if (category === 'siege') {
+    return `공성전 · ${SIEGE_DAY_HISTORY_LABEL[siegeDay] || siegeDay || ''}`.trim();
+  }
+  if (category === 'expedition') {
+    const boss = EXPEDITION_BOSS_THEMES[expeditionBoss]?.label || expeditionBoss || '';
+    return boss ? `강림 원정대 · ${boss}` : '강림 원정대';
+  }
+  if (category === 'arena') return '결투장';
+  if (category === 'totalwar') {
+    const tierLabel = TOTALWAR_TIERS.find((t) => t.id === totalwarTier)?.label;
+    return tierLabel ? `총력전 · ${tierLabel}` : '총력전';
+  }
+  return '공략';
+};
+
 const expeditionThemeVars = (theme) => ({
   '--exp-accent': theme.text,
   '--exp-fill': theme.accent,
@@ -346,13 +367,14 @@ export default function GuildLounge() {
 
   const guildRoom = useMemo(() => {
     if (!activeLounge || !me) {
-      return { name: '', code: '', myNickname: '', masterNickname: '' };
+      return { name: '', code: '', myNickname: '', masterNickname: '', myMemberId: '' };
     }
     const master = activeLounge.members.find(m => m.role === 'master');
     return {
       name: activeLounge.name,
       code: activeLounge.inviteCode,
       myNickname: me.nickname,
+      myMemberId: me.id || '',
       masterNickname: master?.nickname || '',
     };
   }, [activeLounge, me]);
@@ -637,8 +659,11 @@ export default function GuildLounge() {
     });
   }, [showTotalwarTeamPick]);
 
+  const isEditingBuildOpen = !!editingBuild;
+  const isInspectingCounterOpen = !!inspectingCounter;
+
   useEffect(() => {
-    if (!editingBuild) return;
+    if (!isEditingBuildOpen) return;
     pushOverlay(() => {
       if (editingCategoryRef.current === 'totalwar') {
         returnToTotalwarTeamPickInternal();
@@ -646,7 +671,8 @@ export default function GuildLounge() {
       }
       setEditingBuild(null);
     });
-  }, [editingBuild]);
+    // 진형·제목 등 editingBuild 내용 변경 시마다 push하지 않음 (열림 한 번만)
+  }, [isEditingBuildOpen]);
 
   useEffect(() => {
     if (!assignModalBoss) return;
@@ -654,9 +680,9 @@ export default function GuildLounge() {
   }, [assignModalBoss]);
 
   useEffect(() => {
-    if (!inspectingCounter) return;
+    if (!isInspectingCounterOpen) return;
     pushOverlay(() => setInspectingCounter(null));
-  }, [inspectingCounter]);
+  }, [isInspectingCounterOpen]);
 
   const navigateHubTab = (tabId) => {
     if (tabId === activeTab) return;
@@ -692,7 +718,7 @@ export default function GuildLounge() {
     logBuildHistory(
       isNewCreateMode ? 'create_build' : 'update_build',
       buildTitle,
-      `총력전 ${editingTotalwarTier}`
+      buildHistoryScopeLabel('totalwar', { totalwarTier: editingTotalwarTier })
     );
     setShowTotalwarTeamPick(false);
     setEditingBuild(null);
@@ -961,7 +987,7 @@ export default function GuildLounge() {
     logBuildHistory(
       isNewCreateMode ? 'create_build' : 'update_build',
       buildTitle,
-      `${editingCategory} 공략`
+      buildHistoryScopeLabel(editingCategory, { siegeDay, expeditionBoss })
     );
 
     setEditingBuild(null);
@@ -1006,13 +1032,13 @@ export default function GuildLounge() {
       if (!confirm(deleteLabel)) return;
       if (category === 'arena') {
         setArenaBuilds((prev) => prev.filter((b) => b.id !== build.id));
-        logBuildHistory('delete_build', build.title || build.id, 'arena 공략');
+        logBuildHistory('delete_build', build.title || build.id, '결투장');
       } else if (category === 'siege') {
         setSiegeBuilds((prev) => ({
           ...prev,
           [siegeDay]: (prev[siegeDay] || []).filter((b) => b.id !== build.id),
         }));
-        logBuildHistory('delete_build', build.title || build.id, `siege ${siegeDay}`);
+        logBuildHistory('delete_build', build.title || build.id, buildHistoryScopeLabel('siege', { siegeDay }));
       }
     };
 
@@ -1183,7 +1209,7 @@ export default function GuildLounge() {
         ...prev,
         [expeditionBoss]: (prev[expeditionBoss] || []).filter((b) => b.id !== build.id),
       }));
-      logBuildHistory('delete_build', build.title || build.id, `expedition ${expeditionBoss}`);
+      logBuildHistory('delete_build', build.title || build.id, buildHistoryScopeLabel('expedition', { expeditionBoss }));
     };
 
     return (
@@ -1495,7 +1521,7 @@ export default function GuildLounge() {
           onEdit={handleStartEditTotalwar}
           onDelete={(id, title, tierId) => {
             setTotalwarBuilds(prev => ({ ...prev, [tierId]: (prev[tierId] || []).filter(b => b.id !== id) }));
-            logBuildHistory('delete_build', title || id, `총력전 ${tierId}`);
+            logBuildHistory('delete_build', title || id, buildHistoryScopeLabel('totalwar', { totalwarTier: tierId }));
           }}
           onOpenProfile={setProfileUid}
         />
@@ -1514,6 +1540,7 @@ export default function GuildLounge() {
           onBuildHistory={logBuildHistory}
           resolveHeroByName={resolveHeroByName}
           heroes={heroes}
+          canDeleteBuild={canDeleteBuild}
         />
       )}
 
@@ -1526,6 +1553,7 @@ export default function GuildLounge() {
           onBuildHistory={logBuildHistory}
           resolveHeroByName={resolveHeroByName}
           heroes={heroes}
+          canDeleteBuild={canDeleteBuild}
         />
       )}
 

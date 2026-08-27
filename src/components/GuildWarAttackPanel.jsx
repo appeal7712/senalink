@@ -155,7 +155,8 @@ function GwTrioDeckEditor({
 
 export default function GuildWarAttackPanel({
   gwAttacks, setGwAttacks, selectedGwAttackId, setSelectedGwAttackId,
-  inspectingCounter, setInspectingCounter, guildRoom, onBuildHistory, resolveHeroByName, heroes
+  inspectingCounter, setInspectingCounter, guildRoom, onBuildHistory, resolveHeroByName, heroes,
+  canDeleteBuild,
 }) {
   const selectedTarget = gwAttacks.find(g => g.id === selectedGwAttackId) || null;
 
@@ -211,16 +212,20 @@ export default function GuildWarAttackPanel({
       return;
     }
     const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    const authorFields = {
+      author: guildRoom.myNickname,
+      authorId: guildRoom.myMemberId || '',
+    };
     if (targetForm.id) {
       setGwAttacks(prev => prev.map(t => t.id === targetForm.id
-        ? { ...t, title: targetForm.title, heroNames: targetForm.heroNames, note: targetForm.note, formationId: targetForm.formationId, petId: targetForm.petId, author: guildRoom.myNickname, updatedAt: now }
+        ? { ...t, title: targetForm.title, heroNames: targetForm.heroNames, note: targetForm.note, formationId: targetForm.formationId, petId: targetForm.petId, ...authorFields, updatedAt: now }
         : t));
       onBuildHistory?.('update_build', targetForm.title, '길드전 공격 상대덱');
     } else {
       const newTarget = {
         id: 'gwa_' + Date.now(), title: targetForm.title, heroNames: targetForm.heroNames,
         note: targetForm.note, formationId: targetForm.formationId, petId: targetForm.petId,
-        author: guildRoom.myNickname, updatedAt: now, counters: []
+        ...authorFields, updatedAt: now, counters: []
       };
       setGwAttacks(prev => [...prev, newTarget]);
       setSelectedGwAttackId(newTarget.id);
@@ -230,8 +235,12 @@ export default function GuildWarAttackPanel({
     collapseOverlayHistory();
   };
   const deleteTarget = (id) => {
-    if (!confirm('이 상대 덱과 등록된 모든 카운터 덱을 삭제할까요?')) return;
     const target = gwAttacks.find(t => t.id === id);
+    if (!canDeleteBuild?.(target)) {
+      alert('삭제는 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+      return;
+    }
+    if (!confirm('이 상대 덱과 등록된 모든 카운터 덱을 삭제할까요?')) return;
     setGwAttacks(prev => prev.filter(t => t.id !== id));
     if (selectedGwAttackId === id) setSelectedGwAttackId(null);
     onBuildHistory?.('delete_build', target?.title || id, '길드전 공격 상대덱');
@@ -277,6 +286,7 @@ export default function GuildWarAttackPanel({
         petId: counterForm.petId,
         heroGearConfigs: counterForm.heroGearConfigs,
         author: guildRoom.myNickname,
+        authorId: guildRoom.myMemberId || '',
         updatedAt: now,
       };
       if (counterForm.id) {
@@ -290,8 +300,12 @@ export default function GuildWarAttackPanel({
     collapseOverlayHistory();
   };
   const deleteCounter = (counterId) => {
-    if (!confirm('이 카운터 덱을 삭제할까요?')) return;
     const c = selectedTarget?.counters?.find(x => x.id === counterId);
+    if (!canDeleteBuild?.(c)) {
+      alert('삭제는 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+      return;
+    }
+    if (!confirm('이 카운터 덱을 삭제할까요?')) return;
     setGwAttacks(prev => prev.map(t => t.id !== selectedTarget.id ? t : { ...t, counters: (t.counters || []).filter(x => x.id !== counterId) }));
     onBuildHistory?.('delete_build', c?.title || counterId, '길드전 카운터');
   };
@@ -477,9 +491,11 @@ export default function GuildWarAttackPanel({
               <button type="button" onClick={e => { e.stopPropagation(); openEditCounter(c); }}>
                 <Icon name="edit" size={13} /> 수정
               </button>
-              <button type="button" className="is-danger" onClick={e => { e.stopPropagation(); deleteCounter(c.id); }}>
-                <Icon name="close" size={13} /> 삭제
-              </button>
+              {canDeleteBuild?.(c) ? (
+                <button type="button" className="is-danger" onClick={e => { e.stopPropagation(); deleteCounter(c.id); }}>
+                  <Icon name="close" size={13} /> 삭제
+                </button>
+              ) : null}
             </div>
           </div>
         ))}
@@ -522,9 +538,11 @@ export default function GuildWarAttackPanel({
                       <button type="button" onClick={e => { e.stopPropagation(); openEditTarget(t); }}>
                         <Icon name="edit" size={12} /> 수정
                       </button>
-                      <button type="button" className="is-danger" onClick={e => { e.stopPropagation(); deleteTarget(t.id); }}>
-                        <Icon name="close" size={12} /> 삭제
-                      </button>
+                      {canDeleteBuild?.(t) ? (
+                        <button type="button" className="is-danger" onClick={e => { e.stopPropagation(); deleteTarget(t.id); }}>
+                          <Icon name="close" size={12} /> 삭제
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 </div>
