@@ -309,6 +309,13 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
 
   const patchForm = (updates) => setForm(prev => ({ ...prev, ...updates }));
 
+  const patchGearDetail = (text) => {
+    if (!form) return;
+    const cfgs = [...(form.heroGearConfigs || emptyGear5())];
+    cfgs[slotIdx] = { ...(cfgs[slotIdx] || emptyGearConfig()), detailNote: text };
+    patchForm({ heroGearConfigs: cfgs });
+  };
+
   const placeHeroAt = (toIdx, name) => {
     if (!form) return;
     const next = [...form.heroSlots];
@@ -521,6 +528,9 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
             contentMode="pvp"
             reservedSkills={reserved}
             pvpMode={mode}
+            overviewNotes={String(d.otherDetail || '').trim()
+              ? [{ label: '기타 디테일', text: String(d.otherDetail).trim() }]
+              : []}
           />
         </div>
         <div className="build-panel-body">
@@ -843,6 +853,22 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                     <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>덱 유형</div>
                     <MetaDeckKindToggle kind={form.deckKind} onChange={k => patchForm({ deckKind: k })} />
                   </div>
+                  <div style={{ width: 1, background: 'rgba(255,255,255,0.14)', flexShrink: 0 }} />
+                  <div className="editing-build-arena-toggle-col editing-build-other-detail-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 180, flex: 1, maxWidth: 280 }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>기타 디테일</div>
+                    <textarea
+                      className="editing-build-detail-textarea"
+                      rows={2}
+                      value={form.otherDetail || ''}
+                      onChange={e => patchForm({ otherDetail: e.target.value })}
+                      placeholder="예: 피뢰침 - 선란이 맞게 세팅"
+                      style={{
+                        width: '100%', padding: '6px 10px', background: '#07090e', border: '1px solid var(--border-gold)',
+                        color: '#e2e8f0', borderRadius: 7, fontSize: 12, fontWeight: 700, lineHeight: 1.45,
+                        boxSizing: 'border-box', resize: 'none', fontFamily: 'inherit', minHeight: 0,
+                      }}
+                    />
+                  </div>
                   {form.mode === '속공' && (
                     <>
                       <div style={{ width: 1, background: 'rgba(255,255,255,0.14)', flexShrink: 0 }} />
@@ -910,14 +936,14 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
 
                 <div className="glass-inset editing-build-detail-panel" style={{ padding: '8px 12px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <div style={{ fontSize: 11, color: 'var(--accent-cyan)', fontWeight: 800 }}>
-                    기타 디테일
+                    세팅 디테일{currentSlotName ? ` · ${currentSlotName}` : ''}
                   </div>
                   <textarea
                     className="editing-build-detail-textarea"
                     rows={3}
-                    value={form.otherDetail || ''}
-                    onChange={e => patchForm({ otherDetail: e.target.value })}
-                    placeholder="예: 피뢰침 - 선란이 맞게 세팅 (모공 최대로)"
+                    value={(form.heroGearConfigs || emptyGear5())[slotIdx]?.detailNote || ''}
+                    onChange={e => patchGearDetail(e.target.value)}
+                    placeholder="예: 치확 67% · 약공 46%에 가깝게"
                     style={{
                       width: '100%', padding: '8px 12px', background: '#07090e', border: '1px solid var(--border-gold)',
                       color: '#e2e8f0', borderRadius: 7, fontSize: 14, fontWeight: 700, lineHeight: 1.5,

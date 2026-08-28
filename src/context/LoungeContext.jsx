@@ -235,7 +235,10 @@ export function LoungeProvider({ children }) {
     const unsub = onSnapshot(doc(db, COL.USERS, authUser.uid), (snap) => {
       if (!snap.exists()) return;
       const hubId = snap.data()?.hubId || null;
-      if (!hubId) return;
+      if (!hubId) {
+        setSession((prev) => (prev?.observer ? prev : null));
+        return;
+      }
       setSession((prev) => {
         if (prev?.observer) return prev;
         if (prev?.loungeId === hubId) return prev;
@@ -346,6 +349,9 @@ export function LoungeProvider({ children }) {
       setMembersReady(true);
     }, (err) => {
       console.error('members snapshot', err);
+      if (err?.code === 'permission-denied') {
+        setMembers([]);
+      }
       // 빈 목록+ready 로 hubId 삭제하는 레이스를 막음
       setMembersSnapOk(false);
       setMembersReady(true);
@@ -467,26 +473,9 @@ export function LoungeProvider({ children }) {
       return;
     }
 
-    // 목록에 없어도 단건 get으로 한 번 더 확인 — 빈/부분 스냅샷 오판으로 hubId 삭제 방지
-    let cancelled = false;
-    (async () => {
-      try {
-        const memberSnap = await getDoc(doc(db, 'hubs', session.loungeId, 'members', authUser.uid));
-        if (cancelled) return;
-        if (memberSnap.exists()) {
-          setDoc(doc(db, COL.USERS, authUser.uid), {
-            hubId: session.loungeId,
-            updatedAt: nowIso(),
-          }, { merge: true }).catch(() => {});
-          return;
-        }
-        setSession(null);
-        setDoc(doc(db, COL.USERS, authUser.uid), { hubId: null, updatedAt: nowIso() }, { merge: true }).catch(() => {});
-      } catch (err) {
-        console.error('member membership verify', err);
-      }
-    })();
-    return () => { cancelled = true; };
+    // 추방·강퇴 후: 확정 스냅샷에 없으면 즉시 세션·hubId 정리 (재가입 가능)
+    setSession(null);
+    setDoc(doc(db, COL.USERS, authUser.uid), { hubId: null, updatedAt: nowIso() }, { merge: true }).catch(() => {});
   }, [session, authUser, membersReady, membersSnapOk, members, isSuperAdmin]);
 
   const myRole = me?.role || null;

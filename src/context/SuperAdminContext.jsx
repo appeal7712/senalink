@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { auth, db, usingEmulators } from '../lib/firebase';
@@ -21,6 +21,8 @@ export function SuperAdminProvider({ children }) {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [adminReady, setAdminReady] = useState(false);
   const [loginError, setLoginError] = useState(null);
+  const adminUidRef = useRef(null);
+  const adminSnapOkRef = useRef(false);
 
   useEffect(() => {
     void consumeGoogleRedirect();
@@ -36,23 +38,36 @@ export function SuperAdminProvider({ children }) {
 
   useEffect(() => {
     if (!authReady) return undefined;
-    if (!authUser?.uid) {
+    const uid = authUser?.uid || null;
+    if (!uid) {
+      adminUidRef.current = null;
+      adminSnapOkRef.current = false;
       setIsSuperAdmin(false);
       setAdminReady(true);
       return undefined;
     }
 
+    const uidChanged = adminUidRef.current !== uid;
+    if (uidChanged) {
+      adminUidRef.current = uid;
+      adminSnapOkRef.current = false;
+      setAdminReady(false);
+    } else if (adminSnapOkRef.current) {
+      // 토큰 갱신 등으로 auth만 다시 불려도 /ops 로그인 화면으로 튕기지 않음
+      setAdminReady(true);
+    }
+
     let gotSnap = false;
-    setAdminReady(false);
-    const unsub = onSnapshot(doc(db, ...adminDoc(authUser.uid)), (snap) => {
+    const unsub = onSnapshot(doc(db, ...adminDoc(uid)), (snap) => {
       gotSnap = true;
+      adminSnapOkRef.current = true;
       setIsSuperAdmin(snap.exists() && snap.data()?.role === 'super');
       setAdminReady(true);
       setLoginError(null);
     }, (err) => {
       console.error('admin snapshot', err);
       // 토큰 갱신 중 일시 거부 등으로 슈퍼 플래그를 바로 내리면 /ops가 로그인 화면으로 튕김
-      if (!gotSnap) {
+      if (!gotSnap && !adminSnapOkRef.current) {
         setIsSuperAdmin(false);
         setAdminReady(true);
       }
@@ -62,7 +77,7 @@ export function SuperAdminProvider({ children }) {
     });
     const timer = window.setTimeout(() => {
       // 첫 스냅샷이 오기 전에는 로그인 화면으로 떨어뜨리지 않음(권한 확인 중 유지)
-      if (!gotSnap) setAdminReady(true);
+      if (!gotSnap && !adminSnapOkRef.current) setAdminReady(true);
     }, 8000);
     return () => {
       window.clearTimeout(timer);

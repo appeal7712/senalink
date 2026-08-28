@@ -164,7 +164,7 @@ export default function GuildWarAttackPanel({
   const [targetForm, setTargetForm] = useState({ id: null, title: '', heroNames: emptyNames5(), note: '', formationId: 'protect', petId: pets[0]?.id });
 
   const [isCounterModalOpen, setIsCounterModalOpen] = useState(false);
-  const [counterForm, setCounterForm] = useState({ id: null, title: '', heroNames: emptyNames5(), reservedSkills: [], gearNote: '', formationId: 'protect', petId: pets[0]?.id, heroGearConfigs: emptyGear5() });
+  const [counterForm, setCounterForm] = useState({ id: null, title: '', heroNames: emptyNames5(), reservedSkills: [], otherDetail: '', formationId: 'protect', petId: pets[0]?.id, heroGearConfigs: emptyGear5() });
   const [suppressInspectPaint, setSuppressInspectPaint] = useState(false);
   /** 터치 우선순위 드래그 고스트 { targetId, fromId, title, rank, x, y, w, h, ox, oy } */
   const [prioGhost, setPrioGhost] = useState(null);
@@ -247,13 +247,14 @@ export default function GuildWarAttackPanel({
   };
 
   const openCreateCounter = () => {
-    setCounterForm({ id: null, title: '', heroNames: emptyNames5(), reservedSkills: [], gearNote: '', formationId: 'protect', petId: pets[0]?.id, heroGearConfigs: emptyGear5() });
+    setCounterForm({ id: null, title: '', heroNames: emptyNames5(), reservedSkills: [], otherDetail: '', formationId: 'protect', petId: pets[0]?.id, heroGearConfigs: emptyGear5() });
     setIsCounterModalOpen(true);
   };
   const openEditCounter = (c) => {
     setCounterForm({
       id: c.id, title: c.title, heroNames: padNames5(c.heroNames),
-      reservedSkills: [...(c.reservedSkills || [])], gearNote: c.gearNote || '',
+      reservedSkills: [...(c.reservedSkills || [])],
+      otherDetail: c.otherDetail ?? c.gearNote ?? '',
       formationId: normalizeFormationId(c.formationId),
       petId: c.petId || pets[0]?.id,
       heroGearConfigs: (c.heroGearConfigs && c.heroGearConfigs.length === 5)
@@ -281,7 +282,8 @@ export default function GuildWarAttackPanel({
         title: counterForm.title,
         heroNames: counterForm.heroNames,
         reservedSkills: counterForm.reservedSkills.filter(Boolean),
-        gearNote: counterForm.gearNote,
+        otherDetail: counterForm.otherDetail || '',
+        gearNote: counterForm.otherDetail || '',
         formationId: counterForm.formationId,
         petId: counterForm.petId,
         heroGearConfigs: counterForm.heroGearConfigs,
@@ -663,8 +665,9 @@ export default function GuildWarAttackPanel({
               onReservationChange={s => setCounterForm({ ...counterForm, reservedSkills: s })}
             />
             <div>
-              <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '5px', fontWeight: 800 }}>메모 (선택)</div>
-              <textarea value={counterForm.gearNote} onChange={e => setCounterForm({ ...counterForm, gearNote: e.target.value })} rows={2}
+              <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '5px', fontWeight: 800 }}>기타 디테일 (선택)</div>
+              <textarea value={counterForm.otherDetail} onChange={e => setCounterForm({ ...counterForm, otherDetail: e.target.value })} rows={2}
+                placeholder="예: 피뢰침 - 선란이 맞게 세팅"
                 style={{ width: '100%', padding: '10px 12px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }} />
             </div>
             <button onClick={saveCounter} style={{ padding: '13px', background: 'linear-gradient(135deg, var(--accent-cyan), #0ea5c7)', color: '#04202b', fontWeight: 900, border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '15px' }}>저장</button>
@@ -709,19 +712,12 @@ export default function GuildWarAttackPanel({
                   petObj={resolvePet(inspectingCounter.petId)}
                   contentMode="pvp"
                   reservedSkills={inspectingCounter.reservedSkills}
-                  overviewNotes={inspectingCounter.gearNote ? [{ text: inspectingCounter.gearNote }] : []}
+                  overviewNotes={(inspectingCounter.otherDetail || inspectingCounter.gearNote)
+                    ? [{ label: '기타 디테일', text: inspectingCounter.otherDetail || inspectingCounter.gearNote }]
+                    : []}
                   onUnderlyingCover={setSuppressInspectPaint}
                 />
               </div>
-
-              {inspectingCounter.gearNote && (
-                <div className="gw-inspect-memo">
-                  <div className="setting-overview-label">
-                    <Icon name="bolt" size={14} /> 메모
-                  </div>
-                  <div className="gw-inspect-memo-text">{inspectingCounter.gearNote}</div>
-                </div>
-              )}
             </div>
           </div>
         </ModalScrim>
