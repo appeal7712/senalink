@@ -7626,6 +7626,15 @@ h1, h2, h3 {
   .gw-counter-edit-modal .gw-counter-edit-body {
     padding: 12px 14px;
   }
+
+  /* 공용 모바일 order:3 이 카운터 모달에서 기타 디테일을 영웅 목록 위로 밀어올림 → DOM 순서 유지 */
+  .gw-counter-edit-modal .gw-counter-hero-picker {
+    order: unset !important;
+  }
+
+  .gw-counter-edit-modal .gw-counter-other-detail-panel {
+    order: unset !important;
+  }
 }
 
 @media (max-width: 980px) {
