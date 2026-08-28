@@ -2751,6 +2751,22 @@ h1, h2, h3 {
   box-sizing: border-box;
 }
 
+/* PvE 레이드·돌발: 예약 10칸 — 간격만 조밀 (레이아웃 구조 동일) */
+.skill-reserve.is-dense {
+  gap: 6px;
+}
+.skill-reserve.is-dense .skill-reserve-help {
+  font-size: 11px;
+  line-height: 1.35;
+}
+.skill-reserve.is-dense .skill-reserve-row {
+  gap: 8px;
+  padding: 6px 4px 10px;
+}
+.skill-reserve.is-dense .skill-reserve-hero {
+  gap: 6px;
+}
+
 @media (max-width: 900px) {
   .expedition-boss-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3602,8 +3618,20 @@ h1, h2, h3 {
   gap: 8px;
   font-size: 13px;
   font-weight: 800;
-  white-space: nowrap;
   color: #fff;
+  flex-shrink: 0;
+}
+
+/* 시즌 종료 후 순위 갱신 — 라벨 옆 작은 점만 (pill 스타일은 그대로) */
+.guild-rank-due-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(251, 191, 36, 0.5);
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.22);
+  flex-shrink: 0;
+  margin-left: -2px;
+  opacity: 0.85;
 }
 
 .league-chip {
@@ -5170,6 +5198,44 @@ h1, h2, h3 {
   line-height: 1.4;
   margin: 0;
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.75);
+}
+
+/* 공용 PvE 공략(레이드·돌발·성장던전): 수정 및 고정자 없음 → 제목 중앙 */
+.build-title-strip--pve .build-title-pve-center {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.build-title-strip--pve .community-pvp-card-actions {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+/* 공용 PvE 공략: 스킬 예약·타임라인 — 덱 옆 칸 세로·가로 중앙 */
+.build-panel--pve .build-panel-playbook,
+.build-panel--pve .build-panel-timeline {
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+}
+
+.build-panel--pve .build-panel-playbook-title,
+.build-panel--pve .build-panel-timeline-title {
+  justify-content: center;
+  width: 100%;
+}
+
+.build-panel--pve .build-panel-playbook .skill-reserve {
+  align-items: center;
+  width: 100%;
+}
+
+.build-panel--pve .build-panel-playbook .skill-reserve-row {
+  justify-content: center;
 }
 
 .build-title-meta {
@@ -7097,6 +7163,7 @@ h1, h2, h3 {
     grid-area: heroes;
     grid-column: 1 / 3;
     min-height: 0;
+    height: 100%;
     max-height: 100%;
     display: flex;
     flex-direction: column;
@@ -7107,16 +7174,20 @@ h1, h2, h3 {
   }
 
   .editing-build-hero-picker .hero-grid-picker--fill {
-    flex: 1 1 auto !important;
+    flex: 1 1 0% !important;
     min-height: 0 !important;
-    height: 100% !important;
+    height: auto !important;
+    max-height: 100% !important;
   }
 
   .editing-build-hero-picker .hero-grid-picker--fill .hero-grid-picker-grid {
-    flex: 1 1 auto !important;
+    flex: 1 1 0% !important;
     height: auto !important;
-    min-height: 64px !important;
-    max-height: none !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow-y: auto !important;
+    padding-bottom: 12px;
+    box-sizing: border-box;
   }
 
   .editing-build-timeline-col {
@@ -7175,21 +7246,50 @@ h1, h2, h3 {
     }
   }
 
-  .editing-build-hero-grid {
-    flex: 1 1 auto !important;
-    height: auto !important;
-    min-height: 168px !important;
-    max-height: none;
+  /* 영웅 목록: 남는 높이 안에서만 스크롤 (PC — height:auto로 키워져 잘리던 문제) */
+  .editing-build-hero-picker > .editing-build-hero-grid {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow-y: auto !important;
+    padding-bottom: 12px;
+    box-sizing: border-box;
     grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)) !important;
-    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
-  /* HeroGridPicker 래퍼: 그리드 강제 해제 → 안쪽 스크롤이 남는 높이를 먹음 */
+  /* HeroGridPicker 래퍼: 바깥은 높이 고정, 안쪽 그리드만 스크롤 */
+  .editing-build-hero-picker > .editing-build-hero-grid:has(.hero-grid-picker),
   .editing-build-hero-grid:has(.hero-grid-picker) {
     display: flex !important;
     flex-direction: column !important;
     grid-template-columns: unset !important;
     overflow: hidden !important;
+    overflow-y: hidden !important;
+    min-height: 0 !important;
+    flex: 1 1 0% !important;
+    max-height: 100% !important;
+    padding-bottom: 0;
+  }
+
+  .editing-build-hero-picker > .editing-build-hero-grid:has(.hero-grid-picker) .hero-grid-picker--fill,
+  .editing-build-hero-grid:has(.hero-grid-picker) .hero-grid-picker--fill {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: 100% !important;
+  }
+
+  .editing-build-hero-picker > .editing-build-hero-grid:has(.hero-grid-picker) .hero-grid-picker--fill .hero-grid-picker-grid,
+  .editing-build-hero-grid:has(.hero-grid-picker) .hero-grid-picker--fill .hero-grid-picker-grid {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: 100% !important;
+    overflow-y: auto !important;
+    padding-bottom: 12px;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* 세로가 짧을 때만: 왼쪽(덱+디테일) / 장비가 겹치지 않고 스크롤. 영웅 목록 칸은 그대로 */
@@ -7599,6 +7699,16 @@ h1, h2, h3 {
   .build-title-strip > div:first-child {
     flex: 1 1 180px !important;
     min-width: 0;
+  }
+
+  .build-title-strip--pve > .build-title-pve-center {
+    flex: 1 1 auto !important;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .build-title-strip--pve > .community-pvp-card-actions {
+    margin-left: auto !important;
   }
 
   .build-title-strip > div:last-child {
@@ -8064,6 +8174,31 @@ h1, h2, h3 {
     height: auto !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
+    padding-bottom: 12px !important;
+    box-sizing: border-box;
+  }
+
+  /* HeroGridPicker: 바깥 높이 안에서 안쪽만 스크롤 (마지막 줄 잘림 방지) */
+  .editing-build-hero-grid:has(.hero-grid-picker) {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: unset !important;
+    overflow: hidden !important;
+    min-height: 0;
+  }
+
+  .editing-build-hero-grid:has(.hero-grid-picker) .hero-grid-picker--fill {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
+  }
+
+  .editing-build-hero-grid:has(.hero-grid-picker) .hero-grid-picker-grid {
+    max-height: none !important;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto !important;
   }
 
   .pvp-deck-editor-row {
@@ -8082,6 +8217,8 @@ h1, h2, h3 {
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
     padding-right: 4px !important;
+    padding-bottom: 12px !important;
+    box-sizing: border-box;
   }
 
   .editing-build-modal .deck-stage-formation,

@@ -85,7 +85,8 @@ export default function LoungeHubHeader() {
           <div className="hub-header-ranks">
             <GuildRankBars
               lounge={activeLounge}
-              canEdit={isMaster || isSuperAdmin}
+              canEdit={canManageMembers || isSuperAdmin}
+              showDueMarks={canManageMembers || isSuperAdmin}
               onSave={(patch) => updateHubSettings(patch)}
             />
           </div>

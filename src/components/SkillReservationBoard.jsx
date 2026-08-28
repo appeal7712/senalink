@@ -167,8 +167,9 @@ export default function SkillReservationBoard({
     return () => mq.removeEventListener('change', sync);
   }, []);
 
-  const useCompact = compact || (readOnly && isMobileBoard);
-  const useBoard = readOnly && !isMobileBoard && !compact;
+  const useDense = slotLimit > 3;
+  const useCompact = compact || useDense || (readOnly && isMobileBoard);
+  const useBoard = readOnly && !isMobileBoard && !compact && !useDense;
 
   const findOrder = (heroName, skillKey) => {
     const idx = reserved.findIndex(
@@ -177,17 +178,20 @@ export default function SkillReservationBoard({
     return idx === -1 ? null : idx + 1;
   };
 
-  const portraitSize = useCompact ? 58 : useBoard ? 68 : 78;
-  const iconSize = useCompact ? 46 : useBoard ? 50 : 56;
-  const badgeFont = useCompact ? '12px' : useBoard ? '12px' : '13px';
-  const colGap = useCompact ? '10px' : useBoard ? '14px' : '16px';
-  const rowPad = useCompact ? '8px 6px 14px' : useBoard ? '10px 8px 16px' : '12px 10px 18px';
+  const portraitSize = useDense ? 50 : useCompact ? 58 : useBoard ? 68 : 78;
+  const iconSize = useDense ? 38 : useCompact ? 46 : useBoard ? 50 : 56;
+  const badgeFont = useDense ? '11px' : useCompact ? '12px' : useBoard ? '12px' : '13px';
+  const colGap = useDense ? '8px' : useCompact ? '10px' : useBoard ? '14px' : '16px';
+  const rowPad = useDense ? '6px 4px 10px' : useCompact ? '8px 6px 14px' : useBoard ? '10px 8px 16px' : '12px 10px 18px';
+  const stackGap = useDense ? '6px' : '8px';
 
   return (
-    <div className="skill-reserve is-row">
+    <div className={`skill-reserve is-row${useDense ? ' is-dense' : ''}`}>
       {editable && (
         <div className="skill-reserve-help">
-          {`스킬 아이콘을 순서대로 클릭해 최대 ${slotLimit}개까지 예약하세요. 위→아래: 각성기 · 스킬2 · 스킬1.`}
+          {useDense
+            ? `최대 ${slotLimit}개 · 각성·스킬2·스킬1 순으로 클릭`
+            : `스킬 아이콘을 순서대로 클릭해 최대 ${slotLimit}개까지 예약하세요. 위→아래: 각성기 · 스킬2 · 스킬1.`}
         </div>
       )}
 
@@ -233,7 +237,7 @@ export default function SkillReservationBoard({
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '6px', flexShrink: 0 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: stackGap, paddingBottom: '6px', flexShrink: 0 }}>
                   {stacked.length === 0 && (
                     <div style={{
                       width: `${iconSize}px`, height: `${iconSize}px`, borderRadius: '10px',

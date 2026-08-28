@@ -108,41 +108,47 @@ export default function CommunityGuideCard({
       <div className="build-panel-body">
         {!useCollapse && (
           <div
-            className="build-title-strip"
+            className={`build-title-strip${!isPvpLayout ? ' build-title-strip--pve' : ''}`}
             style={{ borderLeft: `3px solid ${tierAccent}` }}
           >
-            <div style={{ minWidth: 0, flex: '1 1 180px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                {arenaKind ? <ArenaDeckKindBadge kind={guide.deckKind} /> : null}
-                {arenaKindLabel && (
-                  <span style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 5,
-                    fontSize: 11, fontWeight: 800, padding: '3px 8px', borderRadius: 999,
-                    background: 'rgba(255,255,255,0.08)', color: '#e2e8f0',
-                  }}>
-                    {guide.arenaKind === 'advanced' ? (
-                      <img src="/images/community/arena/arena_advanced.png" alt="" style={{ width: 16, height: 16 }} />
-                    ) : (
-                      <img src="/images/community/arena/arena.png" alt="" style={{ width: 16, height: 16 }} />
-                    )}
-                    {arenaKindLabel}
-                  </span>
-                )}
-                {tier && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 900, color: '#fff' }}>
-                    <img src={tier.iconUrl} alt="" style={{ width: 18, height: 18 }} />
-                    {tier.label}
-                  </span>
-                )}
+            {isPvpLayout ? (
+              <div style={{ minWidth: 0, flex: '1 1 180px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  {arenaKind ? <ArenaDeckKindBadge kind={guide.deckKind} /> : null}
+                  {arenaKindLabel && (
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      fontSize: 11, fontWeight: 800, padding: '3px 8px', borderRadius: 999,
+                      background: 'rgba(255,255,255,0.08)', color: '#e2e8f0',
+                    }}>
+                      {guide.arenaKind === 'advanced' ? (
+                        <img src="/images/community/arena/arena_advanced.png" alt="" style={{ width: 16, height: 16 }} />
+                      ) : (
+                        <img src="/images/community/arena/arena.png" alt="" style={{ width: 16, height: 16 }} />
+                      )}
+                      {arenaKindLabel}
+                    </span>
+                  )}
+                  {tier && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 900, color: '#fff' }}>
+                      <img src={tier.iconUrl} alt="" style={{ width: 18, height: 18 }} />
+                      {tier.label}
+                    </span>
+                  )}
+                  <h3 className="build-title-name">{guide.title}</h3>
+                </div>
+                <AuthorMeta
+                  author={guide.author}
+                  authorId={guide.authorId}
+                  updatedAt={guide.updatedAt}
+                  onOpenProfile={onOpenProfile}
+                />
+              </div>
+            ) : (
+              <div className="build-title-pve-center">
                 <h3 className="build-title-name">{guide.title}</h3>
               </div>
-              <AuthorMeta
-                author={guide.author}
-                authorId={guide.authorId}
-                updatedAt={guide.updatedAt}
-                onOpenProfile={onOpenProfile}
-              />
-            </div>
+            )}
             {actions}
           </div>
         )}
@@ -187,7 +193,7 @@ export default function CommunityGuideCard({
   if (!useCollapse) {
     return (
       <div
-        className="luxury-panel build-panel"
+        className={`luxury-panel build-panel${!isPvpLayout ? ' build-panel--pve' : ''}`}
         style={{ boxShadow: `inset 3px 0 0 ${tierAccent}` }}
       >
         {expandedBody}

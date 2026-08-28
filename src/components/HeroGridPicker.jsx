@@ -93,6 +93,8 @@ export default function HeroGridPicker({
           gap: `${gap}px`,
           overflowY: 'auto',
           paddingRight: 4,
+          paddingBottom: 12,
+          boxSizing: 'border-box',
         }}
       >
         {filtered.map(h => {

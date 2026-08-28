@@ -1,12 +1,24 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Icon from '../icons/Icon';
 import { formatGuildRank, GUILDWAR_LEAGUES, parseGuildRank } from '../../data/guildRanks';
+import { getGuildRankDueFlags } from '../../lib/guildRankSeasonDue';
 import { backdropDismissProps } from '../../utils/backdropDismiss';
 import LeagueChip from './LeagueChip';
 import ModalScrim from '../ModalScrim';
 
-export default function GuildRankBars({ lounge, canEdit, onSave }) {
+function readPreviewRankDue(showDueMarks) {
+  if (!showDueMarks || typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).get('previewRankDue') === '1';
+}
+
+export default function GuildRankBars({ lounge, canEdit, showDueMarks = false, onSave }) {
   const [open, setOpen] = useState(false);
+  const previewDue = readPreviewRankDue(showDueMarks);
+
+  const due = useMemo(() => {
+    if (previewDue) return { guildwar: true, expedition: true };
+    return showDueMarks ? getGuildRankDueFlags(lounge) : { guildwar: false, expedition: false };
+  }, [lounge, showDueMarks, previewDue]);
 
   const gwRank = formatGuildRank(lounge?.guildwarRank);
   const exRank = formatGuildRank(lounge?.expeditionRank);
@@ -19,10 +31,13 @@ export default function GuildRankBars({ lounge, canEdit, onSave }) {
           className="guild-rank-pill"
           onClick={canEdit ? () => setOpen(true) : undefined}
           style={{ cursor: canEdit ? 'pointer' : 'default' }}
-          title={canEdit ? '순위 갱신' : undefined}
+          title={canEdit ? (due.guildwar ? '시즌 종료 · 순위 갱신' : '순위 갱신') : undefined}
         >
           <span className="guild-rank-pill-icon"><Icon name="fortress" size={15} /></span>
           <span className="guild-rank-pill-label">길드전</span>
+          {due.guildwar && (
+            <span className="guild-rank-due-dot" aria-hidden />
+          )}
           <span className="guild-rank-pill-right">
             <LeagueChip league={lounge?.guildwarLeague} />
             <strong>{gwRank}</strong>
@@ -33,10 +48,13 @@ export default function GuildRankBars({ lounge, canEdit, onSave }) {
           className="guild-rank-pill"
           onClick={canEdit ? () => setOpen(true) : undefined}
           style={{ cursor: canEdit ? 'pointer' : 'default' }}
-          title={canEdit ? '순위 갱신' : undefined}
+          title={canEdit ? (due.expedition ? '시즌 종료 · 순위 갱신' : '순위 갱신') : undefined}
         >
           <span className="guild-rank-pill-icon"><Icon name="volcano" size={15} /></span>
           <span className="guild-rank-pill-label">강림 원정대</span>
+          {due.expedition && (
+            <span className="guild-rank-due-dot" aria-hidden />
+          )}
           <span className="guild-rank-pill-right">
             <strong>{exRank}</strong>
           </span>
@@ -92,7 +110,7 @@ function RankEditModal({ lounge, onClose, onSave }) {
           </button>
         </div>
         <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, lineHeight: 1.5 }}>
-          관리자가 직접 갱신합니다.
+          길드마스터·관리자가 갱신 · 전 시즌 순위 반영 권장
         </p>
 
         <div>

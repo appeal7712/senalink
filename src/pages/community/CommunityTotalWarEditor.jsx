@@ -232,7 +232,7 @@ export default function CommunityTotalWarEditor({
                 selectedNames={filledNames}
                 currentSlotName={current.heroNames[slot] || ''}
                 onPick={(name) => setHeroAt(slot, name)}
-                height={168}
+                fillHeight
                 showSearch
               />
             </div>

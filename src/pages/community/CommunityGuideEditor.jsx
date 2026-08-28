@@ -430,7 +430,7 @@ export default function CommunityGuideEditor({
                   selectedNames={filledNames}
                   currentSlotName={heroNames[slot] || ''}
                   onPick={(name) => setHeroAt(slot, name)}
-                  height={168}
+                  fillHeight
                   showSearch
                 />
               </div>

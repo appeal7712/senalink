@@ -635,6 +635,8 @@ export function LoungeProvider({ children }) {
       guildwarLeague: null,
       expeditionRank: null,
       ranksUpdatedAt: null,
+      guildwarRankUpdatedAt: null,
+      expeditionRankUpdatedAt: null,
       lastActivityAt: ts,
       createdAt: ts,
       updatedAt: ts,
@@ -771,7 +773,8 @@ export function LoungeProvider({ children }) {
       next.description = String(patch.description || '').slice(0, 120);
     }
     if (patch.guildwarRank !== undefined || patch.guildwarLeague !== undefined || patch.expeditionRank !== undefined) {
-      if (!isMaster && !isSuperAdmin) throw new Error('길드 순위는 길드마스터만 갱신할 수 있습니다.');
+      if (!isAdmin && !isSuperAdmin) throw new Error('길드 순위는 길드마스터·관리자만 갱신할 수 있습니다.');
+      const ts = nowIso();
       const gwRank = patch.guildwarRank !== undefined ? parseGuildRank(patch.guildwarRank) : parseGuildRank(activeLounge.guildwarRank);
       const exRank = patch.expeditionRank !== undefined ? parseGuildRank(patch.expeditionRank) : parseGuildRank(activeLounge.expeditionRank);
       next.guildwarRank = gwRank;
@@ -779,7 +782,9 @@ export function LoungeProvider({ children }) {
         ? (normalizeGuildwarLeague(patch.guildwarLeague !== undefined ? patch.guildwarLeague : activeLounge.guildwarLeague) || 'major')
         : null;
       next.expeditionRank = exRank;
-      next.ranksUpdatedAt = nowIso();
+      next.guildwarRankUpdatedAt = ts;
+      next.expeditionRankUpdatedAt = ts;
+      next.ranksUpdatedAt = ts;
     }
     if (patch.password !== undefined) {
       if (!isMaster && !isSuperAdmin) throw new Error('입장 비밀번호 변경은 길드마스터만 가능합니다.');
