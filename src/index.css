@@ -8217,6 +8217,20 @@ h1, h2, h3 {
     max-width: 100%;
   }
 
+  /* 길드전 방어: 기타 디테일 — 모바일에서도 티어·세팅·덱유형과 동일 중앙 정렬 */
+  .editing-build-other-detail-col {
+    max-width: 100% !important;
+    width: 100% !important;
+    flex: none !important;
+    align-items: center !important;
+  }
+
+  .editing-build-other-detail-col .editing-build-detail-textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
   .editing-build-round-toggles {
     display: flex !important;
     justify-content: center !important;
