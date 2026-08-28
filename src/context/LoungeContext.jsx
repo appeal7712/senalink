@@ -473,9 +473,26 @@ export function LoungeProvider({ children }) {
       return;
     }
 
-    // 추방·강퇴 후: 확정 스냅샷에 없으면 즉시 세션·hubId 정리 (재가입 가능)
-    setSession(null);
-    setDoc(doc(db, COL.USERS, authUser.uid), { hubId: null, updatedAt: nowIso() }, { merge: true }).catch(() => {});
+    // 추방·강퇴 후: 목록에 없으면 단건 get으로 재확인 후 세션·hubId 정리 (가입 직후 스냅샷 지연 오판 방지)
+    let cancelled = false;
+    (async () => {
+      try {
+        const memberSnap = await getDoc(doc(db, 'hubs', session.loungeId, 'members', authUser.uid));
+        if (cancelled) return;
+        if (memberSnap.exists()) {
+          setDoc(doc(db, COL.USERS, authUser.uid), {
+            hubId: session.loungeId,
+            updatedAt: nowIso(),
+          }, { merge: true }).catch(() => {});
+          return;
+        }
+        setSession(null);
+        setDoc(doc(db, COL.USERS, authUser.uid), { hubId: null, updatedAt: nowIso() }, { merge: true }).catch(() => {});
+      } catch (err) {
+        console.error('member membership verify', err);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [session, authUser, membersReady, membersSnapOk, members, isSuperAdmin]);
 
   const myRole = me?.role || null;
