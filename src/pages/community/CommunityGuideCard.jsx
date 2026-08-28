@@ -156,7 +156,7 @@ export default function CommunityGuideCard({
         {isTimeline ? (
           <div className="build-panel-timeline">
             <div className="build-panel-timeline-title">
-              <Icon name="clock" size={15} />
+              <Icon name="clock" size={16} />
               스킬 시전 순서 타임라인
             </div>
             <SkillTimelineSteps
@@ -174,7 +174,7 @@ export default function CommunityGuideCard({
         ) : (
           <div className="build-panel-playbook">
             <div className="build-panel-playbook-title">
-              <Icon name="target" size={15} />
+              <Icon name="target" size={16} />
               스킬 예약 ({reserved.filter(Boolean).length}/{maxRes})
             </div>
             <SkillReservationBoard

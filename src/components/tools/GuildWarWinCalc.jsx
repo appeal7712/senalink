@@ -78,7 +78,7 @@ export default function GuildWarWinCalc() {
       <div className="luxury-panel gwcalc-hero">
         <div>
           <div className="gwcalc-eyebrow">길드전 계산기</div>
-          <h1>승리확정 판정기</h1>
+          <h1>승리확정 계산기</h1>
           <p>
             양쪽 남은 공격권과 남은 성 개수를 넣으면, 현재 확정인지 / 남은 공격으로 확정 가능한지 계산합니다.
           </p>

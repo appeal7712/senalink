@@ -5215,27 +5215,60 @@ h1, h2, h3 {
   margin-left: auto;
 }
 
-/* 공용 PvE 공략: 스킬 예약·타임라인 — 덱 옆 칸 세로·가로 중앙 */
+/* 공용 PvE 공략 카드: 스킬 예약·타임라인 — PvP 펼침과 동일 밀도, 제목은 상단 */
 .build-panel--pve .build-panel-playbook,
 .build-panel--pve .build-panel-timeline {
   flex: 1;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
+  padding: 8px 10px;
+  gap: 4px;
 }
 
 .build-panel--pve .build-panel-playbook-title,
 .build-panel--pve .build-panel-timeline-title {
   justify-content: center;
   width: 100%;
+  flex-shrink: 0;
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 4px;
+  padding: 0 4px;
+  gap: 8px;
 }
 
 .build-panel--pve .build-panel-playbook .skill-reserve {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
   width: 100%;
+  min-height: 0;
 }
 
 .build-panel--pve .build-panel-playbook .skill-reserve-row {
   justify-content: center;
+  padding: 6px 4px 10px !important;
+  gap: 8px !important;
+}
+
+/* 공용 PvE 편집: 레이드·돌발 스킬 예약 설정 — 카드와 동일 톤 */
+.editing-build-timeline-list.editing-build-reservation-panel {
+  padding: 8px 10px !important;
+  gap: 4px;
+}
+
+.editing-build-reservation-head {
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 4px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .build-title-meta {
@@ -6965,6 +6998,15 @@ h1, h2, h3 {
   border-radius: 16px;
   padding: 14px;
   background: var(--glass-inset);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.gwcalc-calccard.gwcalc-our {
+  background: var(--gw-our-bg);
+  border-color: var(--gw-our-border);
+}
+.gwcalc-calccard.gwcalc-enemy {
+  background: var(--gw-enemy-bg);
+  border-color: var(--gw-enemy-border);
 }
 .gwcalc-calccard p {
   margin: 0;
@@ -6977,6 +7019,12 @@ h1, h2, h3 {
   margin-top: 6px;
   font-size: 18px;
   color: #fff;
+}
+.gwcalc-calccard.gwcalc-our strong {
+  color: var(--gw-our);
+}
+.gwcalc-calccard.gwcalc-enemy strong {
+  color: var(--gw-enemy);
 }
 .gwcalc-summary {
   margin-top: 12px;
@@ -7459,6 +7507,124 @@ h1, h2, h3 {
   .build-panel-timeline .timeline-arrow,
   .expedition-round-guide .timeline-arrow {
     display: none !important;
+  }
+}
+
+/* 길드전 카운터 덱 수정 — 본문 전체 스크롤 (방어/공용 그리드와 분리) */
+.editing-build-modal.gw-counter-edit-modal {
+  width: min(940px, 94vw) !important;
+  max-width: min(940px, 94vw) !important;
+  max-height: min(88vh, 860px) !important;
+  height: min(88vh, 860px);
+  overflow: hidden !important;
+}
+
+.gw-counter-edit-modal .gw-counter-edit-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 20px;
+  box-sizing: border-box;
+}
+
+.gw-counter-edit-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.gw-counter-edit-top {
+  display: grid;
+  grid-template-columns: minmax(240px, 276px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.gw-counter-edit-modal .editing-build-left-stack {
+  grid-area: unset;
+  justify-content: flex-start;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: visible !important;
+}
+
+.gw-counter-edit-modal .gw-counter-setting-detail {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.gw-counter-edit-modal .gw-counter-setting-detail .editing-build-detail-textarea {
+  flex: 1 1 auto !important;
+  min-height: calc(3 * 1.5em + 16px) !important;
+  max-height: none !important;
+  height: auto !important;
+}
+
+.gw-counter-edit-modal .gw-counter-setting-detail,
+.gw-counter-edit-modal .editing-build-detail-panel {
+  overflow: visible !important;
+}
+
+.gw-counter-edit-modal .editing-build-gear-panel {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  grid-area: unset;
+}
+
+.gw-counter-edit-modal .gw-counter-other-detail-panel {
+  min-width: 0;
+}
+
+.gw-counter-edit-modal .gw-counter-hero-picker {
+  height: auto !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  grid-area: unset;
+  flex-shrink: 0 !important;
+}
+
+.gw-counter-edit-modal .gw-counter-hero-picker .hero-grid-picker-grid {
+  height: 100px !important;
+  min-height: 100px !important;
+  max-height: 100px !important;
+  flex: none !important;
+  overflow-y: auto !important;
+}
+
+.gw-counter-other-detail-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  background: #07090e;
+  border: 1px solid var(--border-gold);
+  color: #e2e8f0;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+  font-family: inherit;
+  resize: none;
+  min-height: calc(2 * 1.5em + 16px);
+}
+
+@media (max-width: 980px) {
+  .gw-counter-edit-top {
+    grid-template-columns: 1fr;
+  }
+
+  .gw-counter-edit-modal .gw-counter-edit-body {
+    padding: 12px 14px;
   }
 }
 

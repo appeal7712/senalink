@@ -53,6 +53,10 @@ function GwTrioDeckEditor({
   gearConfigs, onGearConfigsChange, showGear = false,
   petObj, onPetChange,
   showReservation = false, reservedSkills, onReservationChange,
+  /** 카운터 덱 수정만: 방어/허브 editing-build 그리드 레이아웃 */
+  editingLayout = false,
+  otherDetail = '',
+  onOtherDetailChange,
 }) {
   const [slotIdx, setSlotIdx] = useState(0);
   const names = padNames5(heroNames);
@@ -105,6 +109,112 @@ function GwTrioDeckEditor({
     }
   };
 
+  const deckCard = (
+    <InGameDeckCard
+      teamName={editingLayout ? '' : '영웅 배치'}
+      formationId={normalizeFormationId(formationId)}
+      heroList={names}
+      slotCount={5}
+      maxHeroes={3}
+      contentMode="pvp"
+      isEditMode
+      isSelected
+      hideReservationBtn={!showReservation}
+      reservedSkills={reservedSkills}
+      onReservationChange={showReservation ? onReservationChange : undefined}
+      selectedSlotIdx={slotIdx}
+      onSlotClick={setSlotIdx}
+      onFormationChange={onFormationChange}
+      petObj={petObj}
+      onPetChange={onPetChange}
+      onHeroDrop={handleHeroDrop}
+    />
+  );
+
+  if (editingLayout && showGear && gearConfigs && onGearConfigsChange) {
+    const currentSlotName = (names[slotIdx] || '').replace('(각성)', '');
+    const patchGearDetail = (text) => {
+      const cfgs = [...gearConfigs];
+      cfgs[slotIdx] = { ...(cfgs[slotIdx] || emptyGearConfig()), detailNote: text };
+      onGearConfigsChange(cfgs);
+    };
+
+    return (
+      <div className="gw-counter-edit-layout">
+        <div className="gw-counter-edit-top">
+          <div className="editing-build-left-stack">
+            <div className="editing-build-deck-slot" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {deckCard}
+            </div>
+            <div className="glass-inset editing-build-detail-panel gw-counter-setting-detail" style={{ padding: '8px 12px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 4, minHeight: 0 }}>
+              <div style={{ fontSize: 11, color: 'var(--accent-cyan)', fontWeight: 800, flexShrink: 0 }}>
+                영웅 세팅 디테일{currentSlotName ? ` · ${currentSlotName}` : ''}
+              </div>
+              <textarea
+                className="editing-build-detail-textarea"
+                rows={3}
+                value={(gearConfigs[slotIdx] || emptyGearConfig()).detailNote || ''}
+                onChange={e => patchGearDetail(e.target.value)}
+                placeholder="예: 치확 67% · 약공 46%에 가깝게"
+                style={{
+                  width: '100%', padding: '8px 12px', background: '#07090e', border: '1px solid var(--border-gold)',
+                  color: '#e2e8f0', borderRadius: 7, fontSize: 14, fontWeight: 700, lineHeight: 1.5,
+                  boxSizing: 'border-box', resize: 'none', fontFamily: 'inherit',
+                }}
+              />
+            </div>
+          </div>
+          <div
+            className="glass-inset editing-build-gear-panel editing-build-right-panel"
+            style={{
+              flex: 1, minWidth: 0, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10,
+              boxSizing: 'border-box',
+            }}
+          >
+            <HeroGearPanel
+              embedded
+              showDetail={false}
+              heroNames={names}
+              configs={gearConfigs}
+              selectedIdx={slotIdx}
+              onSelectIdx={setSlotIdx}
+              onChange={onGearConfigsChange}
+            />
+          </div>
+        </div>
+        <div className="glass-inset editing-build-hero-picker gw-counter-hero-picker" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10, width: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            <Icon name="hero" size={14} /> 영웅 목록 · {filledCount}/3
+          </div>
+          <HeroGridPicker
+            heroes={heroes}
+            selectedNames={names.filter(Boolean)}
+            onPick={pickHero}
+            currentSlotName={names[slotIdx] || ''}
+            fillHeight={false}
+            height={100}
+            loungeDensity
+          />
+        </div>
+        {onOtherDetailChange && (
+          <div
+            className="glass-inset gw-counter-other-detail-panel"
+            style={{ padding: '8px 12px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}
+          >
+            <div style={{ fontSize: 11, color: 'var(--accent-cyan)', fontWeight: 800 }}>기타 디테일</div>
+            <textarea
+              className="gw-counter-other-detail-input"
+              rows={2}
+              value={otherDetail || ''}
+              onChange={e => onOtherDetailChange(e.target.value)}
+              placeholder="예: 전뢰의 표식 - 선란이 맞게 세팅"
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <div style={{ fontSize: '12px', color: 'var(--accent-cyan)', fontWeight: 800 }}>
@@ -118,25 +228,7 @@ function GwTrioDeckEditor({
         justifyItems: showGear ? 'stretch' : 'center',
       }}>
         <div style={{ maxWidth: '300px', width: '100%', justifySelf: 'center' }}>
-          <InGameDeckCard
-            teamName="영웅 배치"
-            formationId={normalizeFormationId(formationId)}
-            heroList={names}
-            slotCount={5}
-            maxHeroes={3}
-            contentMode="pvp"
-            isEditMode
-            isSelected
-            hideReservationBtn={!showReservation}
-            reservedSkills={reservedSkills}
-            onReservationChange={showReservation ? onReservationChange : undefined}
-            selectedSlotIdx={slotIdx}
-            onSlotClick={setSlotIdx}
-            onFormationChange={onFormationChange}
-            petObj={petObj}
-            onPetChange={onPetChange}
-            onHeroDrop={handleHeroDrop}
-          />
+          {deckCard}
         </div>
         {showGear && gearConfigs && onGearConfigsChange && (
           <HeroGearPanel
@@ -478,7 +570,7 @@ export default function GuildWarAttackPanel({
               </div>
               <span className="gw-counter-rule" aria-hidden>|</span>
             </div>
-            <MiniHeroTrio heroNames={c.heroNames} resolveHeroByName={resolveHeroByName} size={38} />
+            <MiniHeroTrio heroNames={c.heroNames} resolveHeroByName={resolveHeroByName} size={42} />
             <div className="gw-counter-copy">
               <div className="gw-counter-title">{c.title}</div>
               {c.author ? (
@@ -626,51 +718,76 @@ export default function GuildWarAttackPanel({
       )}
 
       {isCounterModalOpen && (
-        <ModalScrim style={{ zIndex: 3600, padding: '16px' }}
+        <ModalScrim style={{ zIndex: 3600, padding: '16px', overflow: 'hidden' }}
           {...backdropDismissProps(closeCounterModal)}>
-          <div onClick={e => e.stopPropagation()} className="glass-modal" style={{ width: 'min(1100px, 96vw)', maxHeight: '90vh', overflowY: 'auto', padding: '24px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-              <h3 style={{ fontSize: '19px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}><Icon name="swords" size={17} color="var(--accent-cyan)" /> {counterForm.id ? '카운터 덱 수정' : '카운터 덱 추가'}</h3>
-              <button
-                type="button"
-                onClick={closeCounterModal}
-                style={{
-                  background: 'none', border: 'none', color: '#fff',
-                  width: '30px', height: '30px', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-                }}
-                title="모달 닫기"
-              >
-                <Icon name="closeBtn" size={26} />
+          <div
+            className="luxury-panel glass-modal editing-build-modal gw-counter-edit-modal"
+            onClick={e => e.stopPropagation()}
+            onMouseDown={e => e.stopPropagation()}
+            style={{
+              width: '94vw', maxWidth: 940, maxHeight: '88vh', padding: 0,
+              display: 'flex', flexDirection: 'column', borderRadius: 28, minHeight: 0, overflow: 'hidden',
+            }}
+          >
+            <div className="editing-build-modal-header" style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '12px 20px', background: 'rgba(255,255,255,0.04)',
+              borderBottom: '1px solid rgba(255,255,255,0.10)', flexShrink: 0,
+            }}>
+              <div className="editing-build-modal-header-main" style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, flexWrap: 'wrap', minWidth: 0 }}>
+                <div className="editing-build-modal-title-row">
+                  <h3 className="editing-build-title" style={{ fontSize: 17, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Icon name="swords" size={17} color="var(--accent-cyan)" />
+                    {counterForm.id ? '카운터 덱 수정' : '카운터 덱 추가'}
+                  </h3>
+                  <button type="button" className="editing-build-modal-close editing-build-modal-close--mobile" onClick={closeCounterModal} title="모달 닫기">
+                    <Icon name="closeBtn" size={26} />
+                  </button>
+                </div>
+                <div className="editing-build-title-input-row" style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, maxWidth: 420, minWidth: 0 }}>
+                  <span style={{ fontSize: 12, color: '#fff', fontWeight: 800, whiteSpace: 'nowrap' }}>제목:</span>
+                  <input
+                    type="text"
+                    value={counterForm.title}
+                    onChange={e => setCounterForm({ ...counterForm, title: e.target.value })}
+                    placeholder="예: 마덱 카운터 덱"
+                    style={{ width: '100%', padding: '6px 12px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: 6, fontSize: 12, fontWeight: 800, boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
+              <div className="editing-build-author-row" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <button type="button" className="editing-build-modal-close editing-build-modal-close--desktop" onClick={closeCounterModal} title="모달 닫기">
+                  <Icon name="closeBtn" size={26} />
+                </button>
+              </div>
+            </div>
+
+            <div className="gw-counter-edit-body">
+              <GwTrioDeckEditor
+                editingLayout
+                otherDetail={counterForm.otherDetail}
+                onOtherDetailChange={v => setCounterForm({ ...counterForm, otherDetail: v })}
+                heroNames={counterForm.heroNames}
+                formationId={counterForm.formationId}
+                onFormationChange={fid => setCounterForm({ ...counterForm, formationId: fid })}
+                onHeroNamesChange={n => setCounterForm({ ...counterForm, heroNames: n })}
+                heroes={heroes}
+                showGear
+                gearConfigs={counterForm.heroGearConfigs}
+                onGearConfigsChange={cfgs => setCounterForm({ ...counterForm, heroGearConfigs: cfgs })}
+                petObj={resolvePet(counterForm.petId)}
+                onPetChange={p => setCounterForm({ ...counterForm, petId: p.id })}
+                showReservation
+                reservedSkills={counterForm.reservedSkills}
+                onReservationChange={s => setCounterForm({ ...counterForm, reservedSkills: s })}
+              />
+            </div>
+
+            <div style={{ padding: '12px 24px', background: 'rgba(255,255,255,0.04)', borderTop: '1px solid rgba(255,255,255,0.10)', flexShrink: 0 }}>
+              <button type="button" onClick={saveCounter} className="btn-ops" style={{ width: '100%', padding: 11, justifyContent: 'center', borderRadius: 12, fontSize: 14 }}>
+                <Icon name="save" size={15} /> 저장
               </button>
             </div>
-            <div>
-              <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '5px', fontWeight: 800 }}>제목</div>
-              <input value={counterForm.title} onChange={e => setCounterForm({ ...counterForm, title: e.target.value })} placeholder="예: 마덱 카운터 덱"
-                style={{ width: '100%', padding: '10px 12px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '7px', fontSize: '14px', boxSizing: 'border-box' }} />
-            </div>
-            <GwTrioDeckEditor
-              heroNames={counterForm.heroNames}
-              formationId={counterForm.formationId}
-              onFormationChange={fid => setCounterForm({ ...counterForm, formationId: fid })}
-              onHeroNamesChange={n => setCounterForm({ ...counterForm, heroNames: n })}
-              heroes={heroes}
-              showGear
-              gearConfigs={counterForm.heroGearConfigs}
-              onGearConfigsChange={cfgs => setCounterForm({ ...counterForm, heroGearConfigs: cfgs })}
-              petObj={resolvePet(counterForm.petId)}
-              onPetChange={p => setCounterForm({ ...counterForm, petId: p.id })}
-              showReservation
-              reservedSkills={counterForm.reservedSkills}
-              onReservationChange={s => setCounterForm({ ...counterForm, reservedSkills: s })}
-            />
-            <div>
-              <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '5px', fontWeight: 800 }}>기타 디테일 (선택)</div>
-              <textarea value={counterForm.otherDetail} onChange={e => setCounterForm({ ...counterForm, otherDetail: e.target.value })} rows={2}
-                placeholder="예: 피뢰침 - 선란이 맞게 세팅"
-                style={{ width: '100%', padding: '10px 12px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }} />
-            </div>
-            <button onClick={saveCounter} style={{ padding: '13px', background: 'linear-gradient(135deg, var(--accent-cyan), #0ea5c7)', color: '#04202b', fontWeight: 900, border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '15px' }}>저장</button>
           </div>
         </ModalScrim>
       )}

@@ -13,7 +13,7 @@ import SafeImg from './icons/SafeImg';
 import AwakenMark from './AwakenMark';
 import HeroPortraitCard from './HeroPortraitCard';
 import SkillTimelineSteps from './SkillTimelineSteps';
-import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, shouldSuppressDeckClick } from '../utils/deckDrag';
+import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, markDeckHtml5DragStarted, shouldSuppressDeckClick, resetDeckDragState } from '../utils/deckDrag';
 import { useLounge } from '../context/LoungeContext';
 import { db } from '../lib/firebase';
 import { showToast } from './Toast';
@@ -472,6 +472,9 @@ export default function GuildLounge() {
 
   // ── 덱 수정/생성 모달 state ──
   const [editingBuild, setEditingBuild]               = useState(null);
+  useEffect(() => {
+    if (!editingBuild) resetDeckDragState();
+  }, [editingBuild]);
   const [isNewCreateMode, setIsNewCreateMode]         = useState(false);
   const [editingCategory, setEditingCategory]         = useState('siege');
   const [buildTitle, setBuildTitle]                   = useState('');
@@ -796,6 +799,17 @@ export default function GuildLounge() {
       setEditingBuild({ id: 'new_' + Date.now(), formationId: round1.formationId });
       setEditingPetId(pets[0]?.id || 'pet_1');
       applyRoundToEditor(round1);
+    } else if (cat === 'arena') {
+      setEditingHeroNames(['', '', '', '', '']);
+      setEditingSkillTimeline([]);
+      setEditingSpeedOrder([]);
+      setEditingSpeedIgnored([]);
+      setHeroGearConfigs(defaultGear5());
+      setEditingBuild({ id: 'new_' + Date.now(), formationId: 'protect' });
+      setEditingPetId(pets[0]?.id || 'pet_1');
+      setTargetSlotIdx(0);
+      setSelectedHeroGearIdx(0);
+      setNewSkillHero('');
     } else {
       setEditingHeroNames(['미호', '나타', '리나', '에반', '비스킷']);
       setEditingSkillTimeline([]);
@@ -1954,17 +1968,18 @@ export default function GuildLounge() {
                             startDeckPointerDrag(e, { source: 'picker', name: cleanName }, { label: cleanName });
                           }}
                           onDragStart={e => {
-                            if (!allowHtml5DeckDrag()) {
+                            if (!allowHtml5DeckDrag(e)) {
                               e.preventDefault();
                               return;
                             }
+                            markDeckHtml5DragStarted();
                             setDeckDragData(e, { source: 'picker', name: cleanName });
                           }}
                           onClick={() => {
                             if (shouldSuppressDeckClick()) return;
                             handleSelectHeroFromBottom(h);
                           }}
-                          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'grab', touchAction: 'none' }}
+                          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', touchAction: 'manipulation' }}
                         >
                           <div style={{ width: '58px', outline: (editingHeroNames[targetSlotIdx] || '') === cleanName ? '2px solid var(--accent-cyan)' : 'none', outlineOffset: 1, borderRadius: 8 }}>
                             <HeroPortraitCard hero={h} showStars showRole showName={false} />

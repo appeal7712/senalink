@@ -13,7 +13,7 @@ import { sortHeroesForList } from '../data/heroes';
 import { ROLE_ICONS } from '../data/roleIcons';
 import { backdropDismissProps } from '../utils/backdropDismiss';
 import { closeOverlayFromUI, collapseOverlayHistory, pushOverlay } from '../utils/overlayHistory';
-import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, shouldSuppressDeckClick } from '../utils/deckDrag';
+import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, markDeckHtml5DragStarted, shouldSuppressDeckClick, resetDeckDragState } from '../utils/deckDrag';
 import ModalScrim from './ModalScrim';
 
 const ROLE_FILTERS = [
@@ -124,6 +124,10 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
   useEffect(() => {
     if (!isModalOpen) return;
     pushOverlay(() => setIsModalOpen(false));
+  }, [isModalOpen]);
+
+  useEffect(() => {
+    if (!isModalOpen) resetDeckDragState();
   }, [isModalOpen]);
 
   const openCreate = () => {
@@ -1013,18 +1017,19 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                           markDeckPointerDown(e);
                           startDeckPointerDrag(e, { source: 'picker', name: cleanName }, { label: cleanName });
                         }}
-                        onDragStart={(e) => {
-                          if (!allowHtml5DeckDrag()) {
+                          onDragStart={(e) => {
+                          if (!allowHtml5DeckDrag(e)) {
                             e.preventDefault();
                             return;
                           }
+                          markDeckHtml5DragStarted();
                           setDeckDragData(e, { source: 'picker', name: cleanName });
                         }}
                         onClick={() => {
                           if (shouldSuppressDeckClick()) return;
                           pickHero(cleanName);
                         }}
-                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'grab', touchAction: 'none' }}
+                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', touchAction: 'manipulation' }}
                       >
                         <div style={{
                           width: 58,

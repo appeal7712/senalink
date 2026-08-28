@@ -167,7 +167,8 @@ export default function SkillReservationBoard({
     return () => mq.removeEventListener('change', sync);
   }, []);
 
-  const useDense = slotLimit > 3;
+  // 편집기만 조밀 모드 — 읽기(공략 카드)는 PvP와 동일한 아이콘 크기 유지
+  const useDense = slotLimit > 3 && editable;
   const useCompact = compact || useDense || (readOnly && isMobileBoard);
   const useBoard = readOnly && !isMobileBoard && !compact && !useDense;
 

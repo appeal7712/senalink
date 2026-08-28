@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { heroes, sortHeroesForList } from '../../data/heroes';
 import { pets } from '../../data/pets';
 import { ROLE_ICONS } from '../../data/roleIcons';
@@ -15,7 +15,7 @@ import { ARENA_TIERS, normalizeArenaTier } from '../../data/arenaTiers';
 import { communitySkillMode } from '../../data/communityCatalog';
 import { emptyCommunityGuide } from '../../lib/communityGuides';
 import { backdropDismissProps } from '../../utils/backdropDismiss';
-import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, shouldSuppressDeckClick } from '../../utils/deckDrag';
+import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, markDeckHtml5DragStarted, shouldSuppressDeckClick, resetDeckDragState } from '../../utils/deckDrag';
 
 const ROLE_FILTERS = [
   { id: 'all', label: '전체', icon: null },
@@ -77,6 +77,8 @@ export default function CommunityGuideEditor({
   const maxRes = skillMeta.maxReservations || 3;
   const contentMode = skillMeta.layout === 'pvp' ? 'pvp' : 'pve';
   const lockedArenaKind = initial.arenaKind === 'advanced' ? 'advanced' : 'normal';
+
+  useEffect(() => () => resetDeckDragState(), []);
 
   const [title, setTitle] = useState(initial.title || '');
   const [arenaTier, setArenaTier] = useState(normalizeArenaTier(initial.arenaTier || 'bronze'));
@@ -387,17 +389,18 @@ export default function CommunityGuideEditor({
                         startDeckPointerDrag(e, { source: 'picker', name: cleanName }, { label: cleanName });
                       }}
                       onDragStart={(e) => {
-                        if (!allowHtml5DeckDrag()) {
+                        if (!allowHtml5DeckDrag(e)) {
                           e.preventDefault();
                           return;
                         }
+                        markDeckHtml5DragStarted();
                         setDeckDragData(e, { source: 'picker', name: cleanName });
                       }}
                       onClick={() => {
                         if (shouldSuppressDeckClick()) return;
                         setHeroAt(slot, cleanName);
                       }}
-                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'grab', touchAction: 'none' }}
+                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', touchAction: 'manipulation' }}
                     >
                       <div style={{
                         width: 58,
@@ -524,9 +527,9 @@ export default function CommunityGuideEditor({
                   </div>
                 </>
               ) : (
-                <div className="glass-inset editing-build-timeline-list" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                    <Icon name="target" size={13} /> 스킬 예약 ({reserved.filter(Boolean).length}/{maxRes})
+                <div className="glass-inset editing-build-timeline-list editing-build-reservation-panel" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
+                  <div className="editing-build-reservation-head">
+                    <Icon name="target" size={15} /> 스킬 예약 ({reserved.filter(Boolean).length}/{maxRes})
                   </div>
                   <SkillReservationBoard
                     heroNames={heroNames}

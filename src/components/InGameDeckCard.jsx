@@ -17,6 +17,7 @@ import {
   registerDeckPointerDropTarget,
   markDeckPointerDown,
   allowHtml5DeckDrag,
+  markDeckHtml5DragStarted,
 } from '../utils/deckDrag';
 
 import { buildOptionCode } from './HeroGearPanel';
@@ -663,10 +664,11 @@ export default function InGameDeckCard({
           draggable={canDragSlots}
           onDragStart={e => {
             if (!canDragSlots) return;
-            if (!allowHtml5DeckDrag()) {
+            if (!allowHtml5DeckDrag(e)) {
               e.preventDefault();
               return;
             }
+            markDeckHtml5DragStarted();
             setDeckDragData(e, { source: 'slot', fromIdx: idx });
             setDragSlotIdx(idx);
           }}
