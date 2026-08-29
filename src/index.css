@@ -7679,7 +7679,7 @@ h1, h2, h3 {
   .arena-body-scroll-modal .editing-build-grid.is-pvp {
     display: grid !important;
     grid-template-columns: minmax(240px, 276px) minmax(0, 1fr) !important;
-    grid-template-rows: var(--arena-gear-h) auto !important;
+    grid-template-rows: minmax(0, var(--arena-gear-h)) auto !important;
     grid-template-areas:
       "left gear"
       "heroes heroes" !important;
@@ -7687,7 +7687,7 @@ h1, h2, h3 {
     align-items: stretch !important;
     height: auto !important;
     max-height: none !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     flex: none !important;
     min-height: 0 !important;
     padding: 0 !important;
@@ -7700,8 +7700,9 @@ h1, h2, h3 {
     justify-content: flex-start !important;
     align-self: stretch !important;
     height: 100% !important;
+    max-height: 100% !important;
     min-height: 0 !important;
-    overflow: visible !important;
+    overflow: hidden !important;
   }
 
   .arena-body-scroll-modal .editing-build-deck-slot {
@@ -7719,20 +7720,20 @@ h1, h2, h3 {
   .arena-body-scroll-modal .editing-build-detail-panel .editing-build-detail-textarea {
     flex: 1 1 auto !important;
     min-height: calc(3 * 1.5em + 16px) !important;
-    max-height: none !important;
+    max-height: 100% !important;
     height: auto !important;
     resize: none !important;
     overflow-y: auto !important;
   }
 
-  /* 장비: 빈/채움 동일한 고정 슬롯, 내부 스크롤 금지 */
+  /* 장비: 1행 그리드 칸 안에만 — 영웅 목록 침범 방지 */
   .arena-body-scroll-modal .editing-build-gear-panel {
     grid-area: gear;
     align-self: stretch !important;
-    height: var(--arena-gear-h) !important;
-    min-height: var(--arena-gear-h) !important;
-    max-height: var(--arena-gear-h) !important;
-    overflow: visible !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
     box-sizing: border-box;
@@ -7742,14 +7743,31 @@ h1, h2, h3 {
     flex: 1 1 auto !important;
     min-height: 0 !important;
     height: 100% !important;
-    overflow: visible !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+    gap: 8px !important;
+  }
+
+  .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel-set-grid button,
+  .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel-accessory-grid button {
+    padding: 6px 6px !important;
+    font-size: 11px !important;
+  }
+
+  .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel--embedded select {
+    padding: 5px 6px !important;
+    font-size: 12px !important;
   }
 
   .arena-body-scroll-modal .editing-build-hero-picker {
     grid-area: heroes;
+    grid-row: 2;
+    position: relative;
+    z-index: 2;
     flex-shrink: 0 !important;
     height: auto !important;
     overflow: visible !important;
+    align-self: start !important;
   }
 
   /* 공용 PC 규칙(flex:1·max-height:100%)보다 우선 */
