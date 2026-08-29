@@ -157,8 +157,13 @@ body {
   padding: 22px 22px 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+.site-entrance-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .site-entrance-tag {
   display: inline-flex;
@@ -177,6 +182,12 @@ body {
   color: #fff;
   line-height: 1.35;
 }
+.site-entrance-body-panel {
+  background: var(--glass-inset);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
 .site-entrance-body {
   font-size: 14px;
   font-weight: 600;
@@ -188,10 +199,53 @@ body {
 }
 .site-entrance-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: flex-end;
-  margin-top: 4px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 2px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+.site-entrance-skip {
+  margin: 0;
+  padding: 8px 4px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  cursor: pointer;
+  text-align: left;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.site-entrance-skip:hover {
+  color: #e2e8f0;
+}
+.site-entrance-skip:active {
+  color: #fff;
+}
+.site-entrance-confirm {
+  flex-shrink: 0;
+  min-width: 96px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+@media (max-width: 480px) {
+  .site-entrance-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .site-entrance-confirm {
+    width: 100%;
+    min-width: 0;
+  }
+  .site-entrance-skip {
+    text-align: center;
+    padding: 6px 4px 2px;
+  }
 }
 
 /*
@@ -5691,50 +5745,74 @@ h1, h2, h3 {
 }
 
 .gw-attack-layout {
-  /* 상대 — 선명한 로즈·크림슨 (R↑ G/B↓, 갈색 방지) */
-  --gw-enemy-text: #f8c4c4;
-  --gw-enemy-accent: #ee9494;
-  --gw-enemy-border: rgba(235, 110, 110, 0.46);
-  --gw-enemy-border-strong: rgba(245, 130, 130, 0.58);
-  --gw-enemy-mark: #e87878;
-  --gw-enemy-row-bg: rgba(255, 255, 255, 0.06);
-  --gw-enemy-row-border: rgba(240, 115, 115, 0.28);
-  --gw-enemy-row-bg-on: rgba(225, 78, 78, 0.2);
-  /* 카운터 — 선명한 사파이어 블루 (B↑ R↓) */
-  --gw-ally-text: #b6dcf8;
-  --gw-ally-accent: #78baf0;
-  --gw-ally-border: rgba(95, 165, 235, 0.46);
-  --gw-ally-mark: #62aee8;
-  --gw-ally-row-bg: rgba(255, 255, 255, 0.06);
-  --gw-ally-row-border: rgba(110, 175, 245, 0.28);
-  --gw-ally-row-bg-on: rgba(68, 138, 220, 0.2);
+  /* 상대 — 빨강 / 카운터 — 파랑 (유리=강·선명=약, themeSolidDark.css) */
+  --gw-enemy-text: #f3f6fb;
+  --gw-enemy-accent: #ef4444;
+  --gw-enemy-border: rgba(220, 38, 38, 0.85);
+  --gw-enemy-border-strong: #ef4444;
+  --gw-enemy-mark: #dc2626;
+  --gw-enemy-panel-border-w: 3px;
+  --gw-enemy-row-border-w: 2px;
+  --gw-enemy-mark-w: 6px;
+  --gw-enemy-mark-inset-y: 9px;
+  --gw-enemy-mark-radius: 4px;
+  --gw-enemy-alt-indent: 14px;
+  --gw-enemy-panel-tint-top: rgba(239, 68, 68, 0.18);
+  --gw-enemy-panel-tint-bottom: rgba(185, 28, 28, 0.09);
+  --gw-enemy-panel-tint-top-hover: rgba(239, 68, 68, 0.22);
+  --gw-enemy-panel-tint-bottom-hover: rgba(185, 28, 28, 0.11);
+  --gw-enemy-row-bg: rgba(239, 68, 68, 0.08);
+  --gw-enemy-row-border: rgba(220, 38, 38, 0.68);
+  --gw-enemy-row-bg-on: rgba(239, 68, 68, 0.14);
+  --gw-enemy-alt-layer-bg: rgba(239, 68, 68, 0.06);
+  --gw-ally-text: #f3f6fb;
+  --gw-ally-accent: #5eb0ff;
+  --gw-ally-border: rgba(94, 176, 255, 0.85);
+  --gw-ally-border-strong: #5eb0ff;
+  --gw-ally-panel-border-w: 3px;
+  --gw-ally-layer-border-w: 2px;
+  --gw-ally-row-border-w: 2px;
+  --gw-ally-mark-w: 6px;
+  --gw-ally-mark: #3d9ef5;
+  --gw-ally-panel-tint-top: rgba(94, 176, 255, 0.18);
+  --gw-ally-panel-tint-bottom: rgba(37, 99, 235, 0.09);
+  --gw-ally-panel-tint-top-hover: rgba(94, 176, 255, 0.22);
+  --gw-ally-panel-tint-bottom-hover: rgba(37, 99, 235, 0.11);
+  --gw-ally-row-bg: rgba(94, 176, 255, 0.08);
+  --gw-ally-row-border: rgba(94, 176, 255, 0.68);
+  --gw-ally-row-bg-on: rgba(94, 176, 255, 0.14);
+  --gw-ally-layer-bg: rgba(94, 176, 255, 0.07);
   display: flex;
   gap: 18px;
   align-items: flex-start;
 }
 .gw-attack-layout .gw-attack-list.luxury-panel.tint-red {
   background:
-    linear-gradient(180deg, rgba(235, 78, 78, 0.52) 0%, rgba(185, 48, 58, 0.28) 100%),
+    linear-gradient(180deg, var(--gw-enemy-panel-tint-top) 0%, var(--gw-enemy-panel-tint-bottom) 100%),
     var(--glass-bg);
-  border-color: rgba(245, 108, 108, 0.7);
+  border-width: var(--gw-enemy-panel-border-w);
+  border-color: var(--gw-enemy-border-strong);
+  box-shadow: var(--shadow-main), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 .gw-attack-layout .gw-attack-detail.luxury-panel.tint-blue {
   background:
-    linear-gradient(180deg, rgba(78, 148, 228, 0.52) 0%, rgba(48, 98, 175, 0.28) 100%),
+    linear-gradient(180deg, var(--gw-ally-panel-tint-top) 0%, var(--gw-ally-panel-tint-bottom) 100%),
     var(--glass-bg);
-  border-color: rgba(108, 168, 245, 0.7);
+  border-width: var(--gw-ally-panel-border-w);
+  border-color: var(--gw-ally-border-strong);
+  box-shadow: var(--shadow-main), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 .gw-attack-layout .gw-attack-list.luxury-panel.tint-red:hover {
   background:
-    linear-gradient(180deg, rgba(235, 78, 78, 0.52) 0%, rgba(185, 48, 58, 0.28) 100%),
-    var(--glass-bg);
-  border-color: rgba(245, 108, 108, 0.7);
+    linear-gradient(180deg, var(--gw-enemy-panel-tint-top-hover) 0%, var(--gw-enemy-panel-tint-bottom-hover) 100%),
+    var(--glass-bg-hover);
+  border-color: var(--gw-enemy-border-strong);
 }
 .gw-attack-layout .gw-attack-detail.luxury-panel.tint-blue:hover {
   background:
-    linear-gradient(180deg, rgba(78, 148, 228, 0.52) 0%, rgba(48, 98, 175, 0.28) 100%),
-    var(--glass-bg);
-  border-color: rgba(108, 168, 245, 0.7);
+    linear-gradient(180deg, var(--gw-ally-panel-tint-top-hover) 0%, var(--gw-ally-panel-tint-bottom-hover) 100%),
+    var(--glass-bg-hover);
+  border-color: var(--gw-ally-border-strong);
 }
 .gw-attack-list.luxury-panel,
 .gw-attack-detail.luxury-panel {
@@ -5837,43 +5915,65 @@ h1, h2, h3 {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   background: var(--gw-enemy-row-bg);
-  border: 1px solid var(--gw-enemy-row-border);
+  border: var(--gw-enemy-row-border-w) solid var(--gw-enemy-row-border);
   box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.14);
   padding: 8px 10px;
   gap: 8px;
 }
-.gw-attack-target.is-on > .gw-attack-target-row,
-.gw-attack-target-row.gw-attack-alt-row.is-on {
+.gw-attack-layout .gw-attack-target-row.is-on,
+.gw-attack-layout .gw-attack-alt-row.is-on,
+.gw-attack-target.is-on > .gw-attack-target-row {
+  position: relative;
   border-color: var(--gw-enemy-border-strong);
+  border-width: var(--gw-enemy-row-border-w);
+  border-left-width: 0;
   background: var(--gw-enemy-row-bg-on);
   box-shadow:
     0 2px 10px rgba(0, 0, 0, 0.18),
-    inset 3px 0 0 var(--gw-enemy-mark),
     inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.gw-attack-layout .gw-attack-target-row.is-on::after,
+.gw-attack-layout .gw-attack-alt-row.is-on::after,
+.gw-attack-target.is-on > .gw-attack-target-row::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: var(--gw-enemy-mark-inset-y);
+  bottom: var(--gw-enemy-mark-inset-y);
+  width: var(--gw-enemy-mark-w);
+  background: var(--gw-enemy-mark);
+  pointer-events: none;
+  border-radius: 0 var(--gw-enemy-mark-radius) var(--gw-enemy-mark-radius) 0;
 }
 .gw-attack-target-block.is-expanded > .gw-attack-target.is-on > .gw-attack-target-row {
   border-radius: 14px;
 }
 .gw-attack-target-block.is-expanded > .gw-attack-inline-counters {
   padding: 8px 10px 12px;
-  border-top: 1px dashed var(--gw-ally-border);
+  margin-top: 6px;
 }
 .gw-attack-target-block.is-expanded > .gw-attack-inline-counters .gw-counter-layer {
   border-color: var(--gw-ally-border);
 }
-.gw-attack-deck-kind-pill {
+.gw-attack-deck-kind-pill,
+.gw-attack-vs-pill {
   flex-shrink: 0;
   font-size: 10px;
   font-weight: 900;
   letter-spacing: 0.3px;
-  color: var(--gw-enemy-text);
-  background: rgba(225, 95, 95, 0.18);
-  border: 1px solid var(--gw-enemy-border);
-  border-radius: 999px;
+  color: #fff;
+  background: var(--gw-enemy-mark);
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  border-radius: 6px;
   padding: 2px 7px;
   line-height: 1.2;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.gw-attack-deck-kind-pill.is-alt,
+.gw-attack-vs-pill.is-alt {
+  background: color-mix(in srgb, var(--gw-enemy-mark) 82%, #1a1a1a);
 }
 .gw-attack-target.is-on .gw-attack-target-meta,
 .gw-attack-target-row.gw-attack-alt-row.is-on .gw-attack-target-meta {
@@ -6002,36 +6102,34 @@ h1, h2, h3 {
 .gw-attack-target.has-alts-open {
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid var(--gw-enemy-border);
-  background: rgba(255, 255, 255, 0.03);
+  border: var(--gw-enemy-row-border-w) solid var(--gw-enemy-border);
+  background: var(--gw-enemy-alt-layer-bg);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 .gw-attack-target.has-alts-open > .gw-attack-target-row {
-  border-radius: 14px 14px 0 0;
+  border-radius: 0;
   border-bottom: none;
 }
 .gw-attack-target.has-alts-open > .gw-attack-target-row:not(.is-on) {
-  border: 1px solid var(--gw-enemy-row-border);
+  border: var(--gw-enemy-row-border-w) solid var(--gw-enemy-row-border);
   border-bottom: none;
   background: var(--gw-enemy-row-bg);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 .gw-attack-target.has-alts-open > .gw-attack-target-row.is-on {
-  border-color: transparent;
+  border: none;
   border-bottom: none;
   background: var(--gw-enemy-row-bg-on);
-  box-shadow:
-    inset 3px 0 0 var(--gw-enemy-mark),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 .gw-attack-target.has-alts-open > .gw-attack-target-alts {
-  border-top: 1px dashed rgba(255, 255, 255, 0.16);
+  border-top: none;
 }
 .gw-attack-target.has-alts-open .gw-alt-layer {
-  margin: 0 10px 10px 14px;
-  padding: 8px 0 0 12px;
+  margin: 0 10px 10px var(--gw-enemy-alt-indent);
+  padding: 0 0 10px 10px;
   border: none;
-  border-left: 2px solid rgba(255, 255, 255, 0.14);
+  border-left: 2px solid var(--gw-enemy-row-border);
   border-radius: 0;
   background: transparent;
   backdrop-filter: none;
@@ -6040,6 +6138,7 @@ h1, h2, h3 {
 .gw-attack-target.has-alts-open .gw-alt-toolbar {
   min-height: 28px;
   margin-bottom: 2px;
+  padding: 8px 0 0;
 }
 .gw-attack-target.has-alts-open .gw-alt-toolbar-copy span {
   font-size: 11px;
@@ -6050,28 +6149,35 @@ h1, h2, h3 {
   color: rgba(255, 255, 255, 0.4);
 }
 .gw-attack-target.has-alts-open .gw-attack-alt-row {
-  margin-top: 6px;
+  margin: 6px 0 0;
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  background: var(--gw-enemy-row-bg);
+  border: var(--gw-enemy-row-border-w) solid var(--gw-enemy-row-border);
+  box-shadow:
+    0 1px 5px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
   position: relative;
 }
 .gw-attack-target.has-alts-open .gw-attack-alt-row::before {
   content: '';
   position: absolute;
-  left: -14px;
+  left: -10px;
   top: 50%;
   width: 10px;
   height: 2px;
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--gw-enemy-row-border);
   pointer-events: none;
 }
 .gw-attack-target.has-alts-open .gw-attack-alt-row.is-on {
-  border-color: var(--gw-enemy-border-strong);
+  margin: 6px 0 0;
+  padding: 10px 12px;
+  border: var(--gw-enemy-row-border-w) solid var(--gw-enemy-border-strong);
+  border-left-width: 0;
+  border-radius: 10px;
   background: var(--gw-enemy-row-bg-on);
   box-shadow:
-    inset 3px 0 0 var(--gw-enemy-mark),
+    0 2px 8px rgba(0, 0, 0, 0.14),
     inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 .gw-attack-target-alts {
@@ -6079,13 +6185,11 @@ h1, h2, h3 {
 }
 .gw-attack-list-body .gw-alt-layer {
   margin: 0;
-  background:
-    linear-gradient(180deg, rgba(200, 65, 65, 0.12) 0%, rgba(145, 38, 45, 0.06) 100%),
-    rgba(255, 255, 255, 0.03);
-  border-color: rgba(235, 105, 105, 0.24);
+  background: var(--gw-enemy-alt-layer-bg);
+  border: var(--gw-enemy-row-border-w) solid var(--gw-enemy-border);
 }
 .gw-attack-list-body .gw-alt-toolbar-copy span {
-  color: var(--gw-enemy-text);
+  color: #fff;
 }
 .gw-attack-target-alts .gw-alt-layer {
   margin: 0;
@@ -6096,9 +6200,8 @@ h1, h2, h3 {
   padding: 0;
 }
 .gw-attack-target-alts .gw-attack-alt-row.is-on + .gw-attack-inline-counters {
-  margin-top: 0;
-  padding: 8px 0 0;
-  border-top: 1px dashed rgba(255, 255, 255, 0.14);
+  margin-top: 6px;
+  padding: 0;
 }
 .gw-attack-target-alts .gw-attack-alt-row.is-on + .gw-attack-inline-counters .gw-counter-layer {
   border-color: var(--gw-ally-border);
@@ -6353,16 +6456,6 @@ h1, h2, h3 {
   font-weight: 900;
   color: #fff;
 }
-.gw-attack-vs-pill {
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.3px;
-  color: var(--gw-enemy-text);
-  background: rgba(225, 95, 95, 0.18);
-  border: 1px solid var(--gw-enemy-border);
-  border-radius: 999px;
-  padding: 2px 7px;
-}
 .gw-attack-detail-meta {
   font-size: 12px;
   color: #fff;
@@ -6386,23 +6479,22 @@ h1, h2, h3 {
   transition: border-color 0.2s ease, background 0.2s ease;
 }
 .gw-attack-layout .gw-counter-layer {
-  background:
-    linear-gradient(180deg, rgba(68, 132, 210, 0.2) 0%, rgba(42, 82, 150, 0.1) 100%),
-    rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(100, 165, 238, 0.38);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  background: var(--gw-ally-layer-bg);
+  border: var(--gw-ally-layer-border-w) solid var(--gw-ally-border);
+  box-shadow: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
 /* 중간 박스는 클릭 대상 아님 — hover 시 배경이 흰색으로 빠지지 않게 */
 .gw-attack-layout .gw-counter-layer:hover {
-  border-color: rgba(118, 180, 248, 0.44);
+  border-color: var(--gw-ally-border-strong);
+  background: var(--gw-ally-row-bg-on);
 }
 .gw-attack-layout .gw-counter-row {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   background: var(--gw-ally-row-bg);
-  border: 1px solid var(--gw-ally-row-border);
+  border: var(--gw-ally-row-border-w) solid var(--gw-ally-row-border);
   box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.14);
@@ -6443,7 +6535,7 @@ h1, h2, h3 {
 .gw-counter-toolbar span {
   font-size: 12px;
   font-weight: 800;
-  color: #93c5fd;
+  color: var(--gw-ally-accent, #5eb0ff);
   letter-spacing: 0.3px;
   white-space: nowrap;
   overflow: hidden;
@@ -6640,14 +6732,13 @@ h1, h2, h3 {
   }
   .gw-attack-target-block.is-expanded > .gw-attack-inline-counters {
     display: block;
-    margin: 0;
+    margin: 6px 0 0;
     padding: 8px 10px 12px;
     background: transparent;
     border: none;
     box-shadow: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    border-top: 1px dashed var(--gw-ally-border);
   }
   .gw-attack-inline-counters {
     display: block;
@@ -6666,24 +6757,21 @@ h1, h2, h3 {
   }
   .gw-attack-inline-counters .gw-counter-layer {
     margin: 0;
-    background:
-      linear-gradient(180deg, rgba(62, 128, 210, 0.3) 0%, rgba(36, 72, 135, 0.17) 100%),
-      rgba(18, 45, 88, 0.22);
-    border: 1px solid rgba(100, 168, 238, 0.44);
-    box-shadow:
-      inset 2px 0 0 var(--gw-ally-mark),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    background: var(--gw-ally-layer-bg);
+    border: var(--gw-ally-layer-border-w) solid var(--gw-ally-border);
+    box-shadow: inset var(--gw-ally-mark-w) 0 0 var(--gw-ally-mark);
   }
   .gw-attack-inline-counters .gw-counter-layer:hover {
-    border-color: rgba(112, 178, 248, 0.5);
+    border-color: var(--gw-ally-border-strong);
+    background: var(--gw-ally-row-bg-on);
   }
   .gw-attack-inline-counters .gw-counter-row:not(.gw-attack-target-row) {
-    background: rgba(255, 255, 255, 0.07);
-    border-color: rgba(115, 180, 245, 0.3);
+    background: var(--gw-ally-row-bg);
+    border-color: var(--gw-ally-row-border);
   }
   .gw-attack-inline-counters .gw-counter-row:not(.gw-attack-target-row).is-drop-target {
-    background: rgba(62, 130, 210, 0.16);
-    border-color: rgba(120, 188, 252, 0.42);
+    background: var(--gw-ally-row-bg-on);
+    border-color: var(--gw-ally-border);
   }
   .gw-attack-layout .gw-counter-toolbar span {
     color: var(--gw-ally-text);
@@ -6705,7 +6793,7 @@ h1, h2, h3 {
   /* PC와 동일 — 모바일 grid 규칙이 흰 배경으로 덮지 않게 */
   .gw-attack-layout .gw-counter-row:not(.gw-attack-target-row) {
     background: var(--gw-ally-row-bg);
-    border: 1px solid var(--gw-ally-row-border);
+    border: var(--gw-ally-row-border-w) solid var(--gw-ally-row-border);
     box-shadow:
       0 2px 8px rgba(0, 0, 0, 0.16),
       inset 0 1px 0 rgba(255, 255, 255, 0.14);
@@ -6714,10 +6802,11 @@ h1, h2, h3 {
   }
   .gw-attack-layout .gw-counter-row:not(.gw-attack-target-row).is-drop-target {
     border-color: var(--gw-ally-border);
+    border-width: var(--gw-ally-row-border-w);
     background: var(--gw-ally-row-bg-on);
     box-shadow:
       0 0 0 1px rgba(100, 168, 238, 0.25),
-      inset 3px 0 0 var(--gw-ally-mark);
+      inset var(--gw-ally-mark-w) 0 0 var(--gw-ally-mark);
   }
   /* 상대·파생 덱 행: 제목 위 · 초상 아래 (카운터 행 grid와 분리) */
   .gw-attack-list .gw-attack-target-row {
@@ -6726,12 +6815,14 @@ h1, h2, h3 {
     grid-template-areas: "lead body actions";
   }
   .gw-attack-target.is-on > .gw-attack-target-row,
-  .gw-attack-target-row.gw-attack-alt-row.is-on {
+  .gw-attack-layout .gw-attack-target-row.is-on,
+  .gw-attack-layout .gw-attack-alt-row.is-on {
     border-color: var(--gw-enemy-border-strong);
+    border-width: var(--gw-enemy-row-border-w);
+    border-left-width: 0;
     background: var(--gw-enemy-row-bg-on);
     box-shadow:
       0 2px 10px rgba(0, 0, 0, 0.18),
-      inset 3px 0 0 var(--gw-enemy-mark),
       inset 0 1px 0 rgba(255, 255, 255, 0.14);
   }
   .gw-counter-row > .gw-counter-rule {

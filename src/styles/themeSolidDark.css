@@ -212,3 +212,27 @@ html[data-ui-theme="solid"] .glass-modal select {
   outline: 2px solid rgba(185, 196, 204, 0.55);
   outline-offset: 3px;
 }
+
+/* 길드전 공격 — 선명 다크: 불투명 패널이라 틴트·행 배경은 옅게 */
+html[data-ui-theme="solid"] .gw-attack-layout {
+  --gw-enemy-border: rgba(220, 38, 38, 0.72);
+  --gw-enemy-border-strong: rgba(239, 68, 68, 0.92);
+  --gw-enemy-panel-tint-top: rgba(239, 68, 68, 0.07);
+  --gw-enemy-panel-tint-bottom: rgba(185, 28, 28, 0.035);
+  --gw-enemy-panel-tint-top-hover: rgba(239, 68, 68, 0.09);
+  --gw-enemy-panel-tint-bottom-hover: rgba(185, 28, 28, 0.045);
+  --gw-enemy-row-bg: rgba(255, 255, 255, 0.04);
+  --gw-enemy-row-border: rgba(220, 38, 38, 0.58);
+  --gw-enemy-row-bg-on: rgba(255, 255, 255, 0.07);
+  --gw-enemy-alt-layer-bg: rgba(255, 255, 255, 0.03);
+  --gw-ally-border: rgba(94, 176, 255, 0.78);
+  --gw-ally-border-strong: rgba(94, 176, 255, 0.95);
+  --gw-ally-panel-tint-top: rgba(94, 176, 255, 0.07);
+  --gw-ally-panel-tint-bottom: rgba(37, 99, 235, 0.035);
+  --gw-ally-panel-tint-top-hover: rgba(94, 176, 255, 0.09);
+  --gw-ally-panel-tint-bottom-hover: rgba(37, 99, 235, 0.045);
+  --gw-ally-row-bg: rgba(255, 255, 255, 0.04);
+  --gw-ally-row-border: rgba(94, 176, 255, 0.62);
+  --gw-ally-row-bg-on: rgba(255, 255, 255, 0.07);
+  --gw-ally-layer-bg: rgba(255, 255, 255, 0.04);
+}

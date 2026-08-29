@@ -65,17 +65,21 @@ export default function SiteEntranceBanner() {
   return (
     <ModalScrim className="site-entrance-scrim" style={{ zIndex: 9600, padding: 16 }}>
       <div className="site-entrance-card luxury-panel glass-modal" role="dialog" aria-modal="true" aria-labelledby="site-entrance-title">
-        <div className="site-entrance-tag">
-          <Icon name="shield" size={13} /> 공지
-        </div>
-        <h2 id="site-entrance-title" className="site-entrance-title">{title}</h2>
+        <header className="site-entrance-head">
+          <div className="site-entrance-tag">
+            <Icon name="shield" size={13} /> 공지
+          </div>
+          <h2 id="site-entrance-title" className="site-entrance-title">{title}</h2>
+        </header>
         {body ? (
-          <div className="site-entrance-body">{body}</div>
+          <div className="site-entrance-body-panel">
+            <div className="site-entrance-body">{body}</div>
+          </div>
         ) : null}
-        <div className="site-entrance-actions">
+        <footer className="site-entrance-actions">
           <button
             type="button"
-            className="btn-steel"
+            className="site-entrance-skip"
             onClick={() => {
               hideForToday();
               setSkipToday(true);
@@ -86,12 +90,12 @@ export default function SiteEntranceBanner() {
           </button>
           <button
             type="button"
-            className="btn-ops"
+            className="btn-ops site-entrance-confirm"
             onClick={() => setDismissed(true)}
           >
             확인
           </button>
-        </div>
+        </footer>
       </div>
     </ModalScrim>
   );

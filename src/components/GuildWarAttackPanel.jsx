@@ -728,7 +728,7 @@ export default function GuildWarAttackPanel({
           <div className="gw-counter-copy gw-attack-target-copy">
             <div className="gw-counter-title gw-attack-target-title">
               {isActive ? (
-                <span className="gw-attack-deck-kind-pill">{isMain ? '상대' : '파생'}</span>
+                <span className={`gw-attack-deck-kind-pill${isMain ? '' : ' is-alt'}`}>{isMain ? '상대' : '파생'}</span>
               ) : null}
               <span className="gw-attack-target-title-text">{deck.title}</span>
             </div>
@@ -987,7 +987,7 @@ export default function GuildWarAttackPanel({
                 <MiniHeroTrio heroNames={selectedDeck.heroNames} resolveHeroByName={resolveHeroByName} size={44} />
                 <div>
                   <div className="gw-attack-detail-title-row">
-                    <span className="gw-attack-vs-pill">{selectedAltId ? '파생' : '상대'}</span>
+                    <span className={`gw-attack-vs-pill${selectedAltId ? ' is-alt' : ''}`}>{selectedAltId ? '파생' : '상대'}</span>
                     <h3>{selectedDeck.title}</h3>
                   </div>
                   <div className="gw-attack-detail-meta">{formatUpdateAtDisplay(selectedDeck.updatedAt)}</div>
