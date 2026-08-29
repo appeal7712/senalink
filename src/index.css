@@ -7057,8 +7057,21 @@ h1, h2, h3 {
   .gwcalc-stats, .gwcalc-two, .gwcalc-targets, .gwcalc-calcgrid { grid-template-columns: 1fr; }
 }
 
-/* 길드전 방어: 981~1080 태블릿 폭 — 토글 한 줄 유지 (줄바꿈 깨짐 방지) */
-@media (min-width: 981px) and (max-width: 1080px) {
+/* 길드전 방어: 981~1179 — 토글 한 줄·가로 스크롤 (속공 수치가 닫기 X와 겹치지 않게) */
+@media (min-width: 981px) and (max-width: 1179px) {
+  .editing-build-modal.gw-defense-edit-modal .editing-build-modal-header {
+    gap: 10px;
+  }
+
+  .editing-build-modal.gw-defense-edit-modal .editing-build-modal-header-main {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+
+  .editing-build-modal.gw-defense-edit-modal .editing-build-author-row {
+    flex: 0 0 auto !important;
+  }
+
   .editing-build-modal.gw-defense-edit-modal .editing-build-arena-toggles {
     display: flex !important;
     flex-direction: row !important;
