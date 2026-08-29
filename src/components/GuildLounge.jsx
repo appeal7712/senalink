@@ -1646,7 +1646,7 @@ export default function GuildLounge() {
       {editingBuild && (
         <ModalScrim style={{ zIndex: 3500, padding: '16px', overflow: 'hidden' }}>
           <div
-            className={`luxury-panel glass-modal editing-build-modal${editingCategory === 'arena' ? ' arena-body-scroll-modal' : ''}`}
+            className={`luxury-panel glass-modal editing-build-modal${editingCategory === 'arena' ? ' arena-body-scroll-modal arena-body-scroll-modal--guild' : ''}`}
             onClick={e => e.stopPropagation()}
             onMouseDown={e => e.stopPropagation()}
             style={{ width: '94vw', maxWidth: '1520px', maxHeight: '88vh', padding: '0', display: 'flex', flexDirection: 'column', borderRadius: '28px', minHeight: 0, overflow: 'hidden' }}

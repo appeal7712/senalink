@@ -7790,6 +7790,47 @@ h1, h2, h3 {
       overflow: visible !important;
     }
   }
+
+  /* 길드 허브: 인라인 장비 UI — 영웅 배치 시 장비 열이 커지면 좌측 세팅 디테일이 아래까지 채움 */
+  .arena-body-scroll-modal--guild .editing-build-grid.is-pvp {
+    align-items: stretch !important;
+  }
+
+  .arena-body-scroll-modal--guild .editing-build-left-stack {
+    align-self: stretch !important;
+    height: 100%;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+  }
+
+  .arena-body-scroll-modal--guild .editing-build-deck-slot {
+    flex: 0 0 auto;
+  }
+
+  .arena-body-scroll-modal--guild .editing-build-detail-panel {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  .arena-body-scroll-modal--guild .editing-build-detail-panel .editing-build-detail-textarea {
+    flex: 1 1 auto !important;
+    min-height: calc(3 * 1.5em + 16px) !important;
+    max-height: none !important;
+    height: auto !important;
+    resize: none !important;
+    overflow-y: auto !important;
+  }
+
+  .arena-body-scroll-modal--guild .editing-build-gear-panel {
+    align-self: stretch !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+  }
 }
 
 @media (max-width: 980px) {
