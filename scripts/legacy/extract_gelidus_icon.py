@@ -1,7 +1,9 @@
-from bs4 import BeautifulSoup
-import re
+from pathlib import Path
 
-with open("gelidus_success.html", "r", encoding="utf-8") as f:
+from bs4 import BeautifulSoup
+
+_fixture = Path(__file__).resolve().parent / "fixtures" / "gelidus_success.html"
+with open(_fixture, "r", encoding="utf-8") as f:
     soup = BeautifulSoup(f, "html.parser")
 
 # Find navigation table

@@ -643,6 +643,13 @@ API:
 
 ## 17. 패치 내역
 
+### 2026-08-30 — 내부 정리 Phase 2 (배포·라이브 데이터 무변경)
+- **루트 clutter 제거:** `gelidus_success.html` → `scripts/legacy/fixtures/`, `category_success.html`·`asset_list.csv` 삭제.
+- **git:** `.firebase/hosting.*.cache` 추적 해제 (`.gitignore`와 일치).
+- **`firestore.rules.example`:** 라이브 `firestore.rules`와 동기화 (참고용만, 배포 대상 아님).
+- **`.env.example`:** `VITE_USE_EMULATORS`·`tmp_negi_chars_ko.json` 안내 추가.
+- **`.gitignore`:** `firestore-debug.log`, 스크래퍼 산출물 패턴 추가.
+
 ### 2026-08-30 (`v2026.08.30.151`) — 선명 다크 테마 · 마이페이지 · 길드전 공격 UI
 - **화면 테마 (§10.8):** `glass`(유리, 기본) / `solid`(선명 다크). `uiTheme.js` + `themeSolidDark.css` + `index.html` 선적용. 마이프로필 드롭다운 `UiThemeToggle`. `localStorage` `senalink_ui_theme` (계정·시스템 테마 미연동).
 - **마이페이지:** 프로필(사진·닉)과 게임 정보(총력전·결투장·파괴신) `glass-inset` 패널 분리.

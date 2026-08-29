@@ -1,10 +1,19 @@
-// NOT DEPLOYED — reference only. Live rules: firestore.rules (deploy with firebase deploy --only firestore:rules)
+﻿// NOT DEPLOYED — mirror of live firestore.rules for local diff only.
+// Deploy ONLY firestore.rules: firebase deploy --only firestore:rules --project senalink
+// Do not copy this file over live rules without 밍봉 review.
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function signedIn() {
       return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'super';
     }
 
     function memberDoc(hubId) {
@@ -24,51 +33,367 @@ service cloud.firestore {
       return isHubMember(hubId) && hubRole(hubId) == 'master';
     }
 
-    function isAdmin(hubId) {
+    function isHubAdmin(hubId) {
       return isHubMember(hubId) && (hubRole(hubId) == 'master' || hubRole(hubId) == 'admin');
     }
 
-    // 허브 메타: 멤버만 읽기. 생성은 인증 사용자, 민감필드(passwordHash)는 클라이언트 노출 금지 권장(Cloud Function 조인).
+    function canRunHub(hubId) {
+      return isHubAdmin(hubId) || isSuperAdmin();
+    }
+
+    // 첨부 이미지는 base64로 같은 문서에 들어간다. 문서 한도(1MiB)를 넘겨 글이 통째로
+    // 저장 실패하지 않도록 장수·장당 길이를 제한한다. 없는 필드는 통과시켜 기존 쓰기 경로를 깨지 않는다.
+    function feedImageSlotOk(i) {
+      return !('images' in request.resource.data)
+        || !(request.resource.data.images is list)
+        || request.resource.data.images.size() <= i
+        || (request.resource.data.images[i] is string
+            && request.resource.data.images[i].size() <= 280000);
+    }
+
+    function validFeedImages() {
+      return !('images' in request.resource.data)
+        || (
+          request.resource.data.images is list
+          && request.resource.data.images.size() <= 4
+          && feedImageSlotOk(0)
+          && feedImageSlotOk(1)
+          && feedImageSlotOk(2)
+          && feedImageSlotOk(3)
+        );
+    }
+
+    function validFeedWrite() {
+      return request.resource.data.title is string
+        && request.resource.data.title.size() <= 50
+        && request.resource.data.body is string
+        && request.resource.data.body.size() <= 2000
+        && validFeedImages();
+    }
+
+    // Asia/Seoul 달력일 (UTC+9 보정 후 year/month/day)
+    function pad2(n) {
+      return n < 10 ? '0' + string(n) : string(n);
+    }
+    function kstDateString() {
+      let t = request.time + duration.time(9, 0, 0, 0);
+      return string(t.year()) + '-' + pad2(t.month()) + '-' + pad2(t.day());
+    }
+
+    match /admins/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    match /site/{docId} {
+      allow read: if true;
+      allow delete: if false;
+
+      // 메인 CMS — 슈퍼만
+      allow create, update: if docId == 'main'
+        && isSuperAdmin()
+        && request.resource.data.updatedBy == request.auth.uid;
+
+      // 방문자 집계(레거시 단일 문서) — 구 클라이언트 호환. 신규는 visitShards 사용.
+      allow create: if docId == 'stats'
+        && request.resource.data.keys().hasOnly(['total', 'day', 'dayCount', 'updatedAt'])
+        && request.resource.data.total == 1
+        && request.resource.data.dayCount == 1
+        && request.resource.data.day == kstDateString()
+        && request.resource.data.updatedAt is string
+        && request.resource.data.updatedAt.size() <= 40;
+
+      allow update: if docId == 'stats'
+        && request.resource.data.keys().hasOnly(['total', 'day', 'dayCount', 'updatedAt'])
+        && request.resource.data.total is int
+        && request.resource.data.dayCount is int
+        && request.resource.data.day == kstDateString()
+        && request.resource.data.updatedAt is string
+        && request.resource.data.updatedAt.size() <= 40
+        && request.resource.data.total == resource.data.get('total', 0) + 1
+        && (
+          (resource.data.get('day', '') == kstDateString()
+            && request.resource.data.dayCount == resource.data.get('dayCount', 0) + 1)
+          || (resource.data.get('day', '') != kstDateString()
+            && request.resource.data.dayCount == 1)
+        );
+
+      // 분산 카운터 — 권한은 레거시와 동일(정확히 +1만). 샤드 ID 0–31.
+      match /visitShards/{shardId} {
+        allow read: if true;
+        allow delete: if false;
+        allow create: if docId == 'stats'
+          && shardId.matches('^[0-9]{1,2}$')
+          && int(shardId) >= 0
+          && int(shardId) < 32
+          && request.resource.data.keys().hasOnly(['total', 'day', 'dayCount', 'updatedAt'])
+          && request.resource.data.total == 1
+          && request.resource.data.dayCount == 1
+          && request.resource.data.day == kstDateString()
+          && request.resource.data.updatedAt is string
+          && request.resource.data.updatedAt.size() <= 40;
+        allow update: if docId == 'stats'
+          && shardId.matches('^[0-9]{1,2}$')
+          && int(shardId) >= 0
+          && int(shardId) < 32
+          && request.resource.data.keys().hasOnly(['total', 'day', 'dayCount', 'updatedAt'])
+          && request.resource.data.total is int
+          && request.resource.data.dayCount is int
+          && request.resource.data.day == kstDateString()
+          && request.resource.data.updatedAt is string
+          && request.resource.data.updatedAt.size() <= 40
+          && request.resource.data.total == resource.data.get('total', 0) + 1
+          && (
+            (resource.data.get('day', '') == kstDateString()
+              && request.resource.data.dayCount == resource.data.get('dayCount', 0) + 1)
+            || (resource.data.get('day', '') != kstDateString()
+              && request.resource.data.dayCount == 1)
+          );
+      }
+    }
+
+    // 값 검증만 (문서에 여분 필드가 있어도 update 가능)
+    function validUserFieldValues() {
+      let d = request.resource.data;
+      return ((!('nickname' in d)) || (d.nickname is string && d.nickname.size() >= 2 && d.nickname.size() <= 12))
+        && ((!('totalwarTier' in d)) || d.totalwarTier in ['normal', 'advanced', 'rare', 'legend', 'legend_plus'])
+        && ((!('arenaTier' in d)) || d.arenaTier in ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'master', 'challenger', 'legend', 'champion'])
+        && ((!('destructionScore' in d)) || ((d.destructionScore is int || d.destructionScore is float) && d.destructionScore >= 0))
+        && ((!('photoURL' in d)) || d.photoURL == null || d.photoURL is string)
+        && ((!('recommendCount' in d)) || (d.recommendCount is int && d.recommendCount >= 0))
+        && ((!('lastProfileRecommendDate' in d)) || (d.lastProfileRecommendDate is string
+          && d.lastProfileRecommendDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')))
+        && ((!('dailyTarotPeriodId' in d)) || (d.dailyTarotPeriodId is string
+          && d.dailyTarotPeriodId.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')));
+    }
+
+    // 신규 문서: 허용 키만 (쓰레기 필드 create 방지)
+    function validUserCreateKeys() {
+      return request.resource.data.keys().hasOnly([
+        'nickname', 'photoURL', 'totalwarTier', 'arenaTier', 'destructionScore',
+        'hubId', 'updatedAt', 'recommendCount', 'lastProfileRecommendDate',
+        'dailyTarotPeriodId'
+      ]);
+    }
+
+    // 본인 update: 변경된 키만 화이트리스트 (기존 여분 필드는 유지 가능)
+    function onlyAllowedUserFieldChanges() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'nickname', 'photoURL', 'totalwarTier', 'arenaTier', 'destructionScore',
+        'hubId', 'updatedAt', 'lastProfileRecommendDate', 'dailyTarotPeriodId'
+      ]);
+    }
+
+    function recommendCountUnchanged() {
+      return request.resource.data.get('recommendCount', 0) == resource.data.get('recommendCount', 0);
+    }
+
+    function lastRecommendDateNotRewound() {
+      return !('lastProfileRecommendDate' in request.resource.data)
+        || !('lastProfileRecommendDate' in resource.data)
+        || request.resource.data.lastProfileRecommendDate >= resource.data.lastProfileRecommendDate;
+    }
+
+    function dailyTarotPeriodNotRewound() {
+      return !('dailyTarotPeriodId' in request.resource.data)
+        || !('dailyTarotPeriodId' in resource.data)
+        || request.resource.data.dailyTarotPeriodId >= resource.data.dailyTarotPeriodId;
+    }
+
+    // +1 은 같은 배치에서 (추천자×대상×오늘 KST) claim 이 새로 만들어질 때만
+    function onlyProfileRecommendIncrement(targetUid) {
+      let claimId = request.auth.uid + '_' + targetUid + '_' + kstDateString();
+      let claimPath = /databases/$(database)/documents/profileDailyRecommends/$(claimId);
+      return signedIn()
+        && request.auth.uid != targetUid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['recommendCount'])
+        && request.resource.data.recommendCount is int
+        && request.resource.data.recommendCount == resource.data.get('recommendCount', 0) + 1
+        && !exists(claimPath)
+        && existsAfter(claimPath)
+        && getAfter(claimPath).data.toUid == targetUid
+        && getAfter(claimPath).data.day == kstDateString();
+    }
+
+    match /users/{uid} {
+      allow get: if signedIn();
+      allow list: if isSuperAdmin();
+      allow create: if signedIn() && request.auth.uid == uid
+        && validUserCreateKeys()
+        && validUserFieldValues()
+        && (!('recommendCount' in request.resource.data) || request.resource.data.recommendCount == 0);
+      allow update: if (
+          signedIn()
+          && request.auth.uid == uid
+          && onlyAllowedUserFieldChanges()
+          && validUserFieldValues()
+          && recommendCountUnchanged()
+          && lastRecommendDateNotRewound()
+          && dailyTarotPeriodNotRewound()
+        )
+        || onlyProfileRecommendIncrement(uid);
+      allow delete: if false;
+    }
+
+    // 추천자×대상당 KST 하루 1장. docId = {fromUid}_{toUid}_{YYYY-MM-DD}
+    match /profileDailyRecommends/{claimId} {
+      allow get: if signedIn() && claimId.matches('^' + request.auth.uid + '_.*');
+      allow list: if false;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['day', 'toUid', 'createdAt'])
+        && request.resource.data.day == kstDateString()
+        && request.resource.data.toUid is string
+        && request.resource.data.toUid.size() > 0
+        && request.resource.data.toUid.size() <= 128
+        && request.resource.data.toUid != request.auth.uid
+        && claimId == request.auth.uid + '_' + request.resource.data.toUid + '_' + kstDateString()
+        && request.resource.data.createdAt is string
+        && request.resource.data.createdAt.size() <= 40;
+      allow update, delete: if false;
+    }
+
+    // 공용 허브 공략 — 길드 hubs/.../builds 와 완전 분리
+    match /communityGuides/{guideId} {
+      allow read: if true;
+
+      allow create: if isSuperAdmin()
+        || (
+          signedIn()
+          && request.resource.data.section == 'pvp'
+          && request.resource.data.authorId == request.auth.uid
+          && request.resource.data.category in ['arena', 'totalwar']
+        );
+
+      allow update: if isSuperAdmin()
+        || (
+          signedIn()
+          && resource.data.section == 'pvp'
+          && resource.data.authorId == request.auth.uid
+          && request.resource.data.authorId == resource.data.authorId
+          && request.resource.data.section == 'pvp'
+          && request.resource.data.category in ['arena', 'totalwar']
+        );
+
+      allow delete: if isSuperAdmin()
+        || (
+          signedIn()
+          && resource.data.section == 'pvp'
+          && resource.data.authorId == request.auth.uid
+        );
+    }
+
+    // 공용 허브 티어리스트 — 공개 열람, 슈퍼관리자만 수정
+    match /communityTierLists/{listId} {
+      allow read: if true;
+      allow create, update: if isSuperAdmin()
+        && listId in ['pve', 'pvp']
+        && request.resource.data.section == listId;
+      allow delete: if isSuperAdmin() && listId in ['pve', 'pvp'];
+    }
+
+    // 초대 인덱스: 해당 허브 관리자만 "새 코드" create 가능.
+    // 기존 코드 덮어쓰기(update)는 금지 → 다른 길드 초대 링크 하이재킹 차단.
+    // 가입 시 멤버 create 는 joinHub Callable(Admin SDK)만 수행.
+    match /inviteIndex/{code} {
+      allow get: if signedIn();
+      allow list: if isSuperAdmin();
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['hubId'])
+        && request.resource.data.hubId is string
+        && canRunHub(request.resource.data.hubId);
+      allow update: if false;
+      allow delete: if signedIn() && (isMaster(resource.data.hubId) || isSuperAdmin());
+    }
+
+    match /publicGuilds/{hubId} {
+      allow read: if true;
+      allow create, update: if canRunHub(hubId)
+        || (signedIn()
+          && exists(/databases/$(database)/documents/hubs/$(hubId))
+          && get(/databases/$(database)/documents/hubs/$(hubId)).data.masterId == request.auth.uid);
+      allow delete: if isMaster(hubId) || isSuperAdmin();
+    }
+
     match /hubs/{hubId} {
-      allow read: if isHubMember(hubId);
+      allow read: if isHubMember(hubId) || isSuperAdmin();
       allow create: if signedIn()
         && request.resource.data.masterId == request.auth.uid
         && request.resource.data.keys().hasAll(['name', 'affiliation', 'tags', 'masterId', 'inviteCode']);
-      allow update, delete: if isMaster(hubId);
+      allow update: if isSuperAdmin()
+        || isMaster(hubId)
+        // 관리자는 마스터십·초대코드는 못 바꿈 (탈취 방지)
+        || (isHubAdmin(hubId)
+          && request.resource.data.masterId == resource.data.masterId
+          && request.resource.data.inviteCode == resource.data.inviteCode);
+      allow delete: if isMaster(hubId) || isSuperAdmin();
 
       match /members/{uid} {
-        allow read: if isHubMember(hubId);
-        allow write: if isAdmin(hubId) || (signedIn() && uid == request.auth.uid);
+        allow get: if signedIn() && (uid == request.auth.uid || isHubMember(hubId) || isSuperAdmin());
+        allow list: if isHubMember(hubId) || isSuperAdmin();
+        // role:member 신규 가입은 joinHub Callable 만 허용.
+        // 허브 개설 시 길드마스터 문서만 클라이언트가 직접 create.
+        allow create: if signedIn()
+          && uid == request.auth.uid
+          && request.resource.data.role == 'master'
+          && get(/databases/$(database)/documents/hubs/$(hubId)).data.masterId == request.auth.uid;
+        // role 변경(임명·위임)은 마스터/슈퍼만. 관리자는 role 유지한 채 다른 필드만.
+        allow update: if isSuperAdmin()
+          || isMaster(hubId)
+          || (isHubAdmin(hubId) && request.resource.data.role == resource.data.role)
+          || (signedIn() && uid == request.auth.uid
+              && request.resource.data.role == resource.data.role);
+        allow delete: if canRunHub(hubId)
+          || (signedIn() && uid == request.auth.uid);
       }
 
-      // 공략/공지/게시글/히스토리: 같은 hubId 하위만, 타 허브 문서는 경로상 접근 불가
       match /builds/{buildId} {
-        allow read: if isHubMember(hubId);
-        allow create, update, delete: if isHubMember(hubId);
+        allow read: if isHubMember(hubId) || isSuperAdmin();
+        allow create, update: if isHubMember(hubId) || isSuperAdmin();
+        allow delete: if isHubAdmin(hubId) || isSuperAdmin();
       }
 
       match /notices/{noticeId} {
-        allow read: if isHubMember(hubId);
-        allow create: if isAdmin(hubId);
-        allow update, delete: if isAdmin(hubId)
+        allow read: if isHubMember(hubId) || isSuperAdmin();
+        allow create: if canRunHub(hubId) && validFeedWrite();
+        allow update: if (canRunHub(hubId)
+          || (isHubMember(hubId) && resource.data.authorId == request.auth.uid))
+          && validFeedWrite();
+        allow delete: if canRunHub(hubId)
           || (isHubMember(hubId) && resource.data.authorId == request.auth.uid);
       }
 
       match /posts/{postId} {
-        allow read: if isHubMember(hubId);
-        allow create: if isHubMember(hubId);
-        allow update, delete: if isAdmin(hubId)
+        allow read: if isHubMember(hubId) || isSuperAdmin();
+        allow create: if (isHubMember(hubId) || isSuperAdmin()) && validFeedWrite();
+        allow update: if (canRunHub(hubId)
+          || (isHubMember(hubId) && resource.data.authorId == request.auth.uid))
+          && validFeedWrite();
+        allow delete: if canRunHub(hubId)
           || (isHubMember(hubId) && resource.data.authorId == request.auth.uid);
       }
 
       match /history/{eventId} {
-        allow read: if isHubMember(hubId);
-        allow create: if isHubMember(hubId);
+        allow read: if isHubMember(hubId) || isSuperAdmin();
+        allow create: if (isHubMember(hubId) || isSuperAdmin())
+          && request.resource.data.keys().hasOnly(['actor', 'action', 'target', 'detail', 'createdAt'])
+          && request.resource.data.actor is string
+          && request.resource.data.actor.size() <= 30
+          && request.resource.data.action is string
+          && request.resource.data.action.size() <= 30
+          && request.resource.data.target is string
+          && request.resource.data.target.size() <= 120
+          && request.resource.data.detail is string
+          && request.resource.data.detail.size() <= 300
+          && request.resource.data.createdAt is string
+          && request.resource.data.createdAt.size() <= 50;
         allow update, delete: if false;
       }
-    }
 
-    // 초대 코드 → hubId 매핑은 Cloud Function + App Check로 처리 권장.
-    // 공개 컬렉션에 password를 두지 말 것.
+      match /scores/{memberId} {
+        allow read: if isHubMember(hubId) || isSuperAdmin();
+        allow write: if canRunHub(hubId);
+      }
+    }
   }
 }

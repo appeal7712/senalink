@@ -18,3 +18,5 @@ One-off or old maintenance scripts moved from the repo root. **Not used by the V
 ## This folder
 
 Historical scrapers (heroes, gelidus, tooltips, collab fixes, etc.). Keep for reference; delete only after confirming no local workflow depends on them.
+
+`fixtures/` — archived HTML snapshots (e.g. `gelidus_success.html` for `extract_gelidus_icon.py`). Not used by the app build.
