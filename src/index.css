@@ -7670,7 +7670,7 @@ h1, h2, h3 {
     min-height: 0 !important;
     padding: 0 !important;
     gap: 20px !important;
-    align-items: stretch;
+    align-items: start;
   }
 
   .arena-body-scroll-modal .editing-build-left-stack {
@@ -7695,8 +7695,11 @@ h1, h2, h3 {
 
   .arena-body-scroll-modal .editing-build-gear-panel {
     grid-area: gear;
+    align-self: start !important;
+    flex: none !important;
     height: auto !important;
     max-height: none !important;
+    min-height: 0 !important;
     overflow: visible !important;
   }
 
@@ -7718,7 +7721,35 @@ h1, h2, h3 {
   .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--accessories > div:nth-child(2) {
     flex: 0 0 auto !important;
     height: auto !important;
+    min-height: 0 !important;
+    grid-template-rows: repeat(3, auto) !important;
     align-content: start;
+  }
+
+  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--accessories > div:nth-child(2) {
+    grid-template-rows: repeat(2, auto) !important;
+  }
+
+  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--sets > div:nth-child(2) button,
+  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--accessories > div:nth-child(2) button {
+    height: auto !important;
+    min-height: 34px !important;
+  }
+
+  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--weapons {
+    flex: 0 0 auto !important;
+  }
+
+  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--weapons > div {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+  }
+
+  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--weapons select {
+    flex: 0 0 auto !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
   }
 
   .arena-body-scroll-modal .editing-build-hero-picker {
@@ -7731,9 +7762,9 @@ h1, h2, h3 {
   }
 
   .arena-body-scroll-modal .editing-build-hero-grid {
-    height: 168px !important;
-    min-height: 168px !important;
-    max-height: 168px !important;
+    height: 150px !important;
+    min-height: 150px !important;
+    max-height: 150px !important;
     overflow-y: auto !important;
     flex: none !important;
   }
@@ -7746,9 +7777,9 @@ h1, h2, h3 {
   }
 
   .arena-body-scroll-modal .editing-build-hero-picker .hero-grid-picker--fill .hero-grid-picker-grid {
-    height: 168px !important;
-    min-height: 168px !important;
-    max-height: 168px !important;
+    height: 150px !important;
+    min-height: 150px !important;
+    max-height: 150px !important;
     flex: none !important;
     overflow-y: auto !important;
   }
