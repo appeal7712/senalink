@@ -157,10 +157,10 @@ export default function SkillReservationBoard({
   const reserved = (value || []).filter(Boolean);
 
   const [isMobileBoard, setIsMobileBoard] = useState(() => (
-    typeof window !== 'undefined' && window.matchMedia('(max-width: 980px)').matches
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 1080px)').matches
   ));
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 980px)');
+    const mq = window.matchMedia('(max-width: 1080px)');
     const sync = () => setIsMobileBoard(mq.matches);
     sync();
     mq.addEventListener('change', sync);

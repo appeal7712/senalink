@@ -1,0 +1,423 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   덱 수정 모달 — PC 본문 통스크롤 (min-width 1081px only)
+   헬퍼: src/lib/deckEditScrollModal.js
+   · arena — 결투장·상급결투장 (2열)
+   · pve   — 길드 공성전·강림원정대 (3열+타임라인)
+   모바일(≤1080px): index.css만 — 이 파일에서 건드리지 않음
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1081px) {
+  /* ── 공통 토큰 ─────────────────────────────────────────────────────── */
+  .editing-build-modal.arena-body-scroll-modal.glass-modal,
+  .editing-build-modal.pve-body-scroll-modal.glass-modal {
+    --deck-gear-h: 496px;
+    --deck-hero-grid-h: 120px;
+    --deck-pve-hero-grid-h: 152px;
+    --deck-pve-hero-picker-pad-v: 24px;
+    --deck-pve-hero-picker-head: 28px;
+    --deck-pve-hero-picker-gap: 10px;
+    --deck-hero-picker-pad: 24px;
+    --deck-hero-picker-head: 40px;
+    --deck-hero-picker-gap: 10px;
+    --deck-hero-picker-h: calc(
+      var(--deck-hero-picker-pad) + var(--deck-hero-picker-head) +
+      var(--deck-hero-picker-gap) + var(--deck-hero-grid-h)
+    );
+    --deck-pve-hero-picker-h: calc(
+      var(--deck-pve-hero-picker-pad-v) + var(--deck-pve-hero-picker-head) +
+      var(--deck-pve-hero-picker-gap) + var(--deck-pve-hero-grid-h)
+    );
+    --deck-timeline-scroller-h: 220px;
+    --deck-pve-timeline-scroller-min-h: 160px;
+    --deck-row-gap: 16px;
+    --deck-body-grid-min-h: calc(
+      var(--deck-gear-h) + var(--deck-row-gap) + var(--deck-hero-picker-h)
+    );
+    --deck-pve-body-grid-min-h: calc(
+      var(--deck-gear-h) + var(--deck-row-gap) + var(--deck-pve-hero-picker-h)
+    );
+    max-height: min(88vh, 900px) !important;
+    height: min(88vh, 900px);
+    overflow: hidden !important;
+  }
+
+  /* 공성·강림: 라운드 라벨·세팅 디테일 여유 + 풀 높이에서 결투장처럼 스크롤 0 */
+  .editing-build-modal.pve-body-scroll-modal.glass-modal {
+    --deck-gear-h: 520px;
+    --deck-pve-hero-picker-pad-v: 20px;
+  }
+
+  /* ── 공통: 본문 스크롤 (넘치면 여기만 · 레이아웃 동일) ─────────────── */
+  .arena-body-scroll-modal .deck-edit-scroll-body,
+  .pve-body-scroll-modal .deck-edit-scroll-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 20px;
+    box-sizing: border-box;
+  }
+
+  /* 풀 높이(결투장·상급과 동일): 본문 스크롤 없음 · 세로 부족할 때만 위 규칙으로 스크롤 */
+  @media (min-height: 1021px) {
+    .arena-body-scroll-modal .deck-edit-scroll-body,
+    .pve-body-scroll-modal .deck-edit-scroll-body {
+      overflow-y: hidden !important;
+    }
+  }
+
+  /* ── 공통: 좌열 덱+세팅디테일 · 장비 패널 ─────────────────────────── */
+  .arena-body-scroll-modal .editing-build-left-stack,
+  .pve-body-scroll-modal .editing-build-left-stack {
+    grid-area: left;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-self: stretch !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    gap: 10px !important;
+    overflow: visible !important;
+  }
+
+  .pve-body-scroll-modal .editing-build-left-stack {
+    overflow: hidden !important;
+  }
+
+  .arena-body-scroll-modal .editing-build-deck-slot,
+  .pve-body-scroll-modal .editing-build-deck-slot {
+    flex: 0 0 auto;
+  }
+
+  /* 세팅 디테일: 덱 아래 남는 세로를 박스가 전부 채움 (위·아래 빈 공간 없음) */
+  .arena-body-scroll-modal .editing-build-detail-panel,
+  .pve-body-scroll-modal .editing-build-detail-panel {
+    flex: 1 1 auto !important;
+    margin-top: 0 !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .pve-body-scroll-modal .editing-build-detail-panel {
+    overflow: visible !important;
+    padding-bottom: 4px !important;
+  }
+
+  .arena-body-scroll-modal .editing-build-detail-panel .editing-build-detail-textarea,
+  .pve-body-scroll-modal .editing-build-detail-panel .editing-build-detail-textarea {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: calc(3 * 1.5em + 16px) !important;
+    max-height: none !important;
+    height: auto !important;
+    resize: none !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    line-height: 1.5 !important;
+    box-sizing: border-box !important;
+  }
+
+  .arena-body-scroll-modal .editing-build-gear-panel,
+  .pve-body-scroll-modal .editing-build-gear-panel {
+    grid-area: gear;
+    align-self: stretch !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box;
+    padding: 12px 14px 12px !important;
+  }
+
+  .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel--embedded,
+  .pve-body-scroll-modal .editing-build-gear-panel .hero-gear-panel--embedded {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    padding-bottom: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel-set-grid,
+  .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel-accessory-grid,
+  .pve-body-scroll-modal .editing-build-gear-panel .hero-gear-panel-set-grid,
+  .pve-body-scroll-modal .editing-build-gear-panel .hero-gear-panel-accessory-grid {
+    gap: 6px !important;
+    box-sizing: border-box !important;
+  }
+
+  .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel-set-grid button,
+  .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel-accessory-grid button,
+  .pve-body-scroll-modal .editing-build-gear-panel .hero-gear-panel-set-grid button,
+  .pve-body-scroll-modal .editing-build-gear-panel .hero-gear-panel-accessory-grid button {
+    padding: 6px 6px !important;
+    font-size: 11px !important;
+  }
+
+  .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel--embedded select,
+  .pve-body-scroll-modal .editing-build-gear-panel .hero-gear-panel--embedded select {
+    padding: 5px 6px !important;
+    font-size: 12px !important;
+  }
+
+  /* ═══ 결투장 (2열) ═══════════════════════════════════════════════════ */
+
+  .arena-body-scroll-modal .editing-build-grid.is-pvp {
+    display: grid !important;
+    grid-template-columns: minmax(240px, 276px) minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, var(--deck-gear-h)) auto !important;
+    grid-template-areas:
+      "left gear"
+      "heroes heroes" !important;
+    gap: var(--deck-row-gap) !important;
+    align-items: stretch !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: var(--deck-body-grid-min-h) !important;
+    overflow: hidden !important;
+    flex: none !important;
+    padding: 0 !important;
+  }
+
+  .arena-body-scroll-modal .editing-build-hero-picker {
+    grid-area: heroes;
+    grid-row: 2;
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    align-self: start !important;
+  }
+
+  .arena-body-scroll-modal .editing-build-hero-picker > .editing-build-hero-grid,
+  .arena-body-scroll-modal .editing-build-hero-grid.arena-hero-grid,
+  .arena-body-scroll-modal .arena-hero-grid {
+    flex: none !important;
+    height: var(--deck-hero-grid-h) !important;
+    min-height: var(--deck-hero-grid-h) !important;
+    max-height: var(--deck-hero-grid-h) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding: 3px 2px 4px !important;
+    padding-bottom: 0 !important;
+    box-sizing: border-box;
+    grid-template-columns: repeat(auto-fill, minmax(calc((100% - 102px) / 18), 1fr)) !important;
+  }
+
+  .arena-body-scroll-modal .arena-hero-grid > div > div {
+    width: min(64px, 100%) !important;
+    box-sizing: border-box;
+  }
+
+  .arena-body-scroll-modal .arena-hero-grid > div > div:first-child {
+    padding-top: 1px;
+    box-sizing: border-box;
+  }
+
+  .arena-body-scroll-modal .editing-build-hero-picker .hero-grid-picker--fill {
+    flex: none !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+  }
+
+  .arena-body-scroll-modal .editing-build-hero-picker .hero-grid-picker--fill .hero-grid-picker-grid {
+    height: var(--deck-hero-grid-h) !important;
+    min-height: var(--deck-hero-grid-h) !important;
+    max-height: var(--deck-hero-grid-h) !important;
+    flex: none !important;
+    overflow-y: auto !important;
+    padding: 3px 2px 4px !important;
+    box-sizing: border-box;
+    grid-template-columns: repeat(auto-fill, minmax(calc((100% - 102px) / 18), 1fr)) !important;
+  }
+
+  /* ═══ 공성전·강림원정대 — 레이아웃 1벌만 (높이 구간마다 바꾸지 않음)
+   * 1020 기준으로 바뀌는 것: .deck-edit-scroll-body overflow-y 뿐 (위 공통 규칙)
+   * ═══════════════════════════════════════════════════════════════════ */
+
+  .pve-body-scroll-modal .editing-build-grid.is-pve {
+    display: grid !important;
+    grid-template-columns: minmax(240px, 276px) minmax(260px, 1.1fr) minmax(280px, 1fr) !important;
+    grid-template-rows: var(--deck-gear-h) var(--deck-pve-hero-picker-h) !important;
+    grid-template-areas:
+      "left gear timeline"
+      "heroes heroes timeline" !important;
+    gap: var(--deck-row-gap) !important;
+    align-items: stretch !important;
+    flex: none !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: var(--deck-pve-body-grid-min-h) !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+  }
+
+  .pve-body-scroll-modal .editing-build-gear-panel {
+    height: var(--deck-gear-h) !important;
+    max-height: var(--deck-gear-h) !important;
+    min-height: var(--deck-gear-h) !important;
+  }
+
+  .pve-body-scroll-modal .editing-build-hero-picker {
+    grid-area: heroes;
+    grid-column: 1 / 3;
+    grid-row: 2;
+    position: relative;
+    z-index: 2;
+    align-self: stretch !important;
+    flex-shrink: 0 !important;
+    justify-content: flex-start !important;
+    height: var(--deck-pve-hero-picker-h) !important;
+    max-height: var(--deck-pve-hero-picker-h) !important;
+    min-height: var(--deck-pve-hero-picker-h) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  .pve-body-scroll-modal .editing-build-hero-picker > .editing-build-hero-grid,
+  .pve-body-scroll-modal .editing-build-hero-grid.pve-hero-grid,
+  .pve-body-scroll-modal .pve-hero-grid {
+    flex: none !important;
+    height: var(--deck-pve-hero-grid-h) !important;
+    min-height: var(--deck-pve-hero-grid-h) !important;
+    max-height: var(--deck-pve-hero-grid-h) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding: 3px 2px 4px !important;
+    box-sizing: border-box;
+    grid-template-columns: repeat(auto-fill, minmax(calc((100% - 54px) / 10), 1fr)) !important;
+  }
+
+  .pve-body-scroll-modal .pve-hero-grid > div > div {
+    width: min(64px, 100%) !important;
+    box-sizing: border-box;
+  }
+
+  .pve-body-scroll-modal .pve-hero-grid > div > div:first-child {
+    padding-top: 1px;
+    box-sizing: border-box;
+  }
+
+  .pve-body-scroll-modal .editing-build-timeline-col {
+    grid-area: timeline;
+    grid-row: 1 / -1;
+    align-self: stretch !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: var(--deck-pve-body-grid-min-h) !important;
+    overflow: hidden !important;
+    overflow-y: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    box-sizing: border-box;
+  }
+
+  /* 목록 박스가 남는 세로를 먹고, scroller 끝 = 추가 폼 위 (빈 공간 없음) */
+  .pve-body-scroll-modal .editing-build-timeline-list {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  .pve-body-scroll-modal .editing-build-timeline-list-head {
+    flex: 0 0 auto !important;
+  }
+
+  .pve-body-scroll-modal .editing-build-timeline-list .skill-timeline-scroller {
+    flex: 1 1 0% !important;
+    height: 0 !important;
+    min-height: var(--deck-pve-timeline-scroller-min-h) !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .pve-body-scroll-modal .editing-build-timeline-add {
+    flex: 0 0 auto !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* 본문 스크롤 시 overflow:hidden 자식 위 휠 막힘 방지 (영웅·스킬리스트 내부 스크롤은 유지) */
+  @media (max-height: 1020px) {
+    .arena-body-scroll-modal .editing-build-deck-slot,
+    .pve-body-scroll-modal .editing-build-deck-slot,
+    .arena-body-scroll-modal .editing-build-detail-panel,
+    .pve-body-scroll-modal .editing-build-detail-panel,
+    .arena-body-scroll-modal .editing-build-gear-panel,
+    .pve-body-scroll-modal .editing-build-gear-panel,
+    .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel--embedded,
+    .pve-body-scroll-modal .editing-build-gear-panel .hero-gear-panel--embedded,
+    .pve-body-scroll-modal .editing-build-timeline-col,
+    .pve-body-scroll-modal .editing-build-timeline-list-head,
+    .pve-body-scroll-modal .editing-build-timeline-add {
+      overflow: visible !important;
+    }
+
+    .pve-body-scroll-modal .editing-build-timeline-list {
+      overflow: visible !important;
+    }
+
+    .pve-body-scroll-modal .editing-build-timeline-list .skill-timeline-scroller {
+      overflow-y: auto !important;
+    }
+  }
+
+  /* index.css ≤1050 좌열 nested scroll 무력화 — 본문 통스크롤만 */
+  @media (max-height: 1050px) {
+    .arena-body-scroll-modal .editing-build-left-stack,
+    .pve-body-scroll-modal .editing-build-left-stack {
+      overflow-y: visible !important;
+    }
+  }
+
+  /* index.css max-height:860 압축 무력화 */
+  @media (max-height: 860px) {
+    .arena-body-scroll-modal .editing-build-grid.is-pvp,
+    .pve-body-scroll-modal .editing-build-grid.is-pve {
+      padding: 0 !important;
+      gap: var(--deck-row-gap) !important;
+    }
+
+    .pve-body-scroll-modal .editing-build-timeline-list .skill-timeline-scroller {
+      flex: 1 1 0% !important;
+      height: 0 !important;
+      min-height: var(--deck-pve-timeline-scroller-min-h) !important;
+      max-height: none !important;
+    }
+
+    .pve-body-scroll-modal .editing-build-timeline-add textarea,
+    .pve-body-scroll-modal .editing-build-timeline-add .editing-build-timeline-memo {
+      min-height: 52px !important;
+      max-height: 72px !important;
+    }
+  }
+}

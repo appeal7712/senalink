@@ -31,6 +31,16 @@ import { closeOverlayFromUI, collapseOverlayHistory, pushHubTab, pushOverlay } f
 import { parseInviteCode } from '../lib/invite';
 import HeroGearPanel from './HeroGearPanel';
 import ModalScrim from './ModalScrim';
+import {
+  deckEditScrollBodyWrapperProps,
+  deckEditScrollGridBodyStyle,
+  deckEditScrollHeroGridClass,
+  deckEditScrollHeroGridStyle,
+  deckEditScrollModalClassSuffix,
+  deckEditScrollUsesHeroGearPanel,
+  getDeckEditScrollKind,
+  useDeckEditScrollWheelForward,
+} from '../lib/deckEditScrollModal';
 import PublicProfileModal, { AuthorMeta } from './PublicProfileModal';
 import { useUserProfile } from '../context/UserProfileContext';
 import { LOUNGE_STORAGE_KEYS } from '../data/loungeMeta';
@@ -1165,6 +1175,9 @@ export default function GuildLounge() {
   };
 
   const expTheme = EXPEDITION_BOSS_THEMES[expeditionBoss] || EXPEDITION_BOSS_THEMES.taeho;
+  const deckEditScrollKind = editingBuild ? getDeckEditScrollKind(editingCategory) : null;
+  const deckEditScrollBodyRef = useRef(null);
+  useDeckEditScrollWheelForward(deckEditScrollBodyRef, !!editingBuild && !!deckEditScrollKind);
 
   const renderExpeditionRoundDeck = (round, guideTitle = '') => (
     <div className="expedition-round-deck">
@@ -1647,7 +1660,7 @@ export default function GuildLounge() {
       {editingBuild && (
         <ModalScrim style={{ zIndex: 3500, padding: '16px', overflow: 'hidden' }}>
           <div
-            className={`luxury-panel glass-modal editing-build-modal${editingCategory === 'arena' ? ' arena-body-scroll-modal' : ''}`}
+            className={`luxury-panel glass-modal editing-build-modal${deckEditScrollModalClassSuffix(deckEditScrollKind)}`}
             onClick={e => e.stopPropagation()}
             onMouseDown={e => e.stopPropagation()}
             style={{ width: '94vw', maxWidth: '1520px', maxHeight: '88vh', padding: '0', display: 'flex', flexDirection: 'column', borderRadius: '28px', minHeight: 0, overflow: 'hidden' }}
@@ -1759,16 +1772,14 @@ export default function GuildLounge() {
               </div>
             </div>
 
-            {/* 2. 바디 — PC: PvE 3열(덱·장비·타임라인) / PvP 2열+영웅목록 · 결투장만 본문 통스크롤 */}
+            {/* 2. 바디 — PC: PvE 3열(덱·장비·타임라인) / PvP 2열+영웅목록 · 결투장·공성·강림 본문 통스크롤 */}
             <div
-              className={editingCategory === 'arena' ? 'arena-edit-scroll-body' : undefined}
-              style={editingCategory === 'arena' ? undefined : { display: 'contents' }}
+              ref={deckEditScrollKind ? deckEditScrollBodyRef : null}
+              {...deckEditScrollBodyWrapperProps(deckEditScrollKind)}
             >
             <div
               className={`editing-build-grid editing-build-modal-body ${(CONTENT_META[editingCategory] || CONTENT_META.siege).mode === 'pvp' ? 'is-pvp' : 'is-pve'}`}
-              style={editingCategory === 'arena'
-                ? { gap: '20px', alignItems: 'stretch', boxSizing: 'border-box' }
-                : { flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px 20px', gap: '20px', alignItems: 'stretch', boxSizing: 'border-box' }}
+              style={deckEditScrollGridBodyStyle(deckEditScrollKind)}
             >
               <div className="editing-build-left-stack">
               <div className="editing-build-deck-slot" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1827,8 +1838,8 @@ export default function GuildLounge() {
               </div>
               </div>
 
-              {/* 장비 세팅 — 결투장은 공용 허브와 동일: 영웅 배치 전 비활성 */}
-              {editingCategory === 'arena' ? (
+              {/* 장비 세팅 — 결투장·공성·강림: HeroGearPanel / 총력전: 인라인 */}
+              {deckEditScrollUsesHeroGearPanel(deckEditScrollKind) ? (
               <div className="glass-inset editing-build-gear-panel editing-build-right-panel" style={{
                     flex: 1, minWidth: 0, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px',
                     alignSelf: 'stretch', minHeight: 0, boxSizing: 'border-box'
@@ -1984,10 +1995,8 @@ export default function GuildLounge() {
                   </div>
 
                   <div
-                    className={`editing-build-hero-grid${editingCategory === 'arena' ? ' arena-hero-grid' : ''}`}
-                    style={editingCategory === 'arena'
-                      ? { display: 'grid', gap: '6px', overflowY: 'auto', paddingRight: '4px' }
-                      : { minHeight: '168px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(62px, 1fr))', gap: '6px', overflowY: 'auto', paddingRight: '4px' }}
+                    className={deckEditScrollHeroGridClass(deckEditScrollKind)}
+                    style={deckEditScrollHeroGridStyle(deckEditScrollKind)}
                   >
                     {filteredHeroesByRole.map(h => {
                       const cleanName = h.name.replace('(각성)', '');

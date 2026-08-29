@@ -1,7 +1,7 @@
 # AGENTS.md — 세나링크 (sevennight_guild_web_formal) 핸드오프
 
 다른 에이전트·개발자가 **이 폴더만** 이어서 패치할 때 읽는 문서.  
-라이브: https://senalink.web.app · Firebase 프로젝트 **`senalink`만**.
+라이브: **https://senalink.kr** (커스텀 도메인) · Firebase Hosting `senalink.web.app` · 프로젝트 **`senalink`만**.
 
 > **금지:** `sevennight_guild_web`, `*_backup*`, `mingbong-web` / layro / `sevennight-guild-hub` 등 다른 사본·프로젝트 열기·배포.  
 > **배포:** 밍봉/김봉이 명시할 때만. `npm run build` 후 `npx firebase deploy --only … --project senalink`.  
@@ -355,6 +355,7 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | `hubOversee.js` / `userOversee.js` | Ops |
 | `hubEmblem.js` / `avatarUpload.js` | 이미지 업로드 |
 | `copyNodeImage.js` | 세팅 공유 PNG |
+| `deckEditScrollModal.js` | 결투장·공성·강림 덱 수정 모달 PC 클래스·스타일 헬퍼 (§12.4) |
 | `seo.js` / `sanitize.js` / `rateLimit.js` / `formatTime.js` | 부가 |
 
 ---
@@ -401,6 +402,26 @@ API:
 **왜 공용 결투장이 어긋나 보였나:** PvP 편집 UI가 `HeroGridPicker`를 안 쓰고 인라인 목록을 복제해 두었고, 카테고리 순서도 예전엔 `special → normal → asgard → aisha`라 **일반이 준 스페셜보다 앞**이었다. 지금은 `special → asgard → aisha → normal → other` + 목록마다 재정렬.
 
 새 영웅 추가 시 `group`/`category`/`isAwakened`를 맞추고, 새 스페셜 소속이면 `HERO_FACTION_ORDER`에만 넣으면 된다.
+
+### 12.4 덱 수정 모달 — PC 본문 통스크롤 (`deckEditScrollModal`)
+
+**모바일(≤980px)은 `index.css` 기존 규칙만** — 이 패턴의 PC CSS·헬퍼로 모바일 건드리지 말 것.
+
+| 파일 | 역할 |
+|------|------|
+| `src/styles/deckEditScrollModal.css` | PC(`min-width:981px`) 레이아웃·토큰·스크롤 |
+| `src/lib/deckEditScrollModal.js` | kind `arena` \| `pve` · 클래스·스타일 헬퍼 |
+
+| kind | 모달 클래스 | 적용 |
+|------|-------------|------|
+| `arena` | `.arena-body-scroll-modal` | 길드 결투장 · 커뮤니티 결투장/상급 |
+| `pve` | `.pve-body-scroll-modal` | 길드 **공성전·강림원정대** (영웅 10열) |
+
+공통 본문: `.deck-edit-scroll-body` · 그리드 `min-height: var(--deck-body-grid-min-h)` → 넘치면 본문만 스크롤. 1080p 풀은 스크롤 없음.
+
+**유사 패턴(별도):** 길드전 카운터 `.gw-counter-edit-modal` — `index.css`.
+
+클래스·인라인 스타일은 **`deckEditScrollModal.js` 헬퍼만** · `index.css` 공용 그리드 밴드에이드 금지.
 
 ### 12.2 모바일 전용 CSS 패치 원칙
 
@@ -501,6 +522,17 @@ API:
 ---
 
 ## 17. 패치 내역
+
+### 2026-08-29 — 공성·강림 덱 수정 모달 PC 통스크롤 + 영웅 10열
+- **PvE kind:** `pve-body-scroll-modal` — 공성전·강림원정대 (길드 허브)
+- **헬퍼/CSS 통합:** `deckEditScrollModal.js` · `deckEditScrollModal.css` (arena + pve)
+- **장비:** 공성·강림도 `HeroGearPanel` embedded (결투장과 동일)
+- **영웅 목록:** PvE PC 풀화면 10열 (기존 ~12열)
+
+### 2026-08-29 — 결투장 덱 수정 모달 구조화
+- **CSS:** `src/styles/deckEditScrollModal.css` (PC only, arena 섹션) · `index.css`에서 분리
+- **헬퍼:** `src/lib/deckEditScrollModal.js` — GuildLounge·CommunityGuideEditor 공통
+- **문서:** AGENTS.md §12.4 · 모바일 CSS 무변경
 
 ### 2026-08-27 (`v2026.08.27.71`) — 카운터 중폭 한 줄 · 메타 점
 - **공격 카운터:** 1020~671은 초상 오른쪽 제목·작성자, ≤670만 위/아래 스택. 제목·작성자 구분은 `·`.

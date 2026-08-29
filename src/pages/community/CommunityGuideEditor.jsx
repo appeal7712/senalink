@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { heroes, sortHeroesForList } from '../../data/heroes';
 import { pets } from '../../data/pets';
 import { ROLE_ICONS } from '../../data/roleIcons';
@@ -15,6 +15,15 @@ import { ARENA_TIERS, normalizeArenaTier } from '../../data/arenaTiers';
 import { communitySkillMode } from '../../data/communityCatalog';
 import { emptyCommunityGuide } from '../../lib/communityGuides';
 import { backdropDismissProps } from '../../utils/backdropDismiss';
+import {
+  deckEditScrollBodyWrapperProps,
+  deckEditScrollGridBodyStyle,
+  deckEditScrollHeroGridClass,
+  deckEditScrollHeroGridStyle,
+  deckEditScrollModalClassSuffix,
+  getDeckEditScrollKindFromArenaFlag,
+  useDeckEditScrollWheelForward,
+} from '../../lib/deckEditScrollModal';
 import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, markDeckHtml5DragStarted, shouldSuppressDeckClick, resetDeckDragState } from '../../utils/deckDrag';
 
 const ROLE_FILTERS = [
@@ -73,6 +82,9 @@ export default function CommunityGuideEditor({
 }) {
   const skillMeta = communitySkillMode(initial.category);
   const isArena = initial.category === 'arena';
+  const deckEditScrollKind = getDeckEditScrollKindFromArenaFlag(isArena);
+  const deckEditScrollBodyRef = useRef(null);
+  useDeckEditScrollWheelForward(deckEditScrollBodyRef, !!deckEditScrollKind);
   const isTimeline = skillMeta.mode === 'timeline';
   const maxRes = skillMeta.maxReservations || 3;
   const contentMode = skillMeta.layout === 'pvp' ? 'pvp' : 'pve';
@@ -196,7 +208,7 @@ export default function CommunityGuideEditor({
   return (
     <ModalScrim style={{ zIndex: 3500, padding: 16, overflow: 'hidden' }} {...backdropDismissProps(onClose)}>
       <div
-        className={`luxury-panel glass-modal editing-build-modal${isArena ? ' arena-body-scroll-modal' : ''}`}
+        className={`luxury-panel glass-modal editing-build-modal${deckEditScrollModalClassSuffix(deckEditScrollKind)}`}
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
         style={{
@@ -271,14 +283,12 @@ export default function CommunityGuideEditor({
         </div>
 
         <div
-          className={isArena ? 'arena-edit-scroll-body' : undefined}
-          style={isArena ? undefined : { display: 'contents' }}
+          ref={deckEditScrollKind ? deckEditScrollBodyRef : null}
+          {...deckEditScrollBodyWrapperProps(deckEditScrollKind)}
         >
         <div
           className={`editing-build-grid editing-build-modal-body ${contentMode === 'pvp' ? 'is-pvp' : 'is-pve'}`}
-          style={isArena
-            ? { gap: 20, alignItems: 'stretch', boxSizing: 'border-box' }
-            : { flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px 20px', gap: 20, alignItems: 'stretch', boxSizing: 'border-box' }}
+          style={deckEditScrollGridBodyStyle(deckEditScrollKind)}
         >
           <div className="editing-build-left-stack">
           <div className="editing-build-deck-slot" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -377,13 +387,8 @@ export default function CommunityGuideEditor({
                 </div>
               </div>
               <div
-                className={`editing-build-hero-grid${isArena ? ' arena-hero-grid' : ''}`}
-                style={isArena
-                  ? { display: 'grid', gap: 6, overflowY: 'auto', paddingRight: 4 }
-                  : {
-                    height: 168, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(62px, 1fr))',
-                    gap: 6, overflowY: 'auto', paddingRight: 4,
-                  }}
+                className={deckEditScrollHeroGridClass(deckEditScrollKind)}
+                style={deckEditScrollHeroGridStyle(deckEditScrollKind)}
               >
                 {filteredHeroesByRole.map((h) => {
                   const cleanName = h.name.replace('(각성)', '');
