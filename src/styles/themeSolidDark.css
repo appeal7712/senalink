@@ -1,0 +1,214 @@
+/* 선명 다크 (유리·backdrop-filter 제거) */
+html[data-ui-theme="solid"] {
+  --bg-main: #12151c;
+  --bg-darkest: #0a0c10;
+  --bg-dark: #161a22;
+  --bg-card: #1a1f28;
+  --bg-card-hover: #222833;
+
+  --glass-bg: #1a1f28;
+  --glass-bg-hover: #222833;
+  --glass-modal: #1e2430;
+  --glass-inset: #252b36;
+  --glass-blur: none;
+
+  --border-gold: rgba(255, 255, 255, 0.18);
+  --border-steel: rgba(255, 255, 255, 0.14);
+  --border-subtle: rgba(255, 255, 255, 0.1);
+
+  --shadow-main: 0 10px 28px rgba(0, 0, 0, 0.45);
+  --shadow-gold: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+html[data-ui-theme="solid"] body {
+  background-color: #0a0c10;
+}
+
+html[data-ui-theme="solid"] #root::before {
+  background-color: #0a0c10;
+  background-image:
+    linear-gradient(180deg, rgba(10, 12, 16, 0.94) 0%, rgba(14, 17, 24, 0.9) 48%, rgba(10, 12, 16, 0.96) 100%),
+    url('/bg-senari.png');
+}
+
+/* 유리 블러 전역 제거 */
+html[data-ui-theme="solid"] :where(*, *::before, *::after) {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-ui-theme="solid"] .gnb-header {
+  background: #141820;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+html[data-ui-theme="solid"] .gnb-dropdown-panel {
+  background: var(--glass-modal);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-main), 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+html[data-ui-theme="solid"] .gnb-dropdown-panel::before {
+  content: none;
+}
+
+html[data-ui-theme="solid"] .site-footer-glass {
+  background: #1a1f28;
+}
+
+html[data-ui-theme="solid"] .site-footer-glass::before {
+  content: none;
+}
+
+/* 모달: 뒤 페이지 블러 대신 단색 딤 */
+html[data-ui-theme="solid"] body:has(> .modal-scrim) .app-shell {
+  filter: none !important;
+}
+
+html[data-ui-theme="solid"] .modal-scrim {
+  background: rgba(0, 0, 0, 0.78);
+}
+
+html[data-ui-theme="solid"] .modal-scrim::before {
+  content: none;
+}
+
+html[data-ui-theme="solid"] .glass-modal::after {
+  content: none;
+}
+
+html[data-ui-theme="solid"] .glass-modal input:not([type='checkbox']):not([type='radio']),
+html[data-ui-theme="solid"] .glass-modal textarea,
+html[data-ui-theme="solid"] .glass-modal select {
+  background: #252b36 !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+/* ── 테마 토글 (Uiverse MRez321 · 프로필 메뉴) ── */
+.gnb-profile-menu {
+  width: fit-content;
+  min-width: 0;
+}
+
+.gnb-profile-theme-row {
+  display: flex;
+  justify-content: center;
+  padding: 4px 8px 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ui-theme-switch {
+  display: flex;
+  justify-content: center;
+  direction: rtl;
+  line-height: 0;
+}
+
+.ui-theme-switch-input {
+  display: none;
+}
+
+.ui-theme-switch-input + label {
+  font-size: 1.35rem;
+  height: 1em;
+  width: 2.5em;
+  border-radius: 0.25em;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  transition:
+    background-color 0.4s ease,
+    border-color 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+/* 유리 모드(꺼짐): 트랙·손잡이 글라스 질감 */
+.ui-theme-switch-input:not(:checked) + label {
+  background: rgba(16, 18, 24, 0.42);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.ui-theme-switch-input:checked + label {
+  background-color: #1a1f28;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+}
+
+.ui-theme-switch-input + label:active {
+  transform: scale(0.85);
+  transition: transform 0.2s;
+}
+
+.ui-theme-switch-thumb {
+  width: 0.8em;
+  height: 0.8em;
+  border-radius: inherit;
+  position: absolute;
+  top: 0.1em;
+  left: 0.1em;
+  z-index: 10;
+  transition: 0.5s cubic-bezier(1, 0.33, 0.11, 1.34);
+}
+
+.ui-theme-switch-input:not(:checked) + label .ui-theme-switch-thumb {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 1px 4px rgba(0, 0, 0, 0.14);
+}
+
+.ui-theme-switch-input:checked + label .ui-theme-switch-thumb {
+  left: 1.6em;
+  background-color: #343d4d;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.ui-theme-switch-input + label span {
+  display: flex;
+  transition: color 0.35s ease;
+}
+
+.ui-theme-switch-input + label svg {
+  display: inline-block;
+  height: 1em;
+  width: 1em;
+  padding: 0.15em;
+  box-sizing: border-box;
+}
+
+.ui-theme-switch-input + label span:first-of-type {
+  color: #6d7580;
+}
+
+.ui-theme-switch-input + label span:last-of-type {
+  color: #9aa3ad;
+}
+
+.ui-theme-switch-input:not(:checked) + label span:first-of-type {
+  color: #5a6270;
+}
+
+.ui-theme-switch-input:not(:checked) + label span:last-of-type {
+  color: #dce4ee;
+}
+
+.ui-theme-switch-input:checked + label span:first-of-type {
+  color: #dce4ee;
+}
+
+.ui-theme-switch-input:checked + label span:last-of-type {
+  color: #4a5362;
+}
+
+.ui-theme-switch-input:focus-visible + label {
+  outline: 2px solid rgba(185, 196, 204, 0.55);
+  outline-offset: 3px;
+}

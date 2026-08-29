@@ -300,30 +300,30 @@ option {
 
 .luxury-panel.tint-red {
   background:
-    linear-gradient(180deg, rgba(248, 113, 113, 0.22) 0%, transparent 48%),
+    linear-gradient(180deg, rgba(225, 88, 88, 0.24) 0%, rgba(170, 55, 65, 0.1) 100%),
     var(--glass-bg);
-  border: 1px solid rgba(252, 165, 165, 0.38);
+  border: 1px solid rgba(215, 100, 100, 0.42);
   box-shadow: var(--shadow-main);
 }
 .luxury-panel.tint-red:hover {
   background:
-    linear-gradient(180deg, rgba(248, 113, 113, 0.28) 0%, transparent 48%),
+    linear-gradient(180deg, rgba(235, 95, 95, 0.28) 0%, rgba(178, 60, 70, 0.12) 100%),
     var(--glass-bg-hover);
-  border-color: rgba(252, 165, 165, 0.48);
+  border-color: rgba(225, 110, 110, 0.48);
 }
 
 .luxury-panel.tint-blue {
   background:
-    linear-gradient(180deg, rgba(96, 165, 250, 0.22) 0%, transparent 48%),
+    linear-gradient(180deg, rgba(72, 138, 215, 0.24) 0%, rgba(48, 92, 165, 0.1) 100%),
     var(--glass-bg);
-  border: 1px solid rgba(147, 197, 253, 0.32);
+  border: 1px solid rgba(88, 148, 220, 0.4);
   box-shadow: var(--shadow-main);
 }
 .luxury-panel.tint-blue:hover {
   background:
-    linear-gradient(180deg, rgba(96, 165, 250, 0.28) 0%, transparent 48%),
+    linear-gradient(180deg, rgba(82, 148, 225, 0.28) 0%, rgba(55, 100, 175, 0.12) 100%),
     var(--glass-bg-hover);
-  border-color: rgba(147, 197, 253, 0.42);
+  border-color: rgba(100, 158, 230, 0.46);
 }
 
 .luxury-panel.expedition-tint {
@@ -2033,11 +2033,11 @@ h1, h2, h3 {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: rgba(16, 18, 24, 0.72);
+  background: var(--glass-modal);
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: var(--shadow-main), 0 18px 44px rgba(0, 0, 0, 0.38);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   overflow: hidden;
 }
 .gnb-dropdown-panel::before {
@@ -5691,12 +5691,58 @@ h1, h2, h3 {
 }
 
 .gw-attack-layout {
+  /* 상대 — 선명한 로즈·크림슨 (R↑ G/B↓, 갈색 방지) */
+  --gw-enemy-text: #f8c4c4;
+  --gw-enemy-accent: #ee9494;
+  --gw-enemy-border: rgba(235, 110, 110, 0.46);
+  --gw-enemy-border-strong: rgba(245, 130, 130, 0.58);
+  --gw-enemy-mark: #e87878;
+  --gw-enemy-row-bg: rgba(255, 255, 255, 0.06);
+  --gw-enemy-row-border: rgba(240, 115, 115, 0.28);
+  --gw-enemy-row-bg-on: rgba(225, 78, 78, 0.2);
+  /* 카운터 — 선명한 사파이어 블루 (B↑ R↓) */
+  --gw-ally-text: #b6dcf8;
+  --gw-ally-accent: #78baf0;
+  --gw-ally-border: rgba(95, 165, 235, 0.46);
+  --gw-ally-mark: #62aee8;
+  --gw-ally-row-bg: rgba(255, 255, 255, 0.06);
+  --gw-ally-row-border: rgba(110, 175, 245, 0.28);
+  --gw-ally-row-bg-on: rgba(68, 138, 220, 0.2);
   display: flex;
   gap: 18px;
   align-items: flex-start;
 }
+.gw-attack-layout .gw-attack-list.luxury-panel.tint-red {
+  background:
+    linear-gradient(180deg, rgba(235, 78, 78, 0.52) 0%, rgba(185, 48, 58, 0.28) 100%),
+    var(--glass-bg);
+  border-color: rgba(245, 108, 108, 0.7);
+}
+.gw-attack-layout .gw-attack-detail.luxury-panel.tint-blue {
+  background:
+    linear-gradient(180deg, rgba(78, 148, 228, 0.52) 0%, rgba(48, 98, 175, 0.28) 100%),
+    var(--glass-bg);
+  border-color: rgba(108, 168, 245, 0.7);
+}
+.gw-attack-layout .gw-attack-list.luxury-panel.tint-red:hover {
+  background:
+    linear-gradient(180deg, rgba(235, 78, 78, 0.52) 0%, rgba(185, 48, 58, 0.28) 100%),
+    var(--glass-bg);
+  border-color: rgba(245, 108, 108, 0.7);
+}
+.gw-attack-layout .gw-attack-detail.luxury-panel.tint-blue:hover {
+  background:
+    linear-gradient(180deg, rgba(78, 148, 228, 0.52) 0%, rgba(48, 98, 175, 0.28) 100%),
+    var(--glass-bg);
+  border-color: rgba(108, 168, 245, 0.7);
+}
+.gw-attack-list.luxury-panel,
+.gw-attack-detail.luxury-panel {
+  backdrop-filter: blur(10px) saturate(105%);
+  -webkit-backdrop-filter: blur(10px) saturate(105%);
+}
 .gw-attack-list {
-  width: 360px;
+  width: 420px;
   flex-shrink: 0;
   align-self: flex-start;
   padding: 16px;
@@ -5712,11 +5758,18 @@ h1, h2, h3 {
   gap: 8px;
   min-height: 40px;
 }
+.gw-attack-list-head-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
 .gw-attack-list-head h3 {
   margin: 0;
   font-size: 15px;
   font-weight: 900;
-  color: #fca5a5;
+  color: var(--gw-enemy-text);
   display: flex;
   align-items: center;
   gap: 7px;
@@ -5737,15 +5790,18 @@ h1, h2, h3 {
   flex-shrink: 0;
   white-space: nowrap;
 }
-/* 상대 덱 12개까지는 스크롤 없이 보이게 (행≈78px + gap 8) */
+/* 상대 덱 목록 스크롤 영역 — 중간 박스 없이 바깥 패널 안에 카드만 */
 .gw-attack-list-body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: calc(12 * 78px + 11 * 8px);
+  padding: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  padding-right: 2px;
+  max-height: calc(12 * 78px + 11 * 10px);
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 .gw-mini-trio {
   display: flex;
@@ -5756,62 +5812,296 @@ h1, h2, h3 {
   flex-shrink: 0;
   overflow: hidden;
 }
-/* A안: 안쪽 = 중성 글라스 · 구분 = 테두리·살짝 더 선명 */
+/* 상대 덱 행: 카운터 행과 동일 카드, 바깥 래퍼는 투명 */
+.gw-attack-target-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex-shrink: 0;
+}
+.gw-attack-target-block.is-expanded {
+  gap: 0;
+}
 .gw-attack-target {
   position: relative;
-  isolation: isolate;
-  flex-shrink: 0;
-  border-radius: 12px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.09);
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  transition: border-color 0.2s ease, background 0.2s ease;
-}
-.gw-attack-target:hover {
-  border-color: rgba(255, 255, 255, 0.34);
-  background: rgba(255, 255, 255, 0.12);
-}
-.gw-attack-target.is-on {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(252, 165, 165, 0.58);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 0 0 1px rgba(248, 113, 113, 0.14);
-}
-.gw-attack-target-row {
-  position: relative;
-  z-index: 1;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
+  flex-direction: column;
+  gap: 0;
+  flex-shrink: 0;
+}
+.gw-attack-target > .gw-attack-target-row {
   cursor: pointer;
 }
+/* 상대·파생 덱 행: 카드 구분 강화 + 콤팩트 높이 */
+.gw-attack-layout .gw-attack-list .gw-attack-target-row {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--gw-enemy-row-bg);
+  border: 1px solid var(--gw-enemy-row-border);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  padding: 8px 10px;
+  gap: 8px;
+}
+.gw-attack-target.is-on > .gw-attack-target-row,
+.gw-attack-target-row.gw-attack-alt-row.is-on {
+  border-color: var(--gw-enemy-border-strong);
+  background: var(--gw-enemy-row-bg-on);
+  box-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.18),
+    inset 3px 0 0 var(--gw-enemy-mark),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.gw-attack-target-block.is-expanded > .gw-attack-target.is-on > .gw-attack-target-row {
+  border-radius: 14px;
+}
+.gw-attack-target-block.is-expanded > .gw-attack-inline-counters {
+  padding: 8px 10px 12px;
+  border-top: 1px dashed var(--gw-ally-border);
+}
+.gw-attack-target-block.is-expanded > .gw-attack-inline-counters .gw-counter-layer {
+  border-color: var(--gw-ally-border);
+}
+.gw-attack-deck-kind-pill {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  color: var(--gw-enemy-text);
+  background: rgba(225, 95, 95, 0.18);
+  border: 1px solid var(--gw-enemy-border);
+  border-radius: 999px;
+  padding: 2px 7px;
+  line-height: 1.2;
+}
+.gw-attack-target.is-on .gw-attack-target-meta,
+.gw-attack-target-row.gw-attack-alt-row.is-on .gw-attack-target-meta {
+  color: #fff;
+}
+/* 상대·파생 덱 행: 그립 | (제목→초상) | 버튼 */
+.gw-attack-target-row {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "lead body actions";
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.gw-attack-target-row > .gw-attack-target-lead {
+  grid-area: lead;
+  align-self: center;
+}
+.gw-attack-target-row > .gw-attack-target-body {
+  grid-area: body;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+.gw-attack-target-row > .gw-attack-target-actions {
+  grid-area: actions;
+  flex-direction: column !important;
+  align-items: stretch;
+  flex-shrink: 0;
+  gap: 3px;
+  align-self: center;
+}
+.gw-attack-target-row > .gw-attack-target-copy {
+  flex: 0 1 auto;
+  min-width: 0;
+  width: 100%;
+}
+.gw-attack-alt-lead-spacer {
+  display: block;
+  width: 19px;
+  flex-shrink: 0;
+}
+.gw-attack-target-lead {
+  gap: 8px;
+  flex-shrink: 0;
+}
 .gw-attack-target-copy {
-  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  row-gap: 4px;
   min-width: 0;
 }
 .gw-attack-target-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 900;
   color: #fff;
-  line-height: 1.35;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  word-break: keep-all;
+  line-height: 1.25;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
 }
+.gw-attack-target-title-text {
+  min-width: 0;
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gw-attack-target-heroes-meta {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+.gw-attack-target-heroes-meta > .gw-mini-trio {
+  flex-shrink: 0;
+}
 .gw-attack-target-meta {
-  font-size: 12px;
-  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.82);
   font-weight: 700;
-  margin-top: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.25;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
+}
+.gw-attack-target-meta > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gw-attack-target-actions .btn-ops.gw-attack-alt-btn {
+  background: #fff;
+  color: #161616;
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 3px 0 0 #737373;
+}
+.gw-attack-target-actions .btn-ops.gw-attack-alt-btn:hover {
+  filter: brightness(110%);
+  transform: translateY(-5px);
+  box-shadow:
+    0 3px 0 0 rgba(0, 0, 0, 0.25),
+    0 5px 0 0 #737373;
+}
+.gw-attack-target-actions .btn-ops.gw-attack-alt-btn:active {
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #737373;
+}
+.gw-attack-alt-row {
+  margin-top: 8px;
+}
+/* 파생 덱 펼침: 메인 상대 덱 하위 그룹 */
+.gw-attack-target.has-alts-open {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--gw-enemy-border);
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.gw-attack-target.has-alts-open > .gw-attack-target-row {
+  border-radius: 14px 14px 0 0;
+  border-bottom: none;
+}
+.gw-attack-target.has-alts-open > .gw-attack-target-row:not(.is-on) {
+  border: 1px solid var(--gw-enemy-row-border);
+  border-bottom: none;
+  background: var(--gw-enemy-row-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.gw-attack-target.has-alts-open > .gw-attack-target-row.is-on {
+  border-color: transparent;
+  border-bottom: none;
+  background: var(--gw-enemy-row-bg-on);
+  box-shadow:
+    inset 3px 0 0 var(--gw-enemy-mark),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.gw-attack-target.has-alts-open > .gw-attack-target-alts {
+  border-top: 1px dashed rgba(255, 255, 255, 0.16);
+}
+.gw-attack-target.has-alts-open .gw-alt-layer {
+  margin: 0 10px 10px 14px;
+  padding: 8px 0 0 12px;
+  border: none;
+  border-left: 2px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.gw-attack-target.has-alts-open .gw-alt-toolbar {
+  min-height: 28px;
+  margin-bottom: 2px;
+}
+.gw-attack-target.has-alts-open .gw-alt-toolbar-copy span {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.62);
+}
+.gw-attack-target.has-alts-open .gw-alt-toolbar-copy em {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+}
+.gw-attack-target.has-alts-open .gw-attack-alt-row {
+  margin-top: 6px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.12);
+  position: relative;
+}
+.gw-attack-target.has-alts-open .gw-attack-alt-row::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: 50%;
+  width: 10px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.14);
+  pointer-events: none;
+}
+.gw-attack-target.has-alts-open .gw-attack-alt-row.is-on {
+  border-color: var(--gw-enemy-border-strong);
+  background: var(--gw-enemy-row-bg-on);
+  box-shadow:
+    inset 3px 0 0 var(--gw-enemy-mark),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.gw-attack-target-alts {
+  margin: 0;
+}
+.gw-attack-list-body .gw-alt-layer {
+  margin: 0;
+  background:
+    linear-gradient(180deg, rgba(200, 65, 65, 0.12) 0%, rgba(145, 38, 45, 0.06) 100%),
+    rgba(255, 255, 255, 0.03);
+  border-color: rgba(235, 105, 105, 0.24);
+}
+.gw-attack-list-body .gw-alt-toolbar-copy span {
+  color: var(--gw-enemy-text);
+}
+.gw-attack-target-alts .gw-alt-layer {
+  margin: 0;
+}
+.gw-attack-target-alts .gw-attack-inline-counters {
+  display: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.gw-attack-target-alts .gw-attack-alt-row.is-on + .gw-attack-inline-counters {
+  margin-top: 0;
+  padding: 8px 0 0;
+  border-top: 1px dashed rgba(255, 255, 255, 0.14);
+}
+.gw-attack-target-alts .gw-attack-alt-row.is-on + .gw-attack-inline-counters .gw-counter-layer {
+  border-color: var(--gw-ally-border);
 }
 .gw-author {
   color: var(--accent-gold);
@@ -5824,7 +6114,6 @@ h1, h2, h3 {
   gap: 5px;
   flex-shrink: 0;
 }
-.gw-attack-target-actions button,
 .gw-counter-actions button {
   width: auto;
   min-width: 64px;
@@ -5853,7 +6142,6 @@ h1, h2, h3 {
     filter 250ms,
     box-shadow 600ms cubic-bezier(.3, .7, .4, 1);
 }
-.gw-attack-target-actions button:hover,
 .gw-counter-actions button:hover {
   filter: brightness(110%);
   transform: translateY(-6px);
@@ -5865,7 +6153,6 @@ h1, h2, h3 {
     filter 250ms,
     box-shadow 250ms cubic-bezier(.3, .7, .4, 1.5);
 }
-.gw-attack-target-actions button:active,
 .gw-counter-actions button:active {
   transform: translateY(-2px);
   box-shadow:
@@ -5873,11 +6160,9 @@ h1, h2, h3 {
     0 2px 0 0 #0369a1;
   transition: transform 34ms, box-shadow 34ms;
 }
-.gw-attack-target-actions button:focus:not(:focus-visible),
 .gw-counter-actions button:focus:not(:focus-visible) {
   outline: none;
 }
-.gw-attack-target-actions button.is-danger,
 .gw-counter-actions button.is-danger {
   background: #ef4444;
   border: none;
@@ -5886,26 +6171,104 @@ h1, h2, h3 {
     0 2px 0 0 rgba(0, 0, 0, 0.25),
     0 4px 0 0 #991b1b;
 }
-.gw-attack-target-actions button.is-danger:hover,
 .gw-counter-actions button.is-danger:hover {
   box-shadow:
     0 4px 0 0 rgba(0, 0, 0, 0.25),
     0 6px 0 0 #991b1b;
 }
-.gw-attack-target-actions button.is-danger:active,
 .gw-counter-actions button.is-danger:active {
   box-shadow:
     0 1px 0 0 rgba(0, 0, 0, 0.25),
     0 2px 0 0 #991b1b;
 }
 
-/* PC 가로(≥1021): 상대 덱·카운터 수정/삭제만 살짝 축소 */
+/* 상대·파생 덱 행 버튼: 카운터보다 한 단계 더 콤팩트 */
+.gw-attack-target-actions button,
+.gw-attack-target-actions .btn-ops.gw-attack-alt-btn {
+  width: auto;
+  min-width: 50px;
+  padding: 3px 6px;
+  font-size: 10px;
+  font-weight: 900;
+  border-radius: 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  position: relative;
+  outline-offset: 4px;
+  user-select: none;
+  touch-action: manipulation;
+  transform: translateY(-3px);
+  transition:
+    transform 600ms cubic-bezier(.3, .7, .4, 1),
+    filter 250ms,
+    box-shadow 600ms cubic-bezier(.3, .7, .4, 1);
+}
+.gw-attack-target-actions button {
+  background: #38bdf8;
+  border: none;
+  color: #04202b;
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 3px 0 0 #0369a1;
+}
+.gw-attack-target-actions button:hover {
+  filter: brightness(110%);
+  transform: translateY(-5px);
+  box-shadow:
+    0 3px 0 0 rgba(0, 0, 0, 0.25),
+    0 5px 0 0 #0369a1;
+  transition:
+    transform 250ms cubic-bezier(.3, .7, .4, 1.5),
+    filter 250ms,
+    box-shadow 250ms cubic-bezier(.3, .7, .4, 1.5);
+}
+.gw-attack-target-actions button:active {
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #0369a1;
+  transition: transform 34ms, box-shadow 34ms;
+}
+.gw-attack-target-actions button:focus:not(:focus-visible) {
+  outline: none;
+}
+.gw-attack-target-actions button.is-danger {
+  background: #ef4444;
+  border: none;
+  color: #fff;
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 3px 0 0 #991b1b;
+}
+.gw-attack-target-actions button.is-danger:hover {
+  box-shadow:
+    0 3px 0 0 rgba(0, 0, 0, 0.25),
+    0 5px 0 0 #991b1b;
+}
+.gw-attack-target-actions button.is-danger:active {
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #991b1b;
+}
+.gw-attack-target-actions .gw-attack-alt-btn {
+  margin-top: 2px;
+}
+
+/* PC 가로(≥1021): 카운터 수정/삭제만 살짝 축소 */
 @media (min-width: 1021px) and (orientation: landscape) {
-  .gw-attack-target-actions button,
   .gw-counter-actions button {
     min-width: 58px;
     padding: 4px 7px;
     font-size: 11px;
+  }
+  .gw-attack-target-actions button,
+  .gw-attack-target-actions .btn-ops.gw-attack-alt-btn {
+    min-width: 48px;
+    padding: 3px 5px;
+    font-size: 10px;
   }
 }
 
@@ -5967,6 +6330,11 @@ h1, h2, h3 {
   flex-direction: column;
   gap: 14px;
 }
+@media (min-width: 1021px) {
+  .gw-attack-detail .gw-counter-layer {
+    width: min(100%, 660px);
+  }
+}
 .gw-attack-detail-identity {
   display: flex;
   align-items: center;
@@ -5989,9 +6357,9 @@ h1, h2, h3 {
   font-size: 10px;
   font-weight: 900;
   letter-spacing: 0.3px;
-  color: #fca5a5;
-  background: rgba(239, 68, 68, 0.16);
-  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: var(--gw-enemy-text);
+  background: rgba(225, 95, 95, 0.18);
+  border: 1px solid var(--gw-enemy-border);
   border-radius: 999px;
   padding: 2px 7px;
 }
@@ -6005,7 +6373,7 @@ h1, h2, h3 {
 .gw-attack-detail-meta .gw-author {
   color: var(--accent-gold);
 }
-/* A안: 카운터 = 글라스 + 태오 연한 틴트 (모바일에서 빨간 패널에 묻히지 않게) */
+/* 카운터 레이어 — 바깥 tint-blue 패널 안, 중간 톤(카드보다 진함) */
 .gw-counter-layer {
   position: relative;
   isolation: isolate;
@@ -6015,29 +6383,38 @@ h1, h2, h3 {
   padding: 12px;
   border-radius: 14px;
   overflow: hidden;
-  background:
-    linear-gradient(180deg, rgba(96, 165, 250, 0.16) 0%, transparent 50%),
-    rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(147, 197, 253, 0.36);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
   transition: border-color 0.2s ease, background 0.2s ease;
 }
-.gw-counter-layer:hover {
-  border-color: rgba(147, 197, 253, 0.48);
+.gw-attack-layout .gw-counter-layer {
   background:
-    linear-gradient(180deg, rgba(96, 165, 250, 0.2) 0%, transparent 50%),
-    rgba(255, 255, 255, 0.1);
+    linear-gradient(180deg, rgba(68, 132, 210, 0.2) 0%, rgba(42, 82, 150, 0.1) 100%),
+    rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(100, 165, 238, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
-.gw-counter-layer > * {
-  position: relative;
-  z-index: 1;
+/* 중간 박스는 클릭 대상 아님 — hover 시 배경이 흰색으로 빠지지 않게 */
+.gw-attack-layout .gw-counter-layer:hover {
+  border-color: rgba(118, 180, 248, 0.44);
+}
+.gw-attack-layout .gw-counter-row {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--gw-ally-row-bg);
+  border: 1px solid var(--gw-ally-row-border);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 .gw-counter-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+}
+.gw-counter-layer > * {
+  position: relative;
+  z-index: 1;
 }
 .gw-counter-toolbar {
   display: flex;
@@ -6053,6 +6430,15 @@ h1, h2, h3 {
   gap: 2px;
   min-width: 0;
   flex: 1 1 auto;
+}
+.gw-attack-layout .gw-counter-toolbar span {
+  color: var(--gw-ally-text);
+}
+.gw-attack-layout .gw-counter-detail {
+  color: var(--gw-ally-accent);
+}
+.gw-attack-layout .gw-counter-prio-num {
+  color: var(--gw-ally-accent);
 }
 .gw-counter-toolbar span {
   font-size: 12px;
@@ -6252,6 +6638,17 @@ h1, h2, h3 {
   .gw-attack-detail {
     display: none;
   }
+  .gw-attack-target-block.is-expanded > .gw-attack-inline-counters {
+    display: block;
+    margin: 0;
+    padding: 8px 10px 12px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-top: 1px dashed var(--gw-ally-border);
+  }
   .gw-attack-inline-counters {
     display: block;
     margin: 2px 4px 10px 12px;
@@ -6262,11 +6659,34 @@ h1, h2, h3 {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
+  .gw-attack-target-alts .gw-attack-inline-counters {
+    display: block;
+    margin: 8px 0 0;
+    padding: 0;
+  }
   .gw-attack-inline-counters .gw-counter-layer {
     margin: 0;
+    background:
+      linear-gradient(180deg, rgba(62, 128, 210, 0.3) 0%, rgba(36, 72, 135, 0.17) 100%),
+      rgba(18, 45, 88, 0.22);
+    border: 1px solid rgba(100, 168, 238, 0.44);
+    box-shadow:
+      inset 2px 0 0 var(--gw-ally-mark),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
-  .gw-counter-toolbar span {
-    color: #93c5fd;
+  .gw-attack-inline-counters .gw-counter-layer:hover {
+    border-color: rgba(112, 178, 248, 0.5);
+  }
+  .gw-attack-inline-counters .gw-counter-row:not(.gw-attack-target-row) {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(115, 180, 245, 0.3);
+  }
+  .gw-attack-inline-counters .gw-counter-row:not(.gw-attack-target-row).is-drop-target {
+    background: rgba(62, 130, 210, 0.16);
+    border-color: rgba(120, 188, 252, 0.42);
+  }
+  .gw-attack-layout .gw-counter-toolbar span {
+    color: var(--gw-ally-text);
   }
   /*
    * 카운터 행 (1020~671): 초상 오른쪽에 제목·작성자 (빈 공간 줄임)
@@ -6280,14 +6700,45 @@ h1, h2, h3 {
     column-gap: 8px;
     row-gap: 4px;
     flex-wrap: nowrap;
-    background: rgba(255, 255, 255, 0.09);
-    border: 1px solid rgba(255, 255, 255, 0.22);
     padding: 8px 10px;
+  }
+  /* PC와 동일 — 모바일 grid 규칙이 흰 배경으로 덮지 않게 */
+  .gw-attack-layout .gw-counter-row:not(.gw-attack-target-row) {
+    background: var(--gw-ally-row-bg);
+    border: 1px solid var(--gw-ally-row-border);
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.16),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .gw-attack-layout .gw-counter-row:not(.gw-attack-target-row).is-drop-target {
+    border-color: var(--gw-ally-border);
+    background: var(--gw-ally-row-bg-on);
+    box-shadow:
+      0 0 0 1px rgba(100, 168, 238, 0.25),
+      inset 3px 0 0 var(--gw-ally-mark);
+  }
+  /* 상대·파생 덱 행: 제목 위 · 초상 아래 (카운터 행 grid와 분리) */
+  .gw-attack-list .gw-attack-target-row {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "lead body actions";
+  }
+  .gw-attack-target.is-on > .gw-attack-target-row,
+  .gw-attack-target-row.gw-attack-alt-row.is-on {
+    border-color: var(--gw-enemy-border-strong);
+    background: var(--gw-enemy-row-bg-on);
+    box-shadow:
+      0 2px 10px rgba(0, 0, 0, 0.18),
+      inset 3px 0 0 var(--gw-enemy-mark),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14);
   }
   .gw-counter-row > .gw-counter-rule {
     display: none;
   }
-  .gw-counter-row > .gw-counter-lead {
+  .gw-counter-row > .gw-counter-lead,
+  .gw-counter-row > .gw-attack-target-lead {
     grid-area: lead;
     align-self: center;
   }
@@ -6328,9 +6779,15 @@ h1, h2, h3 {
     gap: 4px;
   }
   .gw-attack-target-actions {
-    flex-direction: row;
+    flex-direction: column !important;
+    align-items: stretch;
   }
   .gw-attack-target-actions button,
+  .gw-attack-target-actions .btn-ops.gw-attack-alt-btn {
+    width: auto;
+    padding: 3px 5px;
+    font-size: 10px;
+  }
   .gw-counter-actions button {
     width: auto;
     padding: 6px 8px;
@@ -6340,17 +6797,17 @@ h1, h2, h3 {
   .gw-attack-target-title {
     white-space: nowrap;
     display: block;
-    -webkit-line-clamp: unset;
-    -webkit-box-orient: unset;
     overflow: hidden;
     text-overflow: ellipsis;
     word-break: normal;
     overflow-wrap: normal;
   }
+  .gw-attack-target-heroes-meta {
+    gap: 6px;
+  }
   .gw-attack-target-meta {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 10px;
+    gap: 1px;
   }
   /* 헤더·툴바 라벨: 폭이 줄어도 글자씩 세로로 안 찢기게 */
   .gw-attack-list-head h3 {
@@ -9038,6 +9495,11 @@ h1, h2, h3 {
     min-height: 0;
   }
 
+  .gw-attack-list-head-copy {
+    width: 100%;
+    flex-shrink: 0;
+  }
+
   .gw-attack-list-head h3 {
     display: flex;
     flex-direction: row;
@@ -9050,6 +9512,13 @@ h1, h2, h3 {
 
   .gw-attack-list-head-label {
     min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .gw-attack-list-head .gw-counter-drag-hint {
+    display: block;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -9120,33 +9589,34 @@ h1, h2, h3 {
 
 /*
  * ≤400 (초소형만): 길드전 공격 목록/카운터
- * — 제목은 초상 옆에 유지(세로 버튼으로 폭 확보). 강제 위 배치 없음.
+ * — 상대·파생: 제목 위 · 초상 아래 유지.
  * — 카운터: 라벨만 숨기고 숫자는 살짝만 줄임 · 초상은 크게·가운데.
  */
 @media (max-width: 400px) {
   .gw-attack-target-row {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
     gap: 8px;
   }
-  .gw-attack-target-row > .gw-mini-trio {
+  .gw-attack-target-row > .gw-attack-target-lead {
     flex-shrink: 0;
   }
-  .gw-attack-target-copy {
-    flex: 1 1 auto;
-    min-width: 0;
+  .gw-attack-target-body {
+    gap: 3px;
   }
   .gw-attack-target-actions {
     flex-direction: column;
     flex-shrink: 0;
     margin-left: 0;
-    gap: 4px;
+    gap: 3px;
   }
   .gw-attack-target-actions button {
     min-width: 0;
-    padding: 5px 7px;
-    font-size: 10px;
+    padding: 3px 5px;
+    font-size: 9.5px;
+  }
+  .gw-attack-target-actions .btn-ops.gw-attack-alt-btn {
+    min-width: 0;
+    padding: 3px 5px;
+    font-size: 9.5px;
   }
 
   .gw-counter-drag-hint {
@@ -9212,19 +9682,20 @@ h1, h2, h3 {
   }
 
   .gw-attack-target-row {
-    gap: 8px;
-    padding: 10px;
+    gap: 6px;
+    padding: 7px 8px;
   }
 
   .gw-attack-target-title {
-    font-size: 13px;
-  }
-
-  .gw-attack-target-meta {
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .gw-attack-target-actions button,
+  .gw-attack-target-actions .btn-ops.gw-attack-alt-btn {
+    min-width: 0;
+    padding: 3px 5px;
+    font-size: 9.5px;
+  }
   .gw-counter-actions button {
     min-width: 0;
     padding: 6px 7px;
@@ -9247,10 +9718,6 @@ h1, h2, h3 {
 
   .gw-attack-inline-counters {
     margin: 2px 2px 8px 8px;
-  }
-
-  .gw-counter-layer {
-    padding: 10px;
   }
 }
 
@@ -10901,4 +11368,235 @@ h1, h2, h3 {
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   box-shadow: var(--shadow-main);
+}
+
+/* ── 마이페이지 모달 ── */
+.mypage-modal {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 20px;
+  padding: 24px;
+  max-height: min(92dvh, 92vh);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mypage-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mypage-modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.mypage-recommend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  margin-left: auto;
+  margin-right: 4px;
+}
+
+.mypage-close-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.mypage-mandatory-note {
+  margin: 0;
+  font-size: 13px;
+  color: #fff;
+  font-weight: 700;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.mypage-profile-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 4px;
+}
+
+.mypage-avatar-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--border-gold);
+  background: #0a0e18;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mypage-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mypage-photo-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+}
+
+.mypage-field-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  display: block;
+  text-align: center;
+  width: 100%;
+}
+
+.mypage-profile-block .mypage-field-label {
+  margin-top: 4px;
+}
+
+.mypage-input {
+  width: 100%;
+  padding: 11px 12px;
+  background: #07090e;
+  border: 1px solid var(--border-gold);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.mypage-stats-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 14px 14px 12px;
+}
+
+.mypage-stats-panel-head {
+  text-align: center;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mypage-stats-panel-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--gold-primary);
+  letter-spacing: 0.02em;
+}
+
+.mypage-stats-panel-hint {
+  margin: 4px 0 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.mypage-stats-field {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mypage-stats-field--last {
+  border-bottom: none;
+  padding-bottom: 2px;
+}
+
+.mypage-stats-field .mypage-field-label {
+  margin-bottom: 8px;
+}
+
+.mypage-tier-grid {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.mypage-tier-grid--center {
+  margin-top: 6px;
+}
+
+.mypage-tier-btn {
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mypage-tier-btn img {
+  width: 18px;
+  height: 18px;
+}
+
+.mypage-tier-btn.is-on {
+  border-width: 2px;
+  border-color: var(--tier-color, var(--gold-primary));
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mypage-tier-btn--arena {
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #fff;
+}
+
+.mypage-tier-btn--arena img {
+  width: 16px;
+  height: 16px;
+}
+
+.mypage-tier-btn--arena.is-on {
+  border-color: var(--gold-primary);
+}
+
+.mypage-error {
+  color: #fca5a5;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.mypage-save-btn {
+  width: 100%;
+  padding: 13px 0;
+  font-size: 15px;
+  font-weight: 900;
+  justify-content: center;
+}
+
+html[data-ui-theme="solid"] .mypage-stats-panel {
+  background: #252b36;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }

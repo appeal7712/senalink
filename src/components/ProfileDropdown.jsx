@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import Icon from './icons/Icon';
 import MyPageModal from './MyPageModal';
+import UiThemeToggle from './UiThemeToggle';
 import { useUserProfile } from '../context/UserProfileContext';
 import { useLounge } from '../context/LoungeContext';
 import { auth } from '../lib/firebase';
@@ -46,15 +47,15 @@ export default function ProfileDropdown() {
   const menuStyle = {
     position: 'fixed', zIndex: 9000,
     background: 'var(--glass-modal)', border: '1px solid rgba(255,255,255,0.14)',
-    borderRadius: 14, padding: '6px 0', minWidth: 150,
+    borderRadius: 12, padding: '4px 0',
     boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
     backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)',
   };
 
   const btnStyle = {
     display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-    padding: '10px 16px', background: 'none', border: 'none',
-    fontSize: 13, fontWeight: 800, cursor: 'pointer',
+    padding: '8px 12px', background: 'none', border: 'none',
+    fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
   };
 
   return (
@@ -74,7 +75,7 @@ export default function ProfileDropdown() {
           </span>
         </button>
         {open && pos && createPortal(
-          <div ref={menuRef} style={{ ...menuStyle, top: pos.top, right: pos.right }}>
+          <div ref={menuRef} className="gnb-profile-menu" style={{ ...menuStyle, top: pos.top, right: pos.right }}>
             {authUser ? (
               <>
                 <button type="button" onClick={() => { setOpen(false); setMyPage(true); }}
@@ -92,6 +93,9 @@ export default function ProfileDropdown() {
                 <Icon name="user" size={14} /> Google 로그인
               </button>
             )}
+            <div className="gnb-profile-theme-row">
+              <UiThemeToggle />
+            </div>
           </div>,
           document.body,
         )}

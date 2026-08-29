@@ -100,6 +100,14 @@
         ]
       }
     </script>
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('senalink_ui_theme');
+          document.documentElement.dataset.uiTheme = saved === 'solid' ? 'solid' : 'glass';
+        } catch (e) { /* ignore */ }
+      })();
+    </script>
   </head>
   <body style="background:#0c0b0a;color:#e2e8f0">
     <div id="root"></div>

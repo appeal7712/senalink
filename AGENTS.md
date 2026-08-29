@@ -23,7 +23,7 @@ React + Vite + Firebase (Auth / Firestore / Storage / Functions asia-northeast3)
 |------|------|
 | `.cursor/rules/local-only-until-launch.mdc` | 이 폴더만 패치, senalink만, 배포는 명시 요청 시 |
 | `.cursor/rules/center-and-fill-layout.mdc` | 덱+타임라인 2열: 행 stretch·덱 **세로 중앙**. 덱 수정 모달 「스킬 순서」높이 **px 고정**, 스크롤은 `.skill-timeline-scroller` 안만 |
-| `.cursor/rules/read-agents-md.mdc` | 비트리비얼 작업 전 이 문서 참고 |
+| `.cursor/rules/read-agents-md.mdc` | 비트리비얼 작업 전 이 문서 참고. **「미리보기 허브 켜줘」→ §4.1** |
 
 배포 시 관례: `src/config/appVersion.js`의 `APP_VERSION` bump → 푸터 `SiteFooter`에 표시.
 
@@ -118,6 +118,62 @@ npx firebase deploy --only functions --project senalink         # functions 변�
 
 클라이언트 Firebase: `VITE_FIREBASE_*` (`src/lib/firebase.js`).  
 개발: `.env.development`에서 `VITE_USE_EMULATORS=true`.
+
+### 4.1 미리보기 허브 (로컬 연습장) — **에이전트 필독**
+
+밍봉이 **「미리보기 허브 켜줘」** · **「로컬에서 테스트」** · **「연습장」** 등을 말하면 **이 절을 따른다.**  
+라이브에 따로 만든 허브가 **아니다.** PC에서 Firebase **에뮬레이터**를 켜고 `npm run dev`로 붙이는 방식이다.
+
+#### 한 줄 요약
+
+| | 로컬 미리보기 | 라이브 |
+|--|--------------|--------|
+| 데이터 | 내 PC 에뮬레이터 (비어 있음·재시작 시 초기화 가능) | 실제 `senalink` Firestore |
+| 허브 로그인 | 구글 **없이** 익명 자동 로그인 | 구글 로그인 필수 |
+| 배포 영향 | **없음** — 같은 소스, 환경만 다름 | Hosting 배포 시에만 반영 |
+
+**로컬 패치 → 미리보기 허브에서 확인 → 밍봉이 배포 요청할 때만 라이브** 가 기본 워크플로다. 라이브를 먼저 올려서 UI를 보지 말 것.
+
+#### 코드가 라이브와 다른가?
+
+**아니다.** 미리보기 전용 분기 파일을 따로 두지 않는다.
+
+- `.env.development` — `VITE_USE_EMULATORS=true` (저장소에 포함, **`npm run dev`만** 사용)
+- `src/lib/firebase.js` — `usingEmulators = import.meta.env.DEV && VITE_USE_EMULATORS === 'true'` 일 때만 `127.0.0.1` 에뮬레이터 포트로 연결
+- `src/context/LoungeContext.jsx` — `useGoogleForHub = USE_GOOGLE_AUTH && !usingEmulators` → 로컬에선 구글 없이 허브 생성 가능
+- `src/components/lounge/LoungeGate.jsx` — 로컬이면 **「로컬 연습장 · 구글 없이…」** 문구 표시
+
+`npm run build` / Hosting 배포 시 `import.meta.env.DEV`가 false → **에뮬레이터 분기는 절대 안 탐.** 로컬에서 본 UI 패치를 그대로 배포해도 된다(배포는 명시 요청 시만).
+
+#### 에이전트: 미리보기 허브 켜는 순서
+
+1. **터미널 상태 확인** — 이미 `emulators` / `dev`가 떠 있으면 재실행하지 말고 URL만 안내.
+2. **터미널 1** (프로젝트 루트):
+   ```bash
+   npm run emulators
+   ```
+   - Auth `9099` · Firestore `8080` · Functions `5001` · Storage `9199` · Emulator UI `http://127.0.0.1:4000`
+3. **터미널 2**:
+   ```bash
+   npm run dev
+   ```
+   - Vite `http://127.0.0.1:5173`
+4. 브라우저: **`http://127.0.0.1:5173/hub`**
+5. **닉네임** — `NicknameGate`로 2–12자 닉 저장(라이브와 동일).
+6. **허브 생성** — 「허브 생성」→ **해시태그 1개 이상** 필수(없으면 생성 실패).
+7. 길드전·공격·파생덱 등 패치 확인 후, 배포는 **밍봉/김봉 명시 시만** `npm run build` + `firebase deploy --only hosting --project senalink`.
+
+#### 사전 조건 (처음이거나 연결 실패 시)
+
+- `.env.local` — `.env.example` 참고해 `VITE_FIREBASE_*` 채움(gitignore, **senalink 프로젝트 ID** 그대로 써도 됨. dev일 때 트래픽은 에뮬레이터로만 감).
+- 에뮬레이터 미기동 시 허브 화면: *「로컬 에뮬레이터에 연결하지 못했습니다…」* → 터미널 1에서 `npm run emulators` 재확인.
+- `/ops` 로컬: `npm run seed:admin -- <익명UID>` 후 Ops 페이지에서 「로컬 관리자로 들어가기」(`SuperAdminContext.enterLocalOpsAdmin`).
+
+#### 하지 말 것
+
+- 미리보기 허브를 위해 **라이브 Firestore에 테스트 허브를 만들거나** 프로덕션 데이터를 건드리지 말 것.
+- 로컬 전용으로 `USE_GOOGLE_AUTH`·rules·`VITE_USE_EMULATORS`를 **배포 빌드에 섞이게** 바꾸지 말 것.
+- 밍봉 요청 없이 Hosting 배포하지 말 것.
 
 ---
 
@@ -342,6 +398,27 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 **총력전:** 목~금 14:00 = `시즌 준비`(입장 멘트 없음) · R1~22 = 금 14:00 기점.  
 패치 시 **정본을 코드보다 우선**하고, 문자열은 정본 §0.2와 코드가 일치해야 한다.
 
+### 10.8 화면 테마 — 유리 / 선명 다크
+
+OS 라이트·다크가 아니라 **사이트 스킨** 두 가지. Firestore·계정 동기화 없음.
+
+| 모드 | `data-ui-theme` | 느낌 |
+|------|-----------------|------|
+| **유리** (기본) | `glass` | 반투명·`backdrop-filter`·기존 세나링크 |
+| **선명 다크** | `solid` | 불투명 패널·블러 제거·가독성 우선 |
+
+| 파일 | 역할 |
+|------|------|
+| `src/lib/uiTheme.js` | `initUiTheme` / `setUiTheme` · `localStorage` 키 `senalink_ui_theme` |
+| `src/styles/themeSolidDark.css` | `html[data-ui-theme="solid"]` 토큰·오버라이드·프로필 테마 토글 CSS |
+| `src/main.jsx` | `initUiTheme()` + `themeSolidDark.css` import |
+| `index.html` `<head>` | 짧은 인라인 스크립트로 React 전 테마 적용 (깜빡임 방지) |
+| `src/components/UiThemeToggle.jsx` | GNB **마이프로필** 드롭다운 하단 달·해 스위치 |
+
+**저장:** 브라우저 `localStorage`만 (기기별). 첫 방문·저장 없음 → **유리**. 시스템 `prefers-color-scheme` 미연동.
+
+**패치 시:** 패널·GNB·모달은 `--glass-bg` / `--glass-modal` / `--glass-blur` 쓰게 유지. 하드코딩 `rgba`+`blur`면 선명 다크에서 유리처럼 남음 (예: `.gnb-dropdown-panel`은 변수 사용). 선명 모드에서 모달 뒤 `.app-shell` blur는 끔 — 유리 모드 blur(§10.6)는 유지.
+
 ---
 
 ## 11. 주요 `src/lib/` 맵
@@ -358,6 +435,7 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | `hubEmblem.js` / `avatarUpload.js` | 이미지 업로드 |
 | `copyNodeImage.js` | 세팅 공유 PNG |
 | `deckEditScrollModal.js` | 결투장·공성·강림·방어 덱 수정 모달 PC 클래스·스타일·휠 전달 (§12.4–12.5) |
+| `uiTheme.js` | 화면 테마 유리/선명 · `localStorage` · `html[data-ui-theme]` (§10.8) |
 | `seo.js` / `sanitize.js` / `rateLimit.js` / `formatTime.js` | 부가 |
 
 ---
@@ -366,7 +444,7 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 
 ```
 App
-├── GlobalNavBar → ProfileDropdown → MyPageModal
+├── GlobalNavBar → ProfileDropdown → MyPageModal · UiThemeToggle (§10.8)
 ├── page:
 │   ├── PublicMainDashboard (site/main + 방문수)
 │   ├── GuildLounge (LoungeContext + builds + 길드전/결투장/…)
@@ -525,17 +603,18 @@ API:
 ## 14. 업데이트·패치 시 일반 체크리스트
 
 1. **이 폴더만** 수정. 라이브 배포는 요청 있을 때만.
-2. **§2.1** — 유저·허브 데이터·rules를 손상·완화하지 않는지 확인.
-3. Firestore/Storage **규칙 바꾸면** 해당 rules도 같이 배포 (완화인지 먼저 검토).
-4. Functions 바꾸면 `functions` 배포 + Node 20 유지. 허브/유저 삭제 경로 재확인. **`resolveMyHub` / hubId 클리어 로직** 재확인.
-5. 도감 추가 후 피커·초상·진영 누락 없는지 `/dex`와 덱 수정에서 확인.
-6. 허브 가입/역할은 클라이언트 직쓰기가 아니라 **rules + joinHub** 전제.
-7. 커뮤니티 PvE 공략·티어 = Super; PvP만 일반 유저 작성 가능.
-8. 레이아웃: 덱 수정 모달 타임라인 높이 규칙 위반하지 말 것 (§12.4).
-9. **모바일만** 요청이면 §12.2 — PC·`deckEditScrollModal.css`·`min-width:981` 미포함 확인.
-10. 세팅 확인 모달 뒤 전체 blur(`.app-shell` filter) 제거 제안하지 말 것 (§10.6).
-11. 덱 수정 모달 패치 시 §12.5 회귀 체크리스트 참고.
-12. 커밋/푸시는 밍봉 요청 시. 시크릿(`.env*`)·`.firebase/hosting.*.cache` 커밋 금지.
+2. UI·허브 기능 확인은 **§4.1 미리보기 허브**(에뮬레이터 + `npm run dev`) 우선. 라이브에 먼저 올려 보지 말 것.
+3. **§2.1** — 유저·허브 데이터·rules를 손상·완화하지 않는지 확인.
+4. Firestore/Storage **규칙 바꾸면** 해당 rules도 같이 배포 (완화인지 먼저 검토).
+5. Functions 바꾸면 `functions` 배포 + Node 20 유지. 허브/유저 삭제 경로 재확인. **`resolveMyHub` / hubId 클리어 로직** 재확인.
+6. 도감 추가 후 피커·초상·진영 누락 없는지 `/dex`와 덱 수정에서 확인.
+7. 허브 가입/역할은 클라이언트 직쓰기가 아니라 **rules + joinHub** 전제.
+8. 커뮤니티 PvE 공략·티어 = Super; PvP만 일반 유저 작성 가능.
+9. 레이아웃: 덱 수정 모달 타임라인 높이 규칙 위반하지 말 것 (§12.4).
+10. **모바일만** 요청이면 §12.2 — PC·`deckEditScrollModal.css`·`min-width:981` 미포함 확인.
+11. 세팅 확인 모달 뒤 전체 blur(`.app-shell` filter) 제거 제안하지 말 것 (§10.6).
+12. 덱 수정 모달 패치 시 §12.5 회귀 체크리스트 참고.
+13. 커밋/푸시는 밍봉 요청 시. 시크릿(`.env*`)·`.firebase/hosting.*.cache` 커밋 금지.
 
 ---
 
@@ -553,7 +632,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.08.29.142** (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.08.30.151** (푸터 `APP_VERSION` 확인)
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 
 ---
@@ -563,6 +642,19 @@ API:
 ---
 
 ## 17. 패치 내역
+
+### 2026-08-30 (`v2026.08.30.151`) — 선명 다크 테마 · 마이페이지 · 길드전 공격 UI
+- **화면 테마 (§10.8):** `glass`(유리, 기본) / `solid`(선명 다크). `uiTheme.js` + `themeSolidDark.css` + `index.html` 선적용. 마이프로필 드롭다운 `UiThemeToggle`. `localStorage` `senalink_ui_theme` (계정·시스템 테마 미연동).
+- **마이페이지:** 프로필(사진·닉)과 게임 정보(총력전·결투장·파괴신) `glass-inset` 패널 분리.
+- **GNB:** 도구 flyout `.gnb-dropdown-panel` → `var(--glass-modal)` (선명 다크에서 불투명).
+- **길드전 공격:** 상대·파생 덱·카운터 레이아웃·색 계층·모바일 인라인 카운터 등 UI 정리. 그립 드래그 안내 문구 제거.
+- Hosting만 (rules·Functions·스키마 무변경).
+
+### 2026-08-30 (`v2026.08.30.150`) — 길드전 공격 그립 안내 문구 제거
+- Hosting만.
+
+### 2026-08-29 — 문서: 미리보기 허브 (§4.1)
+- **AGENTS.md §4.1:** 로컬 연습장 = Firebase 에뮬레이터 + `npm run dev` 워크플로·에이전트 켜는 순서·라이브와 코드 동일함을 정리. §14 체크리스트·`read-agents-md` 규칙에 트리거 추가.
 
 ### 2026-08-29 (`v2026.08.29.142`) — 길드전 방어 속공 수치·닫기 X 겹침
 - **방어 덱 수정 헤더:** 981–1179 구간 토글 가로 스크롤·`header-main`/`author-row` flex로 속공 수치 박스가 닫기 X와 겹치지 않게. ≤980·1180+ 무변경.

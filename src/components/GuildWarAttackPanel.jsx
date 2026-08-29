@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect, useRef } from 'react';
+import { Fragment, useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
@@ -253,17 +253,27 @@ export default function GuildWarAttackPanel({
   const selectedTarget = gwAttacks.find(g => g.id === selectedGwAttackId) || null;
 
   const [isTargetModalOpen, setIsTargetModalOpen] = useState(false);
-  const [targetForm, setTargetForm] = useState({ id: null, title: '', heroNames: emptyNames5(), note: '', formationId: 'protect', petId: pets[0]?.id });
+  const [targetForm, setTargetForm] = useState({
+    id: null, parentId: null, title: '', heroNames: emptyNames5(), note: '', formationId: 'protect', petId: pets[0]?.id,
+  });
+  const [altsOpenId, setAltsOpenId] = useState(null);
+  const [selectedAltId, setSelectedAltId] = useState(null);
+
+  const selectedDeck = useMemo(() => {
+    if (!selectedTarget) return null;
+    if (!selectedAltId) return selectedTarget;
+    return (selectedTarget.altDecks || []).find((a) => a.id === selectedAltId) || selectedTarget;
+  }, [selectedTarget, selectedAltId]);
 
   const [isCounterModalOpen, setIsCounterModalOpen] = useState(false);
   const [counterForm, setCounterForm] = useState({ id: null, title: '', heroNames: emptyNames5(), reservedSkills: [], otherDetail: '', formationId: 'protect', petId: pets[0]?.id, heroGearConfigs: emptyGear5() });
   const [suppressInspectPaint, setSuppressInspectPaint] = useState(false);
-  /** 터치 우선순위 드래그 고스트 { targetId, fromId, title, rank, x, y, w, h, ox, oy } */
-  const [prioGhost, setPrioGhost] = useState(null);
-  const prioGhostRef = useRef(null);
+  /** 터치·드래그 고스트 { kind, targetId?, fromId, title, rank?, x, y, w, h, ox, oy } */
+  const [dragGhost, setDragGhost] = useState(null);
+  const dragGhostRef = useRef(null);
   useEffect(() => {
-    prioGhostRef.current = prioGhost;
-  }, [prioGhost]);
+    dragGhostRef.current = dragGhost;
+  }, [dragGhost]);
 
   const closeTargetModal = () => closeOverlayFromUI(() => setIsTargetModalOpen(false));
   const closeCounterModal = () => closeOverlayFromUI(() => setIsCounterModalOpen(false));
@@ -283,13 +293,28 @@ export default function GuildWarAttackPanel({
   }, [isCounterModalOpen]);
 
   const openCreateTarget = () => {
-    setTargetForm({ id: null, title: '', heroNames: emptyNames5(), note: '', formationId: 'protect', petId: pets[0]?.id });
+    setTargetForm({
+      id: null, parentId: null, title: '', heroNames: emptyNames5(), note: '', formationId: 'protect', petId: pets[0]?.id,
+    });
     setIsTargetModalOpen(true);
   };
   const openEditTarget = (t) => {
     setTargetForm({
-      id: t.id, title: t.title, heroNames: padNames5(t.heroNames), note: t.note || '',
+      id: t.id, parentId: null, title: t.title, heroNames: padNames5(t.heroNames), note: t.note || '',
       formationId: normalizeFormationId(t.formationId), petId: t.petId || pets[0]?.id,
+    });
+    setIsTargetModalOpen(true);
+  };
+  const openCreateTargetAlt = (parentId) => {
+    setTargetForm({
+      id: null, parentId, title: '', heroNames: emptyNames5(), note: '', formationId: 'protect', petId: pets[0]?.id,
+    });
+    setIsTargetModalOpen(true);
+  };
+  const openEditTargetAlt = (parentId, alt) => {
+    setTargetForm({
+      id: alt.id, parentId, title: alt.title || '', heroNames: padNames5(alt.heroNames), note: alt.note || '',
+      formationId: normalizeFormationId(alt.formationId), petId: alt.petId || pets[0]?.id,
     });
     setIsTargetModalOpen(true);
   };
@@ -308,16 +333,55 @@ export default function GuildWarAttackPanel({
       author: guildRoom.myNickname,
       authorId: guildRoom.myMemberId || '',
     };
+    const payload = {
+      title: targetForm.title,
+      heroNames: targetForm.heroNames,
+      note: targetForm.note,
+      formationId: targetForm.formationId,
+      petId: targetForm.petId,
+      ...authorFields,
+      updatedAt: now,
+    };
+
+    if (targetForm.parentId) {
+      setGwAttacks((prev) => prev.map((t) => {
+        if (t.id !== targetForm.parentId) return t;
+        const list = Array.isArray(t.altDecks) ? [...t.altDecks] : [];
+        if (targetForm.id) {
+          onBuildHistory?.('update_build', targetForm.title || targetForm.id, '길드전 상대 파생덱');
+          return {
+            ...t,
+            altDecks: list.map((a) => (a.id === targetForm.id ? { ...a, ...payload } : a)),
+          };
+        }
+        const newAlt = { id: 'gwaa_' + Date.now(), ...payload, counters: [] };
+        onBuildHistory?.('create_build', targetForm.title || '파생 덱', '길드전 상대 파생덱');
+        setAltsOpenId(targetForm.parentId);
+        setSelectedGwAttackId(targetForm.parentId);
+        setSelectedAltId(newAlt.id);
+        return { ...t, altDecks: [...list, newAlt] };
+      }));
+      setIsTargetModalOpen(false);
+      collapseOverlayHistory();
+      return;
+    }
+
     if (targetForm.id) {
       setGwAttacks(prev => prev.map(t => t.id === targetForm.id
-        ? { ...t, title: targetForm.title, heroNames: targetForm.heroNames, note: targetForm.note, formationId: targetForm.formationId, petId: targetForm.petId, ...authorFields, updatedAt: now }
+        ? {
+          ...t,
+          ...payload,
+          altDecks: Array.isArray(t.altDecks) ? t.altDecks : [],
+          counters: Array.isArray(t.counters) ? t.counters : [],
+        }
         : t));
       onBuildHistory?.('update_build', targetForm.title, '길드전 공격 상대덱');
     } else {
       const newTarget = {
-        id: 'gwa_' + Date.now(), title: targetForm.title, heroNames: targetForm.heroNames,
-        note: targetForm.note, formationId: targetForm.formationId, petId: targetForm.petId,
-        ...authorFields, updatedAt: now, counters: []
+        id: 'gwa_' + Date.now(),
+        ...payload,
+        counters: [],
+        altDecks: [],
       };
       setGwAttacks(prev => [...prev, newTarget]);
       setSelectedGwAttackId(newTarget.id);
@@ -332,10 +396,31 @@ export default function GuildWarAttackPanel({
       alert('삭제는 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
       return;
     }
-    if (!confirm('이 상대 덱과 등록된 모든 카운터 덱을 삭제할까요?')) return;
+    if (!confirm('이 상대 덱과 등록된 파생·카운터 덱을 모두 삭제할까요?')) return;
     setGwAttacks(prev => prev.filter(t => t.id !== id));
-    if (selectedGwAttackId === id) setSelectedGwAttackId(null);
+    if (selectedGwAttackId === id) {
+      setSelectedGwAttackId(null);
+      setSelectedAltId(null);
+    }
+    if (altsOpenId === id) setAltsOpenId(null);
     onBuildHistory?.('delete_build', target?.title || id, '길드전 공격 상대덱');
+  };
+
+  const deleteTargetAlt = (parentId, altId) => {
+    const parent = gwAttacks.find((t) => t.id === parentId);
+    const alt = (parent?.altDecks || []).find((a) => a.id === altId);
+    if (!canDeleteBuild?.(alt)) {
+      alert('삭제는 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+      return;
+    }
+    if (!confirm('이 파생 덱과 등록된 카운터 덱을 모두 삭제할까요?')) return;
+    setGwAttacks((prev) => prev.map((t) => (
+      t.id !== parentId
+        ? t
+        : { ...t, altDecks: (t.altDecks || []).filter((a) => a.id !== altId) }
+    )));
+    if (selectedAltId === altId) setSelectedAltId(null);
+    onBuildHistory?.('delete_build', alt?.title || altId, '길드전 상대 파생덱');
   };
 
   const openCreateCounter = () => {
@@ -356,7 +441,7 @@ export default function GuildWarAttackPanel({
     setIsCounterModalOpen(true);
   };
   const saveCounter = () => {
-    if (!selectedTarget) return;
+    if (!selectedDeck || !selectedGwAttackId) return;
     const filled = counterForm.heroNames.filter(Boolean);
     if (!counterForm.title || filled.length < 1) {
       alert('카운터 덱 제목과 영웅 최소 1명을 입력해 주세요!');
@@ -367,107 +452,396 @@ export default function GuildWarAttackPanel({
       return;
     }
     const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
-    setGwAttacks(prev => prev.map(t => {
-      if (t.id !== selectedTarget.id) return t;
-      const list = t.counters || [];
-      const payload = {
-        title: counterForm.title,
-        heroNames: counterForm.heroNames,
-        reservedSkills: counterForm.reservedSkills.filter(Boolean),
-        otherDetail: counterForm.otherDetail || '',
-        gearNote: counterForm.otherDetail || '',
-        formationId: counterForm.formationId,
-        petId: counterForm.petId,
-        heroGearConfigs: counterForm.heroGearConfigs,
-        author: guildRoom.myNickname,
-        authorId: guildRoom.myMemberId || '',
-        updatedAt: now,
+    const payload = {
+      title: counterForm.title,
+      heroNames: counterForm.heroNames,
+      reservedSkills: counterForm.reservedSkills.filter(Boolean),
+      otherDetail: counterForm.otherDetail || '',
+      gearNote: counterForm.otherDetail || '',
+      formationId: counterForm.formationId,
+      petId: counterForm.petId,
+      heroGearConfigs: counterForm.heroGearConfigs,
+      author: guildRoom.myNickname,
+      authorId: guildRoom.myMemberId || '',
+      updatedAt: now,
+    };
+    setGwAttacks((prev) => prev.map((t) => {
+      if (t.id !== selectedGwAttackId) return t;
+      const patchCounters = (list) => {
+        if (counterForm.id) {
+          onBuildHistory?.('update_build', counterForm.title, '길드전 카운터');
+          return list.map((c) => (c.id === counterForm.id ? { ...c, ...payload } : c));
+        }
+        onBuildHistory?.('create_build', counterForm.title, '길드전 카운터');
+        return [...list, { id: 'gwac_' + Date.now(), ...payload }];
       };
-      if (counterForm.id) {
-        onBuildHistory?.('update_build', counterForm.title, '길드전 카운터');
-        return { ...t, counters: list.map(c => c.id === counterForm.id ? { ...c, ...payload } : c) };
+      if (!selectedAltId) {
+        return { ...t, counters: patchCounters(t.counters || []) };
       }
-      onBuildHistory?.('create_build', counterForm.title, '길드전 카운터');
-      return { ...t, counters: [...list, { id: 'gwac_' + Date.now(), ...payload }] };
+      return {
+        ...t,
+        altDecks: (t.altDecks || []).map((a) => (
+          a.id === selectedAltId ? { ...a, counters: patchCounters(a.counters || []) } : a
+        )),
+      };
     }));
     setIsCounterModalOpen(false);
     collapseOverlayHistory();
   };
   const deleteCounter = (counterId) => {
-    const c = selectedTarget?.counters?.find(x => x.id === counterId);
+    const c = selectedDeck?.counters?.find((x) => x.id === counterId);
     if (!canDeleteBuild?.(c)) {
       alert('삭제는 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
       return;
     }
     if (!confirm('이 카운터 덱을 삭제할까요?')) return;
-    setGwAttacks(prev => prev.map(t => t.id !== selectedTarget.id ? t : { ...t, counters: (t.counters || []).filter(x => x.id !== counterId) }));
+    setGwAttacks((prev) => prev.map((t) => {
+      if (t.id !== selectedGwAttackId) return t;
+      if (!selectedAltId) {
+        return { ...t, counters: (t.counters || []).filter((x) => x.id !== counterId) };
+      }
+      return {
+        ...t,
+        altDecks: (t.altDecks || []).map((a) => (
+          a.id === selectedAltId
+            ? { ...a, counters: (a.counters || []).filter((x) => x.id !== counterId) }
+            : a
+        )),
+      };
+    }));
     onBuildHistory?.('delete_build', c?.title || counterId, '길드전 카운터');
   };
 
-  const clearPrioDropHighlight = () => {
-    document.querySelectorAll('.gw-counter-row.is-drop-target').forEach((el) => {
+  const clearDragRowHighlight = (rowSelector) => {
+    document.querySelectorAll(`${rowSelector}.is-drop-target`).forEach((el) => {
       el.classList.remove('is-drop-target');
     });
   };
 
-  const finishPrioPointerDrag = (clientX, clientY, ghost) => {
-    clearPrioDropHighlight();
-    document.querySelectorAll('.gw-counter-row.is-dragging-source').forEach((el) => {
+  const clearDraggingSource = (rowSelector) => {
+    document.querySelectorAll(`${rowSelector}.is-dragging-source`).forEach((el) => {
       el.classList.remove('is-dragging-source');
     });
+  };
+
+  const finishDragPointerDrop = (clientX, clientY, ghost, rowSelector, dataAttr, onDrop) => {
+    clearDragRowHighlight(rowSelector);
+    clearDraggingSource(rowSelector);
     if (!ghost) {
-      setPrioGhost(null);
+      setDragGhost(null);
       return;
     }
     const under = document.elementFromPoint(clientX, clientY);
-    const row = under?.closest?.('.gw-counter-row');
-    const toId = row?.getAttribute('data-counter-id');
-    if (toId) reorderCounters(ghost.targetId, ghost.fromId, toId);
-    setPrioGhost(null);
+    const row = under?.closest?.(rowSelector);
+    const toId = row?.getAttribute(dataAttr);
+    if (toId) onDrop(ghost, toId);
+    setDragGhost(null);
   };
 
-  const reorderCounters = (targetId, fromId, toId) => {
+  const reorderTargets = (fromId, toId) => {
+    if (!fromId || !toId || fromId === toId) return;
+    setGwAttacks((prev) => {
+      const list = [...prev];
+      const fromIdx = list.findIndex((t) => t.id === fromId);
+      const toIdx = list.findIndex((t) => t.id === toId);
+      if (fromIdx < 0 || toIdx < 0) return prev;
+      const [item] = list.splice(fromIdx, 1);
+      list.splice(toIdx, 0, item);
+      onBuildHistory?.('update_build', item.title || fromId, '길드전 상대덱 순서');
+      return list;
+    });
+  };
+
+  const reorderCounters = (targetId, altId, fromId, toId) => {
     if (!targetId || !fromId || !toId || fromId === toId) return;
     setGwAttacks((prev) => prev.map((t) => {
       if (t.id !== targetId) return t;
-      const list = [...(t.counters || [])];
-      const fromIdx = list.findIndex((c) => c.id === fromId);
-      const toIdx = list.findIndex((c) => c.id === toId);
-      if (fromIdx < 0 || toIdx < 0) return t;
-      const [item] = list.splice(fromIdx, 1);
-      list.splice(toIdx, 0, item);
+      const reorderList = (list) => {
+        const next = [...list];
+        const fromIdx = next.findIndex((c) => c.id === fromId);
+        const toIdx = next.findIndex((c) => c.id === toId);
+        if (fromIdx < 0 || toIdx < 0) return list;
+        const [item] = next.splice(fromIdx, 1);
+        next.splice(toIdx, 0, item);
+        return next;
+      };
+      if (!altId) {
+        onBuildHistory?.('update_build', t.title || targetId, '길드전 카운터 우선순위');
+        return { ...t, counters: reorderList(t.counters || []) };
+      }
       onBuildHistory?.('update_build', t.title || targetId, '길드전 카운터 우선순위');
-      return { ...t, counters: list };
+      return {
+        ...t,
+        altDecks: (t.altDecks || []).map((a) => (
+          a.id === altId ? { ...a, counters: reorderList(a.counters || []) } : a
+        )),
+      };
     }));
   };
 
-  const renderCounters = (target) => (
+  const renderListDragHandle = ({
+    kind,
+    id,
+    parentTargetId,
+    title,
+    rank,
+    rowSelector,
+    dataAttr,
+    mimeType,
+    onDrop,
+    ariaLabel,
+    handleTitle,
+  }) => (
+    <button
+      type="button"
+      className="gw-defense-drag-handle"
+      draggable
+      title={handleTitle}
+      aria-label={ariaLabel}
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => {
+        if (e.pointerType === 'mouse') return;
+        e.stopPropagation();
+        e.preventDefault();
+        const row = e.currentTarget.closest(rowSelector);
+        if (!row) return;
+        const rect = row.getBoundingClientRect();
+        e.currentTarget.setPointerCapture(e.pointerId);
+        setDragGhost({
+          kind,
+          targetId: parentTargetId,
+          fromId: id,
+          title: title || (kind === 'target' ? '상대 덱' : '카운터 덱'),
+          rank,
+          x: rect.left,
+          y: rect.top,
+          w: rect.width,
+          h: rect.height,
+          ox: e.clientX - rect.left,
+          oy: e.clientY - rect.top,
+        });
+      }}
+      onPointerMove={(e) => {
+        if (e.pointerType === 'mouse') return;
+        if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+        setDragGhost((g) => {
+          if (!g) return null;
+          return {
+            ...g,
+            x: e.clientX - g.ox,
+            y: e.clientY - g.oy,
+          };
+        });
+        clearDragRowHighlight(rowSelector);
+        const under = document.elementFromPoint(e.clientX, e.clientY);
+        under?.closest?.(`${rowSelector}:not(.is-dragging-source)`)?.classList.add('is-drop-target');
+      }}
+      onPointerUp={(e) => {
+        if (e.pointerType === 'mouse') return;
+        finishDragPointerDrop(e.clientX, e.clientY, dragGhostRef.current, rowSelector, dataAttr, onDrop);
+      }}
+      onPointerCancel={() => {
+        clearDragRowHighlight(rowSelector);
+        clearDraggingSource(rowSelector);
+        setDragGhost(null);
+      }}
+      onDragStart={(e) => {
+        e.stopPropagation();
+        e.dataTransfer.setData(mimeType, id);
+        e.dataTransfer.setData('text/plain', id);
+        e.dataTransfer.effectAllowed = 'move';
+        const row = e.currentTarget.closest(rowSelector);
+        if (row) {
+          try {
+            e.dataTransfer.setDragImage(row, Math.min(56, row.offsetWidth / 4), row.offsetHeight / 2);
+          } catch { /* ignore */ }
+          row.classList.add('is-dragging-source');
+        }
+      }}
+      onDragEnd={() => {
+        clearDragRowHighlight(rowSelector);
+        clearDraggingSource(rowSelector);
+      }}
+    >
+      <span className="gw-defense-drag-grip" aria-hidden="true" />
+    </button>
+  );
+
+  const renderAttackDeckRow = ({
+    deck,
+    variant = 'main',
+    altCount = 0,
+    altsOpen = false,
+    isActive = false,
+    onSelect,
+    onEdit,
+    onDelete,
+    onToggleAlts,
+  }) => {
+    const counterCount = deck.counters?.length || 0;
+    const isMain = variant === 'main';
+    const rowId = deck.id;
+
+    return (
+      <div
+        className={`gw-counter-row gw-attack-target-row${variant === 'alt' ? ' gw-attack-alt-row' : ''}${isActive ? ' is-on' : ''}${dragGhost?.kind === (isMain ? 'target' : 'alt') && dragGhost?.fromId === rowId ? ' is-dragging-source' : ''}`}
+        {...{ [isMain ? 'data-target-id' : 'data-alt-id']: rowId }}
+        onClick={onSelect}
+        onDragOver={(e) => {
+          if (!isMain) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          e.currentTarget.classList.add('is-drop-target');
+        }}
+        onDragLeave={(e) => {
+          if (!isMain) return;
+          e.currentTarget.classList.remove('is-drop-target');
+        }}
+        onDrop={(e) => {
+          if (!isMain) return;
+          e.preventDefault();
+          e.stopPropagation();
+          clearDragRowHighlight('.gw-attack-target-row');
+          const fromId = e.dataTransfer.getData('application/x-gw-target-id') || e.dataTransfer.getData('text/plain');
+          reorderTargets(fromId, rowId);
+        }}
+      >
+        <div className="gw-counter-lead gw-attack-target-lead">
+          {isMain ? (
+            renderListDragHandle({
+              kind: 'target',
+              id: rowId,
+              title: deck.title,
+              rowSelector: '.gw-attack-target-row',
+              dataAttr: 'data-target-id',
+              mimeType: 'application/x-gw-target-id',
+              handleTitle: '끌어 옮겨 순서 변경',
+              ariaLabel: '드래그로 순서 변경',
+              onDrop: (ghost, toId) => reorderTargets(ghost.fromId, toId),
+            })
+          ) : (
+            <span className="gw-attack-alt-lead-spacer" aria-hidden="true" />
+          )}
+          <span className="gw-counter-rule" aria-hidden>|</span>
+        </div>
+        <div className="gw-attack-target-body">
+          <div className="gw-counter-copy gw-attack-target-copy">
+            <div className="gw-counter-title gw-attack-target-title">
+              {isActive ? (
+                <span className="gw-attack-deck-kind-pill">{isMain ? '상대' : '파생'}</span>
+              ) : null}
+              <span className="gw-attack-target-title-text">{deck.title}</span>
+            </div>
+          </div>
+          <div className="gw-attack-target-heroes-meta">
+            <MiniHeroTrio heroNames={deck.heroNames} resolveHeroByName={resolveHeroByName} size={42} />
+            <div className="gw-attack-target-meta">
+              <span>카운터 {counterCount}개</span>
+              {isMain && altCount > 0 ? <span>파생 덱 {altCount}</span> : null}
+            </div>
+          </div>
+        </div>
+        <div className="gw-counter-actions gw-attack-target-actions">
+          <button type="button" onClick={(e) => { e.stopPropagation(); onEdit(); }}>
+            <Icon name="edit" size={11} /> 수정
+          </button>
+          {onDelete ? (
+            <button type="button" className="is-danger" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
+              <Icon name="close" size={11} /> 삭제
+            </button>
+          ) : null}
+          {isMain && onToggleAlts ? (
+            <button
+              type="button"
+              className={`btn-ops gw-defense-alt-btn gw-attack-alt-btn${altsOpen ? ' is-on' : ''}`}
+              onClick={(e) => { e.stopPropagation(); onToggleAlts(); }}
+            >
+              <Icon name="copy" size={11} /> 파생 덱{altCount > 0 ? ` ${altCount}` : ''}
+            </button>
+          ) : null}
+        </div>
+      </div>
+    );
+  };
+
+  const renderTargetAltLayer = (parent) => {
+    const alts = Array.isArray(parent.altDecks) ? parent.altDecks : [];
+    return (
+      <div className="gw-attack-target-alts" onClick={(e) => e.stopPropagation()}>
+        <div className="gw-alt-layer">
+          <div className="gw-alt-toolbar">
+            <div className="gw-alt-toolbar-copy">
+              <span>파생 덱</span>
+              <em>비슷한 영웅 조합</em>
+            </div>
+            <button type="button" className="btn-ops gw-alt-add" onClick={() => openCreateTargetAlt(parent.id)}>
+              <Icon name="plus" size={11} /> 파생 덱 추가
+            </button>
+          </div>
+          {alts.length === 0 && (
+            <div className="gw-alt-empty">등록된 파생 덱이 없습니다.</div>
+          )}
+          {alts.map((a) => {
+            const isAltActive = selectedGwAttackId === parent.id && selectedAltId === a.id;
+            return (
+              <Fragment key={a.id}>
+                {renderAttackDeckRow({
+                  deck: a,
+                  variant: 'alt',
+                  isActive: isAltActive,
+                  onSelect: () => {
+                    if (dragGhost) return;
+                    if (isAltActive) {
+                      setSelectedGwAttackId(null);
+                      setSelectedAltId(null);
+                      return;
+                    }
+                    setSelectedGwAttackId(parent.id);
+                    setSelectedAltId(a.id);
+                    setAltsOpenId(parent.id);
+                  },
+                  onEdit: () => openEditTargetAlt(parent.id, a),
+                  onDelete: canDeleteBuild?.(a) ? () => deleteTargetAlt(parent.id, a.id) : null,
+                })}
+                {isAltActive && (
+                  <div className="gw-attack-inline-counters">
+                    {renderCounters(a, { parentTargetId: parent.id, altId: a.id })}
+                  </div>
+                )}
+              </Fragment>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderCounters = (deck, { parentTargetId, altId = null }) => (
     <div className="gw-counter-layer">
       <div className="gw-counter-list">
         <div className="gw-counter-toolbar">
           <div className="gw-counter-toolbar-copy">
             <span>아군 공격 · 카운터 덱</span>
-            <em className="gw-counter-drag-hint">왼쪽 그립을 잡고 끌어 우선순위 변경</em>
           </div>
           <button type="button" onClick={openCreateCounter} className="btn-ops gw-counter-add">
             <Icon name="plus" size={13} /> 카운터 공략 추가
           </button>
         </div>
-        {target.note && (
+        {deck.note && (
           <div className="gw-target-note">
-            <Icon name="warning" size={13} /> {target.note}
+            <Icon name="warning" size={13} /> {deck.note}
           </div>
         )}
-        {(target.counters || []).length === 0 && (
+        {(deck.counters || []).length === 0 && (
           <div className="gw-counter-empty">등록된 카운터 덱이 없습니다.</div>
         )}
-        {(target.counters || []).map((c, idx) => (
+        {(deck.counters || []).map((c, idx) => (
           <div
             key={c.id}
-            className={`gw-counter-row${prioGhost?.fromId === c.id ? ' is-dragging-source' : ''}`}
+            className={`gw-counter-row${dragGhost?.kind === 'counter' && dragGhost?.fromId === c.id ? ' is-dragging-source' : ''}`}
             data-counter-id={c.id}
             onClick={() => {
-              if (prioGhost) return;
+              if (dragGhost) return;
               setInspectingCounter(c);
             }}
             onDragOver={(e) => {
@@ -481,88 +855,25 @@ export default function GuildWarAttackPanel({
             onDrop={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              clearPrioDropHighlight();
+              clearDragRowHighlight('.gw-counter-row');
               const fromId = e.dataTransfer.getData('application/x-gw-counter-id') || e.dataTransfer.getData('text/plain');
-              reorderCounters(target.id, fromId, c.id);
+              reorderCounters(parentTargetId, altId, fromId, c.id);
             }}
           >
             <div className="gw-counter-lead">
-              <button
-                type="button"
-                className="gw-defense-drag-handle"
-                draggable
-                title="끌어 옮겨 우선순위 변경"
-                aria-label={`${idx + 1}순위 · 드래그로 순서 변경`}
-                onClick={(e) => e.stopPropagation()}
-                onPointerDown={(e) => {
-                  if (e.pointerType === 'mouse') return;
-                  e.stopPropagation();
-                  e.preventDefault();
-                  const row = e.currentTarget.closest('.gw-counter-row');
-                  if (!row) return;
-                  const rect = row.getBoundingClientRect();
-                  e.currentTarget.setPointerCapture(e.pointerId);
-                  setPrioGhost({
-                    targetId: target.id,
-                    fromId: c.id,
-                    title: c.title || '카운터 덱',
-                    rank: idx + 1,
-                    x: rect.left,
-                    y: rect.top,
-                    w: rect.width,
-                    h: rect.height,
-                    ox: e.clientX - rect.left,
-                    oy: e.clientY - rect.top,
-                  });
-                }}
-                onPointerMove={(e) => {
-                  if (e.pointerType === 'mouse') return;
-                  if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
-                  setPrioGhost((g) => {
-                    if (!g) return null;
-                    return {
-                      ...g,
-                      x: e.clientX - g.ox,
-                      y: e.clientY - g.oy,
-                    };
-                  });
-                  clearPrioDropHighlight();
-                  const under = document.elementFromPoint(e.clientX, e.clientY);
-                  under?.closest?.('.gw-counter-row:not(.is-dragging-source)')?.classList.add('is-drop-target');
-                }}
-                onPointerUp={(e) => {
-                  if (e.pointerType === 'mouse') return;
-                  finishPrioPointerDrag(e.clientX, e.clientY, prioGhostRef.current);
-                }}
-                onPointerCancel={() => {
-                  clearPrioDropHighlight();
-                  document.querySelectorAll('.gw-counter-row.is-dragging-source').forEach((el) => {
-                    el.classList.remove('is-dragging-source');
-                  });
-                  setPrioGhost(null);
-                }}
-                onDragStart={(e) => {
-                  e.stopPropagation();
-                  e.dataTransfer.setData('application/x-gw-counter-id', c.id);
-                  e.dataTransfer.setData('text/plain', c.id);
-                  e.dataTransfer.effectAllowed = 'move';
-                  const row = e.currentTarget.closest('.gw-counter-row');
-                  if (row) {
-                    try {
-                      e.dataTransfer.setDragImage(row, Math.min(56, row.offsetWidth / 4), row.offsetHeight / 2);
-                    } catch { /* ignore */ }
-                    row.classList.add('is-dragging-source');
-                  }
-                }}
-                onDragEnd={() => {
-                  clearPrioDropHighlight();
-                  document.querySelectorAll('.gw-counter-row.is-dragging-source').forEach((el) => {
-                    el.classList.remove('is-dragging-source');
-                  });
-                }}
-              >
-                <span className="gw-defense-drag-grip" aria-hidden="true" />
-              </button>
+              {renderListDragHandle({
+                kind: 'counter',
+                id: c.id,
+                parentTargetId,
+                title: c.title,
+                rank: idx + 1,
+                rowSelector: '.gw-counter-row',
+                dataAttr: 'data-counter-id',
+                mimeType: 'application/x-gw-counter-id',
+                handleTitle: '끌어 옮겨 우선순위 변경',
+                ariaLabel: `${idx + 1}순위 · 드래그로 순서 변경`,
+                onDrop: (ghost, toId) => reorderCounters(parentTargetId, altId, ghost.fromId, toId),
+              })}
               <span className="gw-counter-rule" aria-hidden>|</span>
               <div className="gw-counter-prio-block">
                 <span className="gw-counter-prio-label">우선순위</span>
@@ -602,10 +913,12 @@ export default function GuildWarAttackPanel({
     <div className="gw-attack-layout">
       <div className="luxury-panel tint-red gw-attack-list">
         <div className="gw-attack-list-head">
-          <h3>
-            <Icon name="guildwar" size={16} color="var(--accent-red)" />
-            <span className="gw-attack-list-head-label">상대 덱 목록</span>
-          </h3>
+          <div className="gw-attack-list-head-copy">
+            <h3>
+              <Icon name="guildwar" size={16} color="var(--gw-enemy-accent)" />
+              <span className="gw-attack-list-head-label">상대 덱 목록</span>
+            </h3>
+          </div>
           <button onClick={openCreateTarget} className="btn-ops" type="button">
             <Icon name="plus" size={13} /> 상대 덱 추가
           </button>
@@ -615,60 +928,73 @@ export default function GuildWarAttackPanel({
             <div className="gw-counter-empty">등록된 상대 덱이 없습니다.</div>
           )}
           {gwAttacks.map(t => {
-            const isActive = selectedTarget?.id === t.id;
+            const isMainActive = selectedGwAttackId === t.id && !selectedAltId;
+            const altsOpen = altsOpenId === t.id;
+            const altCount = (t.altDecks || []).length;
             return (
-              <Fragment key={t.id}>
-                <div className={`gw-attack-target${isActive ? ' is-on' : ''}`}>
-                  <div
-                    className="gw-attack-target-row"
-                    onClick={() => setSelectedGwAttackId(isActive ? null : t.id)}
-                  >
-                    <MiniHeroTrio heroNames={t.heroNames} resolveHeroByName={resolveHeroByName} size={42} />
-                    <div className="gw-attack-target-copy">
-                      <div className="gw-attack-target-title">{t.title}</div>
-                      <div className="gw-attack-target-meta">카운터 {t.counters?.length || 0}개</div>
-                    </div>
-                    <div className="gw-attack-target-actions">
-                      <button type="button" onClick={e => { e.stopPropagation(); openEditTarget(t); }}>
-                        <Icon name="edit" size={12} /> 수정
-                      </button>
-                      {canDeleteBuild?.(t) ? (
-                        <button type="button" className="is-danger" onClick={e => { e.stopPropagation(); deleteTarget(t.id); }}>
-                          <Icon name="close" size={12} /> 삭제
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
+              <div
+                key={t.id}
+                className={`gw-attack-target-block${isMainActive ? ' is-expanded' : ''}`}
+              >
+                <div className={`gw-attack-target${isMainActive ? ' is-on' : ''}${altsOpen ? ' has-alts-open' : ''}`}>
+                  {renderAttackDeckRow({
+                    deck: t,
+                    variant: 'main',
+                    altCount,
+                    altsOpen,
+                    isActive: isMainActive,
+                    onSelect: () => {
+                      if (dragGhost) return;
+                      if (isMainActive) {
+                        setSelectedGwAttackId(null);
+                        setSelectedAltId(null);
+                        return;
+                      }
+                      if (altsOpenId !== t.id) setAltsOpenId(null);
+                      setSelectedGwAttackId(t.id);
+                      setSelectedAltId(null);
+                    },
+                    onEdit: () => openEditTarget(t),
+                    onDelete: canDeleteBuild?.(t) ? () => deleteTarget(t.id) : null,
+                    onToggleAlts: () => {
+                      if (!isMainActive && selectedGwAttackId !== t.id) {
+                        setSelectedGwAttackId(t.id);
+                        setSelectedAltId(null);
+                      }
+                      setAltsOpenId(altsOpen ? null : t.id);
+                    },
+                  })}
+                  {altsOpen && renderTargetAltLayer(t)}
                 </div>
-                {isActive && (
+                {isMainActive && (
                   <div className="gw-attack-inline-counters">
-                    {renderCounters(t)}
+                    {renderCounters(t, { parentTargetId: t.id, altId: null })}
                   </div>
                 )}
-              </Fragment>
+              </div>
             );
           })}
         </div>
       </div>
 
       <div className="luxury-panel tint-blue gw-attack-detail">
-        {!selectedTarget ? (
+        {!selectedDeck ? (
           <div className="gw-counter-empty gw-counter-empty--lg">왼쪽에서 상대 덱을 선택하거나 새로 추가해 주세요.</div>
         ) : (
           <>
             <div className="gw-attack-detail-head">
               <div className="gw-attack-detail-identity">
-                <MiniHeroTrio heroNames={selectedTarget.heroNames} resolveHeroByName={resolveHeroByName} size={44} />
+                <MiniHeroTrio heroNames={selectedDeck.heroNames} resolveHeroByName={resolveHeroByName} size={44} />
                 <div>
                   <div className="gw-attack-detail-title-row">
-                    <span className="gw-attack-vs-pill">상대</span>
-                    <h3>{selectedTarget.title}</h3>
+                    <span className="gw-attack-vs-pill">{selectedAltId ? '파생' : '상대'}</span>
+                    <h3>{selectedDeck.title}</h3>
                   </div>
-                  <div className="gw-attack-detail-meta">{formatUpdateAtDisplay(selectedTarget.updatedAt)}</div>
+                  <div className="gw-attack-detail-meta">{formatUpdateAtDisplay(selectedDeck.updatedAt)}</div>
                 </div>
               </div>
             </div>
-            {renderCounters(selectedTarget)}
+            {renderCounters(selectedDeck, { parentTargetId: selectedGwAttackId, altId: selectedAltId })}
           </>
         )}
       </div>
@@ -679,7 +1005,12 @@ export default function GuildWarAttackPanel({
           {...backdropDismissProps(closeTargetModal)}>
           <div onClick={e => e.stopPropagation()} className="glass-modal" style={{ width: 'min(720px, 96vw)', maxHeight: '90vh', overflowY: 'auto', padding: '24px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-              <h3 style={{ fontSize: '19px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}><Icon name="guildwar" size={18} color="var(--gold-primary)" /> {targetForm.id ? '상대 덱 수정' : '상대 덱 추가'}</h3>
+              <h3 style={{ fontSize: '19px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                <Icon name="guildwar" size={18} color="var(--gold-primary)" />
+                {targetForm.parentId
+                  ? (targetForm.id ? '파생 덱 수정' : '파생 덱 추가')
+                  : (targetForm.id ? '상대 덱 수정' : '상대 덱 추가')}
+              </h3>
               <button
                 type="button"
                 onClick={closeTargetModal}
@@ -695,7 +1026,7 @@ export default function GuildWarAttackPanel({
             </div>
             <div>
               <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '5px', fontWeight: 800 }}>제목</div>
-              <input value={targetForm.title} onChange={e => setTargetForm({ ...targetForm, title: e.target.value })} placeholder="예: vs 트겔미"
+              <input value={targetForm.title} onChange={e => setTargetForm({ ...targetForm, title: e.target.value })} placeholder="예: 선란클 or 윤동연"
                 style={{ width: '100%', padding: '10px 12px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '7px', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
             <GwTrioDeckEditor
@@ -839,18 +1170,21 @@ export default function GuildWarAttackPanel({
           </div>
         </ModalScrim>
       )}
-      {prioGhost && createPortal(
+      {dragGhost && createPortal(
         <div
           className="gw-counter-prio-ghost"
           style={{
-            width: prioGhost.w,
-            minHeight: prioGhost.h,
-            transform: `translate3d(${prioGhost.x}px, ${prioGhost.y}px, 0)`,
+            width: dragGhost.w,
+            minHeight: dragGhost.h,
+            transform: `translate3d(${dragGhost.x}px, ${dragGhost.y}px, 0)`,
           }}
           aria-hidden="true"
         >
           <span className="gw-defense-drag-grip" style={{ color: 'rgba(125,211,252,0.9)' }} />
-          <span className="gw-counter-prio-ghost-title">{prioGhost.rank}순위 · {prioGhost.title}</span>
+          <span className="gw-counter-prio-ghost-title">
+            {dragGhost.kind === 'counter' && dragGhost.rank != null ? `${dragGhost.rank}순위 · ` : ''}
+            {dragGhost.title}
+          </span>
         </div>,
         document.body,
       )}
