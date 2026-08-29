@@ -7777,14 +7777,25 @@ h1, h2, h3 {
   .arena-body-scroll-modal .editing-build-hero-picker > .editing-build-hero-grid,
   .arena-body-scroll-modal .editing-build-hero-grid {
     flex: none !important;
-    height: 128px !important;
-    min-height: 128px !important;
-    max-height: 128px !important;
+    height: 132px !important;
+    min-height: 132px !important;
+    max-height: 132px !important;
     overflow-y: auto !important;
-    padding-bottom: 0 !important;
+    overflow-x: hidden !important;
+    padding: 3px 2px 4px !important;
     box-sizing: border-box;
-    /* 최대 20열 (gap 6px × 19) */
-    grid-template-columns: repeat(auto-fill, minmax(calc((100% - 114px) / 20), 1fr)) !important;
+    /* 최대 18열 (gap 6px × 17) — 초상화 여유 */
+    grid-template-columns: repeat(auto-fill, minmax(calc((100% - 102px) / 18), 1fr)) !important;
+  }
+
+  .arena-body-scroll-modal .arena-hero-grid > div > div {
+    width: min(64px, 100%) !important;
+    box-sizing: border-box;
+  }
+
+  .arena-body-scroll-modal .arena-hero-grid > div > div:first-child {
+    padding-top: 1px;
+    box-sizing: border-box;
   }
 
   .arena-body-scroll-modal .editing-build-hero-picker .hero-grid-picker--fill {
@@ -7795,9 +7806,12 @@ h1, h2, h3 {
   }
 
   .arena-body-scroll-modal .editing-build-hero-picker .hero-grid-picker--fill .hero-grid-picker-grid {
-    height: 128px !important;
-    min-height: 128px !important;
-    max-height: 128px !important;
+    height: 132px !important;
+    min-height: 132px !important;
+    max-height: 132px !important;
+    padding: 3px 2px 4px !important;
+    box-sizing: border-box;
+    grid-template-columns: repeat(auto-fill, minmax(calc((100% - 102px) / 18), 1fr)) !important;
     flex: none !important;
     overflow-y: auto !important;
   }
