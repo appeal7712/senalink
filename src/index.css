@@ -7637,10 +7637,18 @@ h1, h2, h3 {
   }
 }
 
-/* 결투장·상급결투장 덱 수정 — PC만 본문 통스크롤 (길드 허브 + 공용 커뮤니티, 카운터와 동일 철학) */
+/* ── 결투장·상급결투장 덱 수정 (PC) ─────────────────────────────────────
+   구조: [헤더 고정] [본문] [저장 고정]
+   본문 그리드 2행: 1행 덱+세팅디테일 | 장비(고정 높이 슬롯) / 2행 영웅목록(고정)
+   · 장비 슬롯 높이 = 활성화 후와 동일 → 영웅 배치 전후 모달 크기 불변
+   · 1080p 풀(세로≥901px): 본문 스크롤 없음 / 그보다 짧을 때만 본문 스크롤
+   · 장비·영웅목록 박스 내부 스크롤 없음 (영웅 그리드만 초과 시 내부 스크롤)
+   ─────────────────────────────────────────────────────────────────── */
 @media (min-width: 981px) {
   .editing-build-modal.arena-body-scroll-modal.glass-modal {
-    --arena-gear-panel-min-h: 468px;
+    --arena-gear-h: 472px;
+    --arena-hero-grid-h: 120px;
+    --arena-row-gap: 16px;
     max-height: min(88vh, 900px) !important;
     height: min(88vh, 900px);
     overflow: hidden !important;
@@ -7650,39 +7658,49 @@ h1, h2, h3 {
     flex: 1 1 auto;
     min-height: 0;
     overflow-x: hidden;
-    overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     padding: 16px 20px;
     box-sizing: border-box;
   }
 
+  @media (min-height: 901px) {
+    .arena-body-scroll-modal .arena-edit-scroll-body {
+      overflow-y: hidden !important;
+    }
+  }
+
+  @media (max-height: 900px) {
+    .arena-body-scroll-modal .arena-edit-scroll-body {
+      overflow-y: auto !important;
+    }
+  }
+
   .arena-body-scroll-modal .editing-build-grid.is-pvp {
     display: grid !important;
     grid-template-columns: minmax(240px, 276px) minmax(0, 1fr) !important;
-    grid-template-rows: auto auto !important;
+    grid-template-rows: var(--arena-gear-h) auto !important;
     grid-template-areas:
       "left gear"
       "heroes heroes" !important;
+    gap: var(--arena-row-gap) !important;
+    align-items: stretch !important;
     height: auto !important;
     max-height: none !important;
     overflow: visible !important;
     flex: none !important;
     min-height: 0 !important;
     padding: 0 !important;
-    gap: 20px !important;
-    align-items: stretch !important;
   }
 
   .arena-body-scroll-modal .editing-build-left-stack {
     grid-area: left;
-    align-self: stretch !important;
-    height: 100%;
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important;
-    min-height: 0;
-    max-height: none !important;
+    align-self: stretch !important;
+    height: 100% !important;
+    min-height: 0 !important;
     overflow: visible !important;
   }
 
@@ -7707,95 +7725,45 @@ h1, h2, h3 {
     overflow-y: auto !important;
   }
 
+  /* 장비: 빈/채움 동일한 고정 슬롯, 내부 스크롤 금지 */
   .arena-body-scroll-modal .editing-build-gear-panel {
     grid-area: gear;
     align-self: stretch !important;
-    flex: none !important;
-    /* 활성화될 높이만 미리 확보 — 안에서 스크롤 없음 */
-    min-height: var(--arena-gear-panel-min-h) !important;
-    height: auto !important;
-    max-height: none !important;
+    height: var(--arena-gear-h) !important;
+    min-height: var(--arena-gear-h) !important;
+    max-height: var(--arena-gear-h) !important;
     overflow: visible !important;
     display: flex !important;
     flex-direction: column !important;
     box-sizing: border-box;
   }
 
-  .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel--empty.hero-gear-panel--embedded {
+  .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel--embedded {
     flex: 1 1 auto !important;
-    min-height: calc(var(--arena-gear-panel-min-h) - 28px) !important;
-    height: auto !important;
-  }
-
-  .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel--embedded:not(.hero-gear-panel--empty) {
-    flex: 0 0 auto !important;
     min-height: 0 !important;
-    height: auto !important;
-  }
-
-  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section,
-  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--sets,
-  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--weapons,
-  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--accessories {
-    flex: 0 0 auto !important;
-    min-height: auto !important;
-  }
-
-  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--sets > div:nth-child(2),
-  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--accessories > div:nth-child(2) {
-    flex: 0 0 auto !important;
-    height: auto !important;
-    min-height: 0 !important;
-    grid-template-rows: repeat(3, auto) !important;
-    align-content: start;
-  }
-
-  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--accessories > div:nth-child(2) {
-    grid-template-rows: repeat(2, auto) !important;
-  }
-
-  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--sets > div:nth-child(2) button,
-  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--accessories > div:nth-child(2) button {
-    height: auto !important;
-    min-height: 34px !important;
-  }
-
-  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--weapons {
-    flex: 0 0 auto !important;
-  }
-
-  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--weapons > div {
-    flex: 0 0 auto !important;
-    min-height: 0 !important;
-  }
-
-  .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section--weapons select {
-    flex: 0 0 auto !important;
-    height: 36px !important;
-    min-height: 36px !important;
-    max-height: 36px !important;
+    height: 100% !important;
+    overflow: visible !important;
   }
 
   .arena-body-scroll-modal .editing-build-hero-picker {
     grid-area: heroes;
-    height: auto !important;
-    max-height: none !important;
-    min-height: 0 !important;
-    overflow: visible !important;
     flex-shrink: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
   }
 
+  /* 공용 PC 규칙(flex:1·max-height:100%)보다 우선 */
   .arena-body-scroll-modal .editing-build-hero-picker > .editing-build-hero-grid,
   .arena-body-scroll-modal .editing-build-hero-grid {
     flex: none !important;
-    height: 132px !important;
-    min-height: 132px !important;
-    max-height: 132px !important;
-    overflow-y: auto !important;
+    height: var(--arena-hero-grid-h) !important;
+    min-height: var(--arena-hero-grid-h) !important;
+    max-height: var(--arena-hero-grid-h) !important;
     overflow-x: hidden !important;
+    overflow-y: auto !important;
     padding: 3px 2px 4px !important;
+    padding-bottom: 0 !important;
     box-sizing: border-box;
-    /* 최대 18열 (gap 6px × 17) — 초상화 여유 */
     grid-template-columns: repeat(auto-fill, minmax(calc((100% - 102px) / 18), 1fr)) !important;
   }
 
@@ -7817,21 +7785,14 @@ h1, h2, h3 {
   }
 
   .arena-body-scroll-modal .editing-build-hero-picker .hero-grid-picker--fill .hero-grid-picker-grid {
-    height: 132px !important;
-    min-height: 132px !important;
-    max-height: 132px !important;
+    height: var(--arena-hero-grid-h) !important;
+    min-height: var(--arena-hero-grid-h) !important;
+    max-height: var(--arena-hero-grid-h) !important;
+    flex: none !important;
+    overflow-y: auto !important;
     padding: 3px 2px 4px !important;
     box-sizing: border-box;
     grid-template-columns: repeat(auto-fill, minmax(calc((100% - 102px) / 18), 1fr)) !important;
-    flex: none !important;
-    overflow-y: auto !important;
-  }
-
-  @media (max-height: 1050px) {
-    .arena-body-scroll-modal .editing-build-left-stack {
-      max-height: none !important;
-      overflow: visible !important;
-    }
   }
 }
 
