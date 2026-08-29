@@ -19,9 +19,8 @@ dist-ssr
 firestore-debug.log
 
 # Scraper / pipeline artifacts (not app runtime)
-asset_list.csv
-*_success.html
-!scripts/legacy/fixtures/
+/asset_list.csv
+/*_success.html
 tmp_negi_chars_ko.json
 
 # Editor directories and files
