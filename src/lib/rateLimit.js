@@ -17,16 +17,3 @@ export function isRateLimited(action, { maxCalls = 5, windowMs = 60_000 } = {}) 
   bucket.push(now);
   return false;
 }
-
-/**
- * Throttle helper — returns a wrapper that drops calls within cooldownMs.
- */
-export function throttle(fn, cooldownMs = 2000) {
-  let last = 0;
-  return function (...args) {
-    const now = Date.now();
-    if (now - last < cooldownMs) return;
-    last = now;
-    return fn.apply(this, args);
-  };
-}

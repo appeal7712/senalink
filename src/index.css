@@ -488,17 +488,6 @@ option {
   transform: none;
 }
 
-/* 구버전 텍스트 배지 (인라인 이름 옆 등에서 아이콘으로 대체됨) */
-.awaken-badge {
-  background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
-  color: #ffffff;
-  font-weight: 900;
-  border-radius: 3px;
-  border: 1px solid #c084fc;
-  box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
-  letter-spacing: 0.5px;
-}
-
 h1, h2, h3 {
   font-family: var(--font-display);
   letter-spacing: -0.03em;

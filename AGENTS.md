@@ -85,6 +85,7 @@ sevennight_guild_web_formal/
 ├── public/                   ← Vite 정적 (images, robots, sitemap…)
 ├── asset/                    ← 원본 게임 에셋 (영웅/펫/장비 JSON·PNG)
 ├── scripts/                  ← import_gear_assets.py, fetch_hero_cards.py, seed-emulator-admin.mjs
+│   └── legacy/               ← 옛 루트 스크래퍼 보관 (README 참고, 앱 미사용)
 ├── src/
 │   ├── main.jsx              ← Provider 트리
 │   ├── App.jsx               ← 페이지 스위치 + GNB/푸터/배너
@@ -513,7 +514,7 @@ API:
 | 3 | **덱 에디터·길드전·ops 메타덱 세트/옵션**은 `src/data/equipments.js` (주석: 단일 소스) |
 | 4 | 도감 화면은 `gearDex.js`가 generated + legendary(`equipments.js`) 병합 |
 
-주의: `src/data/equipment.js`(단수)는 옛 스키마. 새 작업은 **`equipments.js` + gearDex**.
+장비·장신구 단일 소스: **`equipments.js` + gearDex** (`equipment.js` 단수 스키마는 제거됨).
 
 ### 13.4 도감 UI 탭
 

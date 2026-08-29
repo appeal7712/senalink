@@ -79,6 +79,3 @@ export function sortHeroesForList(list) {
 }
 
 export const heroes = sortHeroesForList(scrapedHeroes);
-
-// 진형 데이터는 formations.js로 분리됨
-export { formations } from './formations';

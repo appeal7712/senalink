@@ -1,3 +1,4 @@
+// NOT DEPLOYED — reference only. Live rules: firestore.rules (deploy with firebase deploy --only firestore:rules)
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
