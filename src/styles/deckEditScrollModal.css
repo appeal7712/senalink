@@ -258,7 +258,7 @@
     padding: 3px 2px 4px !important;
     padding-bottom: 0 !important;
     box-sizing: border-box;
-    grid-template-columns: repeat(auto-fill, minmax(calc((100% - 102px) / 18), 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)) !important;
   }
 
   .arena-body-scroll-modal .arena-hero-grid > div > div {
@@ -286,7 +286,7 @@
     overflow-y: auto !important;
     padding: 3px 2px 4px !important;
     box-sizing: border-box;
-    grid-template-columns: repeat(auto-fill, minmax(calc((100% - 102px) / 18), 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)) !important;
   }
 
   /* ═══ 공성전·강림원정대 — 레이아웃 1벌만 (높이 구간마다 바꾸지 않음)
@@ -344,7 +344,7 @@
     overflow-y: auto !important;
     padding: 3px 2px 4px !important;
     box-sizing: border-box;
-    grid-template-columns: repeat(auto-fill, minmax(calc((100% - 54px) / 10), 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)) !important;
   }
 
   .pve-body-scroll-modal .pve-hero-grid > div > div {
