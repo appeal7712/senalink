@@ -1,12 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   덱 수정 모달 — PC 본문 통스크롤 (min-width 1081px only)
+   덱 수정 모달 — PC 본문 통스크롤 (min-width 981px only)
    헬퍼: src/lib/deckEditScrollModal.js
    · arena — 결투장·상급결투장 (2열)
    · pve   — 길드 공성전·강림원정대 (3열+타임라인)
-   모바일(≤1080px): index.css만 — 이 파일에서 건드리지 않음
+   모바일(≤980px): index.css만 — 이 파일에서 건드리지 않음
    ═══════════════════════════════════════════════════════════════════════════ */
 
-@media (min-width: 1081px) {
+@media (min-width: 981px) {
   /* ── 공통 토큰 ─────────────────────────────────────────────────────── */
   .editing-build-modal.arena-body-scroll-modal.glass-modal,
   .editing-build-modal.pve-body-scroll-modal.glass-modal {

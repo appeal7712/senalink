@@ -7057,8 +7057,67 @@ h1, h2, h3 {
   .gwcalc-stats, .gwcalc-two, .gwcalc-targets, .gwcalc-calcgrid { grid-template-columns: 1fr; }
 }
 
-/* 덱 수정 모달 — 모바일(가로 ≤1080) */
-@media (max-width: 1080px) {
+/* 길드전 방어: 981~1080 태블릿 폭 — 토글 한 줄 유지 (줄바꿈 깨짐 방지) */
+@media (min-width: 981px) and (max-width: 1080px) {
+  .editing-build-modal.gw-defense-edit-modal .editing-build-arena-toggles {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .editing-build-modal.gw-defense-edit-modal .editing-build-arena-toggle-col {
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 6px 9px !important;
+    box-sizing: border-box;
+  }
+
+  .editing-build-modal.gw-defense-edit-modal .editing-build-arena-toggle-col:first-child {
+    min-width: 96px !important;
+  }
+
+  .editing-build-modal.gw-defense-edit-modal .editing-build-arena-toggle-col:not(.editing-build-other-detail-col) {
+    min-width: 148px !important;
+  }
+
+  .editing-build-modal.gw-defense-edit-modal .editing-build-other-detail-col {
+    flex: 0 0 auto !important;
+    min-width: 168px !important;
+    max-width: 220px !important;
+    width: auto !important;
+  }
+
+  .editing-build-modal.gw-defense-edit-modal .editing-build-arena-toggle-col .kind-toggle {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .editing-build-modal.gw-defense-edit-modal .editing-build-arena-toggle-col > div:first-child {
+    font-size: 9px !important;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .editing-build-modal.gw-defense-edit-modal .editing-build-other-detail-col .editing-build-detail-textarea {
+    min-height: 48px !important;
+    max-height: 56px !important;
+    font-size: 11px !important;
+    padding: 4px 7px !important;
+    line-height: 1.35 !important;
+  }
+}
+
+/* 덱 수정 모달 — 모바일(가로 ≤980) · 결투장·공성·강림·총력 동일 */
+@media (max-width: 980px) {
   .modal-scrim:has(.editing-build-modal) {
     overflow: hidden !important;
     align-items: flex-start;
@@ -7318,70 +7377,10 @@ h1, h2, h3 {
   .editing-build-modal .deck-stage-col {
     justify-content: center;
   }
-
-  /* 길드전 방어: 981~1080 태블릿 폭 — 토글 한 줄 유지 (줄바꿈 깨짐 방지) */
-  @media (min-width: 981px) {
-    .editing-build-modal.gw-defense-edit-modal .editing-build-arena-toggles {
-      display: flex !important;
-      flex-direction: row !important;
-      flex-wrap: nowrap !important;
-      align-items: stretch !important;
-      width: 100% !important;
-      overflow-x: auto !important;
-      overflow-y: hidden !important;
-      overscroll-behavior-x: contain;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: thin;
-    }
-
-    .editing-build-modal.gw-defense-edit-modal .editing-build-arena-toggle-col {
-      flex: 0 0 auto !important;
-      min-width: 0 !important;
-      width: auto !important;
-      max-width: none !important;
-      padding: 6px 9px !important;
-      box-sizing: border-box;
-    }
-
-    .editing-build-modal.gw-defense-edit-modal .editing-build-arena-toggle-col:first-child {
-      min-width: 96px !important;
-    }
-
-    .editing-build-modal.gw-defense-edit-modal .editing-build-arena-toggle-col:not(.editing-build-other-detail-col) {
-      min-width: 148px !important;
-    }
-
-    .editing-build-modal.gw-defense-edit-modal .editing-build-other-detail-col {
-      flex: 0 0 auto !important;
-      min-width: 168px !important;
-      max-width: 220px !important;
-      width: auto !important;
-    }
-
-    .editing-build-modal.gw-defense-edit-modal .editing-build-arena-toggle-col .kind-toggle {
-      width: 100%;
-      max-width: 100%;
-    }
-
-    .editing-build-modal.gw-defense-edit-modal .editing-build-arena-toggle-col > div:first-child {
-      font-size: 9px !important;
-      letter-spacing: 0.02em;
-      white-space: nowrap;
-    }
-
-    .editing-build-modal.gw-defense-edit-modal .editing-build-other-detail-col .editing-build-detail-textarea {
-      min-height: 48px !important;
-      max-height: 56px !important;
-      font-size: 11px !important;
-      padding: 4px 7px !important;
-      line-height: 1.35 !important;
-    }
-  }
 }
 
-/* 폰·좁은 미리보기: PC(1180 레이아웃)는 그대로. 덱 수정 모바일은 1080 이하 */
-/* PC 덱 수정 모달 — 뷰포트 높이에 맞춰 칸 안에서 스크롤 (겹침 방지) */
-@media (min-width: 1081px) {
+/* PC 덱 수정 모달(레거시·총력 등) — 가로 ≥981 */
+@media (min-width: 981px) {
   .editing-build-modal.glass-modal {
     max-height: min(88vh, 900px) !important;
     height: min(88vh, 900px);
