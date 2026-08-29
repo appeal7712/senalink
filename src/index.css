@@ -7775,9 +7775,9 @@ h1, h2, h3 {
   }
 
   .arena-body-scroll-modal .editing-build-hero-grid {
-    height: 150px !important;
-    min-height: 150px !important;
-    max-height: 150px !important;
+    height: 136px !important;
+    min-height: 136px !important;
+    max-height: 136px !important;
     overflow-y: auto !important;
     flex: none !important;
   }
@@ -7790,9 +7790,9 @@ h1, h2, h3 {
   }
 
   .arena-body-scroll-modal .editing-build-hero-picker .hero-grid-picker--fill .hero-grid-picker-grid {
-    height: 150px !important;
-    min-height: 150px !important;
-    max-height: 150px !important;
+    height: 136px !important;
+    min-height: 136px !important;
+    max-height: 136px !important;
     flex: none !important;
     overflow-y: auto !important;
   }
