@@ -377,11 +377,13 @@ export default function CommunityGuideEditor({
                 </div>
               </div>
               <div
-                className="editing-build-hero-grid"
-                style={{
-                  height: 168, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(62px, 1fr))',
-                  gap: 6, overflowY: 'auto', paddingRight: 4,
-                }}
+                className={`editing-build-hero-grid${isArena ? ' arena-hero-grid' : ''}`}
+                style={isArena
+                  ? { display: 'grid', gap: 6, overflowY: 'auto', paddingRight: 4 }
+                  : {
+                    height: 168, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(62px, 1fr))',
+                    gap: 6, overflowY: 'auto', paddingRight: 4,
+                  }}
               >
                 {filteredHeroesByRole.map((h) => {
                   const cleanName = h.name.replace('(각성)', '');

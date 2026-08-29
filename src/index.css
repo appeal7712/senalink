@@ -7774,12 +7774,17 @@ h1, h2, h3 {
     flex-shrink: 0 !important;
   }
 
+  .arena-body-scroll-modal .editing-build-hero-picker > .editing-build-hero-grid,
   .arena-body-scroll-modal .editing-build-hero-grid {
-    height: 136px !important;
-    min-height: 136px !important;
-    max-height: 136px !important;
-    overflow-y: auto !important;
     flex: none !important;
+    height: 128px !important;
+    min-height: 128px !important;
+    max-height: 128px !important;
+    overflow-y: auto !important;
+    padding-bottom: 0 !important;
+    box-sizing: border-box;
+    /* 최대 20열 (gap 6px × 19) */
+    grid-template-columns: repeat(auto-fill, minmax(calc((100% - 114px) / 20), 1fr)) !important;
   }
 
   .arena-body-scroll-modal .editing-build-hero-picker .hero-grid-picker--fill {
@@ -7790,9 +7795,9 @@ h1, h2, h3 {
   }
 
   .arena-body-scroll-modal .editing-build-hero-picker .hero-grid-picker--fill .hero-grid-picker-grid {
-    height: 136px !important;
-    min-height: 136px !important;
-    max-height: 136px !important;
+    height: 128px !important;
+    min-height: 128px !important;
+    max-height: 128px !important;
     flex: none !important;
     overflow-y: auto !important;
   }

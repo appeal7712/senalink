@@ -1983,7 +1983,12 @@ export default function GuildLounge() {
                     </div>
                   </div>
 
-                  <div className="editing-build-hero-grid" style={{ minHeight: '168px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(62px, 1fr))', gap: '6px', overflowY: 'auto', paddingRight: '4px' }}>
+                  <div
+                    className={`editing-build-hero-grid${editingCategory === 'arena' ? ' arena-hero-grid' : ''}`}
+                    style={editingCategory === 'arena'
+                      ? { display: 'grid', gap: '6px', overflowY: 'auto', paddingRight: '4px' }
+                      : { minHeight: '168px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(62px, 1fr))', gap: '6px', overflowY: 'auto', paddingRight: '4px' }}
+                  >
                     {filteredHeroesByRole.map(h => {
                       const cleanName = h.name.replace('(각성)', '');
                       return (
