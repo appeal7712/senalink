@@ -179,6 +179,41 @@
     font-size: 12px !important;
   }
 
+  /* 공성·강림: 981~1080 PC에서 장비 칸이 좁을 때 장신구(부활·토벌&공성 등) 버튼 밖으로 튀지 않게 */
+  @media (max-width: 1080px) {
+    .pve-body-scroll-modal .editing-build-gear-panel .hero-gear-panel-accessory-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+    .pve-body-scroll-modal .editing-build-gear-panel .hero-gear-panel-accessory-grid button {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      padding: 5px 3px !important;
+      gap: 3px !important;
+      overflow: hidden !important;
+    }
+
+    .pve-body-scroll-modal .editing-build-gear-panel .hero-gear-panel-accessory-grid button span {
+      min-width: 0 !important;
+      flex: 1 1 auto !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+      font-size: 10px !important;
+    }
+
+    .pve-body-scroll-modal .editing-build-gear-panel .hero-gear-panel-accessory-grid button img {
+      width: 20px !important;
+      height: 20px !important;
+      flex-shrink: 0 !important;
+    }
+  }
+
   /* ═══ 결투장 (2열) ═══════════════════════════════════════════════════ */
 
   .arena-body-scroll-modal .editing-build-grid.is-pvp {
