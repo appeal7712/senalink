@@ -196,7 +196,7 @@ export default function CommunityGuideEditor({
   return (
     <ModalScrim style={{ zIndex: 3500, padding: 16, overflow: 'hidden' }} {...backdropDismissProps(onClose)}>
       <div
-        className="luxury-panel glass-modal editing-build-modal"
+        className={`luxury-panel glass-modal editing-build-modal${isArena ? ' arena-body-scroll-modal' : ''}`}
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
         style={{
@@ -271,8 +271,14 @@ export default function CommunityGuideEditor({
         </div>
 
         <div
+          className={isArena ? 'arena-edit-scroll-body' : undefined}
+          style={isArena ? undefined : { display: 'contents' }}
+        >
+        <div
           className={`editing-build-grid editing-build-modal-body ${contentMode === 'pvp' ? 'is-pvp' : 'is-pve'}`}
-          style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px 20px', gap: 20, alignItems: 'stretch', boxSizing: 'border-box' }}
+          style={isArena
+            ? { gap: 20, alignItems: 'stretch', boxSizing: 'border-box' }
+            : { flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px 20px', gap: 20, alignItems: 'stretch', boxSizing: 'border-box' }}
         >
           <div className="editing-build-left-stack">
           <div className="editing-build-deck-slot" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -542,6 +548,7 @@ export default function CommunityGuideEditor({
               )}
             </div>
           )}
+        </div>
         </div>
 
         <div style={{ padding: '12px 24px', background: 'rgba(255,255,255,0.04)', borderTop: '1px solid rgba(255,255,255,0.10)', flexShrink: 0 }}>

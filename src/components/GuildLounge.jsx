@@ -1646,7 +1646,7 @@ export default function GuildLounge() {
       {editingBuild && (
         <ModalScrim style={{ zIndex: 3500, padding: '16px', overflow: 'hidden' }}>
           <div
-            className="luxury-panel glass-modal editing-build-modal"
+            className={`luxury-panel glass-modal editing-build-modal${editingCategory === 'arena' ? ' arena-body-scroll-modal' : ''}`}
             onClick={e => e.stopPropagation()}
             onMouseDown={e => e.stopPropagation()}
             style={{ width: '94vw', maxWidth: '1520px', maxHeight: '88vh', padding: '0', display: 'flex', flexDirection: 'column', borderRadius: '28px', minHeight: 0, overflow: 'hidden' }}
@@ -1758,10 +1758,16 @@ export default function GuildLounge() {
               </div>
             </div>
 
-            {/* 2. 바디 — PC: PvE 3열(덱·장비·타임라인) / PvP 2열+영웅목록 */}
+            {/* 2. 바디 — PC: PvE 3열(덱·장비·타임라인) / PvP 2열+영웅목록 · 결투장만 본문 통스크롤 */}
+            <div
+              className={editingCategory === 'arena' ? 'arena-edit-scroll-body' : undefined}
+              style={editingCategory === 'arena' ? undefined : { display: 'contents' }}
+            >
             <div
               className={`editing-build-grid editing-build-modal-body ${(CONTENT_META[editingCategory] || CONTENT_META.siege).mode === 'pvp' ? 'is-pvp' : 'is-pve'}`}
-              style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px 20px', gap: '20px', alignItems: 'stretch', boxSizing: 'border-box' }}
+              style={editingCategory === 'arena'
+                ? { gap: '20px', alignItems: 'stretch', boxSizing: 'border-box' }
+                : { flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px 20px', gap: '20px', alignItems: 'stretch', boxSizing: 'border-box' }}
             >
               <div className="editing-build-left-stack">
               <div className="editing-build-deck-slot" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2124,6 +2130,7 @@ export default function GuildLounge() {
                 </div>
               )}
 
+            </div>
             </div>
 
             {/* 3. 하단 푸터 저장 버튼 */}
