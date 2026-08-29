@@ -7640,6 +7640,7 @@ h1, h2, h3 {
 /* 결투장·상급결투장 덱 수정 — PC만 본문 통스크롤 (길드 허브 + 공용 커뮤니티, 카운터와 동일 철학) */
 @media (min-width: 981px) {
   .editing-build-modal.arena-body-scroll-modal.glass-modal {
+    --arena-gear-panel-min-h: 468px;
     max-height: min(88vh, 900px) !important;
     height: min(88vh, 900px);
     overflow: hidden !important;
@@ -7708,18 +7709,23 @@ h1, h2, h3 {
 
   .arena-body-scroll-modal .editing-build-gear-panel {
     grid-area: gear;
-    align-self: start !important;
+    align-self: stretch !important;
     flex: none !important;
-    height: auto !important;
-    max-height: none !important;
-    min-height: 0 !important;
-    overflow: visible !important;
+    min-height: var(--arena-gear-panel-min-h) !important;
+    height: var(--arena-gear-panel-min-h) !important;
+    max-height: var(--arena-gear-panel-min-h) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box;
   }
 
-  .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel--embedded {
-    flex: 0 0 auto !important;
-    height: auto !important;
+  .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel--embedded,
+  .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel--empty.hero-gear-panel--embedded {
+    flex: 1 1 auto !important;
     min-height: 0 !important;
+    height: 100% !important;
   }
 
   .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section,
