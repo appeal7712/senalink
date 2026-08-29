@@ -6,7 +6,7 @@ alwaysApply: true
 # Local work vs live snapshot
 
 - Patch **only** this folder (`sevennight_guild_web_formal`).
-- Live site is `https://senalink.web.app` (Firebase project `senalink`).
+- Live site is **https://senalink.kr** (Firebase Hosting `senalink.web.app`, project `senalink`).
 - **Do not** deploy Hosting unless 밍봉/김봉 explicitly asks.
 - Do not open or edit old copies (`sevennight_guild_web`, `*_backup*`).
 - Do not touch other Firebase projects (`mingbong-web` / layro / `sevennight-guild-hub`) unless explicitly asked.

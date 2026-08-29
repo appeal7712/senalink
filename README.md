@@ -2,7 +2,7 @@
 
 세븐나이츠 유저용 길드 허브 · 커뮤니티 · 도감 웹앱.
 
-- **라이브:** https://senalink.web.app (Firebase `senalink`)
+- **라이브:** https://senalink.kr (Firebase Hosting `senalink.web.app`, project `senalink`)
 - **에이전트/개발 핸드오프:** 저장소 루트 [`AGENTS.md`](./AGENTS.md) — 규칙, 파일 구조, 도감 업데이트, ops, 프로필 전부
 
 ```bash

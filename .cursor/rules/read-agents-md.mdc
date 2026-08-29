@@ -9,7 +9,7 @@ Before non-trivial patches, read **`AGENTS.md`** at the repo root (architecture,
 
 Hard constraints (also in AGENTS.md):
 
-- Patch **only** `sevennight_guild_web_formal`. Live = `https://senalink.web.app` (Firebase **`senalink`**).
+- Patch **only** `sevennight_guild_web_formal`. Live = **https://senalink.kr** (Firebase Hosting `senalink.web.app`, project **`senalink`**).
 - Deploy Hosting/rules/functions **only** when 밍봉/김봉 asks.
 - Do not open old copies (`sevennight_guild_web`, `*_backup*`) or other Firebase projects.
 - **Never damage live user/hub data** — no reckless rules loosening, no wipe `setDoc`, no bulk delete on senalink. See AGENTS.md **§2.1**.

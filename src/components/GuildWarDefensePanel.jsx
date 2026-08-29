@@ -15,6 +15,14 @@ import { backdropDismissProps } from '../utils/backdropDismiss';
 import { closeOverlayFromUI, collapseOverlayHistory, pushOverlay } from '../utils/overlayHistory';
 import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, markDeckHtml5DragStarted, shouldSuppressDeckClick, resetDeckDragState } from '../utils/deckDrag';
 import ModalScrim from './ModalScrim';
+import {
+  deckEditScrollBodyWrapperProps,
+  deckEditScrollGridBodyStyle,
+  deckEditScrollHeroGridClass,
+  deckEditScrollHeroGridStyle,
+  deckEditScrollModalClassSuffix,
+  useDeckEditScrollWheelForward,
+} from '../lib/deckEditScrollModal';
 
 const ROLE_FILTERS = [
   { id: 'all', label: '전체', icon: null },
@@ -129,6 +137,10 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
   useEffect(() => {
     if (!isModalOpen) resetDeckDragState();
   }, [isModalOpen]);
+
+  const gwDefenseDeckScrollKind = 'arena';
+  const deckEditScrollBodyRef = useRef(null);
+  useDeckEditScrollWheelForward(deckEditScrollBodyRef, isModalOpen && !!form);
 
   const openCreate = () => {
     setForm({
@@ -814,7 +826,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
         <ModalScrim style={{ zIndex: 3600, padding: 16, overflow: 'hidden' }}
           {...backdropDismissProps(closeDefenseModal)}>
           <div
-            className="luxury-panel glass-modal editing-build-modal"
+            className={`luxury-panel glass-modal editing-build-modal gw-defense-edit-modal${deckEditScrollModalClassSuffix(gwDefenseDeckScrollKind)}`}
             onClick={e => e.stopPropagation()}
             onMouseDown={e => e.stopPropagation()}
             style={{
@@ -908,8 +920,12 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
             </div>
 
             <div
+              ref={deckEditScrollBodyRef}
+              {...deckEditScrollBodyWrapperProps(gwDefenseDeckScrollKind)}
+            >
+            <div
               className="editing-build-grid editing-build-modal-body is-pvp"
-              style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px 20px', gap: 20, alignItems: 'stretch', boxSizing: 'border-box' }}
+              style={deckEditScrollGridBodyStyle(gwDefenseDeckScrollKind)}
             >
               <div className="editing-build-left-stack">
                 <div className="editing-build-deck-slot" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1000,11 +1016,8 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                   </div>
                 </div>
                 <div
-                  className="editing-build-hero-grid"
-                  style={{
-                    height: 168, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(62px, 1fr))',
-                    gap: 6, overflowY: 'auto', paddingRight: 4,
-                  }}
+                  className={deckEditScrollHeroGridClass(gwDefenseDeckScrollKind)}
+                  style={deckEditScrollHeroGridStyle(gwDefenseDeckScrollKind)}
                 >
                   {filteredHeroesByRole.map((h) => {
                     const cleanName = h.name.replace('(각성)', '');
@@ -1051,6 +1064,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                   })}
                 </div>
               </div>
+            </div>
             </div>
 
             <div style={{ padding: '12px 24px', background: 'rgba(255,255,255,0.04)', borderTop: '1px solid rgba(255,255,255,0.10)', flexShrink: 0 }}>

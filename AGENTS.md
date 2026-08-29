@@ -89,6 +89,7 @@ sevennight_guild_web_formal/
 │   ├── main.jsx              ← Provider 트리
 │   ├── App.jsx               ← 페이지 스위치 + GNB/푸터/배너
 │   ├── index.css             ← 거의 모든 스타일
+│   ├── styles/               ← deckEditScrollModal.css (PC 덱 수정 전용, `main.jsx` import)
 │   ├── config/               ← routes, firestorePaths, appVersion, deployMode, siteContact
 │   ├── context/              ← SuperAdmin / UserProfile / Lounge (3개뿐)
 │   ├── lib/                  ← Firebase·도메인 헬퍼
@@ -267,7 +268,7 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 
 - **공격 상대 목록:** 최대 ~12행 높이에서 내부 스크롤(`.gw-attack-list-body`). 선택 카드는 더 진한 테두리·배경. 카운터는 별도 레이어(`.gw-counter-layer`).
 - **카운터 우선순위:** `counters[]` **배열 순서 = 1위부터**. 왼쪽 그립 드래그로 재정렬(스키마 추가 없음). 리드 UI: **그립 `|` 우선순위 `|` 초상** (구분선은 lead 안에 두어 모바일에서도 유지).
-- **방어 리스트:** PC·모바일 모두 **1열** (공용 PvP 결투장과 동일). `.gw-defense-grid--stack`. 접힌 헤더 lead: **그립 `|` 덱 티어 `|`** 초상·메타 | 수정·삭제·대체 덱. 펼침: 덱(세팅 확인) → 스킬 예약 → **기타 디테일** (부옵/장신구 요약 UI 제거). 구형 `gearPriorityNote`/`accessoryNote`는 클라가 더 이상 쓰지 않으며, 문서에 남아 있어도 UI·저장에서 건드리지 않음. **대체 덱** 버튼 → 중첩 `altDecks[]` 레이어 (공격 카운터와 유사).
+- **방어 리스트:** PC·모바일 모두 **1열** (공용 PvP 결투장과 동일). `.gw-defense-grid--stack`. 접힌 헤더 lead: **그립 `|` 덱 티어 `|`** 초상·메타 | 수정·삭제·대체 덱. 펼침: 덱(세팅 확인) → 스킬 예약 → **기타 디테일**. **방어 덱 수정 모달**은 결투장과 동일 PC 통스크롤(`arena-body-scroll-modal` · §12.4) — 헤더만 덱 티어·세팅·덱 유형·기타 디테일·속공 수치 유지. 모달 클래스 `gw-defense-edit-modal`.
 - **기타 디테일 박스:** PC에서 스킬 예약과 **같은 열 폭** (`max-width` 제한 없음). 모바일에서 `.build-panel-body { display: contents }` 사용 시 **반드시 `order: 4`** — 없으면 order 0으로 맨 위에 붙음.
 
 #### 길드전 화면 폭 브레이크포인트 (요지)
@@ -355,7 +356,7 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | `hubOversee.js` / `userOversee.js` | Ops |
 | `hubEmblem.js` / `avatarUpload.js` | 이미지 업로드 |
 | `copyNodeImage.js` | 세팅 공유 PNG |
-| `deckEditScrollModal.js` | 결투장·공성·강림 덱 수정 모달 PC 클래스·스타일 헬퍼 (§12.4) |
+| `deckEditScrollModal.js` | 결투장·공성·강림·방어 덱 수정 모달 PC 클래스·스타일·휠 전달 (§12.4–12.5) |
 | `seo.js` / `sanitize.js` / `rateLimit.js` / `formatTime.js` | 부가 |
 
 ---
@@ -368,6 +369,7 @@ App
 ├── page:
 │   ├── PublicMainDashboard (site/main + 방문수)
 │   ├── GuildLounge (LoungeContext + builds + 길드전/결투장/…)
+│   ├── GuildWarDefensePanel (방어 덱 수정 · §12.4)
 │   ├── CommunityPage → GuideCard/Editor, TierPanel, TotalWar…
 │   ├── EncyclopediaPage → DbHub
 │   ├── ToolsPage
@@ -397,38 +399,19 @@ API:
 | `HeroGridPicker` | 필터 후 `sortHeroesForList` (길드전·ops·공용 PvE 에디터 등) |
 | `CommunityGuideEditor` PvP(결투장/상급) | **자체 그리드** — 예전엔 export 순서만 의존 → 필터 후 재정렬로 고정 |
 | `GuildLounge` 덱 수정 | 필터 후 `sortHeroesForList` |
+| `GuildWarDefensePanel` 방어 덱 수정 | 인라인 그리드 + `deckEditScrollHeroGrid*` (결투장 kind) |
 | `HeroDB` / 티어리스트 풀 | `sort` / `compareHeroesForList` |
 
 **왜 공용 결투장이 어긋나 보였나:** PvP 편집 UI가 `HeroGridPicker`를 안 쓰고 인라인 목록을 복제해 두었고, 카테고리 순서도 예전엔 `special → normal → asgard → aisha`라 **일반이 준 스페셜보다 앞**이었다. 지금은 `special → asgard → aisha → normal → other` + 목록마다 재정렬.
 
 새 영웅 추가 시 `group`/`category`/`isAwakened`를 맞추고, 새 스페셜 소속이면 `HERO_FACTION_ORDER`에만 넣으면 된다.
 
-### 12.4 덱 수정 모달 — PC 본문 통스크롤 (`deckEditScrollModal`)
-
-**모바일(≤980px)은 `index.css` 기존 규칙만** — 이 패턴의 PC CSS·헬퍼로 모바일 건드리지 말 것.
-
-| 파일 | 역할 |
-|------|------|
-| `src/styles/deckEditScrollModal.css` | PC(`min-width:981px`) 레이아웃·토큰·스크롤 |
-| `src/lib/deckEditScrollModal.js` | kind `arena` \| `pve` · 클래스·스타일 헬퍼 |
-
-| kind | 모달 클래스 | 적용 |
-|------|-------------|------|
-| `arena` | `.arena-body-scroll-modal` | 길드 결투장 · 커뮤니티 결투장/상급 |
-| `pve` | `.pve-body-scroll-modal` | 길드 **공성전·강림원정대** (영웅 10열) |
-
-공통 본문: `.deck-edit-scroll-body` · 그리드 `min-height: var(--deck-body-grid-min-h)` → 넘치면 본문만 스크롤. 1080p 풀은 스크롤 없음.
-
-**유사 패턴(별도):** 길드전 카운터 `.gw-counter-edit-modal` — `index.css`.
-
-클래스·인라인 스타일은 **`deckEditScrollModal.js` 헬퍼만** · `index.css` 공용 그리드 밴드에이드 금지.
-
 ### 12.2 모바일 전용 CSS 패치 원칙
 
 밍봉이 **「모바일만」** 이라고 하면:
 
 1. 스타일은 **해당 화면의 실제 브레이크포인트 안만** 추가/수정 (길드전 공격 **1020**, 방어 **980**, 일반 허브/세팅 **760·900** 등). 공통(베이스) 셀렉터에 넣으면 PC가 같이 바뀐다.
-2. **절대** `@media (min-width: 981px)` 등 PC 블록에 모바일용 규칙을 넣지 말 것 (과거에 방어 리스트 여백 패치가 PC 블록에 잘못 들어간 적 있음).
+2. **절대** `@media (min-width: 1081px)` 등 PC 블록에 모바일용 규칙을 넣지 말 것 (과거에 방어 리스트 여백 패치가 PC 블록에 잘못 들어간 적 있음). 덱 수정 PC는 **`deckEditScrollModal.css`만**.
 3. 길드전 방어 1열·대체 덱·세팅 확인 PC·공유 캡처는 요청 없이 함부로 되돌리지 말 것.
 4. **한글 세로 찢김:** flex/grid가 칸을 쥐어짜면 `white-space: nowrap` + `min-width: 0` + ellipsis, 또는 제목/버튼을 **세로 스택**. `flex-wrap`만으로 제목이 초상 **아래**로 가면 안 되면 grid로 의도한 순서를 고정.
 5. 모바일 `.build-panel-body { display: contents }` + `order` 패턴: **새 자식(기타 디테일 등)에도 order를 명시**하지 않으면 맨 위로 간다.
@@ -438,6 +421,62 @@ API:
 - UI 아이콘 `hero` / `pet`: `public/images/ui/hero-icon.png`, `pet-icon.png` → `Icon.jsx` (`hero`/`pet`). 프로필 `user` 아이콘과 혼용 금지.
 - 세팅 공유 PNG: `warmSettingCapture`는 **공유 클릭 시에만** (`copyNodeImage.js`). 모달 오픈 경로에서 미리 워밍하지 말 것.
 - 모달 뒤 블러: `.app-shell` **blur(22px)** 유지 — 성능 핑계로 제거하지 말 것 (§10.6).
+
+### 12.4 덱 수정 모달 — PC 본문 통스크롤 (`deckEditScrollModal`)
+
+**덱 수정 모달 모바일(가로 ≤1080px)** 은 `index.css` `@media (max-width: 1080px)` 블록만 — **이 패턴의 PC CSS·헬퍼로 모바일 건드리지 말 것.** (사이트 GNB 등 다른 UI의 980 브레이크포인트와 별개.)
+
+| 파일 | 역할 |
+|------|------|
+| `src/styles/deckEditScrollModal.css` | PC **`min-width: 1081px`** 레이아웃·토큰·스크롤 |
+| `src/lib/deckEditScrollModal.js` | kind `arena` \| `pve` · 클래스·스타일·휠 전달 훅 |
+| `src/main.jsx` | `deckEditScrollModal.css` import |
+
+| kind | 모달 클래스 | 적용 화면 |
+|------|-------------|-----------|
+| `arena` | `.arena-body-scroll-modal` | 길드 결투장 · 커뮤니티 결투장/상급 · **길드전 방어 덱 수정** (`gw-defense-edit-modal` 추가) |
+| `pve` | `.pve-body-scroll-modal` | 길드 **공성전·강림원정대** (3열+타임라인) |
+
+#### 브레이크포인트 (가로 × 세로)
+
+| 조건 | 동작 |
+|------|------|
+| **가로 ≥1081** | PC 2열(결투장) / 3열(PvE) · `deckEditScrollModal.css` |
+| **가로 ≤1080** | 모바일 세로 스택 · `index.css` 덱 수정 블록만 (건드릴 때 극도로 주의) |
+| **세로 ≥1021** (PC 폭) | `.deck-edit-scroll-body` **스크롤 없음** (`overflow-y: hidden`) |
+| **세로 ≤1020** (PC 폭) | 본문(`.deck-edit-scroll-body`)만 스크롤 |
+
+#### 스크롤 규칙 (PC)
+
+- **본문 스크롤:** `.deck-edit-scroll-body` 하나만 (세로 부족 시).
+- **내부 스크롤 허용:** 영웅 목록 (`.arena-hero-grid` / `.pve-hero-grid`) · PvE 스킬 순서 (`.skill-timeline-scroller` — 높이 px 고정, `.cursor/rules` 준수).
+- **그 외 영역** (장비·덱·세팅 디테일·타임라인 추가 등): 내부 스크롤 금지 — `useDeckEditScrollWheelForward`가 모달 capture에서 휠을 본문으로 전달.
+- **세팅 디테일:** 좌열 `flex: 1` — 덱 바로 아래부터 좌열 하단까지 박스·textarea가 **가득 채움**. `margin-top: auto`로 위·아래 빈 공간 만들지 말 것.
+
+#### PvE 토큰 (arena와 분리)
+
+- 공성·강림: `--deck-gear-h: 520px` (강림 라운드 라벨·세팅 디테일 여유; 결투장 496px).
+- 레이아웃 **높이 구간마다 바꾸지 않음** — 1020 기준으로 바뀌는 것은 본문 `overflow-y` 뿐.
+
+#### 길드전 방어 덱 수정 (`GuildWarDefensePanel.jsx`)
+
+- PC: `deckEditScrollModal` **kind `arena`** 와 100% 동일 본문.
+- 헤더 유지: 덱 티어 · 세팅 · 덱 유형 · 기타 디테일 · 속공 수치(속공 모드 시).
+- **`981–1080` 태블릿 폭:** `.gw-defense-edit-modal` 헤더 토글 `nowrap` + 필요 시 가로 스크롤 (두 줄 꺾임 방지). **≤980 폰 헤더(세로 스택)는 기존 `index.css` 그대로.**
+
+**별도 패턴:** 길드전 **공격 카운터** `.gw-counter-edit-modal` — `index.css` (덱 수정 통스크롤과 분리).
+
+클래스·인라인 스타일은 **`deckEditScrollModal.js` 헬퍼** 우선 · PC 그리드 밴드에이드를 `index.css` 베이스에 넣지 말 것.
+
+### 12.5 덱 수정 모달 패치 시 마음가짐 (회귀 방지)
+
+1. **한 가지씩, 검증 후 다음** — 스크롤·높이·영웅 그리드·타임라인을 한 번에 바꾸면 한쪽 고치면 다른 쪽 깨짐 (실제로 v106~v138 여러 사이클 소요).
+2. **가로 브레이크포인트와 세로 브레이크포인트 분리** — 1080(모바일 레이아웃) / 1021(본문 스크롤 on·off) / 1020(휠·overflow 보조)를 섞어 한 미디어쿼리로 처리하지 말 것.
+3. **레이아웃 토큰은 1벌** — 뷰포트 높이마다 그리드·칸 크기를 다시 정의하지 말 것. 넘치면 본문만 스크롤.
+4. **「모바일 완벽」이면 모바일 CSS 손대지 않기** — PC만 `deckEditScrollModal.css` (`min-width: 1081px`). 방어·결투장 모바일 `index.css` ≤980 규칙은 밍봉 명시 없이 수정 금지.
+5. **내부 스크롤은 최소** — 영웅 목록(+ PvE 스킬 리스트)만. 장비 패널·좌열에 `overflow-y: auto` 추가 제안하지 말 것.
+6. **헬퍼·DOM 구조 공유** — `GuildLounge` · `CommunityGuideEditor` · `GuildWarDefensePanel`은 동일 `deckEditScrollBodyWrapperProps` / `useDeckEditScrollWheelForward` 패턴.
+7. **배포 전 체크리스트 (PC 1081+, 풀 높이 / 줄인 높이 각각):** 본문 스크롤 유무 · 휠이 장비/디테일/빈 여백에서 먹는지 · 세팅 디테일 좌열 가득 참 · 영웅 목록만 내부 스크롤 · PvE 타임라인 scroller 높이 고정 유지.
 
 ---
 
@@ -491,10 +530,11 @@ API:
 5. 도감 추가 후 피커·초상·진영 누락 없는지 `/dex`와 덱 수정에서 확인.
 6. 허브 가입/역할은 클라이언트 직쓰기가 아니라 **rules + joinHub** 전제.
 7. 커뮤니티 PvE 공략·티어 = Super; PvP만 일반 유저 작성 가능.
-8. 레이아웃: 덱 수정 모달 타임라인 높이 규칙 위반하지 말 것.
-9. **모바일만** 요청이면 §12.2 — PC 미디어/베이스 스타일 미포함 확인.
+8. 레이아웃: 덱 수정 모달 타임라인 높이 규칙 위반하지 말 것 (§12.4).
+9. **모바일만** 요청이면 §12.2 — PC·`deckEditScrollModal.css`·`min-width:1081` 미포함 확인.
 10. 세팅 확인 모달 뒤 전체 blur(`.app-shell` filter) 제거 제안하지 말 것 (§10.6).
-11. 커밋/푸시는 밍봉 요청 시. 시크릿(`.env*`)·`.firebase/hosting.*.cache` 커밋 금지.
+11. 덱 수정 모달 패치 시 §12.5 회귀 체크리스트 참고.
+12. 커밋/푸시는 밍봉 요청 시. 시크릿(`.env*`)·`.firebase/hosting.*.cache` 커밋 금지.
 
 ---
 
@@ -512,7 +552,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.08.27.71** 전후 (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.08.29.138** (푸터 `APP_VERSION` 확인)
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 
 ---
@@ -522,6 +562,29 @@ API:
 ---
 
 ## 17. 패치 내역
+
+### 2026-08-29 (`v2026.08.29.138`) — 길드전 방어 헤더 981–1080
+- **방어 덱 수정:** `.gw-defense-edit-modal` — 태블릿 폭 헤더 토글 한 줄(`nowrap`·가로 스크롤). ≤980 모바일 헤더 무변경.
+
+### 2026-08-29 (`v2026.08.29.137`) — 길드전 방어 덱 수정 = 결투장 PC 통스크롤
+- **`GuildWarDefensePanel`:** `arena-body-scroll-modal` + `deckEditScrollModal` 헬퍼·휠 전달.
+- 헤더 필드 유지: 티어·세팅·덱 유형·기타 디테일·속공 수치.
+
+### 2026-08-29 (`v2026.08.29.136`) — 세팅 디테일 좌열 가득 채움
+- **좌열:** `flex:1` 디테일 패널 — 덱 아래 빈 공간·`margin-top:auto` 제거. textarea가 남는 세로 채움.
+
+### 2026-08-29 (`v2026.08.29.134`–`135`) — 풀 높이 본문 스크롤 0 · 세로 부족 시 디테일 빈공간
+- **1021+:** 본문 `overflow-y:hidden` 복원 (결투장과 동일).
+- **≤1020:** 디테일 위 빈공간 수정 시도 → v136에서 flex 채움으로 정리.
+
+### 2026-08-29 (`v2026.08.29.131`–`133`) — 휠 전달 · 1080 모바일 · PvE 높이
+- **휠:** 모달 capture → 본문 스크롤 (영웅·스킬 scroller만 내부 예외).
+- **덱 수정 모바일:** 가로 **1080** 이하 세로 스택 (`index.css` 블록 분리; 사이트 GNB 980과 별개).
+- **PC 브레이크포인트:** `deckEditScrollModal.css` **1081+**.
+- **PvE:** `--deck-gear-h:520px` 등 강림 세팅 디테일 잘림 방지.
+
+### 2026-08-29 (`v2026.08.29.136` 커밋 `ddf69c7`) — 덱 수정 PC 통스크롤 정리 (문서·헬퍼 통합)
+- **`deckEditScrollModal.js` / `.css`** · `GuildLounge` · `CommunityGuideEditor` · `AGENTS.md` §12.4 초안.
 
 ### 2026-08-29 — 공성·강림 덱 수정 모달 PC 통스크롤 + 영웅 10열
 - **PvE kind:** `pve-body-scroll-modal` — 공성전·강림원정대 (길드 허브)
