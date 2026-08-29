@@ -7711,21 +7711,26 @@ h1, h2, h3 {
     grid-area: gear;
     align-self: stretch !important;
     flex: none !important;
+    /* 활성화될 높이만 미리 확보 — 안에서 스크롤 없음 */
     min-height: var(--arena-gear-panel-min-h) !important;
-    height: var(--arena-gear-panel-min-h) !important;
-    max-height: var(--arena-gear-panel-min-h) !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
     display: flex !important;
     flex-direction: column !important;
     box-sizing: border-box;
   }
 
-  .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel--embedded,
   .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel--empty.hero-gear-panel--embedded {
     flex: 1 1 auto !important;
+    min-height: calc(var(--arena-gear-panel-min-h) - 28px) !important;
+    height: auto !important;
+  }
+
+  .arena-body-scroll-modal .editing-build-gear-panel .hero-gear-panel--embedded:not(.hero-gear-panel--empty) {
+    flex: 0 0 auto !important;
     min-height: 0 !important;
-    height: 100% !important;
+    height: auto !important;
   }
 
   .arena-body-scroll-modal .editing-build-gear-panel .editing-build-gear-section,
