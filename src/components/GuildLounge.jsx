@@ -29,7 +29,7 @@ import SkillReservationBoard from './SkillReservationBoard';
 import { backdropDismissProps } from '../utils/backdropDismiss';
 import { closeOverlayFromUI, collapseOverlayHistory, pushHubTab, pushOverlay } from '../utils/overlayHistory';
 import { parseInviteCode } from '../lib/invite';
-import ModalScrim from './ModalScrim';
+import HeroGearPanel from './HeroGearPanel';
 import PublicProfileModal, { AuthorMeta } from './PublicProfileModal';
 import { useUserProfile } from '../context/UserProfileContext';
 import { LOUNGE_STORAGE_KEYS } from '../data/loungeMeta';
@@ -1646,7 +1646,7 @@ export default function GuildLounge() {
       {editingBuild && (
         <ModalScrim style={{ zIndex: 3500, padding: '16px', overflow: 'hidden' }}>
           <div
-            className={`luxury-panel glass-modal editing-build-modal${editingCategory === 'arena' ? ' arena-body-scroll-modal arena-body-scroll-modal--guild' : ''}`}
+            className={`luxury-panel glass-modal editing-build-modal${editingCategory === 'arena' ? ' arena-body-scroll-modal' : ''}`}
             onClick={e => e.stopPropagation()}
             onMouseDown={e => e.stopPropagation()}
             style={{ width: '94vw', maxWidth: '1520px', maxHeight: '88vh', padding: '0', display: 'flex', flexDirection: 'column', borderRadius: '28px', minHeight: 0, overflow: 'hidden' }}
@@ -1826,7 +1826,26 @@ export default function GuildLounge() {
               </div>
               </div>
 
-              {/* 장비 세팅 */}
+              {/* 장비 세팅 — 결투장은 공용 허브와 동일: 영웅 배치 전 비활성 */}
+              {editingCategory === 'arena' ? (
+              <div className="glass-inset editing-build-gear-panel editing-build-right-panel" style={{
+                    flex: 1, minWidth: 0, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px',
+                    alignSelf: 'stretch', minHeight: 0, boxSizing: 'border-box'
+                  }}>
+                <HeroGearPanel
+                  embedded
+                  showDetail={false}
+                  heroNames={editingHeroNames}
+                  configs={heroGearConfigs}
+                  selectedIdx={selectedHeroGearIdx}
+                  onSelectIdx={(idx) => {
+                    setSelectedHeroGearIdx(idx);
+                    setTargetSlotIdx(idx);
+                  }}
+                  onChange={setHeroGearConfigs}
+                />
+              </div>
+              ) : (
               <div className="glass-inset editing-build-gear-panel editing-build-right-panel" style={{
                     flex: 1, minWidth: 0, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px',
                     alignSelf: 'stretch', minHeight: 0, boxSizing: 'border-box'
@@ -1933,6 +1952,7 @@ export default function GuildLounge() {
                       </div>
                     </div>
               </div>
+              )}
 
               <div className="glass-inset editing-build-hero-picker" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap', flexShrink: 0 }}>
