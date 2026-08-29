@@ -30,6 +30,7 @@ import { backdropDismissProps } from '../utils/backdropDismiss';
 import { closeOverlayFromUI, collapseOverlayHistory, pushHubTab, pushOverlay } from '../utils/overlayHistory';
 import { parseInviteCode } from '../lib/invite';
 import HeroGearPanel from './HeroGearPanel';
+import ModalScrim from './ModalScrim';
 import PublicProfileModal, { AuthorMeta } from './PublicProfileModal';
 import { useUserProfile } from '../context/UserProfileContext';
 import { LOUNGE_STORAGE_KEYS } from '../data/loungeMeta';
