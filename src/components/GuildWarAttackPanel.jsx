@@ -1153,7 +1153,7 @@ export default function GuildWarAttackPanel({
               />
             </div>
 
-            <div style={{ padding: '12px 24px', background: 'rgba(255,255,255,0.04)', borderTop: '1px solid rgba(255,255,255,0.10)', flexShrink: 0 }}>
+            <div className="gw-counter-edit-footer">
               <button type="button" onClick={saveCounter} className="btn-ops" style={{ width: '100%', padding: 11, justifyContent: 'center', borderRadius: 12, fontSize: 14 }}>
                 <Icon name="save" size={15} /> 저장
               </button>

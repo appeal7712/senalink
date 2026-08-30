@@ -8401,6 +8401,13 @@ h1, h2, h3 {
   box-sizing: border-box;
 }
 
+.gw-counter-edit-modal .gw-counter-edit-footer {
+  flex-shrink: 0;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.04);
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+}
+
 .gw-counter-edit-layout {
   display: flex;
   flex-direction: column;
@@ -8505,6 +8512,33 @@ h1, h2, h3 {
 
   .gw-counter-edit-modal .gw-counter-other-detail-panel {
     order: unset !important;
+  }
+
+  /* 카운터 덱 수정만: 공용 editing-build-modal 모바일(전체 스크롤) 규칙 제외 — 푸터 저장 고정 유지 */
+  .editing-build-modal.gw-counter-edit-modal.glass-modal {
+    display: flex !important;
+    flex-direction: column !important;
+    height: min(
+      86svh,
+      86dvh,
+      calc(100svh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 28px)
+    ) !important;
+    max-height: min(
+      86svh,
+      86dvh,
+      calc(100svh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 28px)
+    ) !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    overflow-y: hidden !important;
+  }
+
+  .gw-counter-edit-modal .gw-counter-edit-footer {
+    padding-bottom: max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px));
+  }
+
+  .modal-scrim:has(.gw-counter-edit-modal) {
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px)) !important;
   }
 }
 
