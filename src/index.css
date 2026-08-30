@@ -8408,6 +8408,33 @@ h1, h2, h3 {
   border-top: 1px solid rgba(255, 255, 255, 0.10);
 }
 
+/* PC: 모바일 전용 본문 제목 입력 숨김 (헤더 제목 유지) */
+.gw-counter-edit-modal .gw-counter-edit-title-mobile {
+  display: none;
+}
+
+.gw-counter-edit-modal .gw-counter-edit-title-mobile > span {
+  font-size: 12px;
+  color: #fff;
+  font-weight: 800;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.gw-counter-edit-modal .gw-counter-edit-title-mobile input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  padding: 6px 12px;
+  background: #07090e;
+  border: 1px solid var(--border-gold);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  box-sizing: border-box;
+}
+
 .gw-counter-edit-layout {
   display: flex;
   flex-direction: column;
@@ -8503,6 +8530,28 @@ h1, h2, h3 {
 
   .gw-counter-edit-modal .gw-counter-edit-body {
     padding: 12px 14px;
+  }
+
+  .gw-counter-edit-modal .gw-counter-edit-title-header {
+    display: none !important;
+  }
+
+  .gw-counter-edit-modal .gw-counter-edit-title-mobile {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    flex: 0 0 auto !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+  }
+
+  .gw-counter-edit-modal .gw-counter-edit-title-mobile > span {
+    width: auto !important;
+    text-align: left !important;
   }
 
   /* 공용 모바일 order:3 이 카운터 모달에서 기타 디테일을 영웅 목록 위로 밀어올림 → DOM 순서 유지 */

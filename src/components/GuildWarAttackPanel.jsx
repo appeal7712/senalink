@@ -1114,7 +1114,7 @@ export default function GuildWarAttackPanel({
                     <Icon name="closeBtn" size={26} />
                   </button>
                 </div>
-                <div className="editing-build-title-input-row" style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, maxWidth: 420, minWidth: 0 }}>
+                <div className="editing-build-title-input-row gw-counter-edit-title-header" style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, maxWidth: 420, minWidth: 0 }}>
                   <span style={{ fontSize: 12, color: '#fff', fontWeight: 800, whiteSpace: 'nowrap' }}>제목:</span>
                   <input
                     type="text"
@@ -1133,6 +1133,15 @@ export default function GuildWarAttackPanel({
             </div>
 
             <div className="gw-counter-edit-body">
+              <div className="gw-counter-edit-title-mobile editing-build-title-input-row">
+                <span>제목:</span>
+                <input
+                  type="text"
+                  value={counterForm.title}
+                  onChange={e => setCounterForm({ ...counterForm, title: e.target.value })}
+                  placeholder="예: 마덱 카운터 덱"
+                />
+              </div>
               <GwTrioDeckEditor
                 editingLayout
                 otherDetail={counterForm.otherDetail}
