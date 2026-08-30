@@ -47,7 +47,7 @@ export default function EquipDB() {
         display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center',
       }}>
         {[
-          { id: 'equip', icon: 'swords', label: '장비 세트 · 실전 장비' },
+          { id: 'equip', icon: 'gearSetting', label: '장비 세트 · 실전 장비' },
           { id: 'accessory', icon: 'ring', label: '장신구 도감' },
         ].map((tab) => {
           const on = pane === tab.id;
@@ -55,7 +55,7 @@ export default function EquipDB() {
             <button key={tab.id} type="button" onClick={() => { setPane(tab.id); setQuery(''); }}
               className={`nav-tab-btn${on ? ' active' : ''}`}
               style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 16px' }}>
-              <Icon name={tab.icon} size={15} color={on ? '#161616' : 'rgba(255,255,255,0.8)'} />
+              <Icon name={tab.icon} size={15} />
               {tab.label}
             </button>
           );

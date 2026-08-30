@@ -1,8 +1,7 @@
-
 /**
- * 세븐나이츠 리버스 전술 워룸 — 커스텀 라인 아이콘 세트
- * 24x24 스트로크 기반, currentColor 사용. 이모지를 전면 대체하기 위해 직접 제작.
+ * 세븐나이츠 리버스 전술 워룸 — 커스텀 라인 아이콘 + 게임 PNG
  */
+import { UI_IMAGE_ICONS, UI_GAME_ICON_DISPLAY_SCALE } from '../../data/uiIcons';
 const PATHS = {
   globe: (
     <>
@@ -273,30 +272,22 @@ const PATHS = {
   ),
 };
 
-/**
- * 게임 원본 아이콘(PNG)으로 그리는 항목. 선 아이콘과 호출 방식을 맞추려고 같은 컴포넌트에서 처리한다.
- * w/h는 원본 크기 — size를 높이로 두고 가로를 비율대로 계산해 찌그러지지 않게 한다.
- */
-const IMAGE_ICONS = {
-  closeBtn: { src: '/images/ui/close.png', w: 52, h: 52 },
-  speed: { src: '/images/ui/speed.png', w: 44, h: 31 },
-  transcend2: { src: '/images/ui/transcend-2.png', w: 128, h: 128 },
-  transcend6: { src: '/images/ui/transcend-6.png', w: 128, h: 128 },
-  hero: { src: '/images/ui/hero-icon.png', w: 64, h: 64 },
-  pet: { src: '/images/ui/pet-icon.png', w: 64, h: 64 },
-};
+const IMAGE_ICONS = UI_IMAGE_ICONS;
 
 export default function Icon({ name, size = 16, color = 'currentColor', strokeWidth = 2, style, className }) {
   const image = IMAGE_ICONS[name];
   if (image) {
+    const colorClass = image.activeInvert === false ? 'icon-inline--color' : '';
+    const extraScale = image.displayScale ?? 1;
+    const displaySize = Math.round(size * UI_GAME_ICON_DISPLAY_SCALE * extraScale);
     return (
       <img
-        className={`icon-inline ${className || ''}`.trim()}
+        className={`icon-inline ${colorClass} ${className || ''}`.trim()}
         src={image.src}
         alt=""
         aria-hidden="true"
-        width={Math.round(size * (image.w / image.h))}
-        height={size}
+        width={Math.round(displaySize * (image.w / image.h))}
+        height={displaySize}
         style={{ display: 'block', flexShrink: 0, objectFit: 'contain', ...style }}
       />
     );

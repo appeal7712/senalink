@@ -10,8 +10,8 @@ import ModalScrim from './ModalScrim';
 const HUB_TABS = [
   { id: 'hero', icon: 'hero', label: '영웅 도감', desc: '역할 · 세력 · 스킬', accent: '#ece8e0' },
   { id: 'pet', icon: 'pet', label: '펫 도감', desc: '스페셜 펫 스킬', accent: '#d4c4a8' },
-  { id: 'equip', icon: 'shield', label: '장비 / 장신구', desc: '세트 · 실전 장비 · 반지', accent: '#8eb8c4' },
-  { id: 'system', icon: 'flask', label: '시스템', desc: '전투 규칙 · 잠재능력', accent: '#9a9388' },
+  { id: 'equip', icon: 'gearSetting', label: '장비 / 장신구', desc: '세트 · 실전 장비 · 반지', accent: '#8eb8c4' },
+  { id: 'system', icon: 'system', label: '시스템', desc: '전투 규칙 · 잠재능력', accent: '#9a9388' },
 ];
 
 export default function DbHub() {
@@ -51,7 +51,7 @@ export default function DbHub() {
                     width: 32, height: 32, borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     background: on ? 'rgba(22,22,24,0.08)' : 'rgba(255,255,255,0.08)',
                   }}>
-                    <Icon name={tab.icon} size={15} color={on ? '#161616' : 'rgba(255,255,255,0.85)'} />
+                    <Icon name={tab.icon} size={15} />
                   </span>
                   <span className="dex-hub-tab-label" style={{ fontSize: 16, fontWeight: 700 }}>{tab.label}</span>
                 </span>
@@ -90,10 +90,9 @@ export default function DbHub() {
                   padding: 20, display: 'flex', flexDirection: 'column', alignItems: 'center',
                   cursor: 'pointer', border: '1px solid var(--border-gold)',
                 }}>
-                <div style={{
+                <div className="pet-portrait-face" style={{
                   position: 'relative', width: 84, height: 94, borderRadius: 14,
-                  background: 'linear-gradient(180deg, #facc15 0%, #ca8a04 100%)',
-                  border: '2px solid #fde047', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
+                  overflow: 'hidden',
                   marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   {p.portraitUrl ? (
@@ -140,9 +139,9 @@ export default function DbHub() {
                   <button type="button" onClick={() => setSelectedPet(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="closeBtn" size={20} /></button>
                 </div>
                 <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                  <div style={{
+                  <div className="pet-portrait-face" style={{
                     width: 80, height: 90, borderRadius: 12, overflow: 'hidden',
-                    border: '2px solid #fde047', background: 'linear-gradient(180deg, #facc15 0%, #ca8a04 100%)', flexShrink: 0,
+                    flexShrink: 0,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     {selectedPet.portraitUrl ? <img src={selectedPet.portraitUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="pet" size={28} />}

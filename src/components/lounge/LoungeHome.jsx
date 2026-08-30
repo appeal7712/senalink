@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import Icon from '../icons/Icon';
+import { hubRoleIconName } from '../../data/uiIcons';
 import { LOUNGE_AFFILIATIONS, loungeTagLabel } from '../../data/loungeMeta';
 import { useLounge } from '../../context/LoungeContext';
 import { formatJoinedAt, formatLastActive } from '../../lib/formatTime';
@@ -128,13 +129,13 @@ export default function LoungeHome() {
         <section className="luxury-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: '7px' }}>
-              <Icon name="flame" size={14} /> 공지
+              <Icon name="hubNotice" size={16} /> 공지
             </h3>
             <span style={{ fontSize: '12px', color: '#fff', fontWeight: 700 }}>관리자만 작성</span>
             {canPostNotice && (
               <button type="button" onClick={() => setWriteMode('notice')} className="btn-ops"
                 style={{ marginLeft: 'auto', padding: '7px 12px', fontSize: '12px' }}>
-                <Icon name="plus" size={12} /> 공지 작성
+                <Icon name="hubWrite" size={16} /> 공지 작성
               </button>
             )}
           </div>
@@ -163,7 +164,7 @@ export default function LoungeHome() {
             <span style={{ fontSize: '12px', color: '#fff', fontWeight: 700 }}>전원 작성 가능</span>
             <button type="button" onClick={() => setWriteMode('post')} className="btn-ops"
               style={{ marginLeft: 'auto', padding: '7px 12px', fontSize: '12px' }}>
-              <Icon name="plus" size={12} /> 글 작성
+              <Icon name="hubWrite" size={16} /> 글 작성
             </button>
           </div>
           <FeedList
@@ -187,7 +188,7 @@ export default function LoungeHome() {
       <section className="luxury-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: '7px' }}>
-            <Icon name="crown" size={14} color="var(--gold-primary)" /> 참여 길드원
+            <Icon name="hubMembers" size={16} /> 참여 길드원
           </h3>
           <span style={{ fontSize: '12px', color: '#fff', fontWeight: 700 }}>
             {activeLounge.members.length} / {maxMembers}
@@ -237,7 +238,8 @@ export default function LoungeHome() {
                 <div style={{ fontSize: '13px', fontWeight: 900, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {m.nickname}
                 </div>
-                <div style={{ fontSize: '10px', fontWeight: 700, color: m.role === 'master' ? 'var(--accent-gold)' : m.role === 'admin' ? '#7dd3fc' : '#fff' }}>
+                <div style={{ fontSize: '10px', fontWeight: 700, color: m.role === 'master' ? 'var(--accent-gold)' : m.role === 'admin' ? '#7dd3fc' : '#fff', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  {hubRoleIconName(m.role) ? <Icon name={hubRoleIconName(m.role)} size={12} /> : null}
                   {ROLE_LABEL[m.role]} · {formatLastActive(m.lastActiveAt)}
                 </div>
                 <div style={{ fontSize: '11px', color: '#fff', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -402,7 +404,8 @@ function WritePostModal({ mode, onClose, onSubmit }) {
         display: 'flex', flexDirection: 'column', gap: '12px'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#fff' }}>
+          <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Icon name="hubWrite" size={16} />
             {isNotice ? '공지 작성' : '커뮤니티 글 작성'}
           </h3>
           <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>

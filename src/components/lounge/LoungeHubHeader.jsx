@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Icon from '../icons/Icon';
+import { hubRoleIconName } from '../../data/uiIcons';
 import {
   HUB_EMBLEMS,
   LOUNGE_AFFILIATIONS,
@@ -93,7 +94,7 @@ export default function LoungeHubHeader() {
 
           <div className="hub-header-actions">
             {canManageMembers && (
-              <ActionBtn icon="users" label="길드원 관리" onClick={() => setMembersOpen(true)} tone="cyan" />
+              <ActionBtn icon="hubMembers" label="길드원 관리" onClick={() => setMembersOpen(true)} tone="cyan" />
             )}
             <ActionBtn icon="copy" label="코드 복사" onClick={copyCode} tone="muted" />
             <ActionBtn icon="copy" label="링크 복사" onClick={copyLink} tone="cyan" />
@@ -441,8 +442,12 @@ function HubMembersModal({
                 <span style={{
                   fontSize: '11px', fontWeight: 900, padding: '3px 8px', borderRadius: '999px',
                   background: m.role === 'master' ? 'var(--gold-primary)' : m.role === 'admin' ? 'rgba(56,189,248,0.2)' : 'rgba(255,255,255,0.08)',
-                  color: m.role === 'master' ? '#000' : m.role === 'admin' ? '#7dd3fc' : '#fff'
-                }}>{ROLE_LABEL[m.role]}</span>
+                  color: m.role === 'master' ? '#000' : m.role === 'admin' ? '#7dd3fc' : '#fff',
+                  display: 'inline-flex', alignItems: 'center', gap: '5px',
+                }}>
+                  {hubRoleIconName(m.role) ? <Icon name={hubRoleIconName(m.role)} size={13} /> : null}
+                  {ROLE_LABEL[m.role]}
+                </span>
                 <span style={{ fontSize: '11px', color: '#fff' }}>
                   {m.googleEmail || m.googleName || `입장 ${formatJoinedAt(m.joinedAt)}`}
                 </span>

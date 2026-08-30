@@ -1,0 +1,190 @@
+{
+  "new-badge.png": [
+    32,
+    32
+  ],
+  "pve.png": [
+    60,
+    60
+  ],
+  "pvp.png": [
+    55,
+    55
+  ],
+  "awaken.png": [
+    103,
+    86
+  ],
+  "expedition.png": [
+    60,
+    60
+  ],
+  "arena.png": [
+    55,
+    55
+  ],
+  "formation-attack.png": [
+    90,
+    66
+  ],
+  "siege.png": [
+    60,
+    60
+  ],
+  "share.png": [
+    44,
+    44
+  ],
+  "hub-notice.png": [
+    47,
+    44
+  ],
+  "hub-admin.png": [
+    30,
+    25
+  ],
+  "formation-basic.png": [
+    90,
+    66
+  ],
+  "pick-rate-1.png": [
+    80,
+    80
+  ],
+  "pick-rate-2.png": [
+    80,
+    80
+  ],
+  "pick-rate-3.png": [
+    80,
+    80
+  ],
+  "hub-master.png": [
+    30,
+    25
+  ],
+  "hub-members.png": [
+    50,
+    50
+  ],
+  "hub.png": [
+    50,
+    50
+  ],
+  "download.png": [
+    44,
+    44
+  ],
+  "close.png": [
+    52,
+    52
+  ],
+  "encyclopedia.png": [
+    60,
+    60
+  ],
+  "tools.png": [
+    60,
+    60
+  ],
+  "league-minor.png": [
+    400,
+    360
+  ],
+  "minus.png": [
+    44,
+    44
+  ],
+  "league-major.png": [
+    400,
+    360
+  ],
+  "main.png": [
+    60,
+    60
+  ],
+  "formation-balance.png": [
+    90,
+    66
+  ],
+  "boss.png": [
+    54,
+    51
+  ],
+  "formation-protect.png": [
+    90,
+    66
+  ],
+  "settings.png": [
+    44,
+    42
+  ],
+  "setting-share.png": [
+    50,
+    50
+  ],
+  "speed-attack.png": [
+    44,
+    31
+  ],
+  "rank.png": [
+    60,
+    50
+  ],
+  "skill-formation-layer.png": [
+    62,
+    63
+  ],
+  "skill-reserve-0.png": [
+    62,
+    67
+  ],
+  "skill-reserve-1.png": [
+    62,
+    67
+  ],
+  "skill-reserve-2.png": [
+    62,
+    67
+  ],
+  "skill-reserve-3.png": [
+    62,
+    67
+  ],
+  "system.png": [
+    60,
+    60
+  ],
+  "time.png": [
+    42,
+    51
+  ],
+  "deck-ally.png": [
+    40,
+    40
+  ],
+  "hero.png": [
+    54,
+    74
+  ],
+  "deck-enemy.png": [
+    40,
+    40
+  ],
+  "gear-setting.png": [
+    50,
+    50
+  ],
+  "pet.png": [
+    54,
+    65
+  ],
+  "plus.png": [
+    46,
+    50
+  ],
+  "hub-exit.png": [
+    50,
+    45
+  ]
+}

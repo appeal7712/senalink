@@ -3,12 +3,14 @@ import InGameDeckCard from '../../components/InGameDeckCard';
 import SkillReservationBoard from '../../components/SkillReservationBoard';
 import HeroPortraitCard from '../../components/HeroPortraitCard';
 import SkillTimelineSteps from '../../components/SkillTimelineSteps';
+import { SKILL_RESERVE_ICON_SIZE } from '../../lib/skillReserveIcon';
+import { SkillReservePlateIcon } from '../../components/icons/GameIconPlate';
 import Icon from '../../components/icons/Icon';
 import { AuthorMeta } from '../../components/PublicProfileModal';
 import { ArenaDeckKindBadge, metaDeckKindTheme } from '../../components/ArenaDeckKind';
 import { PvpModeBadge } from '../../components/PvpModeToggle';
 import { arenaTierById, arenaTierColor } from '../../data/arenaTiers';
-import { COMMUNITY_ARENA_KINDS, communitySkillMode } from '../../data/communityCatalog';
+import { COMMUNITY_ARENA_KINDS, communityContentAccent, communitySkillMode } from '../../data/communityCatalog';
 import { pets } from '../../data/pets';
 import { heroes } from '../../data/heroes';
 
@@ -53,7 +55,7 @@ export default function CommunityGuideCard({
   const tier = guide.arenaTier ? arenaTierById(guide.arenaTier) : null;
   const tierAccent = guide.category === 'arena'
     ? arenaTierColor(guide.arenaTier)
-    : (arenaKind?.text || 'var(--gold-primary)');
+    : communityContentAccent(guide.category, guide.contentKey);
   const arenaKindLabel = COMMUNITY_ARENA_KINDS.find((k) => k.id === guide.arenaKind)?.label;
   const reserved = isTimeline
     ? []
@@ -174,7 +176,7 @@ export default function CommunityGuideCard({
         ) : (
           <div className="build-panel-playbook">
             <div className="build-panel-playbook-title">
-              <Icon name="target" size={16} />
+              <SkillReservePlateIcon reservedSkills={reserved} size={SKILL_RESERVE_ICON_SIZE} />
               스킬 예약 ({reserved.filter(Boolean).length}/{maxRes})
             </div>
             <SkillReservationBoard
@@ -194,7 +196,10 @@ export default function CommunityGuideCard({
     return (
       <div
         className={`luxury-panel build-panel${!isPvpLayout ? ' build-panel--pve' : ''}`}
-        style={{ boxShadow: `inset 3px 0 0 ${tierAccent}` }}
+        style={!isPvpLayout ? {
+          '--guide-accent': tierAccent,
+          boxShadow: `inset 4px 0 0 ${tierAccent}`,
+        } : { boxShadow: `inset 3px 0 0 ${tierAccent}` }}
       >
         {expandedBody}
       </div>

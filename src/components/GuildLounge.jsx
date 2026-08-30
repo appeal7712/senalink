@@ -8,6 +8,8 @@ import TotalWarPanel from './TotalWarPanel';
 import { TOTALWAR_TIERS } from '../data/totalwarTiers';
 import { EQUIPMENT_SET_ICONS, accessories, weaponOptions, armorOptions } from '../data/equipments';
 import { pets } from '../data/pets';
+import { SKILL_RESERVE_ICON_SIZE } from '../lib/skillReserveIcon';
+import { SkillReservePlateIcon } from './icons/GameIconPlate';
 import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
 import AwakenMark from './AwakenMark';
@@ -22,7 +24,6 @@ import ArenaDeckKindToggle, { ArenaDeckKindBadge, arenaKindTheme, normalizeArena
 import { LoungeLanding, InviteReadyModal, LoungeJoinModal } from './lounge/LoungeGate';
 import LoungeHome from './lounge/LoungeHome';
 import LoungeHubHeader from './lounge/LoungeHubHeader';
-import GuildMark from './GuildMark';
 import StrategyActionBar from './StrategyActionBar';
 import DeckLikeButton, { likedByList, toggleLikedBy } from './DeckLikeButton';
 import SkillReservationBoard from './SkillReservationBoard';
@@ -319,7 +320,7 @@ export default function GuildLounge() {
   const {
     activeLounge, me, session, canEditBuilds, isAdmin,
     logBuildHistory, freshInvite, dismissFreshInvite,
-    authReady, authUser, hubRecovering,
+    authReady, authUser,
   } = useLounge();
   const { profile, profileReady } = useUserProfile();
 
@@ -348,6 +349,7 @@ export default function GuildLounge() {
   const [inspectingCounter, setInspectingCounter]   = useState(null);
   const [profileUid, setProfileUid] = useState(null);
   const [inviteJoinOpen, setInviteJoinOpen] = useState(false);
+  const inviteJoinKeyRef = useRef('');
   const pendingInvite = useMemo(() => {
     const fromUrl = parseInviteCode(window.location.search);
     if (fromUrl) {
@@ -359,12 +361,22 @@ export default function GuildLounge() {
 
   // 이미 다른 허브에 있는 채 초대 링크로 들어온 경우만 Join 모달 (미로그인·닉 없음은 LoungeLanding)
   useEffect(() => {
-    if (!pendingInvite) return;
-    if (!authReady || !authUser || !profileReady) return;
-    if (!String(profile?.nickname || '').trim()) return;
-    if (!activeLounge) return;
-    if (pendingInvite === activeLounge.inviteCode) return;
-    setInviteJoinOpen(true);
+    if (!authUser) inviteJoinKeyRef.current = '';
+  }, [authUser]);
+
+  useEffect(() => {
+    if (!pendingInvite) return undefined;
+    if (!authReady || !authUser || !profileReady) return undefined;
+    if (!String(profile?.nickname || '').trim()) return undefined;
+    if (!activeLounge) return undefined;
+    if (pendingInvite === activeLounge.inviteCode) return undefined;
+    const key = `${authUser.uid}:${pendingInvite}`;
+    if (inviteJoinKeyRef.current === key) return undefined;
+    const t = window.setTimeout(() => {
+      inviteJoinKeyRef.current = key;
+      setInviteJoinOpen(true);
+    }, 180);
+    return () => window.clearTimeout(t);
   }, [pendingInvite, authReady, authUser, profileReady, profile?.nickname, activeLounge, activeLounge?.inviteCode]);
 
   const buildsReady = useRef(false);
@@ -1154,7 +1166,7 @@ export default function GuildLounge() {
           {isPvp ? (
             <div className="build-panel-playbook">
               <div className="build-panel-playbook-title">
-                <Icon name="target" size={15} />
+                <SkillReservePlateIcon reservedSkills={build.skillSequence || build.reservedSkills} size={SKILL_RESERVE_ICON_SIZE} />
                 스킬 예약
               </div>
               <SkillReservationBoard
@@ -1291,7 +1303,7 @@ export default function GuildLounge() {
 
         <div className="expedition-round-block">
           <div className="expedition-round-title">
-            <Icon name="volcano" size={16} color={expTheme.text} />
+            <Icon name="expedition" size={16} />
             1라운드
           </div>
           <div className="expedition-round-row">
@@ -1302,7 +1314,7 @@ export default function GuildLounge() {
         <div className="expedition-round-divider" />
         <div className="expedition-round-block">
           <div className="expedition-round-title">
-            <Icon name="volcano" size={16} color={expTheme.text} />
+            <Icon name="expedition" size={16} />
             2라운드
           </div>
           <div className="expedition-round-row">
@@ -1317,10 +1329,10 @@ export default function GuildLounge() {
   if (!session || !activeLounge || !me) {
     // 로그인이 풀린 채 로컬 세션만 남아 있으면 허브를 영원히 못 불러온다.
     // 인증이 끝났는데 계정이 없으면 로딩 대신 로그인 화면을 보여준다.
-    if (hubRecovering || (session && (!authReady || authUser))) {
+    if (session && (!authReady || authUser)) {
       return (
         <div className="container fade-in" style={{ padding: '48px 24px', color: '#fff', fontWeight: 800, textAlign: 'center' }}>
-          {hubRecovering ? '소속 길드 허브를 찾는 중…' : '허브를 불러오는 중…'}
+          허브를 불러오는 중…
         </div>
       );
     }
@@ -1348,20 +1360,15 @@ export default function GuildLounge() {
             className={`nav-tab-btn ${activeTab === 'home' ? 'active' : ''}`}
             onClick={() => navigateHubTab('home')}
             style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <GuildMark
-              emblem={activeLounge.emblem || 'fortress'}
-              emblemUrl={activeLounge.emblemUrl}
-              size={16}
-              color={activeTab === 'home' ? '#161616' : 'var(--text-muted)'}
-            />
+            <Icon name="main" size={16} />
             <span>홈</span>
           </button>
           <span className="tab-bar-split" aria-hidden="true" />
           {[
             { id: 'siege',      label: '공성전', short: '공성전', icon: 'siege' },
-            { id: 'expedition', label: '강림 원정대', short: '원정대', icon: 'volcano' },
-            { id: 'gw_attack',  label: '길드전 공격', short: '공격', icon: 'guildwar' },
-            { id: 'gw_defense', label: '길드전 방어', short: '방어', icon: 'shield' },
+            { id: 'expedition', label: '강림 원정대', short: '원정대', icon: 'expedition' },
+            { id: 'gw_attack',  label: '길드전 공격', short: '공격', icon: 'deckEnemy' },
+            { id: 'gw_defense', label: '길드전 방어', short: '방어', icon: 'deckAlly' },
             { id: 'arena',      label: '결투장&상급 결투장', short: '결투장', icon: 'arena' },
             { id: 'totalwar',   label: '총력전', short: '총력전', icon: 'totalwar' },
           ].map(tab => {
@@ -1371,7 +1378,7 @@ export default function GuildLounge() {
                 className={`nav-tab-btn ${isActive ? 'active' : ''}`}
                 onClick={() => navigateHubTab(tab.id)}
                 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Icon name={tab.icon} size={16} color={isActive ? '#161616' : 'var(--text-muted)'} />
+                <Icon name={tab.icon} size={16} />
                 <span className="tab-label-full">{tab.label}</span>
                 <span className="tab-label-short">{tab.short}</span>
               </button>
@@ -1450,7 +1457,7 @@ export default function GuildLounge() {
                       '--exp-btn-text': b.text,
                       borderColor: isActive ? b.text : undefined,
                     }}>
-                    <Icon name="volcano" size={18} color={isActive ? b.text : 'var(--text-muted)'} />
+                    <Icon name="expedition" size={18} />
                     <div style={{ textAlign: 'left', minWidth: 0 }}>
                       <div className="exp-boss-caption">최종</div>
                       <div style={{ fontSize: '14px', fontWeight: 800, color: '#fff', whiteSpace: 'nowrap' }}>파괴신</div>
@@ -1876,7 +1883,7 @@ export default function GuildLounge() {
                     alignSelf: 'stretch', minHeight: 0, boxSizing: 'border-box'
                   }}>
                     <div style={{ flexShrink: 0, fontSize: '13px', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <Icon name="swords" size={13} /> 장비 세팅
+                      <Icon name="gearSetting" size={13} /> 장비 세팅
                     </div>
 
                     <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>

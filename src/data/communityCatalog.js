@@ -34,32 +34,32 @@ export const COMMUNITY_SURPRISE_RAIDS = [
   {
     key: 'leonid',
     name: '레오니드',
-    iconUrl: '/images/community/raid/leonid.png',
+    iconUrl: '/images/community/raid/leonid-box.png',
     accent: '#2563eb',
     title: '돌발 · 레오니드',
   },
   {
     key: 'calistra',
     name: '칼리스트라',
-    iconUrl: '/images/community/raid/calistra.png',
-    accent: '#dc2626',
+    iconUrl: '/images/community/raid/calistra-box.png',
+    accent: '#facc15',
     title: '돌발 · 칼리스트라',
   },
   {
     key: 'astrea',
     name: '아스트레아',
-    iconUrl: '/images/community/raid/astrea.png',
-    accent: '#facc15',
+    iconUrl: '/images/community/raid/astrea-box.png',
+    accent: '#dc2626',
     title: '돌발 · 아스트레아',
   },
 ];
 
 export const COMMUNITY_GROWTH_DUNGEONS = [
-  { key: 'fire', name: '불의 원소', iconUrl: '/images/community/dungeon/fire.png', accent: '#fb7185' },
+  { key: 'fire', name: '불의 원소', iconUrl: '/images/community/dungeon/fire.png', accent: '#f97316' },
   { key: 'water', name: '물의 원소', iconUrl: '/images/community/dungeon/water.png', accent: '#38bdf8' },
-  { key: 'earth', name: '땅의 원소', iconUrl: '/images/community/dungeon/earth.png', accent: '#a3e635' },
-  { key: 'light', name: '빛의 원소', iconUrl: '/images/community/dungeon/light.png', accent: '#fde68a' },
-  { key: 'dark', name: '암흑의 원소', iconUrl: '/images/community/dungeon/dark.png', accent: '#a78bfa' },
+  { key: 'earth', name: '땅의 원소', iconUrl: '/images/community/dungeon/earth.png', accent: '#22c55e' },
+  { key: 'light', name: '빛의 원소', iconUrl: '/images/community/dungeon/light.png', accent: '#ffffff' },
+  { key: 'dark', name: '암흑의 원소', iconUrl: '/images/community/dungeon/dark.png', accent: '#a855f7' },
   { key: 'gold', name: '골드던전', iconUrl: '/images/community/dungeon/gold.png', accent: '#facc15' },
 ];
 
@@ -123,4 +123,10 @@ export function communityContentsFor(category) {
   if (category === 'surprise_raid') return COMMUNITY_SURPRISE_RAIDS;
   if (category === 'growth_dungeon') return COMMUNITY_GROWTH_DUNGEONS;
   return [];
+}
+
+/** PvE 공략 카드 왼쪽 하이라이트 — 보스·던전 accent. 없으면 골드 */
+export function communityContentAccent(category, contentKey) {
+  const hit = communityContentsFor(category).find((x) => x.key === contentKey);
+  return hit?.accent || 'var(--gold-primary)';
 }

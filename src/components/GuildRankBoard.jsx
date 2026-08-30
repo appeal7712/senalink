@@ -8,8 +8,8 @@ import GuildMark from './GuildMark';
 
 const AFF_MAP = Object.fromEntries(LOUNGE_AFFILIATIONS.map(a => [a.id, a]));
 const BOARDS = [
-  { id: 'guildwar', label: '길드전', icon: 'fortress' },
-  { id: 'expedition', label: '강림 원정대', icon: 'volcano' },
+  { id: 'guildwar', label: '길드전', icon: 'pvp' },
+  { id: 'expedition', label: '강림 원정대', icon: 'expedition' },
 ];
 
 export default function GuildRankBoard() {
@@ -60,7 +60,7 @@ export default function GuildRankBoard() {
                 className={`guild-board-mode${on ? ' is-on' : ''}`}
                 onClick={() => setBoard(b.id)}
               >
-                <Icon name={b.icon} size={14} color={on ? '#161616' : 'currentColor'} />
+                <Icon name={b.icon} size={14} />
                 {b.label}
               </button>
             );

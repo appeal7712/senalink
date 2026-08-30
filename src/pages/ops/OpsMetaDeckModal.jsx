@@ -209,7 +209,7 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
 
             <div className="glass-inset" style={{ flex: 1, minWidth: 360, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>
-                <Icon name="swords" size={13} /> 장비 세팅 · {heroNames[slot] || '슬롯을 고르세요'}
+                <Icon name="gearSetting" size={13} /> 장비 세팅 · {heroNames[slot] || '슬롯을 고르세요'}
               </div>
               <div style={{ display: 'flex', gap: 5 }}>
                 {heroNames.map((hName, idx) => (

@@ -157,6 +157,11 @@ export function LoungeProvider({ children }) {
   const [membersSnapOk, setMembersSnapOk] = useState(false);
   const [hubRecovering, setHubRecovering] = useState(false);
   const hubRecoverTriedFor = useRef(null);
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
+  const [hubListenNonce, setHubListenNonce] = useState(0);
+  const hubListenFailsRef = useRef(0);
+  const hubListenLoungeRef = useRef(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -271,7 +276,6 @@ export function LoungeProvider({ children }) {
         // 짧은 대기: users.hubId 스냅샷이 먼저 채울 수 있음
         if (cancelled) return;
         hubRecoverTriedFor.current = authUser.uid;
-        setHubRecovering(true);
         try {
           const userSnap = await getDoc(doc(db, COL.USERS, authUser.uid));
           if (cancelled) return;
@@ -293,8 +297,6 @@ export function LoungeProvider({ children }) {
         } catch (err) {
           console.error('resolveMyHub', err);
           hubRecoverTriedFor.current = null;
-        } finally {
-          if (!cancelled) setHubRecovering(false);
         }
       })();
     }, 400);
@@ -319,23 +321,69 @@ export function LoungeProvider({ children }) {
       return undefined;
     }
 
+    if (hubListenLoungeRef.current !== loungeId) {
+      hubListenLoungeRef.current = loungeId;
+      hubListenFailsRef.current = 0;
+    }
+
     setMembersReady(false);
     setMembersSnapOk(false);
 
+    let cancelled = false;
+    let deniedTimer = null;
     const unsubs = [];
 
+    const dropZombieHubSession = () => {
+      if (sessionRef.current?.observer) return;
+      if (sessionRef.current?.loungeId !== loungeId) return;
+      setSession(null);
+      clearUserHubPointer(authUser.uid);
+    };
+
     unsubs.push(onSnapshot(doc(db, 'hubs', loungeId), (snap) => {
+      if (deniedTimer) {
+        window.clearTimeout(deniedTimer);
+        deniedTimer = null;
+      }
+      hubListenFailsRef.current = 0;
       if (!snap.exists()) {
         setHubMeta(null);
         setSession(null);
-        clearUserHubPointer(authUser.uid);
+        // 옵저버는 남의 허브를 보는 중 — users.hubId(본인 소속)를 지우면 안 된다.
+        if (!sessionRef.current?.observer) {
+          clearUserHubPointer(authUser.uid);
+        }
         return;
       }
       setHubMeta({ id: snap.id, ...snap.data() });
     }, (err) => {
-      // 권한·네트워크 일시 실패로 hubId를 지우면 다른 기기까지 끊김 — 세션/포인터 유지
+      // 일시 permission-denied 로 hubId를 바로 지우면 다른 기기까지 끊김.
+      // 멤버 문서가 없을 때만 세션·포인터를 비운다 (getDoc members/{uid} 는 본인 get 허용).
       console.error('hub snapshot', err);
       setHubMeta(null);
+      if (err?.code !== 'permission-denied') return;
+      if (deniedTimer) window.clearTimeout(deniedTimer);
+      deniedTimer = window.setTimeout(() => {
+        void (async () => {
+          if (cancelled) return;
+          if (sessionRef.current?.observer) return;
+          if (sessionRef.current?.loungeId !== loungeId) return;
+          try {
+            const memberSnap = await getDoc(doc(db, 'hubs', loungeId, 'members', authUser.uid));
+            if (cancelled) return;
+            if (memberSnap.exists()) {
+              if (hubListenFailsRef.current < 4) {
+                hubListenFailsRef.current += 1;
+                setHubListenNonce((n) => n + 1);
+              }
+              return;
+            }
+            dropZombieHubSession();
+          } catch (verifyErr) {
+            console.error('hub membership verify', verifyErr);
+          }
+        })();
+      }, 1200);
     }));
 
     unsubs.push(onSnapshot(collection(db, 'hubs', loungeId, 'members'), (snap) => {
@@ -406,8 +454,12 @@ export function LoungeProvider({ children }) {
       setScoresMap(map);
     }, (err) => console.error('scores snapshot', err)));
 
-    return () => unsubs.forEach(u => u());
-  }, [loungeId, authUser, authReady]);
+    return () => {
+      cancelled = true;
+      if (deniedTimer) window.clearTimeout(deniedTimer);
+      unsubs.forEach((u) => u());
+    };
+  }, [loungeId, authUser, authReady, hubListenNonce]);
 
   const activeLounge = useMemo(() => {
     if (!hubMeta || !loungeId) return null;

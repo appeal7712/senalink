@@ -53,7 +53,7 @@ function ToolsFlyout({ isActive, onOpenTools }) {
         className={`gnb-link${isActive ? ' active' : ''}`}
         onClick={() => openTool()}
       >
-        <Icon name="flask" size={14} />
+        <Icon name="toolsMenu" size={14} />
         도구
         <Icon name="chevronDown" size={11} />
       </button>
@@ -90,10 +90,10 @@ function ToolsFlyout({ isActive, onOpenTools }) {
 
 export default function GNB({ activeTab, setActiveTab, onOpenTools }) {
   const menuItems = [
-    { id: PAGE.MAIN, icon: 'globe', label: '메인' },
-    { id: PAGE.HUB, icon: 'fortress', label: '길드 허브' },
-    { id: PAGE.COMMUNITY, icon: 'users', label: '공용 허브' },
-    { id: PAGE.DEX, icon: 'book', label: '도감' },
+    { id: PAGE.MAIN, icon: 'main', label: '메인' },
+    { id: PAGE.HUB, icon: 'hub', label: '길드 허브' },
+    { id: PAGE.COMMUNITY, icon: 'hubMembers', label: '공용 허브' },
+    { id: PAGE.DEX, icon: 'encyclopedia', label: '도감' },
   ];
 
   const openTools = onOpenTools || (() => setActiveTab(PAGE.TOOLS));

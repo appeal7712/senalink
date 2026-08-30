@@ -23,26 +23,6 @@ import {
 import { useSuperAdmin } from '../../context/SuperAdminContext';
 import { useUserProfile } from '../../context/UserProfileContext';
 
-/** 보스별 object-position 이 src 교체보다 먼저 바뀌면 1초간 어긋남 → key+로드 전 숨김 */
-function SurpriseBossArt({ content }) {
-  const [ready, setReady] = useState(false);
-
-  return (
-    <img
-      className={`community-surprise-view-boss community-surprise-view-boss--${content.key}${ready ? ' is-ready' : ''}`}
-      src={content.iconUrl}
-      alt={content.name}
-      decoding="async"
-      onLoad={() => setReady(true)}
-      ref={(node) => {
-        if (node?.complete && node.naturalWidth > 0 && !ready) {
-          queueMicrotask(() => setReady(true));
-        }
-      }}
-    />
-  );
-}
-
 export default function CommunityPvePanel() {
   const { isSuperAdmin } = useSuperAdmin();
   const { authUser, profile } = useUserProfile();
@@ -55,7 +35,6 @@ export default function CommunityPvePanel() {
 
   const contents = communityContentsFor(mode);
   const canCreate = canCreateCommunityGuide({ isSuperAdmin, section: 'pve' });
-  const activeContent = contents.find((c) => c.key === contentKey) || contents[0];
 
   useEffect(() => {
     const list = communityContentsFor(mode);
@@ -151,23 +130,25 @@ export default function CommunityPvePanel() {
 
       {mode === 'surprise_raid' && (
         <div className="community-surprise">
-          <div className="community-surprise-list">
-            {COMMUNITY_SURPRISE_RAIDS.map((c) => (
-              <button
-                key={c.key}
-                type="button"
-                className={`luxury-panel community-surprise-pick${contentKey === c.key ? ' is-on' : ''}`}
-                style={{ '--sur-accent': c.accent }}
-                onClick={() => setContentKey(c.key)}
-              >
-                <span className="community-surprise-pick-name">{c.name}</span>
-              </button>
-            ))}
-          </div>
-          <div className="luxury-panel community-surprise-view">
-            {activeContent && <SurpriseBossArt key={activeContent.key} content={activeContent} />}
-            <div className="community-surprise-view-name">{activeContent?.name}</div>
-          </div>
+          {COMMUNITY_SURPRISE_RAIDS.map((c) => (
+            <button
+              key={c.key}
+              type="button"
+              className={`community-surprise-box${contentKey === c.key ? ' is-on' : ''}`}
+              style={{ '--sur-accent': c.accent }}
+              onClick={() => setContentKey(c.key)}
+              aria-pressed={contentKey === c.key}
+              aria-label={c.name}
+            >
+              <span className="community-surprise-box-spine" aria-hidden="true">
+                <span className="community-surprise-box-spine-eyebrow">돌발</span>
+                <span className="community-surprise-box-spine-name">{c.name}</span>
+              </span>
+              <span className="community-surprise-box-art">
+                <SafeImg src={c.iconUrl} alt="" />
+              </span>
+            </button>
+          ))}
         </div>
       )}
 

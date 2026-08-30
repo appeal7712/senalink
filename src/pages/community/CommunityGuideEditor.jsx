@@ -7,6 +7,8 @@ import HeroGridPicker from '../../components/HeroGridPicker';
 import HeroPortraitCard from '../../components/HeroPortraitCard';
 import HeroGearPanel, { emptyGearConfig, buildOptionCode } from '../../components/HeroGearPanel';
 import SkillReservationBoard from '../../components/SkillReservationBoard';
+import { SKILL_RESERVE_ICON_SIZE } from '../../lib/skillReserveIcon';
+import { SkillReservePlateIcon } from '../../components/icons/GameIconPlate';
 import Icon from '../../components/icons/Icon';
 import ModalScrim from '../../components/ModalScrim';
 import PvpModeToggle, { normalizePvpMode } from '../../components/PvpModeToggle';
@@ -542,7 +544,7 @@ export default function CommunityGuideEditor({
               ) : (
                 <div className="glass-inset editing-build-timeline-list editing-build-reservation-panel" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
                   <div className="editing-build-reservation-head">
-                    <Icon name="target" size={15} /> 스킬 예약 ({reserved.filter(Boolean).length}/{maxRes})
+                    <SkillReservePlateIcon reservedSkills={reserved} size={SKILL_RESERVE_ICON_SIZE} /> 스킬 예약 ({reserved.filter(Boolean).length}/{maxRes})
                   </div>
                   <SkillReservationBoard
                     heroNames={heroNames}

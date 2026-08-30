@@ -136,7 +136,7 @@ export const pets = [
   {
     "id": "pet_7",
     "name": "윈디",
-    "portraitUrl": "/images/pets/윈디.jpg",
+    "portraitUrl": "/images/pets/윈디.png",
     "skills": [
       {
         "name": "펫의 응원",
@@ -269,7 +269,7 @@ export const pets = [
   {
     "id": "pet_12",
     "name": "카람",
-    "portraitUrl": "/images/pets/카람.jpg",
+    "portraitUrl": "/images/pets/카람.png",
     "skills": [
       {
         "name": "펫의 응원",
@@ -292,7 +292,7 @@ export const pets = [
   {
     "id": "pet_13",
     "name": "제오",
-    "portraitUrl": "/images/pets/제오.jpg",
+    "portraitUrl": "/images/pets/제오.png",
     "skills": [
       {
         "name": "펫의 응원",
@@ -320,7 +320,7 @@ export const pets = [
   {
     "id": "pet_14",
     "name": "멜패로",
-    "portraitUrl": "/images/pets/멜페로.jpg",
+    "portraitUrl": "/images/pets/멜페로.png",
     "skills": [
       {
         "name": "펫의 응원",

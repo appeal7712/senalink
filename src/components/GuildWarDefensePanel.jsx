@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from './icons/Icon';
+import { SKILL_RESERVE_ICON_SIZE } from '../lib/skillReserveIcon';
+import { SkillReservePlateIcon } from './icons/GameIconPlate';
 import HeroPortraitCard from './HeroPortraitCard';
 import InGameDeckCard from './InGameDeckCard';
 import HeroGearPanel, { emptyGearConfig } from './HeroGearPanel';
@@ -576,7 +578,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
         <div className="build-panel-body">
           <div className="build-panel-playbook">
             <div className="build-panel-playbook-title">
-              <Icon name="target" size={15} />
+              <SkillReservePlateIcon reservedSkills={reserved} size={SKILL_RESERVE_ICON_SIZE} />
               스킬 예약 ({reserved.filter(Boolean).length}/3)
             </div>
             <SkillReservationBoard

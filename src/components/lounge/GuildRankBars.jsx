@@ -33,10 +33,12 @@ export default function GuildRankBars({ lounge, canEdit, showDueMarks = false, o
           style={{ cursor: canEdit ? 'pointer' : 'default' }}
           title={canEdit ? (due.guildwar ? '시즌 종료 · 순위 갱신' : '순위 갱신') : undefined}
         >
-          <span className="guild-rank-pill-icon"><Icon name="fortress" size={15} /></span>
+          <span className="guild-rank-pill-icon"><Icon name="pvp" size={15} /></span>
           <span className="guild-rank-pill-label">길드전</span>
           {due.guildwar && (
-            <span className="guild-rank-due-dot" aria-hidden />
+            <span className="guild-rank-due-badge" aria-hidden>
+              <Icon name="newBadge" size={14} />
+            </span>
           )}
           <span className="guild-rank-pill-right">
             <LeagueChip league={lounge?.guildwarLeague} />
@@ -50,10 +52,12 @@ export default function GuildRankBars({ lounge, canEdit, showDueMarks = false, o
           style={{ cursor: canEdit ? 'pointer' : 'default' }}
           title={canEdit ? (due.expedition ? '시즌 종료 · 순위 갱신' : '순위 갱신') : undefined}
         >
-          <span className="guild-rank-pill-icon"><Icon name="volcano" size={15} /></span>
+          <span className="guild-rank-pill-icon"><Icon name="expedition" size={15} /></span>
           <span className="guild-rank-pill-label">강림 원정대</span>
           {due.expedition && (
-            <span className="guild-rank-due-dot" aria-hidden />
+            <span className="guild-rank-due-badge" aria-hidden>
+              <Icon name="newBadge" size={14} />
+            </span>
           )}
           <span className="guild-rank-pill-right">
             <strong>{exRank}</strong>
@@ -115,7 +119,7 @@ function RankEditModal({ lounge, onClose, onSave }) {
 
         <div>
           <div className="rank-edit-heading">
-            <Icon name="fortress" size={16} color="#fff" />
+            <Icon name="pvp" size={16} />
             길드전
             <div className="rank-edit-leagues">
               {GUILDWAR_LEAGUES.map(l => (
@@ -124,6 +128,7 @@ function RankEditModal({ lounge, onClose, onSave }) {
                   league={l.id}
                   as="button"
                   active={gwLeague === l.id}
+                  grow
                   onClick={() => setGwLeague(l.id)}
                 />
               ))}
@@ -138,7 +143,7 @@ function RankEditModal({ lounge, onClose, onSave }) {
 
         <div>
           <div className="rank-edit-heading">
-            <Icon name="volcano" size={16} color="#fff" />
+            <Icon name="expedition" size={16} />
             강림 원정대
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

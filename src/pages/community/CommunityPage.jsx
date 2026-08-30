@@ -5,8 +5,8 @@ import CommunityPvpPanel from './CommunityPvpPanel';
 import CommunityTierPanel from './CommunityTierPanel';
 
 const tabs = [
-  { id: 'pvp', label: 'PvP 공략', hint: '결투장 · 상급 · 총력전', icon: 'swords' },
-  { id: 'pve', label: 'PvE 공략', hint: '레이드 · 돌발 · 성장던전', icon: 'flask' },
+  { id: 'pvp', label: 'PvP 공략', hint: '결투장 · 상급 · 총력전', icon: 'pvp' },
+  { id: 'pve', label: 'PvE 공략', hint: '레이드 · 돌발 · 성장던전', icon: 'pve' },
   { id: 'tierlist', label: '티어 리스트', hint: 'PVE · PVP 영웅 티어', icon: 'chart' },
 ];
 
@@ -47,7 +47,7 @@ export default function CommunityPage() {
               onClick={() => setTab(t.id)}
             >
               <span className="community-hero-gate-icon" aria-hidden>
-                <Icon name={t.icon} size={22} color="#fff" />
+                <Icon name={t.icon} size={22} />
               </span>
               <span className="community-hero-gate-copy">
                 <span className="community-hero-gate-label">{t.label}</span>

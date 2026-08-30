@@ -6,6 +6,9 @@ import { pets } from '../data/pets';
 import { formationsData } from '../data/formations';
 import { EQUIPMENT_SET_ICONS, findAccessory } from '../data/equipments';
 import Icon from './icons/Icon';
+import { FORMATION_ICON_SIZE, FORMATION_ICON_SIZE_COMPACT } from '../data/uiIcons';
+import { SKILL_RESERVE_ICON_SIZE, SKILL_RESERVE_ICON_SIZE_SM, SKILL_RESERVE_ICON_SIZE_LG } from '../lib/skillReserveIcon';
+import { FormationPlateIcon, SkillReservePlateIcon } from './icons/GameIconPlate';
 import SafeImg from './icons/SafeImg';
 import SkillReservationBoard from './SkillReservationBoard';
 import { PvpModeBadge } from './PvpModeToggle';
@@ -42,105 +45,10 @@ function uncoverUnderlyingScrims() {
   });
 }
 
-// 인게임 4대 공식 원형 사선 별 아이콘 렌더러 (원 중앙 정밀 중앙 정렬)
-export const renderFormationCircleIcon = (fId, size = 56) => {
-  let backPos = [];
-  let frontPos = [];
-
-  if (fId === '2f1b') {
-    // 길드전 3v3 — 전방 2명(사선) + 후방 1명
-    frontPos = [
-      { left: 18, top: 33 },
-      { left: 27, top: 24 },
-    ];
-    backPos = [
-      { left: 24, top: 14 }
-    ];
-  } else if (fId === '1f2b') {
-    // 길드전 3v3 — 후방 2명(사선) + 전방 1명
-    backPos = [
-      { left: 16, top: 26 },
-      { left: 25, top: 17 },
-    ];
-    frontPos = [
-      { left: 28, top: 32 }
-    ];
-  } else if (fId === 'attack') {
-    // 공격 진형: 후방 4명 (사선 일렬) + 전방 1명 (오른쪽 아래)
-    backPos = [
-      { left: 12, top: 32 },
-      { left: 19, top: 25 },
-      { left: 26, top: 18 },
-      { left: 33, top: 11 },
-    ];
-    frontPos = [
-      { left: 27, top: 27 }
-    ];
-  } else if (fId === 'protect') {
-    // 보호 진형: 전방 4명 (사선 일렬) + 후방 1명 (왼쪽 위)
-    frontPos = [
-      { left: 14, top: 34 },
-      { left: 21, top: 27 },
-      { left: 28, top: 20 },
-      { left: 35, top: 13 },
-    ];
-    backPos = [
-      { left: 19, top: 19 }
-    ];
-  } else if (fId === 'balance') {
-    // 밸런스 진형: 후방 2명 + 전방 3명
-    backPos = [
-      { left: 15, top: 23 },
-      { left: 22, top: 16 },
-    ];
-    frontPos = [
-      { left: 21, top: 33 },
-      { left: 28, top: 26 },
-      { left: 35, top: 19 },
-    ];
-  } else {
-    // 기본 진형: 후방 3명 + 전방 2명
-    backPos = [
-      { left: 14, top: 31 },
-      { left: 21, top: 24 },
-      { left: 28, top: 17 },
-    ];
-    frontPos = [
-      { left: 26, top: 31 },
-      { left: 33, top: 24 },
-    ];
-  }
-
-  const scale = size / 56;
-  const marker = Math.max(5, 7 * scale);
-
-  return (
-    <div style={{
-      width: `${size}px`, height: `${size}px`, borderRadius: '50%',
-      background: 'linear-gradient(155deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.04) 55%, rgba(15,23,42,0.35) 100%)',
-      backdropFilter: 'blur(12px) saturate(160%)',
-      WebkitBackdropFilter: 'blur(12px) saturate(160%)',
-      border: '1px solid rgba(255,255,255,0.28)',
-      boxShadow: '0 4px 14px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.28)',
-      position: 'relative', flexShrink: 0, overflow: 'hidden'
-    }}>
-      {backPos.map((pos, i) => (
-        <span key={`b_${i}`} style={{
-          position: 'absolute', left: `${pos.left * scale}px`, top: `${pos.top * scale}px`,
-          width: `${marker}px`, height: `${marker}px`, background: '#ef4444', transform: 'rotate(45deg)',
-          boxShadow: '0 0 5px rgba(239, 68, 68, 0.85)'
-        }} />
-      ))}
-      {frontPos.map((pos, i) => (
-        <span key={`f_${i}`} style={{
-          position: 'absolute', left: `${pos.left * scale}px`, top: `${pos.top * scale}px`,
-          width: `${marker}px`, height: `${marker}px`, background: '#3b82f6', transform: 'rotate(45deg)',
-          boxShadow: '0 0 5px rgba(59, 130, 246, 0.85)'
-        }} />
-      ))}
-    </div>
-  );
-};
+// 인게임 진형 아이콘 (게임 원본 PNG)
+export const renderFormationCircleIcon = (fId, size = FORMATION_ICON_SIZE) => (
+  <FormationPlateIcon formationId={fId} size={size} />
+);
 
 export default function InGameDeckCard({
   teamName = '1 팀',
@@ -822,7 +730,7 @@ export default function InGameDeckCard({
                   color: '#fff',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                 }} title={onReservationChange ? '스킬 예약 설정' : 'PvP 스킬 예약 순서 보기'}>
-                <Icon name="target" size={16} /> 스킬 예약
+                <SkillReservePlateIcon reservedSkills={reservedSkills} size={SKILL_RESERVE_ICON_SIZE} /> 스킬 예약
                 {(reservedSkills || []).filter(Boolean).length > 0 && (
                   <span style={{
                     fontSize: '11px', fontWeight: 800, padding: '1px 7px', borderRadius: '999px',
@@ -857,16 +765,15 @@ export default function InGameDeckCard({
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: compact ? '8px' : '10px', width: compact ? '44px' : '56px', flexShrink: 0 }}>
 
           {!hidePet && (
-            <div onClick={() => canEditPetOrFormation && openPetModal()}
+            <div
+              className="pet-portrait-face"
+              onClick={() => canEditPetOrFormation && openPetModal()}
               style={{
                 position: 'relative',
                 width: compact ? '44px' : '56px',
                 height: compact ? '44px' : '56px',
                 borderRadius: compact ? '10px' : '12px', overflow: 'hidden',
-                background: 'linear-gradient(180deg, #facc15 0%, #ca8a04 100%)',
-                border: compact ? '1.5px solid #fde047' : '2px solid #fde047',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.45)',
                 cursor: canEditPetOrFormation ? 'pointer' : 'default',
                 flexShrink: 0
               }} title={canEditPetOrFormation ? "클릭하여 펫 변경하기" : selectedPet?.name || "장착 펫"}>
@@ -883,7 +790,7 @@ export default function InGameDeckCard({
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: canEditPetOrFormation ? 'pointer' : 'default', flexShrink: 0
             }} title={canEditPetOrFormation ? "진형 변경하기" : currentFormation.name}>
-            {renderFormationCircleIcon(currentFormationId, compact ? 44 : 56)}
+            {renderFormationCircleIcon(currentFormationId, compact ? FORMATION_ICON_SIZE_COMPACT : FORMATION_ICON_SIZE)}
           </div>
 
         </div>
@@ -933,10 +840,9 @@ export default function InGameDeckCard({
                     borderRadius: '10px', padding: '8px 6px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer',
                     transition: 'all 0.15s ease'
                   }}>
-                  <div style={{
+                  <div className="pet-portrait-face" style={{
                     width: '50px', height: '56px', borderRadius: '8px', overflow: 'hidden',
-                    background: 'linear-gradient(180deg, #facc15 0%, #ca8a04 100%)',
-                    border: '1.5px solid #fde047', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '24px'
                   }}>
                     {p.portraitUrl ? <img src={p.portraitUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="pet" size={22} />}
@@ -1090,7 +996,7 @@ export default function InGameDeckCard({
             borderRadius: '18px', position: 'relative', display: 'flex', flexDirection: 'column', boxSizing: 'border-box'
           }}>
             <div style={{ fontSize: '20px', fontWeight: 900, color: '#fff', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-              <Icon name="target" size={19} color="var(--accent-cyan)" /> 스킬 예약
+              <SkillReservePlateIcon reservedSkills={reservedSkills} size={SKILL_RESERVE_ICON_SIZE_LG} /> 스킬 예약
             </div>
             <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '18px', flexShrink: 0 }}>
               {onReservationChange
@@ -1128,7 +1034,7 @@ export default function InGameDeckCard({
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-gold)', paddingBottom: '12px' }}>
               <h3 style={{ fontSize: '22px', fontWeight: 900, color: 'var(--gold-primary)', display: 'flex', alignItems: 'center', gap: '9px' }}>
-                <Icon name="shield" size={20} /> 진형 선택
+                <FormationPlateIcon formationId="protect" size={20} /> 진형 선택
               </h3>
               <button onClick={() => dismissSubModal(closeFormationModal)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="closeBtn" size={20} /></button>
             </div>
@@ -1208,7 +1114,7 @@ export default function InGameDeckCard({
               {isPvp ? (
                 <div className="setting-overview-section">
                   <div className="setting-overview-label">
-                    <Icon name="target" size={14} /> 스킬 예약
+                    <SkillReservePlateIcon reservedSkills={reservedSkills} size={SKILL_RESERVE_ICON_SIZE_SM} /> 스킬 예약
                   </div>
                   <SkillReservationBoard
                     heroNames={displayHeroes.filter(Boolean).map(h => (h.name || '').replace('(각성)', ''))}
@@ -1290,7 +1196,7 @@ export default function InGameDeckCard({
                             {renderFormationLayout(renderOverviewHeroSlot)}
                           </div>
                           {!hidePet && (
-                            <div className="setting-overview-deck-pet" title={selectedPet?.name || '장착 펫'}>
+                            <div className="setting-overview-deck-pet pet-portrait-face" title={selectedPet?.name || '장착 펫'}>
                               {selectedPet?.portraitUrl ? (
                                 <img src={selectedPet.portraitUrl} alt={selectedPet.name} />
                               ) : (

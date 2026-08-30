@@ -309,7 +309,7 @@ export default function MainSiteEditor() {
         </div>
       </section>
 
-      <section className="luxury-panel" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12, overflow: 'visible' }}>
+      <section className="luxury-panel ops-pick-rates-panel" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12, overflow: 'visible' }}>
         <div>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#fff' }}>결투장 & 상급결투장 기용률 TOP 5</h3>
           <div style={{ fontSize: 12, color: '#fff', marginTop: 4, textShadow: '0 1px 6px rgba(0,0,0,0.7)' }}>도감에 있는 영웅을 고르고, 기용률·승률만 숫자로 적으면 됩니다. 유형은 영웅을 고르면 자동으로 들어갑니다.</div>

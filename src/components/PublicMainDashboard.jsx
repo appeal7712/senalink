@@ -116,7 +116,9 @@ export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCo
               const role = heroData?.role || h.role || 'offensive';
               return (
                 <div key={i} className={`rank-row${i < 3 ? ' is-lead' : ''}`}>
-                  <span className={`rank-num${i < 3 ? ' gold' : ''}`}>{i + 1}</span>
+                  <span className={`rank-num${i < 3 ? ' gold' : ''}`}>
+                    {i < 3 ? <Icon name={`pickRate${i + 1}`} size={30} /> : i + 1}
+                  </span>
                   <div>
                     <div className="rank-member-name">{h.name}</div>
                     <div className="rank-member-meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

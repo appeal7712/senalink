@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import Icon from './icons/Icon';
 import MyPageModal from './MyPageModal';
 import UiThemeToggle from './UiThemeToggle';
 import { useUserProfile } from '../context/UserProfileContext';
 import { useLounge } from '../context/LoungeContext';
-import { auth } from '../lib/firebase';
-
-const googleProvider = new GoogleAuthProvider();
+import { signInWithGoogleNow } from '../lib/googleSignIn';
+import { showToast } from './Toast';
 
 export default function ProfileDropdown() {
   const { authUser, profile } = useUserProfile();
@@ -40,8 +38,10 @@ export default function ProfileDropdown() {
   const handleLogin = async () => {
     setOpen(false);
     try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (_) { /* user cancelled */ }
+      await signInWithGoogleNow();
+    } catch (err) {
+      showToast(err?.message || '구글 로그인에 실패했습니다.', 'error');
+    }
   };
 
   const menuStyle = {

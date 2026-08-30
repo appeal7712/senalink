@@ -997,6 +997,9 @@ h1, h2, h3 {
     filter 250ms,
     box-shadow 600ms cubic-bezier(.3, .7, .4, 1);
 }
+.btn-ops img.icon-inline:not(.icon-inline--color) {
+  filter: invert(1);
+}
 .btn-ops:hover {
   filter: brightness(110%);
   transform: translateY(-5px);
@@ -1470,6 +1473,39 @@ h1, h2, h3 {
 .icon-inline {
   display: inline-flex;
   flex-shrink: 0;
+}
+
+/* 스킬 예약·진형 아이콘 원형 레이어 (게임 PNG) */
+.game-icon-plate {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 0;
+  vertical-align: middle;
+}
+.game-icon-plate__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+.game-icon-plate__fg {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.build-panel-playbook-title,
+.build-panel-timeline-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Compact day-of-week pill strip (guild lounge siege day picker) */
@@ -2062,6 +2098,33 @@ h1, h2, h3 {
   font-weight: 600;
 }
 
+/* 게임 PNG — 비활성: 흰 글리프 / 활성(밝은 pill·카드): 검정 실루엣 */
+.gnb-link img.icon-inline,
+.nav-tab-btn img.icon-inline,
+.dex-hub-tab img.icon-inline,
+.guild-board-mode img.icon-inline {
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+.gnb-link:not(.active) img.icon-inline,
+.nav-tab-btn:not(.active) img.icon-inline,
+.dex-hub-tab:not(.active) img.icon-inline,
+.guild-board-mode:not(.is-on) img.icon-inline {
+  opacity: 0.88;
+}
+.gnb-link:hover:not(.active) img.icon-inline,
+.nav-tab-btn:hover:not(.active) img.icon-inline,
+.dex-hub-tab:hover:not(.active) img.icon-inline,
+.guild-board-mode:hover:not(.is-on) img.icon-inline {
+  opacity: 1;
+}
+.gnb-link.active img.icon-inline:not(.icon-inline--color),
+.nav-tab-btn.active img.icon-inline:not(.icon-inline--color),
+.dex-hub-tab.active img.icon-inline:not(.icon-inline--color),
+.guild-board-mode.is-on img.icon-inline:not(.icon-inline--color) {
+  filter: brightness(0);
+  opacity: 1;
+}
+
 .gnb-fly {
   position: relative;
 }
@@ -2575,6 +2638,11 @@ h1, h2, h3 {
   border-radius: 16px;
   padding: 12px;
   box-shadow: var(--shadow-main);
+}
+
+/* 기용률 TOP5 드롭다운이 아래 뉴스 패널에 가리지 않게 */
+.ops-pick-rates-panel {
+  z-index: 4;
 }
 
 .ops-hero-slots {
@@ -3677,34 +3745,45 @@ h1, h2, h3 {
   opacity: 0.85;
 }
 
+/* 시즌 종료 후 순위 갱신 — NEW 배지 */
+.guild-rank-due-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: -2px;
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.45));
+}
+
 .league-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  line-height: 1.2;
-  white-space: nowrap;
-  color: #161616;
-  border: 1px solid rgba(22, 22, 22, 0.12);
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  line-height: 0;
+  flex-shrink: 0;
 }
-.league-chip--major {
-  background: #ff7a7a;
+.league-chip__img {
+  display: block;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.35));
 }
-.league-chip--minor {
-  background: #5eb0ff;
-}
-.league-chip--grow {
-  flex: 1;
-  height: 36px;
+.league-chip--pick {
   cursor: pointer;
-  font-size: 12px;
+  opacity: 0.5;
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
-.league-chip.is-on {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.88);
+.league-chip--pick:hover {
+  opacity: 0.78;
+}
+.league-chip--pick.is-on {
+  opacity: 1;
+  transform: scale(1.04);
+}
+.league-chip.is-on:not(.league-chip--pick) {
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.35));
 }
 
 .rank-edit-heading {
@@ -3720,12 +3799,10 @@ h1, h2, h3 {
 .rank-edit-leagues {
   margin-left: auto;
   display: flex;
-  gap: 6px;
+  gap: 8px;
+  align-items: center;
 }
 .rank-edit-leagues .league-chip {
-  height: 28px;
-  padding: 0 11px;
-  font-size: 12px;
   cursor: pointer;
 }
 
@@ -3894,10 +3971,8 @@ h1, h2, h3 {
     font-size: 12px;
   }
   .guild-board .league-chip {
-    padding: 2px 6px;
-    font-size: 9px;
-    letter-spacing: 0.2px;
-    line-height: 1.15;
+    transform: scale(0.82);
+    transform-origin: center right;
   }
 }
 
@@ -4415,13 +4490,17 @@ h1, h2, h3 {
   height: clamp(44px, min(18cqh, 26cqw), 60px);
   border-radius: 11px;
   overflow: hidden;
-  background: linear-gradient(180deg, #facc15 0%, #ca8a04 100%);
-  border: 2px solid #fde047;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
   flex-shrink: 0;
+}
+
+/* 펫 초상 뒷배경 — 영웅 GradeBG 주황톤에 맞춤 (노란 그라데이션 대신) */
+.pet-portrait-face {
+  background: linear-gradient(180deg, #f0b429 0%, #d97706 100%);
+  border: 1.5px solid #eab308;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
 
 .setting-overview-deck-pet img {
@@ -5126,7 +5205,7 @@ h1, h2, h3 {
 
 .deck-stage-formation {
   width: auto;
-  min-width: 128px;
+  min-width: 112px;
   height: 100%;
   display: flex;
   align-items: stretch;
@@ -8651,10 +8730,6 @@ h1, h2, h3 {
     gap: 4px;
   }
 
-  .gnb-link svg {
-    display: none;
-  }
-
   .hero-banner {
     padding: 20px 16px;
     gap: 14px;
@@ -11375,134 +11450,132 @@ h1, h2, h3 {
     0 0 8px rgba(243, 240, 234, 0.35);
 }
 
-/* 돌발: 이름 선택 넓게 + 보스 아트 여백 crop으로 박스 채움 */
+/* 돌발: 세로 라벨 바 + 오른쪽 정렬 2배 박스 아이콘 (3열 꽉 채움) */
 .community-surprise {
-  display: grid;
-  grid-template-columns: minmax(0, 2.6fr) minmax(0, 1fr);
-  gap: 12px;
+  --surprise-gap: clamp(4px, 1vw, 10px);
+  --surprise-spine: 30px;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--surprise-gap);
+  width: 100%;
   margin-bottom: 22px;
-  align-items: stretch;
-  width: 100%;
-  min-height: 280px;
 }
-@media (max-width: 720px) {
-  .community-surprise {
-    grid-template-columns: 1fr;
-    min-height: 0;
-  }
-}
-.community-surprise-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-height: 0;
-  height: 100%;
-  align-self: stretch;
-}
-.community-surprise-pick {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
+.community-surprise-box {
   flex: 1 1 0;
-  min-height: 0;
-  padding: 8px 12px;
-  text-align: center;
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 2px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
   cursor: pointer;
   color: inherit;
   font: inherit;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  border-radius: 0;
+  text-align: left;
+  transition: transform 0.15s ease;
 }
-.community-surprise-pick-name {
-  font-size: 16px;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.78);
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
+.community-surprise-box:hover {
+  transform: translateY(-2px);
 }
-.community-surprise-pick.is-on {
-  border-color: color-mix(in srgb, var(--sur-accent, #fff) 70%, white);
-  background: color-mix(in srgb, var(--sur-accent, #fff) 18%, var(--glass-bg));
-  box-shadow:
-    inset 4px 0 0 var(--sur-accent, var(--gold-primary)),
-    0 0 0 1px color-mix(in srgb, var(--sur-accent, #fff) 45%, transparent),
-    0 8px 24px color-mix(in srgb, var(--sur-accent, #000) 35%, transparent);
-}
-.community-surprise-pick.is-on .community-surprise-pick-name {
-  color: #fff;
-  font-size: 17px;
-  letter-spacing: 0.1em;
-  text-shadow:
-    0 0 14px color-mix(in srgb, var(--sur-accent, #fff) 70%, transparent),
-    0 0 28px color-mix(in srgb, var(--sur-accent, #fff) 40%, transparent),
-    0 2px 10px rgba(0, 0, 0, 0.45);
-}
-/* 폰만: 돌발 레이드 선택 박스 세로 살짝 키움 (PC·태블릿 미적용) */
-@media (max-width: 640px) {
-  .community-surprise-pick {
-    flex: 0 0 auto;
-    min-height: 52px;
-    padding: 14px 12px;
-  }
-}
-.community-surprise-view {
-  position: relative;
-  width: 100%;
-  align-self: stretch;
-  min-height: 280px;
-  height: auto;
-  padding: 0;
-  overflow: hidden;
+.community-surprise-box-spine {
+  flex: 0 0 var(--surprise-spine);
+  width: var(--surprise-spine);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 2px;
+  margin-top: 5px;
+  margin-bottom: 3px;
   box-sizing: border-box;
+  align-self: stretch;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.48) 100%);
+  border: 2px solid color-mix(in srgb, var(--sur-accent, #fff) 50%, white);
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
-@media (max-width: 720px) {
-  .community-surprise-view {
-    min-height: 280px;
-  }
+.community-surprise-box-spine-eyebrow {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.42);
+  white-space: nowrap;
 }
-.community-surprise-view-boss {
-  position: absolute;
-  left: 50%;
-  top: 46%;
-  width: 155%;
-  height: 155%;
-  max-width: none;
-  transform: translate(-50%, -50%);
-  object-fit: cover;
-  object-position: center 18%;
-  filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.4));
-  opacity: 0;
-  pointer-events: none;
-}
-.community-surprise-view-boss.is-ready {
-  opacity: 1;
-  transition: opacity 0.12s ease;
-}
-/* 몸통이 아트 왼쪽이라 기본보다 약간만 오른쪽 — 직전에 과하게 민 것의 절반 */
-.community-surprise-view-boss--calistra {
-  left: 50%;
-  top: 46%;
-  transform: translate(-38%, -54%);
-  object-position: 40% 40%;
-}
-.community-surprise-view-boss--astrea {
-  left: 50%;
-  top: 46%;
-  transform: translate(-46%, -52%);
-  object-position: 42% 38%;
-}
-.community-surprise-view-name {
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 12px;
-  font-size: clamp(16px, 2.4vw, 22px);
+.community-surprise-box-spine-name {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: clamp(11px, 1.5vw, 14px);
   font-weight: 900;
+  letter-spacing: 0.1em;
   color: #fff;
-  text-align: center;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
-  pointer-events: none;
-  z-index: 1;
+  white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+.community-surprise-box-art {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-end;
+  line-height: 0;
+}
+.community-surprise-box-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: clamp(148px, 34vw, 388px);
+  object-fit: contain;
+  object-position: left bottom;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.28));
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+.community-surprise-box.is-on .community-surprise-box-spine {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--sur-accent, #fff) 24%, transparent) 0%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+  border-color: var(--sur-accent, var(--gold-primary));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--sur-accent, #fff) 38%, transparent),
+    0 0 16px color-mix(in srgb, var(--sur-accent, #fff) 28%, transparent);
+}
+.community-surprise-box.is-on .community-surprise-box-spine-name {
+  color: color-mix(in srgb, var(--sur-accent, #fff) 28%, white);
+}
+.community-surprise-box.is-on .community-surprise-box-art img {
+  filter:
+    drop-shadow(0 0 12px color-mix(in srgb, var(--sur-accent, #fff) 55%, transparent))
+    drop-shadow(0 10px 20px rgba(0, 0, 0, 0.35));
+  transform: scale(1.02);
+}
+@media (max-width: 520px) {
+  .community-surprise {
+    --surprise-spine: 24px;
+    --surprise-gap: 3px;
+  }
+  .community-surprise-box-spine {
+    gap: 4px;
+    padding: 5px 1px;
+    margin-top: 5px;
+    margin-bottom: 3px;
+  }
+  .community-surprise-box-spine-eyebrow {
+    font-size: 8px;
+    letter-spacing: 0.12em;
+  }
+  .community-surprise-box-spine-name {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+  }
 }
 
 .community-section-head {

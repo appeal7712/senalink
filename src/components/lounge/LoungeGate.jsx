@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '../icons/Icon';
 import { useLounge } from '../../context/LoungeContext';
 import { useUserProfile } from '../../context/UserProfileContext';
@@ -37,13 +37,25 @@ export function LoungeLanding() {
 
   const hasNickname = Boolean(String(profile?.nickname || '').trim());
   const canEnter = authReady && !!authUser;
+  const joinAutoKeyRef = useRef('');
 
   useEffect(() => {
-    if (!queryCode) return;
-    if (!authReady || !authUser) return;
-    if (!profileReady) return;
-    if (!hasNickname) return; // NicknameGate가 닉 받을 때까지 대기
-    setMode('join');
+    if (!authUser) joinAutoKeyRef.current = '';
+  }, [authUser]);
+
+  useEffect(() => {
+    if (!queryCode) return undefined;
+    if (!authReady || !authUser) return undefined;
+    if (!profileReady) return undefined;
+    if (!hasNickname) return undefined;
+    const key = `${authUser.uid}:${queryCode}`;
+    if (joinAutoKeyRef.current === key) return undefined;
+    // 닉네임 게이트가 닫힌 뒤에 열어서, 창이 연달아 바뀌는 느낌을 줄인다.
+    const t = window.setTimeout(() => {
+      joinAutoKeyRef.current = key;
+      setMode('join');
+    }, 180);
+    return () => window.clearTimeout(t);
   }, [queryCode, authReady, authUser, profileReady, hasNickname]);
 
   const onGoogle = () => {
