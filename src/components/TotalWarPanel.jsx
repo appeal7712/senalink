@@ -80,7 +80,9 @@ export default function TotalWarPanel({
                 myId={likeUserId}
                 onToggle={() => onToggleLike?.(b.id, activeTier)}
               />
-              <button type="button" onClick={() => onEdit?.(b, activeTier, tier.deckCount)} className="btn-edit">수정</button>
+              {canDeleteBuild?.(b) && (
+                <button type="button" onClick={() => onEdit?.(b, activeTier, tier.deckCount)} className="btn-edit">수정</button>
+              )}
               {canDeleteBuild?.(b) && (
                 <button type="button" onClick={() => {
                   if (!confirm('이 총력전 공략을 삭제할까요?')) return;

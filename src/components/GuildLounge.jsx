@@ -323,7 +323,7 @@ export default function GuildLounge() {
   } = useLounge();
   const { profile, profileReady } = useUserProfile();
 
-  /** 공략 삭제: 마스터·관리자(슈퍼 포함) 또는 작성자만. 수정은 멤버 전원. */
+  /** 공략 수정·삭제: 마스터·관리자(슈퍼 포함) 또는 작성자만 */
   const canDeleteBuild = (build) => {
     if (!me || !canEditBuilds || !build) return false;
     if (isAdmin) return true;
@@ -709,6 +709,13 @@ export default function GuildLounge() {
       alert('공략 제목을 입력해 주세요!');
       return false;
     }
+    if (!isNewCreateMode) {
+      const existing = (totalwarBuilds[editingTotalwarTier] || []).find((b) => b.id === editingTotalwarId);
+      if (!canDeleteBuild(existing)) {
+        alert('공략 수정은 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+        return false;
+      }
+    }
     const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
     const payload = {
       id: editingTotalwarId || ('tw_' + Date.now()),
@@ -777,8 +784,8 @@ export default function GuildLounge() {
   };
 
   const handleStartEditTotalwar = (build, tierId, deckCount) => {
-    if (!canEditBuilds) {
-      alert('허브에 입장한 멤버만 공략을 수정할 수 있습니다.');
+    if (!canDeleteBuild(build)) {
+      alert('공략 수정은 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
       return;
     }
     setIsNewCreateMode(false);
@@ -940,6 +947,10 @@ export default function GuildLounge() {
       alert('공략 제목을 입력해 주세요!');
       return;
     }
+    if (!isNewCreateMode && !canDeleteBuild(editingBuild)) {
+      alert('공략 수정은 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+      return;
+    }
 
     const updated = editingCategory === 'expedition'
       ? (() => {
@@ -1036,8 +1047,8 @@ export default function GuildLounge() {
     const arenaKind = category === 'arena' ? arenaKindTheme(build.deckKind) : null;
 
     const requestEdit = () => {
-      if (!canEditBuilds) {
-        alert('허브에 입장한 멤버만 공략을 수정할 수 있습니다.');
+      if (!canDeleteBuild(build)) {
+        alert('공략 수정은 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
         return;
       }
       handleStartEditBuild(build, category);
@@ -1086,7 +1097,7 @@ export default function GuildLounge() {
             reservedSkills={build.skillSequence || build.reservedSkills}
             speedOrderNames={build.speedOrderNames}
             speedIgnoredNames={build.speedIgnoredNames}
-            onEditClick={editOnRight ? undefined : requestEdit}
+            onEditClick={editOnRight || !canDeleteBuild(build) ? undefined : requestEdit}
             pvpMode={isPvp ? build.mode : null}
             headerSlot={isPvp ? (
               <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', flexWrap: 'wrap' }}>
@@ -1119,7 +1130,7 @@ export default function GuildLounge() {
                   onToggle={() => toggleShareLike('arena', build.id)}
                 />
               )}
-              {editOnRight && (
+              {editOnRight && canDeleteBuild(build) && (
                 <button
                   type="button"
                   onClick={requestEdit}
@@ -1221,8 +1232,8 @@ export default function GuildLounge() {
   const renderExpeditionBuildPanel = (build) => {
     const rounds = normalizeExpeditionRounds(build);
     const requestEdit = () => {
-      if (!canEditBuilds) {
-        alert('허브에 입장한 멤버만 공략을 수정할 수 있습니다.');
+      if (!canDeleteBuild(build)) {
+        alert('공략 수정은 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
         return;
       }
       handleStartEditBuild(build, 'expedition');
@@ -1257,13 +1268,15 @@ export default function GuildLounge() {
             />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: 'auto' }}>
-            <button
-              type="button"
-              onClick={requestEdit}
-              className="btn-edit"
-            >
-              <Icon name="edit" size={14} /> 수정
-            </button>
+            {canDeleteBuild(build) && (
+              <button
+                type="button"
+                onClick={requestEdit}
+                className="btn-edit"
+              >
+                <Icon name="edit" size={14} /> 수정
+              </button>
+            )}
             {canDeleteBuild(build) && (
               <button
                 type="button"

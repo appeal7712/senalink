@@ -299,6 +299,10 @@ export default function GuildWarAttackPanel({
     setIsTargetModalOpen(true);
   };
   const openEditTarget = (t) => {
+    if (!canDeleteBuild?.(t)) {
+      alert('수정은 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+      return;
+    }
     setTargetForm({
       id: t.id, parentId: null, title: t.title, heroNames: padNames5(t.heroNames), note: t.note || '',
       formationId: normalizeFormationId(t.formationId), petId: t.petId || pets[0]?.id,
@@ -312,6 +316,10 @@ export default function GuildWarAttackPanel({
     setIsTargetModalOpen(true);
   };
   const openEditTargetAlt = (parentId, alt) => {
+    if (!canDeleteBuild?.(alt)) {
+      alert('수정은 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+      return;
+    }
     setTargetForm({
       id: alt.id, parentId, title: alt.title || '', heroNames: padNames5(alt.heroNames), note: alt.note || '',
       formationId: normalizeFormationId(alt.formationId), petId: alt.petId || pets[0]?.id,
@@ -327,6 +335,22 @@ export default function GuildWarAttackPanel({
     if (filled.length > 3) {
       alert('길드전은 최대 3명까지 배치할 수 있습니다!');
       return;
+    }
+    if (targetForm.id) {
+      if (targetForm.parentId) {
+        const parent = gwAttacks.find((t) => t.id === targetForm.parentId);
+        const alt = (parent?.altDecks || []).find((a) => a.id === targetForm.id);
+        if (!canDeleteBuild?.(alt)) {
+          alert('수정은 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+          return;
+        }
+      } else {
+        const target = gwAttacks.find((t) => t.id === targetForm.id);
+        if (!canDeleteBuild?.(target)) {
+          alert('수정은 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+          return;
+        }
+      }
     }
     const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
     const authorFields = {
@@ -428,6 +452,10 @@ export default function GuildWarAttackPanel({
     setIsCounterModalOpen(true);
   };
   const openEditCounter = (c) => {
+    if (!canDeleteBuild?.(c)) {
+      alert('수정은 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+      return;
+    }
     setCounterForm({
       id: c.id, title: c.title, heroNames: padNames5(c.heroNames),
       reservedSkills: [...(c.reservedSkills || [])],
@@ -450,6 +478,13 @@ export default function GuildWarAttackPanel({
     if (filled.length > 3) {
       alert('길드전은 최대 3명까지 배치할 수 있습니다!');
       return;
+    }
+    if (counterForm.id) {
+      const existing = (selectedDeck.counters || []).find((x) => x.id === counterForm.id);
+      if (!canDeleteBuild?.(existing)) {
+        alert('수정은 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+        return;
+      }
     }
     const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
     const payload = {
@@ -742,9 +777,11 @@ export default function GuildWarAttackPanel({
           </div>
         </div>
         <div className="gw-counter-actions gw-attack-target-actions">
-          <button type="button" onClick={(e) => { e.stopPropagation(); onEdit(); }}>
-            <Icon name="edit" size={11} /> 수정
-          </button>
+          {onEdit ? (
+            <button type="button" onClick={(e) => { e.stopPropagation(); onEdit(); }}>
+              <Icon name="edit" size={11} /> 수정
+            </button>
+          ) : null}
           {onDelete ? (
             <button type="button" className="is-danger" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
               <Icon name="close" size={11} /> 삭제
@@ -800,7 +837,7 @@ export default function GuildWarAttackPanel({
                     setSelectedAltId(a.id);
                     setAltsOpenId(parent.id);
                   },
-                  onEdit: () => openEditTargetAlt(parent.id, a),
+                  onEdit: canDeleteBuild?.(a) ? () => openEditTargetAlt(parent.id, a) : null,
                   onDelete: canDeleteBuild?.(a) ? () => deleteTargetAlt(parent.id, a.id) : null,
                 })}
                 {isAltActive && (
@@ -893,9 +930,11 @@ export default function GuildWarAttackPanel({
             </div>
             <span className="gw-counter-detail">상세 <Icon name="chevronRight" size={12} /></span>
             <div className="gw-counter-actions">
-              <button type="button" onClick={e => { e.stopPropagation(); openEditCounter(c); }}>
-                <Icon name="edit" size={13} /> 수정
-              </button>
+              {canDeleteBuild?.(c) ? (
+                <button type="button" onClick={e => { e.stopPropagation(); openEditCounter(c); }}>
+                  <Icon name="edit" size={13} /> 수정
+                </button>
+              ) : null}
               {canDeleteBuild?.(c) ? (
                 <button type="button" className="is-danger" onClick={e => { e.stopPropagation(); deleteCounter(c.id); }}>
                   <Icon name="close" size={13} /> 삭제
@@ -954,7 +993,7 @@ export default function GuildWarAttackPanel({
                       setSelectedGwAttackId(t.id);
                       setSelectedAltId(null);
                     },
-                    onEdit: () => openEditTarget(t),
+                    onEdit: canDeleteBuild?.(t) ? () => openEditTarget(t) : null,
                     onDelete: canDeleteBuild?.(t) ? () => deleteTarget(t.id) : null,
                     onToggleAlts: () => {
                       if (!isMainActive && selectedGwAttackId !== t.id) {

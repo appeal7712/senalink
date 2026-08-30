@@ -158,6 +158,10 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
   };
 
   const openEdit = (raw) => {
+    if (!canDeleteBuild?.(raw)) {
+      alert('수정은 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+      return;
+    }
     const d = flattenDefense(raw);
     setForm({
       id: d.id,
@@ -196,6 +200,10 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
   };
 
   const openEditAlt = (parentId, altRaw) => {
+    if (!canDeleteBuild?.(altRaw)) {
+      alert('수정은 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+      return;
+    }
     const d = flattenDefense(altRaw);
     setForm({
       id: d.id,
@@ -231,6 +239,22 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
     if (filled > 3) {
       alert('길드전은 최대 3명까지 배치할 수 있습니다!');
       return;
+    }
+    if (form.id) {
+      if (form.parentId) {
+        const parent = gwDefenses.find((d) => d.id === form.parentId);
+        const alt = (parent?.altDecks || []).find((a) => a.id === form.id);
+        if (!canDeleteBuild?.(alt)) {
+          alert('수정은 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+          return;
+        }
+      } else {
+        const target = gwDefenses.find((d) => d.id === form.id);
+        if (!canDeleteBuild?.(target)) {
+          alert('수정은 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
+          return;
+        }
+      }
     }
     const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
     // 제목 UI 제거 — 기존 문서 title은 덮어쓰지 않음(신규만 빈 문자열)
@@ -676,9 +700,11 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                 onToggle: () => setExpandedAltId(isAltOn ? null : a.id),
                 actions: (
                   <>
-                    <button type="button" className="btn-edit" onClick={() => openEditAlt(parent.id, rawAlt)}>
-                      <Icon name="edit" size={13} /> 수정
-                    </button>
+                    {canDeleteBuild?.(a) ? (
+                      <button type="button" className="btn-edit" onClick={() => openEditAlt(parent.id, rawAlt)}>
+                        <Icon name="edit" size={13} /> 수정
+                      </button>
+                    ) : null}
                     {canDeleteBuild?.(a) ? (
                       <button type="button" className="btn-danger-solid" onClick={() => removeAlt(parent.id, a.id)}>
                         <Icon name="close" size={13} /> 삭제
@@ -757,9 +783,11 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
               >
                 <Icon name="copy" size={12} /> 대체 덱{altCount > 0 ? ` ${altCount}` : ''}
               </button>
-              <button type="button" className="btn-edit" onClick={() => openEdit(raw)}>
-                <Icon name="edit" size={13} /> 수정
-              </button>
+              {canDeleteBuild?.(d) ? (
+                <button type="button" className="btn-edit" onClick={() => openEdit(raw)}>
+                  <Icon name="edit" size={13} /> 수정
+                </button>
+              ) : null}
               {canDeleteBuild?.(d) ? (
                 <button type="button" className="btn-danger-solid" onClick={() => remove(d.id)}>
                   <Icon name="close" size={13} /> 삭제
