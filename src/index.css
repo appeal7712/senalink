@@ -6884,14 +6884,31 @@ h1, h2, h3 {
     padding: 6px 8px;
     font-size: 11px;
   }
-  /* 상대 덱 제목도 좁은 폭에서 한 글자씩 세로로 깨지지 않게 */
+  /* 상대 덱 제목: 뱃지는 보이게, 긴 제목만 말줄임 */
   .gw-attack-target-title {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
     white-space: nowrap;
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible;
+    min-width: 0;
     word-break: normal;
     overflow-wrap: normal;
+  }
+  .gw-attack-target-title-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .gw-attack-target-title .gw-attack-deck-kind-pill {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    align-self: center;
+    line-height: 1.25;
+    padding: 3px 7px;
   }
   .gw-attack-target-heroes-meta {
     gap: 6px;
