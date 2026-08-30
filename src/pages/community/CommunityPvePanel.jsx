@@ -145,7 +145,9 @@ export default function CommunityPvePanel() {
                 <span className="community-surprise-box-spine-name">{c.name}</span>
               </span>
               <span className="community-surprise-box-art">
-                <SafeImg src={c.iconUrl} alt="" />
+                <SafeImg className="community-surprise-box-img community-surprise-box-img--pc" src={c.iconUrl} alt="" />
+                <SafeImg className="community-surprise-box-img community-surprise-box-img--mobile" src={c.iconUrlMobile} alt="" />
+                <span className="community-surprise-box-caption" aria-hidden="true">{c.name}</span>
               </span>
             </button>
           ))}
