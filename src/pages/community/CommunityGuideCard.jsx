@@ -124,9 +124,9 @@ export default function CommunityGuideCard({
                       background: 'rgba(255,255,255,0.08)', color: '#e2e8f0',
                     }}>
                       {guide.arenaKind === 'advanced' ? (
-                        <img src="/images/community/arena/arena_advanced.png" alt="" style={{ width: 16, height: 16 }} />
+                        <Icon name="arenaAdvanced" size={16} />
                       ) : (
-                        <img src="/images/community/arena/arena.png" alt="" style={{ width: 16, height: 16 }} />
+                        <Icon name="arena" size={16} />
                       )}
                       {arenaKindLabel}
                     </span>

@@ -37,7 +37,7 @@ export function pathToPage(pathname) {
 /** `/tools` · `/tools/win-calc` · `/tools/tierlist` → tool id */
 export function toolIdFromPath(pathname) {
   const p = normalizePath(pathname);
-  if (p === '/tools') return DEFAULT_TOOL_ID;
+  if (p === '/tools') return null;
   if (!p.startsWith('/tools/')) return null;
   const id = p.slice('/tools/'.length).split('/')[0];
   return id || DEFAULT_TOOL_ID;
@@ -59,7 +59,7 @@ export function isOpsPath(pathname) {
 
 export function navigateTo(page) {
   if (typeof window === 'undefined') return;
-  const next = page === PAGE.TOOLS ? toolsPath(DEFAULT_TOOL_ID) : pageToPath(page);
+  const next = pageToPath(page);
   if (normalizePath(window.location.pathname) === normalizePath(next)) return;
   window.history.pushState({ page }, '', next);
   window.dispatchEvent(new CustomEvent('app:navigate', { detail: { page } }));

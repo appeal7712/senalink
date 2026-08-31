@@ -1,0 +1,64 @@
+{
+  "menuIcon": "/images/ui/exclusive-gear-tool.png",
+  "optionBar": "/images/ui/exclusive-gear/option-bar.png",
+  "legendIcon": "/images/ui/exclusive-gear/legend-icon.png",
+  "options": {
+    "모든 공격력(%)": {
+      "src": "/images/ui/exclusive-gear/options/all-atk-pct.png",
+      "w": 32,
+      "h": 32
+    },
+    "방어력(%)": {
+      "src": "/images/ui/exclusive-gear/options/def-pct.png",
+      "w": 32,
+      "h": 32
+    },
+    "생명력(%)": {
+      "src": "/images/ui/exclusive-gear/options/hp-pct.png",
+      "w": 32,
+      "h": 32
+    },
+    "파쇄": {
+      "src": "/images/ui/exclusive-gear/options/crush.png",
+      "w": 32,
+      "h": 32
+    },
+    "탄성": {
+      "src": "/images/ui/exclusive-gear/options/elasticity.png",
+      "w": 32,
+      "h": 32
+    },
+    "재생": {
+      "src": "/images/ui/exclusive-gear/options/regen.png",
+      "w": 32,
+      "h": 32
+    },
+    "피해 증폭": {
+      "src": "/images/ui/exclusive-gear/options/dmg-amp.png",
+      "w": 32,
+      "h": 32
+    },
+    "효과 적중": {
+      "src": "/images/ui/exclusive-gear/options/effect-hit.png",
+      "w": 32,
+      "h": 32
+    },
+    "효과 저항": {
+      "src": "/images/ui/exclusive-gear/options/effect-resist.png",
+      "w": 32,
+      "h": 32
+    }
+  },
+  "menuIconSize": [
+    50,
+    50
+  ],
+  "optionBarSize": [
+    472,
+    72
+  ],
+  "legendIconSize": [
+    38,
+    38
+  ]
+}

@@ -11,6 +11,7 @@ export const COMMUNITY_RAIDS = [
     key: 'doom_eye',
     name: '파멸의 눈동자',
     iconUrl: '/images/community/raid/doom_eye.png',
+    iconUrlMobile: '/images/community/raid/doom_eye-mobile.png',
     accent: '#dc2626',
     glow: 'rgba(220,38,38,0.5)',
   },
@@ -18,6 +19,7 @@ export const COMMUNITY_RAIDS = [
     key: 'umawang',
     name: '우마왕',
     iconUrl: '/images/community/raid/umawang.png',
+    iconUrlMobile: '/images/community/raid/umawang-mobile.png',
     accent: '#ea580c',
     glow: 'rgba(234,88,12,0.5)',
   },
@@ -25,6 +27,7 @@ export const COMMUNITY_RAIDS = [
     key: 'steel_predator',
     name: '강철의 포식자',
     iconUrl: '/images/community/raid/steel_predator.png',
+    iconUrlMobile: '/images/community/raid/steel_predator-mobile.png',
     accent: '#2563eb',
     glow: 'rgba(37,99,235,0.5)',
   },
@@ -67,31 +70,38 @@ export const COMMUNITY_GROWTH_DUNGEONS = [
 ];
 
 export const COMMUNITY_ARENA_KINDS = [
-  { id: 'normal', label: '결투장', iconUrl: '/images/community/arena/arena.png' },
-  { id: 'advanced', label: '상급 결투장', iconUrl: '/images/community/arena/arena_advanced.png' },
+  { id: 'normal', label: '결투장', iconUrl: '/images/ui/arena.png' },
+  { id: 'advanced', label: '상급 결투장', iconUrl: '/images/ui/arena-advanced.png' },
 ];
 
-export const COMMUNITY_ARENA_ICON = '/images/community/arena/arena.png';
-export const COMMUNITY_ARENA_ADVANCED_ICON = '/images/community/arena/arena_advanced.png';
+/** 공용 허브 결투장 패널 우측 대형 아트 (탭·뱃지 아이콘과 분리) */
+export const COMMUNITY_ARENA_BANNER = '/images/community/arena/arena.png';
+export const COMMUNITY_ARENA_ADVANCED_BANNER = '/images/community/arena/arena_advanced.png';
+
+export const COMMUNITY_ARENA_ICON = COMMUNITY_ARENA_BANNER;
+export const COMMUNITY_ARENA_ADVANCED_ICON = COMMUNITY_ARENA_ADVANCED_BANNER;
 
 export const COMMUNITY_PVP_MODES = [
   {
     id: 'arena',
     label: '결투장',
+    icon: 'arena',
     arenaKind: 'normal',
     blurb: '결투장 덱 공유',
-    banner: COMMUNITY_ARENA_ICON,
+    banner: COMMUNITY_ARENA_BANNER,
   },
   {
     id: 'arena_advanced',
     label: '상급 결투장',
+    icon: 'arenaAdvanced',
     arenaKind: 'advanced',
     blurb: '상급 결투장 덱 공유',
-    banner: COMMUNITY_ARENA_ADVANCED_ICON,
+    banner: COMMUNITY_ARENA_ADVANCED_BANNER,
   },
   {
     id: 'totalwar',
     label: '총력전',
+    icon: 'totalwar',
     arenaKind: null,
     blurb: '등급별 다팀 편성 공략',
   },

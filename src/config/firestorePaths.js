@@ -10,13 +10,17 @@ export const COL = {
   PROFILE_DAILY_RECOMMENDS: 'profileDailyRecommends',
   COMMUNITY_GUIDES: 'communityGuides',
   COMMUNITY_TIER_LISTS: 'communityTierLists',
+  EXCLUSIVE_GEAR_GUIDES: 'exclusiveGearGuides',
 };
+
+export const EXCLUSIVE_GEAR_GUIDE_DOC_ID = 'main';
 
 export const profileDailyRecommendDocId = (fromUid, toUid, day) => `${fromUid}_${toUid}_${day}`;
 
 
 export const communityGuideDoc = (guideId) => [COL.COMMUNITY_GUIDES, guideId];
 export const communityTierListDoc = (listId) => [COL.COMMUNITY_TIER_LISTS, listId];
+export const exclusiveGearGuideDoc = (docId) => [COL.EXCLUSIVE_GEAR_GUIDES, docId];
 
 export const SITE_MAIN_ID = 'main';
 

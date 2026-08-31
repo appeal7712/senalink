@@ -115,13 +115,17 @@ export default function CommunityPvePanel() {
               className={`luxury-panel community-raid-banner${contentKey === c.key ? ' is-on' : ''}`}
               style={{ '--raid-accent': c.accent }}
               onClick={() => setContentKey(c.key)}
+              aria-pressed={contentKey === c.key}
+              aria-label={c.name}
             >
               <div className="community-raid-banner-copy">
                 <div className="eyebrow">Raid</div>
                 <div className="name">{c.name}</div>
               </div>
               <div className="community-raid-banner-art">
-                <SafeImg src={c.iconUrl} alt={c.name} />
+                <SafeImg className="community-raid-banner-img community-raid-banner-img--pc" src={c.iconUrl} alt="" />
+                <SafeImg className="community-raid-banner-img community-raid-banner-img--mobile" src={c.iconUrlMobile} alt="" />
+                <span className="community-raid-banner-caption" aria-hidden="true">{c.name}</span>
               </div>
             </button>
           ))}
@@ -140,14 +144,15 @@ export default function CommunityPvePanel() {
               aria-pressed={contentKey === c.key}
               aria-label={c.name}
             >
-              <span className="community-surprise-box-spine" aria-hidden="true">
-                <span className="community-surprise-box-spine-eyebrow">돌발</span>
-                <span className="community-surprise-box-spine-name">{c.name}</span>
-              </span>
               <span className="community-surprise-box-art">
-                <SafeImg className="community-surprise-box-img community-surprise-box-img--pc" src={c.iconUrl} alt="" />
-                <SafeImg className="community-surprise-box-img community-surprise-box-img--mobile" src={c.iconUrlMobile} alt="" />
-                <span className="community-surprise-box-caption" aria-hidden="true">{c.name}</span>
+                <span className="community-surprise-box-art-media">
+                  <SafeImg className="community-surprise-box-img community-surprise-box-img--pc" src={c.iconUrl} alt="" />
+                  <SafeImg className="community-surprise-box-img community-surprise-box-img--mobile" src={c.iconUrlMobile} alt="" />
+                  <span className="community-surprise-box-caption" aria-hidden="true">{c.name}</span>
+                </span>
+                <span className="community-surprise-box-spine" aria-hidden="true">
+                  <span className="community-surprise-box-spine-name">{c.name}</span>
+                </span>
               </span>
             </button>
           ))}

@@ -23,6 +23,10 @@
     55,
     55
   ],
+  "arena-advanced.png": [
+    50,
+    50
+  ],
   "formation-attack.png": [
     90,
     66
@@ -38,6 +42,10 @@
   "hub-notice.png": [
     47,
     44
+  ],
+  "hub-write.png": [
+    34,
+    34
   ],
   "hub-admin.png": [
     30,
@@ -148,8 +156,8 @@
     67
   ],
   "skill-reserve-3.png": [
-    62,
-    67
+    109,
+    91
   ],
   "system.png": [
     60,
@@ -180,8 +188,8 @@
     65
   ],
   "plus.png": [
-    46,
-    50
+    35,
+    35
   ],
   "hub-exit.png": [
     50,

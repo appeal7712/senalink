@@ -86,7 +86,7 @@ export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCo
 
       <div className="luxury-panel meta-deck-board">
         <h3 className="meta-deck-board-title">
-          <Icon name="flame" size={19} /> 결투장 & 상급결투장 메타 덱
+          <Icon name="metaDeck" size={19} /> 결투장 & 상급결투장 메타 덱
         </h3>
 
         <div className="meta-deck-row meta-deck-row--desktop">
@@ -102,8 +102,8 @@ export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCo
 
       <div className="grid-2-responsive">
         <div className="luxury-panel main-side-panel">
-          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '8px', letterSpacing: '-0.03em' }}>
-            결투장 & 상급결투장 기용률 TOP 5
+          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '8px', letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Icon name="pvpPickRate" size={17} /> PVP 영웅 기용률 TOP 5
           </h3>
           <div className="rank-list">
             <div className="rank-head">

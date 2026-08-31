@@ -36,7 +36,9 @@ export default function CommunityPvpPanel() {
             type="button"
             className={`nav-tab-btn${hubMode === m.id ? ' active' : ''}`}
             onClick={() => setHubMode(m.id)}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
           >
+            {m.icon ? <Icon name={m.icon} size={14} /> : null}
             {m.label}
           </button>
         ))}
@@ -159,7 +161,7 @@ function CommunityArenaSection({ arenaKind, bannerUrl }) {
         <div className="community-arena-action-main">
           <div className="community-arena-action-copy">
             <div className="community-arena-action-title">
-              <Icon name="swords" size={15} color="var(--gold-primary)" />
+              <Icon name={arenaKind === 'advanced' ? 'arenaAdvanced' : 'arena'} size={15} />
               {activeArena.label} 공략
             </div>
             <div className="community-arena-action-hint">덱 유형 · 펫 · 장비 · 스킬 예약 · 1인 1공략</div>

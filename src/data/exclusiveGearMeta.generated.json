@@ -1,0 +1,454 @@
+{
+  "collab_성진우": {
+    "heroName": "성진우",
+    "iconUrl": "/images/collab_성진우/exclusive-gear.png"
+  },
+  "collab_유진호": {
+    "heroName": "유진호",
+    "iconUrl": "/images/collab_유진호/exclusive-gear.png"
+  },
+  "collab_이주희": {
+    "heroName": "이주희",
+    "iconUrl": "/images/collab_이주희/exclusive-gear.png"
+  },
+  "collab_차해인": {
+    "heroName": "차해인",
+    "iconUrl": "/images/collab_차해인/exclusive-gear.png"
+  },
+  "연희": {
+    "heroName": "연희",
+    "iconUrl": "/images/연희/exclusive-gear.png"
+  },
+  "카르마": {
+    "heroName": "카르마",
+    "iconUrl": "/images/카르마/exclusive-gear.png"
+  },
+  "카일": {
+    "heroName": "카일",
+    "iconUrl": "/images/카일/exclusive-gear.png"
+  },
+  "태오": {
+    "heroName": "태오",
+    "iconUrl": "/images/태오/exclusive-gear.png"
+  },
+  "겔리두스": {
+    "heroName": "겔리두스",
+    "iconUrl": "/images/겔리두스/exclusive-gear.png"
+  },
+  "로지": {
+    "heroName": "로지",
+    "iconUrl": "/images/로지/exclusive-gear.png"
+  },
+  "밀리아": {
+    "heroName": "밀리아",
+    "iconUrl": "/images/밀리아/exclusive-gear.png"
+  },
+  "쥬리": {
+    "heroName": "쥬리",
+    "iconUrl": "/images/쥬리/exclusive-gear.png"
+  },
+  "파이": {
+    "heroName": "파이",
+    "iconUrl": "/images/파이/exclusive-gear.png"
+  },
+  "실베스타": {
+    "heroName": "실베스타",
+    "iconUrl": "/images/실베스타/exclusive-gear.png"
+  },
+  "선란": {
+    "heroName": "선란",
+    "iconUrl": "/images/선란/exclusive-gear.png"
+  },
+  "아킬라": {
+    "heroName": "아킬라",
+    "iconUrl": "/images/아킬라/exclusive-gear.png"
+  },
+  "오를리": {
+    "heroName": "오를리",
+    "iconUrl": "/images/오를리/exclusive-gear.png"
+  },
+  "오목": {
+    "heroName": "오목",
+    "iconUrl": "/images/오목/exclusive-gear.png"
+  },
+  "칼헤론": {
+    "heroName": "칼헤론",
+    "iconUrl": "/images/칼헤론/exclusive-gear.png"
+  },
+  "타카": {
+    "heroName": "타카",
+    "iconUrl": "/images/타카/exclusive-gear.png"
+  },
+  "델론즈": {
+    "heroName": "델론즈",
+    "iconUrl": "/images/델론즈/exclusive-gear.png"
+  },
+  "멜키르": {
+    "heroName": "멜키르",
+    "iconUrl": "/images/멜키르/exclusive-gear.png"
+  },
+  "브란즈&브란셀": {
+    "heroName": "브란즈&브란셀",
+    "iconUrl": "/images/브란즈&브란셀/exclusive-gear.png"
+  },
+  "콜트": {
+    "heroName": "콜트",
+    "iconUrl": "/images/콜트/exclusive-gear.png"
+  },
+  "팔라누스": {
+    "heroName": "팔라누스",
+    "iconUrl": "/images/팔라누스/exclusive-gear.png"
+  },
+  "플라튼": {
+    "heroName": "플라튼",
+    "iconUrl": "/images/플라튼/exclusive-gear.png"
+  },
+  "라이언": {
+    "heroName": "라이언",
+    "iconUrl": "/images/라이언/exclusive-gear.png"
+  },
+  "엘리시아": {
+    "heroName": "엘리시아",
+    "iconUrl": "/images/엘리시아/exclusive-gear.png"
+  },
+  "키리엘": {
+    "heroName": "키리엘",
+    "iconUrl": "/images/키리엘/exclusive-gear.png"
+  },
+  "린": {
+    "heroName": "린",
+    "iconUrl": "/images/린/exclusive-gear.png"
+  },
+  "에이스": {
+    "heroName": "에이스",
+    "iconUrl": "/images/에이스/exclusive-gear.png"
+  },
+  "여포": {
+    "heroName": "여포",
+    "iconUrl": "/images/여포/exclusive-gear.png"
+  },
+  "오공": {
+    "heroName": "오공",
+    "iconUrl": "/images/오공/exclusive-gear.png"
+  },
+  "레이첼": {
+    "heroName": "레이첼",
+    "iconUrl": "/images/레이첼/exclusive-gear.png"
+  },
+  "루디": {
+    "heroName": "루디",
+    "iconUrl": "/images/루디/exclusive-gear.png"
+  },
+  "바네사": {
+    "heroName": "바네사",
+    "iconUrl": "/images/바네사/exclusive-gear.png"
+  },
+  "스파이크": {
+    "heroName": "스파이크",
+    "iconUrl": "/images/스파이크/exclusive-gear.png"
+  },
+  "아일린": {
+    "heroName": "아일린",
+    "iconUrl": "/images/아일린/exclusive-gear.png"
+  },
+  "제이브": {
+    "heroName": "제이브",
+    "iconUrl": "/images/제이브/exclusive-gear.png"
+  },
+  "크리스": {
+    "heroName": "크리스",
+    "iconUrl": "/images/크리스/exclusive-gear.png"
+  },
+  "미호": {
+    "heroName": "미호",
+    "iconUrl": "/images/미호/exclusive-gear.png"
+  },
+  "아멜리아": {
+    "heroName": "아멜리아",
+    "iconUrl": "/images/아멜리아/exclusive-gear.png"
+  },
+  "윤건": {
+    "heroName": "윤건",
+    "iconUrl": "/images/윤건/exclusive-gear.png"
+  },
+  "카구라": {
+    "heroName": "카구라",
+    "iconUrl": "/images/카구라/exclusive-gear.png"
+  },
+  "클라한": {
+    "heroName": "클라한",
+    "iconUrl": "/images/클라한/exclusive-gear.png"
+  },
+  "라드그리드": {
+    "heroName": "라드그리드",
+    "iconUrl": "/images/라드그리드/exclusive-gear.png"
+  },
+  "란드그리드": {
+    "heroName": "란드그리드",
+    "iconUrl": "/images/란드그리드/exclusive-gear.png"
+  },
+  "레긴레이프": {
+    "heroName": "레긴레이프",
+    "iconUrl": "/images/레긴레이프/exclusive-gear.png"
+  },
+  "미스트": {
+    "heroName": "미스트",
+    "iconUrl": "/images/미스트/exclusive-gear.png"
+  },
+  "스쿨드": {
+    "heroName": "스쿨드",
+    "iconUrl": "/images/스쿨드/exclusive-gear.png"
+  },
+  "트루드": {
+    "heroName": "트루드",
+    "iconUrl": "/images/트루드/exclusive-gear.png"
+  },
+  "프레이야": {
+    "heroName": "프레이야",
+    "iconUrl": "/images/프레이야/exclusive-gear.png"
+  },
+  "아리스": {
+    "heroName": "아리스",
+    "iconUrl": "/images/아리스/exclusive-gear.png"
+  },
+  "오르카": {
+    "heroName": "오르카",
+    "iconUrl": "/images/오르카/exclusive-gear.png"
+  },
+  "클레미스": {
+    "heroName": "클레미스",
+    "iconUrl": "/images/클레미스/exclusive-gear.png"
+  },
+  "녹스": {
+    "heroName": "녹스",
+    "iconUrl": "/images/녹스/exclusive-gear.png"
+  },
+  "사라": {
+    "heroName": "사라",
+    "iconUrl": "/images/사라/exclusive-gear.png"
+  },
+  "라니아": {
+    "heroName": "라니아",
+    "iconUrl": "/images/라니아/exclusive-gear.png"
+  },
+  "데이지": {
+    "heroName": "데이지",
+    "iconUrl": "/images/데이지/exclusive-gear.png"
+  },
+  "레이": {
+    "heroName": "레이",
+    "iconUrl": "/images/레이/exclusive-gear.png"
+  },
+  "리나": {
+    "heroName": "리나",
+    "iconUrl": "/images/리나/exclusive-gear.png"
+  },
+  "진": {
+    "heroName": "진",
+    "iconUrl": "/images/진/exclusive-gear.png"
+  },
+  "캐티": {
+    "heroName": "캐티",
+    "iconUrl": "/images/캐티/exclusive-gear.png"
+  },
+  "관우": {
+    "heroName": "관우",
+    "iconUrl": "/images/관우/exclusive-gear.png"
+  },
+  "조운": {
+    "heroName": "조운",
+    "iconUrl": "/images/조운/exclusive-gear.png"
+  },
+  "초선": {
+    "heroName": "초선",
+    "iconUrl": "/images/초선/exclusive-gear.png"
+  },
+  "동영": {
+    "heroName": "동영",
+    "iconUrl": "/images/동영/exclusive-gear.png"
+  },
+  "아수라": {
+    "heroName": "아수라",
+    "iconUrl": "/images/아수라/exclusive-gear.png"
+  },
+  "파스칼": {
+    "heroName": "파스칼",
+    "iconUrl": "/images/파스칼/exclusive-gear.png"
+  },
+  "나타": {
+    "heroName": "나타",
+    "iconUrl": "/images/나타/exclusive-gear.png"
+  },
+  "백각": {
+    "heroName": "백각",
+    "iconUrl": "/images/백각/exclusive-gear.png"
+  },
+  "비담": {
+    "heroName": "비담",
+    "iconUrl": "/images/비담/exclusive-gear.png"
+  },
+  "소교": {
+    "heroName": "소교",
+    "iconUrl": "/images/소교/exclusive-gear.png"
+  },
+  "유신": {
+    "heroName": "유신",
+    "iconUrl": "/images/유신/exclusive-gear.png"
+  },
+  "링링": {
+    "heroName": "링링",
+    "iconUrl": "/images/링링/exclusive-gear.png"
+  },
+  "백룡": {
+    "heroName": "백룡",
+    "iconUrl": "/images/백룡/exclusive-gear.png"
+  },
+  "소이": {
+    "heroName": "소이",
+    "iconUrl": "/images/소이/exclusive-gear.png"
+  },
+  "풍연": {
+    "heroName": "풍연",
+    "iconUrl": "/images/풍연/exclusive-gear.png"
+  },
+  "발리스타": {
+    "heroName": "발리스타",
+    "iconUrl": "/images/발리스타/exclusive-gear.png"
+  },
+  "블랙로즈": {
+    "heroName": "블랙로즈",
+    "iconUrl": "/images/블랙로즈/exclusive-gear.png"
+  },
+  "세라": {
+    "heroName": "세라",
+    "iconUrl": "/images/세라/exclusive-gear.png"
+  },
+  "제인": {
+    "heroName": "제인",
+    "iconUrl": "/images/제인/exclusive-gear.png"
+  },
+  "루시": {
+    "heroName": "루시",
+    "iconUrl": "/images/루시/exclusive-gear.png"
+  },
+  "벨리카": {
+    "heroName": "벨리카",
+    "iconUrl": "/images/벨리카/exclusive-gear.png"
+  },
+  "빅토리아": {
+    "heroName": "빅토리아",
+    "iconUrl": "/images/빅토리아/exclusive-gear.png"
+  },
+  "샤오": {
+    "heroName": "샤오",
+    "iconUrl": "/images/샤오/exclusive-gear.png"
+  },
+  "실비아": {
+    "heroName": "실비아",
+    "iconUrl": "/images/실비아/exclusive-gear.png"
+  },
+  "조커": {
+    "heroName": "조커",
+    "iconUrl": "/images/조커/exclusive-gear.png"
+  },
+  "카론": {
+    "heroName": "카론",
+    "iconUrl": "/images/카론/exclusive-gear.png"
+  },
+  "니아": {
+    "heroName": "니아",
+    "iconUrl": "/images/니아/exclusive-gear.png"
+  },
+  "루리": {
+    "heroName": "루리",
+    "iconUrl": "/images/루리/exclusive-gear.png"
+  },
+  "세인": {
+    "heroName": "세인",
+    "iconUrl": "/images/세인/exclusive-gear.png"
+  },
+  "에스파다": {
+    "heroName": "에스파다",
+    "iconUrl": "/images/에스파다/exclusive-gear.png"
+  },
+  "지크": {
+    "heroName": "지크",
+    "iconUrl": "/images/지크/exclusive-gear.png"
+  },
+  "리": {
+    "heroName": "리",
+    "iconUrl": "/images/리/exclusive-gear.png"
+  },
+  "스니퍼": {
+    "heroName": "스니퍼",
+    "iconUrl": "/images/스니퍼/exclusive-gear.png"
+  },
+  "아리엘": {
+    "heroName": "아리엘",
+    "iconUrl": "/images/아리엘/exclusive-gear.png"
+  },
+  "에반": {
+    "heroName": "에반",
+    "iconUrl": "/images/에반/exclusive-gear.png"
+  },
+  "유리": {
+    "heroName": "유리",
+    "iconUrl": "/images/유리/exclusive-gear.png"
+  },
+  "유이": {
+    "heroName": "유이",
+    "iconUrl": "/images/유이/exclusive-gear.png"
+  },
+  "쥬피": {
+    "heroName": "쥬피",
+    "iconUrl": "/images/쥬피/exclusive-gear.png"
+  },
+  "카린": {
+    "heroName": "카린",
+    "iconUrl": "/images/카린/exclusive-gear.png"
+  },
+  "헤브니아": {
+    "heroName": "헤브니아",
+    "iconUrl": "/images/헤브니아/exclusive-gear.png"
+  },
+  "헬레니아": {
+    "heroName": "헬레니아",
+    "iconUrl": "/images/헬레니아/exclusive-gear.png"
+  },
+  "노호": {
+    "heroName": "노호",
+    "iconUrl": "/images/노호/exclusive-gear.png"
+  },
+  "돼오": {
+    "heroName": "돼오",
+    "iconUrl": "/images/돼오/exclusive-gear.png"
+  },
+  "룩": {
+    "heroName": "룩",
+    "iconUrl": "/images/룩/exclusive-gear.png"
+  },
+  "메이": {
+    "heroName": "메이",
+    "iconUrl": "/images/메이/exclusive-gear.png"
+  },
+  "비스킷": {
+    "heroName": "비스킷",
+    "iconUrl": "/images/비스킷/exclusive-gear.png"
+  },
+  "아라곤": {
+    "heroName": "아라곤",
+    "iconUrl": "/images/아라곤/exclusive-gear.png"
+  },
+  "엘리스": {
+    "heroName": "엘리스",
+    "iconUrl": "/images/엘리스/exclusive-gear.png"
+  },
+  "챈슬러": {
+    "heroName": "챈슬러",
+    "iconUrl": "/images/챈슬러/exclusive-gear.png"
+  },
+  "클로에": {
+    "heroName": "클로에",
+    "iconUrl": "/images/클로에/exclusive-gear.png"
+  }
+}

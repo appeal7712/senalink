@@ -288,6 +288,13 @@ service cloud.firestore {
       allow delete: if isSuperAdmin() && listId in ['pve', 'pvp'];
     }
 
+    // 전용장비 조율 가이드 — 공개 열람, 슈퍼관리자만 수정
+    match /exclusiveGearGuides/{docId} {
+      allow read: if true;
+      allow create, update: if isSuperAdmin() && docId == 'main';
+      allow delete: if isSuperAdmin() && docId == 'main';
+    }
+
     // 초대 인덱스: 해당 허브 관리자만 "새 코드" create 가능.
     // 기존 코드 덮어쓰기(update)는 금지 → 다른 길드 초대 링크 하이재킹 차단.
     // 가입 시 멤버 create 는 joinHub Callable(Admin SDK)만 수행.

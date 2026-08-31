@@ -253,7 +253,7 @@ body {
   #root::before 라이브 filter는 GPU 이중 비용이라 제외 — 대신 스크림을 더 짙게.
   (블러 자체 삭제 금지, AGENTS §10.6)
 */
-body:has(> .modal-scrim) .app-shell {
+body:has(> .modal-scrim:not(.modal-scrim--lite)) .app-shell {
   filter: blur(22px) saturate(130%);
   will-change: filter;
 }
@@ -705,22 +705,101 @@ h1, h2, h3 {
   box-shadow: 0 0 14px rgba(56, 189, 248, 0.55) !important;
 }
 
-/* 대체 덱: btn-ops 베이스 + 열림 강조만 */
-.gw-defense-alt-btn.is-on {
-  background: #e8e8e8;
+/* 대체 덱 — 수정/삭제와 동일 3D 푸시 + 파생 덱 초록 */
+.gw-defense-alt-btn:not(.gw-attack-alt-btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 900;
+  border-radius: 12px;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+  line-height: 1;
+  min-width: 4.75em;
+  box-sizing: border-box;
+  background: #3dce9a;
+  color: #161616;
+  transform: translateY(-4px);
   box-shadow:
     0 2px 0 0 rgba(0, 0, 0, 0.25),
-    0 3px 0 0 #737373;
+    0 4px 0 0 #2a9d76;
+  transition:
+    transform 600ms cubic-bezier(.3, .7, .4, 1),
+    filter 250ms,
+    box-shadow 600ms cubic-bezier(.3, .7, .4, 1),
+    background-color 0.2s ease;
 }
-.gw-defense-alt-btn.is-on:hover {
+.gw-defense-alt-btn:not(.gw-attack-alt-btn):hover {
+  filter: brightness(110%);
+  transform: translateY(-6px);
+  background: #32c08f;
   box-shadow:
-    0 3px 0 0 rgba(0, 0, 0, 0.25),
-    0 5px 0 0 #737373;
+    0 4px 0 0 rgba(0, 0, 0, 0.25),
+    0 6px 0 0 #2a9d76;
+  transition:
+    transform 250ms cubic-bezier(.3, .7, .4, 1.5),
+    filter 250ms,
+    box-shadow 250ms cubic-bezier(.3, .7, .4, 1.5),
+    background-color 0.2s ease;
 }
-.gw-defense-alt-btn.is-on:active {
+.gw-defense-alt-btn:not(.gw-attack-alt-btn):active {
+  transform: translateY(-2px);
+  background: #32c08f;
   box-shadow:
     0 1px 0 0 rgba(0, 0, 0, 0.25),
-    0 2px 0 0 #737373;
+    0 2px 0 0 #2a9d76;
+  transition: transform 34ms, box-shadow 34ms, background-color 0.2s ease;
+}
+.gw-defense-alt-btn.is-on:not(.gw-attack-alt-btn) {
+  background: #4fe0ab;
+  color: #161616;
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 4px 0 0 #2fb889;
+}
+.gw-defense-alt-btn.is-on:not(.gw-attack-alt-btn):hover {
+  filter: brightness(110%);
+  transform: translateY(-6px);
+  background: #3dce9a;
+  box-shadow:
+    0 4px 0 0 rgba(0, 0, 0, 0.25),
+    0 6px 0 0 #2fb889;
+}
+.gw-defense-alt-btn.is-on:not(.gw-attack-alt-btn):active {
+  transform: translateY(-2px);
+  background: #3dce9a;
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #2fb889;
+}
+.gw-defense-alt-btn:not(.gw-attack-alt-btn):focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* 대체 덱 아이콘 — 수정/삭제와 동일 높이 (altDeck PNG 기본 스케일 보정) */
+.gw-defense-card .community-pvp-card-actions .gw-defense-alt-btn .icon-inline,
+.gw-alt-card .community-pvp-card-actions .gw-defense-alt-btn .icon-inline {
+  height: 12px !important;
+  width: auto !important;
+  max-height: 12px;
+  object-fit: contain;
+}
+
+/* 방어 헤더 액션: 개수 유무와 관계없이 버튼 높이 통일 */
+.gw-defense-card > .community-pvp-card-head > .community-pvp-card-actions .btn-edit,
+.gw-defense-card > .community-pvp-card-head > .community-pvp-card-actions .btn-danger-solid,
+.gw-defense-card > .community-pvp-card-head > .community-pvp-card-actions .gw-defense-alt-btn,
+.gw-alt-card > .community-pvp-card-head > .community-pvp-card-actions .btn-edit,
+.gw-alt-card > .community-pvp-card-head > .community-pvp-card-actions .btn-danger-solid,
+.gw-alt-card > .community-pvp-card-head > .community-pvp-card-actions .gw-defense-alt-btn {
+  height: 29px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .gw-defense-card .community-pvp-card-meta {
@@ -860,6 +939,37 @@ h1, h2, h3 {
   border-radius: 12px;
   flex-shrink: 0;
   white-space: nowrap;
+  background: #3dce9a !important;
+  color: #161616 !important;
+  transform: translateY(-3px);
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 3px 0 0 #2a9d76 !important;
+  filter: none !important;
+  transition:
+    transform 250ms cubic-bezier(.3, .7, .4, 1.5),
+    filter 250ms,
+    box-shadow 250ms cubic-bezier(.3, .7, .4, 1.5),
+    background-color 0.2s ease;
+}
+.gw-alt-add:hover {
+  background: #32c08f !important;
+  filter: brightness(110%) !important;
+  transform: translateY(-5px);
+  box-shadow:
+    0 3px 0 0 rgba(0, 0, 0, 0.25),
+    0 5px 0 0 #2a9d76 !important;
+}
+.gw-alt-add:active {
+  background: #32c08f !important;
+  transform: translateY(-1px);
+  filter: none !important;
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #2a9d76 !important;
+}
+.gw-alt-add img.icon-inline:not(.icon-inline--color) {
+  filter: invert(1);
 }
 
 .gw-alt-empty {
@@ -898,26 +1008,22 @@ h1, h2, h3 {
   }
 
   .gw-defense-card .community-pvp-card-actions {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: flex-end;
     max-width: 100%;
   }
 
   .gw-defense-alt-btn {
-    padding: 6px 8px;
+    padding: 0 8px;
     font-size: 11px;
   }
 }
 
 @media (max-width: 380px) {
   .gw-defense-card .community-pvp-card-actions .btn-edit,
-  .gw-defense-card .community-pvp-card-actions .btn-danger-solid {
-    height: 26px;
-    padding: 0 6px;
-    font-size: 10px;
-    gap: 2px;
-  }
+  .gw-defense-card .community-pvp-card-actions .btn-danger-solid,
   .gw-defense-card .community-pvp-card-actions .gw-defense-alt-btn {
+    height: 26px;
     padding: 0 6px;
     font-size: 10px;
     gap: 2px;
@@ -5906,6 +6012,7 @@ h1, h2, h3 {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  overflow: visible;
 }
 .gw-attack-list-head {
   display: flex;
@@ -5975,6 +6082,7 @@ h1, h2, h3 {
   flex-direction: column;
   gap: 0;
   flex-shrink: 0;
+  overflow: visible;
 }
 .gw-attack-target-block.is-expanded {
   gap: 0;
@@ -5985,6 +6093,7 @@ h1, h2, h3 {
   flex-direction: column;
   gap: 0;
   flex-shrink: 0;
+  overflow: visible;
 }
 .gw-attack-target > .gw-attack-target-row {
   cursor: pointer;
@@ -5995,6 +6104,7 @@ h1, h2, h3 {
   -webkit-backdrop-filter: none;
   background: var(--gw-enemy-row-bg);
   border: var(--gw-enemy-row-border-w) solid var(--gw-enemy-row-border);
+  border-radius: 12px;
   box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.14);
@@ -6048,49 +6158,171 @@ h1, h2, h3 {
   border-radius: 6px;
   padding: 2px 7px;
   line-height: 1.2;
+  min-width: 2.35em;
+  text-align: center;
+  box-sizing: border-box;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
-}
-.gw-attack-deck-kind-pill.is-alt,
-.gw-attack-vs-pill.is-alt {
-  background: color-mix(in srgb, var(--gw-enemy-mark) 82%, #1a1a1a);
 }
 .gw-attack-target.is-on .gw-attack-target-meta,
 .gw-attack-target-row.gw-attack-alt-row.is-on .gw-attack-target-meta {
   color: #fff;
 }
-/* 상대·파생 덱 행: 그립 | (제목→초상) | 버튼 */
+/* 상대·파생 덱 행: lead | 초상+파생덱 | 제목·메타 | 수정·삭제 */
 .gw-attack-target-row {
   display: grid !important;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-areas: "lead body actions";
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  grid-template-areas: "lead heroes stack actions";
   align-items: center;
-  gap: 10px;
+  column-gap: 10px;
+  row-gap: 0;
   min-width: 0;
 }
 .gw-attack-target-row > .gw-attack-target-lead {
   grid-area: lead;
   align-self: center;
 }
-.gw-attack-target-row > .gw-attack-target-body {
-  grid-area: body;
+.gw-attack-target-row > .gw-attack-target-heroes-col {
+  grid-area: heroes;
+  align-self: center;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
   min-width: 0;
+}
+.gw-attack-target-heroes-col > .gw-mini-trio {
+  flex-shrink: 0;
+}
+.gw-attack-target-heroes-col > .gw-attack-alt-btn {
+  width: 100%;
+  max-width: 100%;
+  justify-content: center;
+  margin-top: 2px;
+  font-size: 11px;
 }
 .gw-attack-target-row > .gw-attack-target-actions {
   grid-area: actions;
+  align-self: center;
   flex-direction: column !important;
   align-items: stretch;
+  gap: 6px;
   flex-shrink: 0;
-  gap: 3px;
-  align-self: center;
 }
-.gw-attack-target-row > .gw-attack-target-copy {
-  flex: 0 1 auto;
+.gw-attack-target-stack {
+  grid-area: stack;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
   min-width: 0;
-  width: 100%;
+}
+.gw-attack-target-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.gw-attack-target-title-text {
+  min-width: 0;
+  flex: 1 1 auto;
+  font-size: 13px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
+}
+.gw-attack-target-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 700;
+  line-height: 1.25;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
+}
+.gw-attack-target-meta > span {
+  white-space: nowrap;
+}
+.gw-attack-alt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex-shrink: 0;
+  padding: 3px 6px;
+  font-size: 11px;
+  font-weight: 900;
+  border-radius: 9px;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+  line-height: 1;
+  background: #3dce9a;
+  color: #161616;
+  transform: translateY(-3px);
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 3px 0 0 #2a9d76;
+  transition:
+    transform 600ms cubic-bezier(.3, .7, .4, 1),
+    filter 250ms,
+    box-shadow 600ms cubic-bezier(.3, .7, .4, 1),
+    background-color 0.2s ease;
+}
+.gw-attack-alt-btn:hover {
+  filter: brightness(110%);
+  transform: translateY(-5px);
+  background: #32c08f;
+  box-shadow:
+    0 3px 0 0 rgba(0, 0, 0, 0.25),
+    0 5px 0 0 #2a9d76;
+  transition:
+    transform 250ms cubic-bezier(.3, .7, .4, 1.5),
+    filter 250ms,
+    box-shadow 250ms cubic-bezier(.3, .7, .4, 1.5),
+    background-color 0.2s ease;
+}
+.gw-attack-alt-btn:active {
+  transform: translateY(-1px);
+  background: #32c08f;
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #2a9d76;
+  transition: transform 34ms, box-shadow 34ms, background-color 0.2s ease;
+}
+.gw-attack-alt-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+.gw-attack-alt-btn .icon-inline {
+  height: 11px !important;
+  width: auto !important;
+  max-height: 11px;
+  object-fit: contain;
+}
+.gw-attack-alt-btn.is-on {
+  background: #4fe0ab;
+  color: #161616;
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 3px 0 0 #2fb889;
+}
+.gw-attack-alt-btn.is-on:hover {
+  background: #3dce9a;
+  box-shadow:
+    0 3px 0 0 rgba(0, 0, 0, 0.25),
+    0 5px 0 0 #2fb889;
+}
+.gw-attack-alt-btn.is-on:active {
+  background: #3dce9a;
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #2fb889;
 }
 .gw-attack-alt-lead-spacer {
   display: block;
@@ -6100,79 +6332,6 @@ h1, h2, h3 {
 .gw-attack-target-lead {
   gap: 8px;
   flex-shrink: 0;
-}
-.gw-attack-target-copy {
-  flex-direction: column;
-  align-items: flex-start;
-  row-gap: 4px;
-  min-width: 0;
-}
-.gw-attack-target-title {
-  font-size: 13px;
-  font-weight: 900;
-  color: #fff;
-  line-height: 1.25;
-  flex: 0 1 auto;
-  min-width: 0;
-  max-width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
-}
-.gw-attack-target-title-text {
-  min-width: 0;
-  flex: 1 1 auto;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.gw-attack-target-heroes-meta {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  min-width: 0;
-  width: 100%;
-}
-.gw-attack-target-heroes-meta > .gw-mini-trio {
-  flex-shrink: 0;
-}
-.gw-attack-target-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.82);
-  font-weight: 700;
-  flex: 1 1 auto;
-  min-width: 0;
-  line-height: 1.25;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
-}
-.gw-attack-target-meta > span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.gw-attack-target-actions .btn-ops.gw-attack-alt-btn {
-  background: #fff;
-  color: #161616;
-  box-shadow:
-    0 2px 0 0 rgba(0, 0, 0, 0.25),
-    0 3px 0 0 #737373;
-}
-.gw-attack-target-actions .btn-ops.gw-attack-alt-btn:hover {
-  filter: brightness(110%);
-  transform: translateY(-5px);
-  box-shadow:
-    0 3px 0 0 rgba(0, 0, 0, 0.25),
-    0 5px 0 0 #737373;
-}
-.gw-attack-target-actions .btn-ops.gw-attack-alt-btn:active {
-  transform: translateY(-1px);
-  box-shadow:
-    0 1px 0 0 rgba(0, 0, 0, 0.25),
-    0 2px 0 0 #737373;
 }
 .gw-attack-alt-row {
   margin-top: 8px;
@@ -6203,6 +6362,19 @@ h1, h2, h3 {
 }
 .gw-attack-target.has-alts-open > .gw-attack-target-alts {
   border-top: none;
+  animation: gw-attack-alts-reveal-lr 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes gw-attack-alts-reveal-lr {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+    clip-path: inset(0 0 0 0);
+  }
 }
 .gw-attack-target.has-alts-open .gw-alt-layer {
   margin: 0 10px 10px var(--gw-enemy-alt-indent);
@@ -6237,6 +6409,17 @@ h1, h2, h3 {
     0 1px 5px rgba(0, 0, 0, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
   position: relative;
+  animation: gw-attack-alt-row-reveal-lr 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes gw-attack-alt-row-reveal-lr {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 .gw-attack-target.has-alts-open .gw-attack-alt-row::before {
   content: '';
@@ -6365,8 +6548,7 @@ h1, h2, h3 {
 }
 
 /* 상대·파생 덱 행 버튼: 카운터보다 한 단계 더 콤팩트 */
-.gw-attack-target-actions button,
-.gw-attack-target-actions .btn-ops.gw-attack-alt-btn {
+.gw-attack-target-actions button {
   width: auto;
   min-width: 50px;
   padding: 3px 6px;
@@ -6435,9 +6617,6 @@ h1, h2, h3 {
     0 1px 0 0 rgba(0, 0, 0, 0.25),
     0 2px 0 0 #991b1b;
 }
-.gw-attack-target-actions .gw-attack-alt-btn {
-  margin-top: 2px;
-}
 
 /* PC 가로(≥1021): 카운터 수정/삭제만 살짝 축소 */
 @media (min-width: 1021px) and (orientation: landscape) {
@@ -6446,11 +6625,14 @@ h1, h2, h3 {
     padding: 4px 7px;
     font-size: 11px;
   }
-  .gw-attack-target-actions button,
-  .gw-attack-target-actions .btn-ops.gw-attack-alt-btn {
+  .gw-attack-target-actions button {
     min-width: 48px;
     padding: 3px 5px;
     font-size: 10px;
+  }
+  .gw-attack-alt-btn {
+    padding: 3px 5px;
+    font-size: 11px;
   }
 }
 
@@ -6793,6 +6975,9 @@ h1, h2, h3 {
 .gw-counter-row .gw-counter-actions {
   flex-direction: row;
 }
+.gw-attack-target-row .gw-counter-actions.gw-attack-target-actions {
+  flex-direction: column !important;
+}
 
 /* 길드전 공격 모바일: 기본 스타일(.gw-attack-detail display:flex 등)보다 아래에 둬야 덮어씀 */
 @media (max-width: 1020px) {
@@ -6887,11 +7072,24 @@ h1, h2, h3 {
       0 0 0 1px rgba(100, 168, 238, 0.25),
       inset var(--gw-ally-mark-w) 0 0 var(--gw-ally-mark);
   }
-  /* 상대·파생 덱 행: 제목 위 · 초상 아래 (카운터 행 grid와 분리) */
+  /* 상대·파생 덱 행: lead | 초상+파생덱 | 스택 | 수정·삭제 */
   .gw-attack-list .gw-attack-target-row {
     display: grid !important;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-areas: "lead body actions";
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    grid-template-areas: "lead heroes stack actions";
+    column-gap: 8px;
+  }
+  .gw-attack-target-row > .gw-attack-target-heroes-col {
+    grid-area: heroes;
+  }
+  .gw-attack-target-stack {
+    grid-area: stack;
+  }
+  .gw-attack-target-row > .gw-attack-target-actions {
+    grid-area: actions;
+    flex-direction: column !important;
+    align-items: stretch;
+    gap: 6px;
   }
   .gw-attack-target.is-on > .gw-attack-target-row,
   .gw-attack-layout .gw-attack-target-row.is-on,
@@ -6948,31 +7146,23 @@ h1, h2, h3 {
     align-items: stretch;
     gap: 4px;
   }
-  .gw-attack-target-actions {
-    flex-direction: column !important;
-    align-items: stretch;
-  }
   .gw-attack-target-actions button,
-  .gw-attack-target-actions .btn-ops.gw-attack-alt-btn {
+  .gw-attack-alt-btn {
     width: auto;
     padding: 3px 5px;
-    font-size: 10px;
+    font-size: 11px;
   }
   .gw-counter-actions button {
     width: auto;
     padding: 6px 8px;
     font-size: 11px;
   }
-  /* 상대 덱 제목: 뱃지는 보이게, 긴 제목만 말줄임 */
-  .gw-attack-target-title {
+  /* 상대 덱: 뱃지·제목 한 줄 */
+  .gw-attack-target-head {
     display: flex !important;
     align-items: center;
     gap: 6px;
-    white-space: nowrap;
-    overflow: visible;
     min-width: 0;
-    word-break: normal;
-    overflow-wrap: normal;
   }
   .gw-attack-target-title-text {
     white-space: nowrap;
@@ -6981,20 +7171,19 @@ h1, h2, h3 {
     min-width: 0;
     flex: 1 1 auto;
   }
-  .gw-attack-target-title .gw-attack-deck-kind-pill {
+  .gw-attack-target-head .gw-attack-deck-kind-pill {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     flex-shrink: 0;
     align-self: center;
-    line-height: 1.25;
-    padding: 3px 7px;
-  }
-  .gw-attack-target-heroes-meta {
-    gap: 6px;
+    line-height: 1.2;
+    padding: 2px 7px;
+    min-width: 2.35em;
   }
   .gw-attack-target-meta {
     font-size: 10px;
-    gap: 1px;
+    gap: 4px 8px;
   }
   /* 헤더·툴바 라벨: 폭이 줄어도 글자씩 세로로 안 찢기게 */
   .gw-attack-list-head h3 {
@@ -7030,6 +7219,146 @@ h1, h2, h3 {
 
 .tools-page {
   padding: 12px 24px 80px;
+}
+.tools-hero {
+  text-align: center;
+  padding: 22px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.tools-hero-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2px 8px 14px;
+}
+.tools-hero-title {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  font-family: var(--font-display);
+}
+.tools-hero-copy {
+  margin: 0;
+  max-width: 420px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.72);
+}
+.tools-hero-gates {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  margin-top: 2px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+}
+.tools-hero-gate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  min-height: 0;
+  padding: 16px 18px;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(16, 18, 24, 0.28);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.12s ease;
+}
+.tools-hero-gate:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+.tools-hero-gate.is-on,
+.tools-hero-gate.active {
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.86);
+  transform: none;
+}
+.tools-hero-gate.is-soon,
+.tools-hero-gate:disabled {
+  opacity: 0.42;
+  cursor: default;
+  transform: none;
+}
+.tools-hero-gate-lead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.tools-hero-gate-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+}
+.tools-hero-gate.is-on .tools-hero-gate-icon,
+.tools-hero-gate.active .tools-hero-gate-icon {
+  background: rgba(22, 22, 24, 0.08);
+}
+.tools-hero-gate-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.25;
+}
+.tools-hero-gate.is-on .tools-hero-gate-label,
+.tools-hero-gate.active .tools-hero-gate-label {
+  color: #161616;
+}
+.tools-hero-gate-hint {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.3;
+  padding-left: 42px;
+}
+.tools-hero-gate.is-on .tools-hero-gate-hint,
+.tools-hero-gate.active .tools-hero-gate-hint {
+  color: rgba(22, 22, 24, 0.72);
+}
+.tools-body {
+  margin-top: 14px;
+}
+@media (max-width: 980px) {
+  .tools-hero-gates {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .tools-hero-gate {
+    padding: 10px 12px;
+    gap: 4px;
+    border-radius: 14px;
+  }
+  .tools-hero-gate-icon {
+    width: 24px;
+    height: 24px;
+  }
+  .tools-hero-gate-label {
+    font-size: 13px;
+  }
+  .tools-hero-gate-hint {
+    font-size: 11px;
+    padding-left: 0;
+  }
 }
 .tools-switch {
   display: inline-flex;
@@ -9852,34 +10181,24 @@ h1, h2, h3 {
 
 /*
  * ≤400 (초소형만): 길드전 공격 목록/카운터
- * — 상대·파생: 제목 위 · 초상 아래 유지.
+ * — 상대·파생: 카운터 행과 동일 lead | 초상 | 스택.
  * — 카운터: 라벨만 숨기고 숫자는 살짝만 줄임 · 초상은 크게·가운데.
  */
 @media (max-width: 400px) {
   .gw-attack-target-row {
-    gap: 8px;
+    column-gap: 6px;
   }
   .gw-attack-target-row > .gw-attack-target-lead {
     flex-shrink: 0;
   }
-  .gw-attack-target-body {
+  .gw-attack-target-stack {
     gap: 3px;
   }
-  .gw-attack-target-actions {
-    flex-direction: column;
-    flex-shrink: 0;
-    margin-left: 0;
-    gap: 3px;
-  }
-  .gw-attack-target-actions button {
+  .gw-attack-target-actions button,
+  .gw-attack-alt-btn {
     min-width: 0;
     padding: 3px 5px;
-    font-size: 9.5px;
-  }
-  .gw-attack-target-actions .btn-ops.gw-attack-alt-btn {
-    min-width: 0;
-    padding: 3px 5px;
-    font-size: 9.5px;
+    font-size: 10.5px;
   }
 
   .gw-counter-drag-hint {
@@ -9924,13 +10243,9 @@ h1, h2, h3 {
 /* 아주 좁은 폰(≤380): 대체 덱 버튼 등만 추가 타이트 (목록 헤더는 480에서 이미 분리) */
 @media (max-width: 380px) {
   .gw-defense-card .community-pvp-card-actions .btn-edit,
-  .gw-defense-card .community-pvp-card-actions .btn-danger-solid {
-    height: 26px;
-    padding: 0 6px;
-    font-size: 10px;
-    gap: 2px;
-  }
+  .gw-defense-card .community-pvp-card-actions .btn-danger-solid,
   .gw-defense-card .community-pvp-card-actions .gw-defense-alt-btn {
+    height: 26px;
     padding: 0 6px;
     font-size: 10px;
     gap: 2px;
@@ -9949,15 +10264,15 @@ h1, h2, h3 {
     padding: 7px 8px;
   }
 
-  .gw-attack-target-title {
+  .gw-attack-target-title-text {
     font-size: 12px;
   }
 
   .gw-attack-target-actions button,
-  .gw-attack-target-actions .btn-ops.gw-attack-alt-btn {
+  .gw-attack-alt-btn {
     min-width: 0;
     padding: 3px 5px;
-    font-size: 9.5px;
+    font-size: 10.5px;
   }
   .gw-counter-actions button {
     min-width: 0;
@@ -10786,6 +11101,14 @@ h1, h2, h3 {
 .gw-alt-card > .community-pvp-card-head > .community-pvp-card-actions {
   margin-left: auto;
 }
+/* 방어·대체덱: 수정 아이콘만 PNG 스케일 보정 (삭제는 공용 btn-danger-solid과 동일 크기) */
+.gw-defense-card .community-pvp-card-actions .btn-edit .icon-inline,
+.gw-alt-card .community-pvp-card-actions .btn-edit .icon-inline {
+  height: 12px !important;
+  width: auto !important;
+  max-height: 12px;
+  object-fit: contain;
+}
 
 /* 981~1024: 공용 PvP는 스택이지만 길드전 방어만 PC 한 줄 유지 */
 @media (min-width: 981px) and (max-width: 1024px) {
@@ -10925,14 +11248,24 @@ h1, h2, h3 {
     grid-area: actions;
     margin-left: 0;
     gap: 4px;
+    flex-wrap: nowrap;
   }
   .gw-defense-card .community-pvp-card-actions .btn-edit,
   .gw-defense-card .community-pvp-card-actions .btn-danger-solid,
   .gw-defense-card .community-pvp-card-actions .gw-defense-alt-btn,
   .gw-alt-card .community-pvp-card-actions .btn-edit,
-  .gw-alt-card .community-pvp-card-actions .btn-danger-solid {
-    padding: 5px 7px;
+  .gw-alt-card .community-pvp-card-actions .btn-danger-solid,
+  .gw-alt-card .community-pvp-card-actions .gw-defense-alt-btn {
+    height: 26px;
+    padding: 0 7px;
     font-size: 10px;
+  }
+  .gw-defense-card .community-pvp-card-actions .btn-edit .icon-inline,
+  .gw-defense-card .community-pvp-card-actions .gw-defense-alt-btn .icon-inline,
+  .gw-alt-card .community-pvp-card-actions .btn-edit .icon-inline,
+  .gw-alt-card .community-pvp-card-actions .gw-defense-alt-btn .icon-inline {
+    height: 11px !important;
+    max-height: 11px;
   }
 }
 
@@ -10953,7 +11286,7 @@ h1, h2, h3 {
   .gw-defense-card .community-pvp-card-actions .gw-defense-alt-btn {
     order: 3;
     margin-top: 6px;
-    height: auto;
+    height: 26px;
     justify-content: center;
   }
   .gw-alt-card > .community-pvp-card-head > .community-pvp-card-actions {
@@ -11345,7 +11678,7 @@ h1, h2, h3 {
   position: relative;
   min-height: 108px;
 }
-.community-raid-banner-art img {
+.community-raid-banner-art .community-raid-banner-img--pc {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -11354,12 +11687,129 @@ h1, h2, h3 {
   object-fit: cover;
   object-position: center 18%;
 }
+.community-raid-banner-art .community-raid-banner-img--mobile {
+  display: none;
+}
+.community-raid-banner-caption {
+  display: none;
+}
 .community-raid-banner-art::after {
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(90deg, rgba(16, 18, 24, 0.42), transparent 42%);
   pointer-events: none;
+}
+@media (max-width: 720px) {
+  .community-raid-stack {
+    --raid-gap: 6px;
+    flex-direction: row;
+    align-items: stretch;
+    gap: var(--raid-gap);
+    width: 100%;
+  }
+  .community-raid-banner.luxury-panel {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    transition: transform 0.15s ease;
+  }
+  .community-raid-banner.luxury-panel::before {
+    display: none;
+  }
+  .community-raid-banner.is-on {
+    border-color: transparent;
+    box-shadow: none;
+  }
+  .community-raid-banner:hover {
+    transform: none;
+  }
+  .community-raid-banner-copy {
+    display: none;
+  }
+  .community-raid-banner-art {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    line-height: 0;
+  }
+  .community-raid-banner-art::after {
+    display: none;
+  }
+  .community-raid-banner-art .community-raid-banner-img--pc {
+    display: none;
+  }
+  .community-raid-banner-art .community-raid-banner-img--mobile {
+    display: block;
+    position: static;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    object-fit: contain;
+    object-position: center bottom;
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.28));
+    transition: filter 0.15s ease, transform 0.15s ease;
+  }
+  .community-raid-banner-caption {
+    display: block;
+    position: absolute;
+    left: 50%;
+    bottom: 10%;
+    z-index: 1;
+    transform: translateX(-50%);
+    width: 86%;
+    margin: 0;
+    padding: 0;
+    font-size: clamp(14px, 4vw, 17px);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    text-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.95),
+      0 0 10px rgba(0, 0, 0, 0.8),
+      0 2px 12px rgba(0, 0, 0, 0.55);
+    pointer-events: none;
+  }
+  .community-raid-banner.is-on .community-raid-banner-img--mobile {
+    transform: scale(1.02);
+    filter:
+      drop-shadow(0 0 12px color-mix(in srgb, var(--raid-accent, #fff) 55%, transparent))
+      drop-shadow(0 10px 20px rgba(0, 0, 0, 0.35));
+  }
+  .community-raid-banner.is-on .community-raid-banner-caption {
+    text-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.95),
+      0 0 12px rgba(0, 0, 0, 0.85),
+      0 0 8px color-mix(in srgb, var(--raid-accent, #fff) 45%, transparent);
+  }
+}
+@media (max-width: 520px) {
+  .community-raid-stack {
+    --raid-gap: 4px;
+  }
+  .community-raid-banner-caption {
+    font-size: clamp(13px, 4.2vw, 15px);
+    bottom: 9.5%;
+  }
 }
 
 .community-dungeon-grid {
@@ -11450,10 +11900,9 @@ h1, h2, h3 {
     0 0 8px rgba(243, 240, 234, 0.35);
 }
 
-/* 돌발: 세로 라벨 바 + 오른쪽 정렬 2배 박스 아이콘 (3열 꽉 채움) */
+/* 돌발 PC: 아이콘 위 · 이름 뱃지(spine)는 아이콘 너비에 맞춰 아래 가로 */
 .community-surprise {
-  --surprise-gap: clamp(4px, 1vw, 10px);
-  --surprise-spine: 30px;
+  --surprise-gap: clamp(8px, 1.4vw, 14px);
   display: flex;
   align-items: flex-end;
   gap: var(--surprise-gap);
@@ -11464,11 +11913,10 @@ h1, h2, h3 {
   flex: 1 1 0;
   min-width: 0;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: stretch;
-  justify-content: flex-start;
-  gap: 2px;
-  padding: 0;
+  justify-content: flex-end;
+  padding: 0 4px;
   margin: 0;
   border: none;
   background: transparent;
@@ -11482,64 +11930,74 @@ h1, h2, h3 {
 .community-surprise-box:hover {
   transform: translateY(-2px);
 }
-.community-surprise-box-spine {
-  flex: 0 0 var(--surprise-spine);
-  width: var(--surprise-spine);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 2px;
-  margin-top: 5px;
-  margin-bottom: 3px;
-  box-sizing: border-box;
-  align-self: stretch;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.48) 100%);
-  border: 2px solid color-mix(in srgb, var(--sur-accent, #fff) 50%, white);
-  border-radius: 8px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-}
-.community-surprise-box-spine-eyebrow {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  color: rgba(255, 255, 255, 0.42);
-  white-space: nowrap;
-}
-.community-surprise-box-spine-name {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  font-size: clamp(11px, 1.5vw, 14px);
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  color: #fff;
-  white-space: nowrap;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
-}
 .community-surprise-box-art {
   position: relative;
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
-  justify-content: flex-start;
-  align-items: flex-end;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: 10px;
+  line-height: 0;
+}
+.community-surprise-box-art-media {
+  position: relative;
+  display: block;
+  width: 100%;
   line-height: 0;
 }
 .community-surprise-box-art img {
   display: block;
   width: 100%;
   height: auto;
-  max-height: clamp(148px, 34vw, 388px);
+  max-height: clamp(180px, 42vw, 460px);
   object-fit: contain;
-  object-position: left bottom;
+  object-position: center bottom;
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.28));
   transition: filter 0.15s ease, transform 0.15s ease;
 }
+.community-surprise-box-spine {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  margin: 0;
+  line-height: 1.2;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.48) 100%);
+  border: 2px solid color-mix(in srgb, var(--sur-accent, #fff) 50%, white);
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.community-surprise-box-spine-name {
+  width: 100%;
+  min-width: 0;
+  font-size: clamp(12px, 1.35vw, 15px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
 .community-surprise-box-art .community-surprise-box-img--mobile {
   display: none;
+}
+@media (min-width: 721px) {
+  .community-surprise-box-art .community-surprise-box-img--pc {
+    width: 94%;
+    max-height: clamp(168px, 38.5vw, 430px);
+    margin-inline: auto;
+  }
+  .community-surprise-box-spine {
+    width: 88%;
+    margin-inline: auto;
+    padding-inline: 8px;
+  }
 }
 .community-surprise-box-caption {
   display: none;
@@ -11564,23 +12022,30 @@ h1, h2, h3 {
     drop-shadow(0 10px 20px rgba(0, 0, 0, 0.35));
   transform: scale(1.02);
 }
-@media (max-width: 980px) {
+@media (max-width: 720px) {
   .community-surprise {
-    --surprise-spine: 0;
-    --surprise-gap: 6px;
+    --surprise-gap: 8px;
     align-items: stretch;
   }
   .community-surprise-box {
+    flex-direction: row;
     gap: 0;
-  }
-  .community-surprise-box:hover {
-    transform: none;
+    padding: 0 2px;
   }
   .community-surprise-box-spine {
     display: none;
   }
+  .community-surprise-box:hover {
+    transform: none;
+  }
   .community-surprise-box-art {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow: hidden;
+    gap: 0;
+  }
+  .community-surprise-box-art-media {
     width: 100%;
     overflow: hidden;
   }
@@ -11599,7 +12064,7 @@ h1, h2, h3 {
     display: block;
     position: absolute;
     left: 50%;
-    bottom: 10%;
+    bottom: 18%;
     z-index: 1;
     transform: translateX(-50%);
     width: 86%;
@@ -11630,11 +12095,11 @@ h1, h2, h3 {
 }
 @media (max-width: 520px) {
   .community-surprise {
-    --surprise-gap: 4px;
+    --surprise-gap: 6px;
   }
   .community-surprise-box-caption {
     font-size: clamp(13px, 4.2vw, 15px);
-    bottom: 9.5%;
+    bottom: 16%;
   }
 }
 
@@ -11920,4 +12385,528 @@ html[data-ui-theme="solid"] .mypage-stats-panel {
   background: #252b36;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+}
+
+/* —— 전용장비 조율 가이드 (도구) —— */
+.dex-hero-search {
+  box-sizing: border-box;
+  padding: 10px 18px;
+  font-size: 13px;
+  width: 240px;
+  max-width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.dex-hero-search::placeholder {
+  color: rgba(255, 255, 255, 0.92);
+  opacity: 1;
+}
+
+.exgear-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.exgear-intro-panel {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.exgear-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+
+.exgear-title {
+  margin: 0 0 6px;
+  font-size: 1.25rem;
+}
+
+.exgear-copy {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: 52ch;
+}
+
+.exgear-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.exgear-updated {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.exgear-error {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 77, 94, 0.2);
+  border: 1px solid rgba(255, 77, 94, 0.35);
+  color: #ffb3bb;
+  font-size: 13px;
+}
+
+.exgear-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.exgear-search {
+  flex: 1;
+  min-width: 180px;
+  max-width: 320px;
+  width: auto;
+}
+
+.exgear-grid-panel {
+  padding: 16px 18px;
+}
+
+.exgear-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 18px 24px;
+  justify-items: center;
+}
+
+/* 전용장비 슬롯 프레임 (bg + border 합성) */
+.exgear-card {
+  position: relative;
+  aspect-ratio: 146 / 222;
+  margin: 4px 8px;
+  flex-shrink: 0;
+}
+
+.exgear-card__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: fill;
+  border-radius: 6px;
+}
+
+.exgear-card__icon {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 7%;
+  height: 56%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.exgear-card__icon img {
+  width: 92%;
+  height: 92%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+}
+
+.exgear-card__label {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 6%;
+  height: 26%;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: clamp(12px, 3.4vw, 15px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: #f3efe6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  z-index: 2;
+  overflow: hidden;
+  word-break: keep-all;
+  pointer-events: none;
+  transform: translateY(-2px);
+}
+
+.exgear-card__border {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 108.9%;
+  height: 105.9%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 3;
+  object-fit: fill;
+}
+
+.exgear-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 148px;
+  padding: 8px 10px;
+  margin: 0 auto;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.exgear-cell:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+}
+
+.exgear-cell.has-guide .exgear-card__border {
+  filter: drop-shadow(0 0 6px rgba(255, 200, 80, 0.45));
+}
+
+.exgear-cell-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #1a1408;
+  background: rgba(255, 200, 80, 0.92);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.exgear-empty-panel,
+.exgear-empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.exgear-modal {
+  width: min(332px, 94vw);
+  max-height: min(88vh, 540px);
+  overflow-y: auto;
+  padding: 0;
+}
+
+.exgear-modal.luxury-panel::before {
+  content: none;
+}
+
+.exgear-modal-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 40px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.exgear-modal-head .exgear-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.28);
+  color: inherit;
+  cursor: pointer;
+}
+
+.exgear-modal-head .exgear-modal-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.exgear-modal-card {
+  flex-shrink: 0;
+  margin: 0 auto;
+}
+
+.exgear-modal-body {
+  padding: 10px 10px 12px;
+}
+
+.exgear-modal-slots-panel {
+  padding: 10px 8px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.exgear-modal-section-label {
+  margin: 0 0 10px;
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.exgear-modal-pending {
+  margin: 0;
+  padding: 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.exgear-priority-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  width: 100%;
+  max-width: 304px;
+}
+
+.exgear-priority-tab {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.45;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.exgear-priority-tab__icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.exgear-priority-tab:hover {
+  opacity: 0.72;
+}
+
+.exgear-priority-tab.is-on {
+  opacity: 1;
+  transform: scale(1.06);
+}
+
+.exgear-priority-tab.has-data:not(.is-on) {
+  opacity: 0.62;
+}
+
+.exgear-option-set {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  width: 100%;
+  max-width: 304px;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.exgear-option-set__row {
+  width: 100%;
+}
+
+.exgear-option-bar {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 472 / 72;
+  max-height: 50px;
+  display: flex;
+  align-items: stretch;
+}
+
+.exgear-option-bar__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+.exgear-option-bar__inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  padding: 0 10% 0 11%;
+  box-sizing: border-box;
+}
+
+.exgear-option-bar__legend {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.exgear-option-bar__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.exgear-option-bar__stat {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.exgear-option-bar__name {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.exgear-option-bar__value {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-right: 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  text-align: right;
+}
+
+.exgear-option-bar__empty {
+  flex: 1;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 500;
+}
+
+.exgear-option-bar__select {
+  width: 100%;
+  min-width: 0;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.35);
+  color: inherit;
+  font-size: 12px;
+}
+
+.exgear-field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 14px 0 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.exgear-field {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.22);
+  color: inherit;
+  font-size: 14px;
+}
+
+.exgear-field--area {
+  resize: vertical;
+  min-height: 72px;
+}
+
+.exgear-modal-note {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.exgear-remove {
+  width: 100%;
+  margin-top: 4px;
+}
+
+@media (max-width: 1100px) {
+  .exgear-grid {
+    grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
+    gap: 16px 20px;
+  }
+}
+
+@media (max-width: 520px) {
+  .exgear-grid {
+    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+    gap: 14px 16px;
+  }
+
+  .exgear-cell {
+    max-width: 136px;
+    padding: 6px 8px;
+  }
+
+  .exgear-card {
+    margin: 3px 6px;
+  }
+
+  .exgear-modal-head {
+    padding: 12px 40px 10px;
+  }
+
+  .exgear-modal-head .exgear-modal-close {
+    top: 8px;
+    right: 8px;
+  }
 }

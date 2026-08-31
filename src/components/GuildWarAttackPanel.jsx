@@ -759,21 +759,27 @@ export default function GuildWarAttackPanel({
           )}
           <span className="gw-counter-rule" aria-hidden>|</span>
         </div>
-        <div className="gw-attack-target-body">
-          <div className="gw-counter-copy gw-attack-target-copy">
-            <div className="gw-counter-title gw-attack-target-title">
-              {isActive ? (
-                <span className={`gw-attack-deck-kind-pill${isMain ? '' : ' is-alt'}`}>{isMain ? '상대' : '파생'}</span>
-              ) : null}
-              <span className="gw-attack-target-title-text">{deck.title}</span>
-            </div>
+        <div className="gw-attack-target-heroes-col">
+          <MiniHeroTrio heroNames={deck.heroNames} resolveHeroByName={resolveHeroByName} size={42} />
+          {isMain && onToggleAlts ? (
+            <button
+              type="button"
+              className={`gw-attack-alt-btn${altsOpen ? ' is-on' : ''}`}
+              aria-label={`파생 덱${altCount > 0 ? ` ${altCount}개` : ''}`}
+              onClick={(e) => { e.stopPropagation(); onToggleAlts(); }}
+            >
+              <Icon name="altDeck" size={11} /> 파생 덱{altCount > 0 ? ` ${altCount}` : ''}
+            </button>
+          ) : null}
+        </div>
+        <div className="gw-attack-target-stack">
+          <div className="gw-attack-target-head">
+            <span className="gw-attack-deck-kind-pill">{isMain ? '상대' : '파생'}</span>
+            <span className="gw-attack-target-title-text">{deck.title}</span>
           </div>
-          <div className="gw-attack-target-heroes-meta">
-            <MiniHeroTrio heroNames={deck.heroNames} resolveHeroByName={resolveHeroByName} size={42} />
-            <div className="gw-attack-target-meta">
-              <span>카운터 {counterCount}개</span>
-              {isMain && altCount > 0 ? <span>파생 덱 {altCount}</span> : null}
-            </div>
+          <div className="gw-attack-target-meta">
+            <span>카운터 {counterCount}개</span>
+            {isMain && altCount > 0 ? <span>파생 덱 {altCount}</span> : null}
           </div>
         </div>
         <div className="gw-counter-actions gw-attack-target-actions">
@@ -785,15 +791,6 @@ export default function GuildWarAttackPanel({
           {onDelete ? (
             <button type="button" className="is-danger" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
               <Icon name="close" size={11} /> 삭제
-            </button>
-          ) : null}
-          {isMain && onToggleAlts ? (
-            <button
-              type="button"
-              className={`btn-ops gw-defense-alt-btn gw-attack-alt-btn${altsOpen ? ' is-on' : ''}`}
-              onClick={(e) => { e.stopPropagation(); onToggleAlts(); }}
-            >
-              <Icon name="copy" size={11} /> 파생 덱{altCount > 0 ? ` ${altCount}` : ''}
             </button>
           ) : null}
         </div>
@@ -1026,7 +1023,7 @@ export default function GuildWarAttackPanel({
                 <MiniHeroTrio heroNames={selectedDeck.heroNames} resolveHeroByName={resolveHeroByName} size={44} />
                 <div>
                   <div className="gw-attack-detail-title-row">
-                    <span className={`gw-attack-vs-pill${selectedAltId ? ' is-alt' : ''}`}>{selectedAltId ? '파생' : '상대'}</span>
+                    <span className="gw-attack-vs-pill">{selectedAltId ? '파생' : '상대'}</span>
                     <h3>{selectedDeck.title}</h3>
                   </div>
                   <div className="gw-attack-detail-meta">{formatUpdateAtDisplay(selectedDeck.updatedAt)}</div>

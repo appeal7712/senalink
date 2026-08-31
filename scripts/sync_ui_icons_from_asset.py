@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""asset/공용 아이콘 → public/images/ui (상급결투장·잠금 제외)."""
+"""asset/공용 아이콘 → public/images/ui (소형 UI 글리프만; community/arena 배너는 별도 유지)."""
 from __future__ import annotations
 
 import json
@@ -22,6 +22,7 @@ COPY_MAP: dict[str, str] = {
     "강림원정대 아이콘.png": "expedition.png",
     "강림 원정대 아이콘.png": "expedition.png",
     "결투장 아이콘.png": "arena.png",
+    "상급 결투장 아이콘.png": "arena-advanced.png",
     "공격진형 아이콘.png": "formation-attack.png",
     "공성전 아이콘.png": "siege.png",
     "공유 아이콘.png": "share.png",
@@ -64,9 +65,10 @@ COPY_MAP: dict[str, str] = {
     "펫 아이콘.png": "pet.png",
     "플러스 아이콘.png": "plus.png",
     "허브 나가기 아이콘.png": "hub-exit.png",
+    "전용장비 백그라운드 레이어.png": "exclusive-gear-card-bg.png",
+    "전용장비 백그라운드 레이어 테두리.png": "exclusive-gear-card-border.png",
 }
 
-SKIP_SUBSTR = ("상급", "잠금")
 SKIP_PREFIX = ("Atl_", "Tex_")
 
 

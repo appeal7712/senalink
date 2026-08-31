@@ -6,7 +6,7 @@ import HubPage from './pages/hub/HubPage';
 import ToastContainer from './components/Toast';
 import SiteEntranceBanner from './components/SiteEntranceBanner';
 import NicknameGate from './components/NicknameGate';
-import { PAGE, navigateTo, navigateToTools, pathToPage } from './config/routes';
+import { PAGE, navigateTo, pathToPage } from './config/routes';
 import { handleOverlayPopState, readHubTabFromState } from './utils/overlayHistory';
 import { useSuperAdmin } from './context/SuperAdminContext';
 import { applyPageSeo } from './lib/seo';
@@ -66,11 +66,6 @@ export default function App() {
     setActiveTab(page);
   };
 
-  const goTools = (toolId) => {
-    navigateToTools(toolId);
-    setActiveTab(PAGE.TOOLS);
-  };
-
   const onOpsPath = activeTab === PAGE.OPS;
   // /ops 는 항상 OpsPage(로그인 게이트 포함). 쓰기 잠금은 Firestore isSuperAdmin().
   const opsUnlocked = authReady && adminReady && isSuperAdmin;
@@ -78,7 +73,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <GNB activeTab={gnbTab} setActiveTab={go} onOpenTools={goTools} />
+      <GNB activeTab={gnbTab} setActiveTab={go} />
 
       <main className="app-main">
         {onOpsPath ? (

@@ -709,7 +709,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                     ) : null}
                     {canDeleteBuild?.(a) ? (
                       <button type="button" className="btn-danger-solid" onClick={() => removeAlt(parent.id, a.id)}>
-                        <Icon name="close" size={13} /> 삭제
+                        <Icon name="close" size={14} /> 삭제
                       </button>
                     ) : null}
                   </>
@@ -775,7 +775,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
             <>
               <button
                 type="button"
-                className={`btn-ops gw-defense-alt-btn${altsOpen ? ' is-on' : ''}`}
+                className={`gw-defense-alt-btn${altsOpen ? ' is-on' : ''}`}
                 onClick={() => {
                   if (!isExpanded) setExpandedId(d.id);
                   const nextOpen = !(altsOpen && isExpanded);
@@ -783,7 +783,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                   if (!nextOpen) setExpandedAltId(null);
                 }}
               >
-                <Icon name="copy" size={12} /> 대체 덱{altCount > 0 ? ` ${altCount}` : ''}
+                <Icon name="altDeck" size={12} /> 대체 덱{altCount > 0 ? ` ${altCount}` : ''}
               </button>
               {canDeleteBuild?.(d) ? (
                 <button type="button" className="btn-edit" onClick={() => openEdit(raw)}>
@@ -792,7 +792,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
               ) : null}
               {canDeleteBuild?.(d) ? (
                 <button type="button" className="btn-danger-solid" onClick={() => remove(d.id)}>
-                  <Icon name="close" size={13} /> 삭제
+                  <Icon name="close" size={14} /> 삭제
                 </button>
               ) : null}
             </>
