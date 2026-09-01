@@ -112,54 +112,100 @@ function totalWarFrontStatus(kst) {
 
 /**
  * 총력전
- * 오픈 목 → R1 금 14:00 → 마감 다다음주 화 09:00
- * 테두리 스핀(burning) = 「전투 진행 중」일 때만. 그 외·시즌 휴식 = 회색 고정
+ * 오픈 목 → 금 09:00 일일 싸이클 → R1 금 14:00 → 마감 화 09:00
+ * 마감 후: 화09~수09 시즌 결산 · 수09~금09 시즌 준비
+ * 테두리 스핀(burning) = 「전투 진행 중」일 때만. 그 외 = 회색 고정
  */
 function evalTotalWar(nowMs, anchorYmd) {
   const start = cycleStartMs(anchorYmd, 14, nowMs);
   if (start == null) return null;
 
+  const fri09 = start + DAY_MS + 9 * HOUR_MS;
   const fri14 = start + DAY_MS + 14 * HOUR_MS;
   const tue09 = start + 12 * DAY_MS + 9 * HOUR_MS;
+  const settlementEnd = tue09 + DAY_MS;
+  const nextCycleStart = addDaysUtcMs(start, 14);
+  const nextFri09 = nextCycleStart + DAY_MS + 9 * HOUR_MS;
+  const nextTue09 = nextCycleStart + 12 * DAY_MS + 9 * HOUR_MS;
+
   const kst = getKstParts(new Date(nowMs));
   const id = 'totalwar';
   const name = '총력전';
-  const inSeason = nowMs >= start && nowMs < tue09;
 
-  if (!inSeason) {
-    return baseItem({
-      id, name, icon: 'totalwar', burning: false,
+  const twItem = (partial) => baseItem({ id, name, icon: 'totalwar', ...partial });
+
+  if (nowMs < start) {
+    return twItem({
+      burning: false,
       frontStatus: '시즌 준비',
       endsAtMs: tue09,
       endsAtLabel: formatEndsAtLabel(tue09),
-      progress: nowMs >= tue09 ? 1 : 0,
+      progress: 0,
       status: '시즌 준비',
     });
   }
 
-  if (nowMs < fri14) {
-    return baseItem({
-      id, name, icon: 'totalwar', burning: false,
+  // 시즌 중 일일 6슬롯: 금 09:00 ~ 화 09:00
+  if (nowMs >= fri09 && nowMs < tue09) {
+    const frontStatus = totalWarFrontStatus(kst);
+    const round = nowMs >= fri14
+      ? Math.min(22, Math.max(1, Math.floor((nowMs - fri14) / DAY_MS) + 1))
+      : null;
+    return twItem({
+      burning: frontStatus === '전투 진행 중',
+      frontStatus,
+      detail: round ? `R${round}/22` : '',
+      round,
+      endsAtMs: tue09,
+      endsAtLabel: formatEndsAtLabel(tue09),
+      progress: progressBetween(fri14, tue09, nowMs),
+      status: frontStatus,
+    });
+  }
+
+  // 시즌 초: 목 00:00 ~ 금 09:00
+  if (nowMs >= start && nowMs < fri09) {
+    return twItem({
+      burning: false,
       frontStatus: '시즌 준비',
       endsAtMs: tue09,
       endsAtLabel: formatEndsAtLabel(tue09),
-      progress: progressBetween(start, tue09, nowMs),
+      progress: 0,
       status: '시즌 준비',
     });
   }
 
-  const round = Math.min(22, Math.max(1, Math.floor((nowMs - fri14) / DAY_MS) + 1));
-  const frontStatus = totalWarFrontStatus(kst);
-  return baseItem({
-    id, name, icon: 'totalwar',
-    burning: frontStatus === '전투 진행 중',
-    frontStatus,
-    detail: `R${round}/22`,
-    round,
-    endsAtMs: tue09,
-    endsAtLabel: formatEndsAtLabel(tue09),
-    progress: progressBetween(fri14, tue09, nowMs),
-    status: frontStatus,
+  // 시즌 마감 직후: 화 09:00 ~ 수 09:00
+  if (nowMs >= tue09 && nowMs < settlementEnd) {
+    return twItem({
+      burning: false,
+      frontStatus: '시즌 결산',
+      endsAtMs: tue09,
+      endsAtLabel: formatEndsAtLabel(tue09),
+      progress: 1,
+      status: '시즌 결산',
+    });
+  }
+
+  // 다음 시즌 전: 수 09:00 ~ 다음 금 09:00
+  if (nowMs >= settlementEnd && nowMs < nextFri09) {
+    return twItem({
+      burning: false,
+      frontStatus: '시즌 준비',
+      endsAtMs: nextTue09,
+      endsAtLabel: formatEndsAtLabel(nextTue09),
+      progress: 1,
+      status: '시즌 준비',
+    });
+  }
+
+  return twItem({
+    burning: false,
+    frontStatus: '시즌 준비',
+    endsAtMs: nextTue09,
+    endsAtLabel: formatEndsAtLabel(nextTue09),
+    progress: 1,
+    status: '시즌 준비',
   });
 }
 
