@@ -276,7 +276,10 @@ export default function LoungeHome() {
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
         <button type="button" className="hub-action-btn" onClick={() => {
-          if (confirm('이 길드 허브에서 나갈까요?')) leaveLounge();
+          if (!confirm('이 길드 허브에서 나갈까요?')) return;
+          void leaveLounge().catch((e) => {
+            showToast(e?.message || '허브 나가기에 실패했습니다.', 'error');
+          });
         }} style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
           padding: '7px 14px', fontSize: 12, fontWeight: 800,

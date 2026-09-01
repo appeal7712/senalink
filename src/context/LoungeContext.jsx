@@ -8,6 +8,7 @@ import {
   updateDoc,
   deleteDoc,
   deleteField,
+  runTransaction,
   onSnapshot,
   query,
   orderBy,
@@ -160,6 +161,7 @@ export function LoungeProvider({ children }) {
   const sessionRef = useRef(session);
   sessionRef.current = session;
   const [hubListenNonce, setHubListenNonce] = useState(0);
+  const [hubLoadStalled, setHubLoadStalled] = useState(false);
   const hubListenFailsRef = useRef(0);
   const hubListenLoungeRef = useRef(null);
 
@@ -292,7 +294,11 @@ export function LoungeProvider({ children }) {
           const hubId = String(res?.data?.hubId || '').trim();
           if (cancelled) return;
           if (hubId) {
-            setSession({ loungeId: hubId, memberId: authUser.uid });
+            setSession((prev) => {
+              if (prev?.observer) return prev;
+              if (prev?.loungeId) return prev;
+              return { loungeId: hubId, memberId: authUser.uid };
+            });
           }
         } catch (err) {
           console.error('resolveMyHub', err);
@@ -460,6 +466,26 @@ export function LoungeProvider({ children }) {
       unsubs.forEach((u) => u());
     };
   }, [loungeId, authUser, authReady, hubListenNonce]);
+
+  useEffect(() => {
+    setHubLoadStalled(false);
+    if (!loungeId || !authUser || !hubMeta || session?.observer) return undefined;
+    if (membersSnapOk) return undefined;
+
+    const timer = window.setTimeout(() => {
+      if (sessionRef.current?.observer) return;
+      setHubLoadStalled(true);
+    }, 15_000);
+
+    return () => window.clearTimeout(timer);
+  }, [loungeId, authUser, hubMeta, membersSnapOk, session?.observer, hubListenNonce]);
+
+  const retryHubLoad = useCallback(() => {
+    setHubLoadStalled(false);
+    setMembersReady(false);
+    setMembersSnapOk(false);
+    setHubListenNonce((n) => n + 1);
+  }, []);
 
   const activeLounge = useMemo(() => {
     if (!hubMeta || !loungeId) return null;
@@ -913,9 +939,27 @@ export function LoungeProvider({ children }) {
       ? 'member'
       : 'admin';
 
-    await updateDoc(doc(db, 'hubs', loungeId, 'members', memberId), { role: 'master' });
-    await updateDoc(doc(db, 'hubs', loungeId, 'members', me.id), { role: nextMyRole });
-    await updateDoc(doc(db, 'hubs', loungeId), { masterId: memberId, updatedAt: nowIso() });
+    const hubRef = doc(db, 'hubs', loungeId);
+    const newMasterRef = doc(db, 'hubs', loungeId, 'members', memberId);
+    const oldMasterRef = doc(db, 'hubs', loungeId, 'members', me.id);
+    const updatedAt = nowIso();
+
+    await runTransaction(db, async (transaction) => {
+      const [newMasterSnap, oldMasterSnap, hubSnap] = await Promise.all([
+        transaction.get(newMasterRef),
+        transaction.get(oldMasterRef),
+        transaction.get(hubRef),
+      ]);
+      if (!hubSnap.exists()) throw new Error('허브를 찾을 수 없습니다.');
+      if (!newMasterSnap.exists()) throw new Error('대상 멤버를 찾을 수 없습니다.');
+      if (!oldMasterSnap.exists()) throw new Error('길드마스터 정보를 확인할 수 없습니다.');
+      if (oldMasterSnap.data().role !== 'master') throw new Error('길드마스터만 위임할 수 있습니다.');
+
+      transaction.update(newMasterRef, { role: 'master' });
+      transaction.update(oldMasterRef, { role: nextMyRole });
+      transaction.update(hubRef, { masterId: memberId, updatedAt });
+    });
+
     await pushHistory(loungeId, me.nickname, 'transfer_master', target.nickname, '길드마스터 위임');
   }, [activeLounge, isMaster, loungeId, me, members, pushHistory]);
 
@@ -1036,6 +1080,8 @@ export function LoungeProvider({ children }) {
     bootError,
     authUser,
     hubRecovering,
+    hubLoadStalled,
+    retryHubLoad,
     usingEmulators,
     useGoogleAuth: useGoogleForHub,
     signInWithGoogle,

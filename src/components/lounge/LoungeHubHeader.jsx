@@ -17,6 +17,7 @@ import CopyNotice from './CopyNotice';
 import GuildRankBars from './GuildRankBars';
 import ModalScrim from '../ModalScrim';
 import GuildMark from '../GuildMark';
+import { showToast } from '../Toast';
 
 const ROLE_LABEL = { master: '길드마스터', admin: '관리자', member: '길드원', super: '슈퍼관리자' };
 
@@ -142,7 +143,12 @@ export default function LoungeHubHeader() {
             </button>
             <button
               type="button"
-              onClick={() => { setLeaveOpen(false); void leaveLounge(); }}
+              onClick={() => {
+                setLeaveOpen(false);
+                void leaveLounge().catch((e) => {
+                  showToast(e?.message || '허브 나가기에 실패했습니다.', 'error');
+                });
+              }}
               className="btn-ops"
               style={{ flex: 1, padding: '12px', justifyContent: 'center', background: 'rgba(239,68,68,0.92)', color: '#fff' }}
             >

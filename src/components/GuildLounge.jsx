@@ -320,7 +320,7 @@ export default function GuildLounge() {
   const {
     activeLounge, me, session, canEditBuilds, isAdmin,
     logBuildHistory, freshInvite, dismissFreshInvite,
-    authReady, authUser,
+    authReady, authUser, hubLoadStalled, retryHubLoad,
   } = useLounge();
   const { profile, profileReady } = useUserProfile();
 
@@ -1330,6 +1330,24 @@ export default function GuildLounge() {
     // 로그인이 풀린 채 로컬 세션만 남아 있으면 허브를 영원히 못 불러온다.
     // 인증이 끝났는데 계정이 없으면 로딩 대신 로그인 화면을 보여준다.
     if (session && (!authReady || authUser)) {
+      if (hubLoadStalled) {
+        return (
+          <div className="container fade-in" style={{ padding: '48px 24px', color: '#fff', fontWeight: 800, textAlign: 'center' }}>
+            <p style={{ margin: '0 0 8px', fontSize: 16 }}>허브 연결이 지연되고 있습니다</p>
+            <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, lineHeight: 1.5 }}>
+              네트워크가 불안정하거나 일시적인 오류일 수 있습니다.
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button type="button" className="btn-ops" onClick={retryHubLoad}>
+                다시 시도
+              </button>
+              <button type="button" className="btn-steel" onClick={() => window.location.reload()}>
+                새로고침
+              </button>
+            </div>
+          </div>
+        );
+      }
       return (
         <div className="container fade-in" style={{ padding: '48px 24px', color: '#fff', fontWeight: 800, textAlign: 'center' }}>
           허브를 불러오는 중…

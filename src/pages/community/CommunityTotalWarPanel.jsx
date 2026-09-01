@@ -20,6 +20,7 @@ import {
 import { emptyGearConfig } from '../../components/HeroGearPanel';
 import { useSuperAdmin } from '../../context/SuperAdminContext';
 import { useUserProfile } from '../../context/UserProfileContext';
+import { showToast } from '../../components/Toast';
 import { backdropDismissProps } from '../../utils/backdropDismiss';
 import CommunityTotalWarEditor from './CommunityTotalWarEditor';
 
@@ -148,7 +149,11 @@ export default function CommunityTotalWarPanel() {
   const handleDelete = async (guide) => {
     if (!canEditCommunityGuide(guide, { uid: authUser?.uid, isSuperAdmin, section: 'pvp' })) return;
     if (!window.confirm(`「${guide.title}」공략을 삭제할까요?`)) return;
-    await deleteCommunityGuide(guide.id);
+    try {
+      await deleteCommunityGuide(guide.id);
+    } catch (e) {
+      showToast(e?.message || '공략 삭제에 실패했습니다.', 'error');
+    }
   };
 
   return (

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Icon from '../../components/icons/Icon';
 import SafeImg from '../../components/icons/SafeImg';
 import PublicProfileModal from '../../components/PublicProfileModal';
+import { showToast } from '../../components/Toast';
 import CommunityGuideCard from './CommunityGuideCard';
 import CommunityGuideEditor from './CommunityGuideEditor';
 import {
@@ -84,7 +85,11 @@ export default function CommunityPvePanel() {
   const handleDelete = async (guide) => {
     if (!canEditCommunityGuide(guide, { uid: authUser?.uid, isSuperAdmin, section: 'pve' })) return;
     if (!window.confirm(`「${guide.title}」공략을 삭제할까요?`)) return;
-    await deleteCommunityGuide(guide.id);
+    try {
+      await deleteCommunityGuide(guide.id);
+    } catch (e) {
+      showToast(e?.message || '공략 삭제에 실패했습니다.', 'error');
+    }
   };
 
   return (
