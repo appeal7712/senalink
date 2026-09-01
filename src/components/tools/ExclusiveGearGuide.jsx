@@ -31,17 +31,16 @@ function gearCardLabel(hero) {
   return cleanName(hero);
 }
 
-function HeroGuideCell({ hero, hasGuide, onClick }) {
+function HeroGuideCell({ hero, onClick }) {
   const gearIcon = getExclusiveGearIconUrl(hero.id);
   return (
     <button
       type="button"
-      className={`exgear-cell${hasGuide ? ' has-guide' : ''}`}
+      className="exgear-cell"
       onClick={onClick}
       title={cleanName(hero)}
     >
       <ExclusiveGearCard iconUrl={gearIcon} label={gearCardLabel(hero)} size={108} />
-      {hasGuide ? <span className="exgear-cell-badge">추천</span> : null}
     </button>
   );
 }
@@ -305,18 +304,13 @@ export default function ExclusiveGearGuide() {
       ) : (
         <div className="luxury-panel exgear-grid-panel">
           <div className="exgear-grid">
-            {listedHeroes.map((hero) => {
-              const guide = activeGuides[hero.id];
-              const hasGuide = heroGuideHasContent(guide);
-              return (
+            {listedHeroes.map((hero) => (
                 <HeroGuideCell
                   key={hero.id}
                   hero={hero}
-                  hasGuide={hasGuide}
                   onClick={() => setSelectedHeroId(hero.id)}
                 />
-              );
-            })}
+              ))}
           </div>
         </div>
       )}
