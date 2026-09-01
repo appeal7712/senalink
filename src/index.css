@@ -1106,6 +1106,9 @@ h1, h2, h3 {
 .btn-ops img.icon-inline:not(.icon-inline--color) {
   filter: invert(1);
 }
+.setting-overview-head-kicker img.icon-inline:not(.icon-inline--color) {
+  filter: none;
+}
 .btn-ops:hover {
   filter: brightness(110%);
   transform: translateY(-5px);
@@ -4373,6 +4376,9 @@ h1, h2, h3 {
     transform 600ms cubic-bezier(.3, .7, .4, 1),
     filter 250ms,
     box-shadow 600ms cubic-bezier(.3, .7, .4, 1);
+}
+.btn-share-setting img.icon-inline {
+  filter: brightness(0);
 }
 
 .btn-share-setting:hover {

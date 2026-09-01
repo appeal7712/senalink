@@ -809,7 +809,7 @@ export default function InGameDeckCard({
             justifyContent: 'center'
           }}
         >
-          <Icon name="swords" size={compact ? 12 : 14} /> 세팅 확인
+          <Icon name="settingConfirm" size={compact ? 12 : 14} /> 세팅 확인
         </button>
       )}
     </div>
@@ -1090,7 +1090,7 @@ export default function InGameDeckCard({
             <div className="setting-overview-head">
               <div className="setting-overview-head-lead">
                 <div className="setting-overview-head-kicker">
-                  <Icon name="swords" size={16} /> 세팅 확인
+                  <Icon name="settingConfirm" size={16} /> 세팅 확인
                   {isPvp && pvpMode ? <PvpModeBadge mode={pvpMode} size="sm" /> : null}
                   {settingDeckTitle ? (
                     <div className="setting-overview-head-title">
@@ -1219,7 +1219,7 @@ export default function InGameDeckCard({
                 disabled={shareBusy}
                 onClick={shareSettingImage}
               >
-                <Icon name="copy" size={14} color="#161616" />
+                <Icon name="copy" size={14} />
                 {shareBusy ? '복사 중…' : '세팅 공유'}
               </button>
               <button type="button" onClick={() => dismissSubModal(closeGearOverview)} className="btn-ops" style={{
