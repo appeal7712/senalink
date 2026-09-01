@@ -48,7 +48,7 @@ export const UI_IMAGE_ICONS = {
   volcano: { src: '/images/ui/expedition.png', w: 60, h: 60 },
   boss: { src: '/images/ui/boss.png', w: 54, h: 51 },
   gearSetting: { src: '/images/ui/gear-setting.png', w: 50, h: 50 },
-  settingConfirm: { src: '/images/ui/setting-confirm.png', w: 50, h: 50 },
+  settingConfirm: { src: '/images/ui/setting-confirm.png', w: 60, h: 60 },
   exclusiveGear: { src: '/images/ui/exclusive-gear-tool.png', w: 60, h: 60 },
   system: { src: '/images/ui/system.png', w: 60, h: 60 },
   hubExit: { src: '/images/ui/hub-exit.png', w: 50, h: 45 },
