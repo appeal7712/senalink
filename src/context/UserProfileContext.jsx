@@ -18,6 +18,8 @@ const EMPTY_PROFILE = {
   totalwarTier: 'normal',
   arenaTier: 'bronze',
   destructionScore: 0,
+  /** 게임 계정 「전투력」총합 — 본인 입력, 공개 프로필 표시 */
+  combatPower: 0,
   hubId: null,
 };
 

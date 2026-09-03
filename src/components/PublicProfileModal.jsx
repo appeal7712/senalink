@@ -170,6 +170,10 @@ export default function PublicProfileModal({ uid, onClose }) {
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', marginBottom: 4 }}>파괴신 3합 평균 점수</div>
                 <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--gold-light)' }}>{formatScore(profile.destructionScore)}</div>
               </div>
+              <div className="glass-inset" style={{ padding: '12px 14px', borderRadius: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', marginBottom: 4 }}>내 전투력 총합</div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--gold-light)' }}>{formatScore(profile.combatPower)}</div>
+              </div>
             </div>
 
             <p style={{ margin: '4px 0 0', fontSize: 11, color: '#64748b', fontWeight: 700, textAlign: 'center' }}>

@@ -3,6 +3,7 @@
 export const COMMUNITY_PVE_MODES = [
   { id: 'raid', label: '레이드', blurb: '정규 레이드 보스 공략' },
   { id: 'surprise_raid', label: '돌발 레이드', blurb: '등장 시 한정 돌발 보스' },
+  { id: 'trial_tower', label: '시련의 탑', blurb: '시즌 전 업데이트 예정' },
   { id: 'growth_dungeon', label: '성장던전', blurb: '원소·골드 던전 루트' },
 ];
 
@@ -69,6 +70,11 @@ export const COMMUNITY_GROWTH_DUNGEONS = [
   { key: 'gold', name: '골드던전', iconUrl: '/images/community/dungeon/gold.png', accent: '#facc15' },
 ];
 
+/** 시련의 탑 — 컨텐츠 칸만 확보. 공략/보스 목록은 다음 시즌 전 업데이트 */
+export const COMMUNITY_TRIAL_TOWER = [];
+export const COMMUNITY_TRIAL_TOWER_COMING_SOON =
+  '시련의 탑 공략은 다음 시즌 전에 업데이트할 예정입니다.';
+
 export const COMMUNITY_ARENA_KINDS = [
   { id: 'normal', label: '결투장', iconUrl: '/images/ui/arena.png' },
   { id: 'advanced', label: '상급 결투장', iconUrl: '/images/ui/arena-advanced.png' },
@@ -112,7 +118,7 @@ export function communitySkillMode(category) {
   if (category === 'raid' || category === 'surprise_raid') {
     return { mode: 'reservation', maxReservations: 10, layout: 'pve' };
   }
-  if (category === 'growth_dungeon') {
+  if (category === 'growth_dungeon' || category === 'trial_tower') {
     return { mode: 'timeline', maxReservations: 0, layout: 'pve' };
   }
   if (category === 'arena' || category === 'totalwar') {
@@ -125,8 +131,10 @@ export function communityContentLabel(category, contentKey) {
   const lists = {
     raid: COMMUNITY_RAIDS,
     surprise_raid: COMMUNITY_SURPRISE_RAIDS,
+    trial_tower: COMMUNITY_TRIAL_TOWER,
     growth_dungeon: COMMUNITY_GROWTH_DUNGEONS,
   };
+  if (category === 'trial_tower') return '시련의 탑';
   const hit = (lists[category] || []).find((x) => x.key === contentKey);
   return hit?.name || contentKey || '';
 }
@@ -134,6 +142,7 @@ export function communityContentLabel(category, contentKey) {
 export function communityContentsFor(category) {
   if (category === 'raid') return COMMUNITY_RAIDS;
   if (category === 'surprise_raid') return COMMUNITY_SURPRISE_RAIDS;
+  if (category === 'trial_tower') return COMMUNITY_TRIAL_TOWER;
   if (category === 'growth_dungeon') return COMMUNITY_GROWTH_DUNGEONS;
   return [];
 }

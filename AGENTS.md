@@ -206,7 +206,7 @@ Provider 순서 (`main.jsx`): **SuperAdmin → UserProfile → Lounge → App**.
 
 ### 6.2 사이트 유저 프로필 (`UserProfileContext.jsx`)
 - 문서: `users/{uid}` 실시간 구독 + `saveProfile`.
-- 필드: `nickname`(2–12), `photoURL`, `totalwarTier`, `arenaTier`, `destructionScore`, `hubId`, `recommendCount`, `lastProfileRecommendDate`, `dailyTarotPeriodId`(선택, KST 09:00 주기 일일 타로 클릭), `updatedAt`.
+- 필드: `nickname`(2–12), `photoURL`, `totalwarTier`, `arenaTier`, `destructionScore`, `combatPower`(선택, 내 전투력 총합·본인 입력), `hubId`, `recommendCount`, `lastProfileRecommendDate`, `dailyTarotPeriodId`(선택, KST 09:00 주기 일일 타로 클릭), `updatedAt`.
 - **마이페이지:** GNB `ProfileDropdown` → `MyPageModal` (본인만 수정).
 - **일일 타로카드:** GNB `DailyTarotButton` — 외부 링크 + `dailyTarotPeriodId` / localStorage. 규칙 화이트리스트 필드(완화 아님).
 - **닉네임 게이트:** `NicknameGate` — 닉 없을 때 강제 모달 (`/ops` 제외).
@@ -361,7 +361,8 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 
 - 도구: `ToolsPage` / `data/tools.js` (승확 계산기·티어리스트 메이커 등)
 - 도감: `EncyclopediaPage` → `DbHub` → `HeroDB` / `EquipDB` / `SystemDB`
-- **모바일 도감 영웅 상세(≤760px):** `.hero-db-detail`은 `max-height`/`overflow` 풀어 **스킬 설명 내부 스크롤 없이** 페이지로 펼침. 영웅 **목록** 칸 스크롤·PC(고정 높이 3열)는 유지.
+- **도감 영웅 DB 레이아웃:** PC **3열**은 **≥981** 유지. **1열 스택은 ≤980만** (예전 1100 중간 브레이크 없음).
+- **모바일 도감 영웅 상세(≤760/≤980 블록):** `.hero-db-detail`은 `max-height`/`overflow` 풀어 **스킬 설명 내부 스크롤 없이** 페이지로 펼침. 영웅 **목록** 칸 스크롤·PC(고정 높이 3열)는 유지.
 
 ### 10.6 세팅 확인 (`InGameDeckCard`)
 
@@ -559,21 +560,60 @@ API:
 
 ---
 
-## 13. 도감 업데이트 유의 사항 (영웅 · 펫 · 장비)
+## 13. 도감 업데이트 유의 사항 (영웅 · 펫 · 장비 · 전용장비)
 
 앱이 **실제로 import하는 파일**만 고치면 UI에 반영된다. `asset/`은 원본·재생성 소스.
 
-### 13.1 영웅
+**목록 정렬 (전역, 까먹지 말 것):** §12.1  
+각성 → 스페셜(`HERO_FACTION_ORDER.special` 소속순) → 준스페셜(아스가르드·아이샤) → 일반 → 기타.  
+`heroes.js`의 `sortHeroesForList` / `compareHeroesForList`가 단일 소스. 새 소속이면 `HERO_FACTION_ORDER`에만 추가.
+
+런타임 영웅: `scraped_heroes.json` ← `heroes.js` ← `HeroDB` / 피커 / 세팅·스킬 예약.
+
+### 13.1 영웅 — 신규 캐릭터 추가 (체크리스트)
+
+밍봉이 `asset/영웅 목록/.../이름(역할)(각성?)` 폴더를 채워 둔 뒤:
 
 | 단계 | 할 일 |
 |------|--------|
-| 1 | `asset/영웅 목록/...`에 폴더·스킬 JSON·초상 원본 추가 |
-| 2 | `src/data/scraped_heroes.json`에 병합 (루트 `rebuild_heroes_json.py` 등은 **옛 경로**를 가리킬 수 있음 → 이 repo 기준으로 수정) |
-| 3 | `public/images/...` 초상; 카드는 `scripts/fetch_hero_cards.py` → `heroCardMeta.json` + `card.webp` |
-| 4 | `src/data/heroes.js` — `heroes` export, 새 진영이면 `HERO_FACTION_ORDER` 확인. **목록 순서는 §12.1** |
-| 5 | 빌드·배포 시 `APP_VERSION` bump |
+| 1 | **폴더 위치 = 소속.** 예: `스페셜 영웅/경계의 수호자/하연(지원형)(각성)` → `group: "경계의 수호자"`, `category: "special"`, `role`은 괄호, `isAwakened`는 `(각성)` 여부 |
+| 2 | 폴더 안: `skills/*.json`(스킬·쿨·effects·tooltips) · 스킬 PNG · `*_초상화.png` · **`이름_전용장비.png`(필수에 가깝게 — 아래 13.1.1)** |
+| 3 | `src/data/scraped_heroes.json`에 엔트리 추가/병합. 스킬 `type`/`direction`: Normal→`basic_attack`, Active1→`active`+`upper`, Active2→`active`+`down`, Passive→`passive`, Awakening→`awaken_skill`+`awaken`. `cooldown` null→0. `iconUrl`=`/images/{id}/skills/{스킬명}.png` |
+| 4 | `public/images/{id}/portrait.png` + 스킬 PNG 복사. 카드는 `card.webp`(+ `heroCardMeta.json`) — 초상에서 생성해도 됨 (`scripts/fetch_hero_cards.py` 또는 초상→webp) |
+| 5 | 새 진영이면 `src/data/heroes.js`의 `HERO_FACTION_ORDER`만 확인. **목록 재정렬 수동 금지** — `heroes` export가 이미 `sortHeroesForList` |
+| 6 | **전용장비** — §13.1.1 |
+| 7 | `/dex` 도감 · 덱 수정 영웅 목록 · 스킬 예약에 뜨는지 확인. 배포 시 `APP_VERSION` bump |
 
-런타임: `scraped_heroes.json` ← `heroes.js` ← `HeroDB` / 피커 / 초상.
+> `scripts/legacy/rebuild_heroes_json.py` 등은 **옛 폴더 경로**를 가리킬 수 있음. formal 기준으로만 쓰거나 수동 병합.
+
+#### 13.1.1 전용장비 (신규·각성 시 같이)
+
+도구 **「전용장비 옵션 추천」** 그리드는 `exclusiveGearMeta.generated.json`(+ `scraped_heroes`)를 본다. **신규 영웅이면 캐릭뿐 아니라 전용장비 아이콘도 반드시 넣는다.**
+
+| 단계 | 할 일 |
+|------|--------|
+| 1 | `asset/.../영웅폴더/{이름}_전용장비.png` 배치 |
+| 2 | `python scripts/sync_exclusive_gear_from_asset.py` → `public/images/{id}/exclusive-gear.png` + `src/data/exclusiveGearMeta.generated.json` |
+| 3 | (선택) Ops/도구에서 조율 옵션 추천 문구는 Firestore `exclusiveGearGuides` — 아이콘만이면 메타 sync로 충분 |
+
+이미 영웅만 넣고 전용장비를 빼먹으면 도구 그리드에 아이콘이 비거나 누락된다.
+
+#### 13.1.2 일반 → 각성 업데이트
+
+| 단계 | 할 일 |
+|------|--------|
+| 1 | asset에 `(각성)` 폴더·JSON·초상·스킬 아이콘·전용장비 갱신 |
+| 2 | `scraped_heroes.json` 해당 영웅: `isAwakened: true`, 스킬에 **Awakening** 추가, 쿨/설명/아이콘 경로 갱신 |
+| 3 | `public/images/{id}/` 초상·스킬·전용장비 덮어쓰기 |
+| 4 | 정렬은 자동(각성이 일반보다 앞). 같은 소속끼리는 이름순 |
+
+#### 13.1.3 스킬 이름·아이콘만 변경
+
+| 단계 | 할 일 |
+|------|--------|
+| 1 | asset `skills/*.json` + 새 스킬 PNG |
+| 2 | `scraped_heroes.json`의 `skills[].name` / `iconUrl` / 필요 시 description·effects 동기화 |
+| 3 | `public/images/{id}/skills/`에 **새 파일명**으로 PNG 복사 (옛 아이콘 파일은 남겨도 UI는 `iconUrl`만 봄) |
 
 ### 13.2 펫
 
@@ -592,7 +632,8 @@ API:
 | 3 | **덱 에디터·길드전·ops 메타덱 세트/옵션**은 `src/data/equipments.js` (주석: 단일 소스) |
 | 4 | 도감 화면은 `gearDex.js`가 generated + legendary(`equipments.js`) 병합 |
 
-장비·장신구 단일 소스: **`equipments.js` + gearDex** (`equipment.js` 단수 스키마는 제거됨).
+장비·장신구 단일 소스: **`equipments.js` + gearDex** (`equipment.js` 단수 스키마는 제거됨).  
+전용장비(영웅 전용)는 §13.1.1 — 일반 장비 도감과 경로가 다름.
 
 ### 13.4 도감 UI 탭
 
@@ -642,6 +683,17 @@ API:
 ---
 
 ## 17. 패치 내역
+
+### 2026-09-03 (`v2026.09.03.174`) — 영웅·프로필·PVE 탭·배경
+- **하연** (스페셜·경계의 수호자·지원·각성) `scraped_heroes` + 초상/스킬/전용장비.
+- **벨리카** 일반→각성 (`isAwakened`, 각성기「마녀의 그림자」, Active2 쿨 80).
+- **루디** 스킬명·아이콘만 (규탄의 검격 / 영겁의 성채 / 철옹의 방벽; 각성「영광의 심판」유지).
+- **마이프로필:** `combatPower`(내 전투력 총합) 본인 입력·공개 프로필 표시. `firestore.rules` 화이트리스트 optional 필드 추가(완화 아님).
+- **공용 허브 PVE:** 시련의 탑 탭 칸 추가(Coming Soon, Firestore 구독 없음).
+- **도감:** 영웅 DB 3열↔1열 전환 **≤980**만 (981–1100 중간 레이아웃 제거).
+- **배경:** `public/bg-senari.png` → 세나리 배경 화면2.
+- **AGENTS.md §13** 신규·각성·스킬-only·**전용장비 동시 추가** 체크리스트 보강.
+- Hosting + `firestore:rules` 배포.
 
 ### 2026-08-30 — 내부 정리 Phase 2 (배포·라이브 데이터 무변경)
 - **루트 clutter 제거:** `gelidus_success.html` → `scripts/legacy/fixtures/`, `category_success.html`·`asset_list.csv` 삭제.

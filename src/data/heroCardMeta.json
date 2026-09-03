@@ -207,7 +207,10 @@
     "negiRarity": "legendary+",
     "negiStar": "7",
     "negiRole": "3",
-    "cardUrl": "/images/루디/card.webp"
+    "cardUrl": "/images/루디/card.webp",
+    "id": "루디",
+    "name": "루디",
+    "source": "asset_portrait"
   },
   "바네사": {
     "negiId": "100636",
@@ -571,7 +574,10 @@
     "negiRarity": "legendary",
     "negiStar": "6",
     "negiRole": "2",
-    "cardUrl": "/images/벨리카/card.webp"
+    "cardUrl": "/images/벨리카/card.webp",
+    "id": "벨리카",
+    "name": "벨리카",
+    "source": "asset_portrait"
   },
   "빅토리아": {
     "negiId": "100796",
@@ -803,5 +809,11 @@
     "negiStar": "6",
     "negiRole": "1",
     "cardUrl": "/images/차해인/card.webp"
+  },
+  "하연": {
+    "id": "하연",
+    "name": "하연",
+    "cardUrl": "/images/하연/card.webp",
+    "source": "asset_portrait"
   }
 }

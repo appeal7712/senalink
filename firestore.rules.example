@@ -160,6 +160,7 @@ service cloud.firestore {
         && ((!('totalwarTier' in d)) || d.totalwarTier in ['normal', 'advanced', 'rare', 'legend', 'legend_plus'])
         && ((!('arenaTier' in d)) || d.arenaTier in ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'master', 'challenger', 'legend', 'champion'])
         && ((!('destructionScore' in d)) || ((d.destructionScore is int || d.destructionScore is float) && d.destructionScore >= 0))
+        && ((!('combatPower' in d)) || ((d.combatPower is int || d.combatPower is float) && d.combatPower >= 0))
         && ((!('photoURL' in d)) || d.photoURL == null || d.photoURL is string)
         && ((!('recommendCount' in d)) || (d.recommendCount is int && d.recommendCount >= 0))
         && ((!('lastProfileRecommendDate' in d)) || (d.lastProfileRecommendDate is string
@@ -172,6 +173,7 @@ service cloud.firestore {
     function validUserCreateKeys() {
       return request.resource.data.keys().hasOnly([
         'nickname', 'photoURL', 'totalwarTier', 'arenaTier', 'destructionScore',
+        'combatPower',
         'hubId', 'updatedAt', 'recommendCount', 'lastProfileRecommendDate',
         'dailyTarotPeriodId'
       ]);
@@ -181,6 +183,7 @@ service cloud.firestore {
     function onlyAllowedUserFieldChanges() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
         'nickname', 'photoURL', 'totalwarTier', 'arenaTier', 'destructionScore',
+        'combatPower',
         'hubId', 'updatedAt', 'lastProfileRecommendDate', 'dailyTarotPeriodId'
       ]);
     }

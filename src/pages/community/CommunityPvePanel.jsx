@@ -10,6 +10,7 @@ import {
   COMMUNITY_RAIDS,
   COMMUNITY_SURPRISE_RAIDS,
   COMMUNITY_GROWTH_DUNGEONS,
+  COMMUNITY_TRIAL_TOWER_COMING_SOON,
   communityContentLabel,
   communityContentsFor,
 } from '../../data/communityCatalog';
@@ -45,7 +46,7 @@ export default function CommunityPvePanel() {
   }, [mode, contentKey]);
 
   useEffect(() => {
-    if (!contentKey) {
+    if (!contentKey || mode === 'trial_tower') {
       setGuides([]);
       return undefined;
     }
@@ -164,6 +165,15 @@ export default function CommunityPvePanel() {
         </div>
       )}
 
+      {mode === 'trial_tower' && (
+        <div className="luxury-panel community-trial-tower-soon" style={{ padding: '28px 22px', marginBottom: 16, textAlign: 'center' }}>
+          <div style={{ fontSize: 15, fontWeight: 900, color: '#fff', marginBottom: 8 }}>시련의 탑</div>
+          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.62)', lineHeight: 1.55 }}>
+            {COMMUNITY_TRIAL_TOWER_COMING_SOON}
+          </p>
+        </div>
+      )}
+
       {mode === 'growth_dungeon' && (
         <div className="community-dungeon-grid">
           {COMMUNITY_GROWTH_DUNGEONS.map((c) => (
@@ -182,6 +192,8 @@ export default function CommunityPvePanel() {
         </div>
       )}
 
+      {mode !== 'trial_tower' && (
+      <>
       <div className="community-section-head">
         <h3>
           {communityContentLabel(mode, contentKey)} 공략
@@ -219,6 +231,8 @@ export default function CommunityPvePanel() {
           );
         })}
       </div>
+      </>
+      )}
 
       {editing && (
         <CommunityGuideEditor

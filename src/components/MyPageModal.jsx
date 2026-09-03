@@ -27,6 +27,7 @@ export default function MyPageModal({ onClose, mandatory = false }) {
   const [tier, setTier] = useState(profile.totalwarTier || 'normal');
   const [arenaTier, setArenaTier] = useState(normalizeArenaTier(profile.arenaTier || 'bronze'));
   const [scoreRaw, setScoreRaw] = useState(formatScore(profile.destructionScore));
+  const [combatPowerRaw, setCombatPowerRaw] = useState(formatScore(profile.combatPower));
   const [photoPreview, setPhotoPreview] = useState(profile.photoURL || null);
   const [file, setFile] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -55,6 +56,11 @@ export default function MyPageModal({ onClose, mandatory = false }) {
     setScoreRaw(num ? formatScore(num) : '');
   };
 
+  const handleCombatPowerChange = (e) => {
+    const num = parseScore(e.target.value);
+    setCombatPowerRaw(num ? formatScore(num) : '');
+  };
+
   const handleSave = async () => {
     const trimmed = nickname.trim();
     if (trimmed.length < 2 || trimmed.length > 12) {
@@ -80,6 +86,7 @@ export default function MyPageModal({ onClose, mandatory = false }) {
         totalwarTier: tier,
         arenaTier,
         destructionScore: parseScore(scoreRaw),
+        combatPower: parseScore(combatPowerRaw),
         photoURL,
       });
       onClose();
@@ -208,7 +215,7 @@ export default function MyPageModal({ onClose, mandatory = false }) {
             </div>
           </div>
 
-          <div className="mypage-stats-field mypage-stats-field--last">
+          <div className="mypage-stats-field">
             <label className="mypage-field-label" htmlFor="mypage-destruction-score">파괴신 3합 평균 점수</label>
             <input
               id="mypage-destruction-score"
@@ -216,6 +223,18 @@ export default function MyPageModal({ onClose, mandatory = false }) {
               value={scoreRaw}
               onChange={handleScoreChange}
               placeholder="예: 34,555,000"
+              inputMode="numeric"
+            />
+          </div>
+
+          <div className="mypage-stats-field mypage-stats-field--last">
+            <label className="mypage-field-label" htmlFor="mypage-combat-power">내 전투력 총합</label>
+            <input
+              id="mypage-combat-power"
+              className="mypage-input"
+              value={combatPowerRaw}
+              onChange={handleCombatPowerChange}
+              placeholder="예: 416,757"
               inputMode="numeric"
             />
           </div>

@@ -6,7 +6,7 @@ import CommunityTierPanel from './CommunityTierPanel';
 
 const tabs = [
   { id: 'pvp', label: 'PvP 공략', hint: '결투장 · 상급 · 총력전', icon: 'pvp' },
-  { id: 'pve', label: 'PvE 공략', hint: '레이드 · 돌발 · 성장던전', icon: 'pve' },
+  { id: 'pve', label: 'PvE 공략', hint: '레이드 · 돌발 · 시련의 탑 · 성장던전', icon: 'pve' },
   { id: 'tierlist', label: '티어 리스트', hint: 'PVE · PVP 영웅 티어', icon: 'chart' },
 ];
 

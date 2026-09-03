@@ -450,5 +450,9 @@
   "클로에": {
     "heroName": "클로에",
     "iconUrl": "/images/클로에/exclusive-gear.png"
+  },
+  "하연": {
+    "heroName": "하연",
+    "iconUrl": "/images/하연/exclusive-gear.png"
   }
 }

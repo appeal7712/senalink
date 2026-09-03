@@ -16,7 +16,7 @@
       ]
     },
     {
-      "name": "돌격",
+      "name": "규탄의 검격",
       "type": "Active1",
       "cooldown": 91,
       "effects": [
@@ -35,7 +35,7 @@
       ]
     },
     {
-      "name": "방어 준비",
+      "name": "영겁의 성채",
       "type": "Active2",
       "cooldown": 96,
       "effects": [
@@ -58,7 +58,7 @@
       }
     },
     {
-      "name": "견고한 방패",
+      "name": "철옹의 방벽",
       "type": "Passive",
       "effects": [
         {
