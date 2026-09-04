@@ -2,7 +2,7 @@ import { useState } from 'react';
 import InGameDeckCard from '../../components/InGameDeckCard';
 import SkillReservationBoard from '../../components/SkillReservationBoard';
 import HeroPortraitCard from '../../components/HeroPortraitCard';
-import SkillTimelineSteps from '../../components/SkillTimelineSteps';
+import SkillTimelineSteps, { RoundMark, SkillDirBadge } from '../../components/SkillTimelineSteps';
 import { SKILL_RESERVE_ICON_SIZE } from '../../lib/skillReserveIcon';
 import { SkillReservePlateIcon } from '../../components/icons/GameIconPlate';
 import Icon from '../../components/icons/Icon';
@@ -25,15 +25,6 @@ function resolveHeroByName(name) {
 
 function resolvePetById(petId) {
   return pets.find((p) => p.id === petId) || pets[0];
-}
-
-/** 스킬 시전 순서 턴 라벨 (저장값이 1라여도 1턴으로 표시 · 0-1턴 포함) */
-function formatSkillTurnLabel(round) {
-  const s = String(round || '').trim();
-  if (!s) return '';
-  if (/0\s*[-~∼]\s*1/.test(s)) return '0-1턴';
-  const m = s.match(/(\d+)/);
-  return m ? `${Number(m[1])}턴` : s.replace(/라/g, '턴');
 }
 
 export default function CommunityGuideCard({
@@ -158,17 +149,14 @@ export default function CommunityGuideCard({
         {isTimeline ? (
           <div className="build-panel-timeline">
             <div className="build-panel-timeline-title">
-              <Icon name="clock" size={16} />
-              스킬 시전 순서 타임라인
+              <Icon name="clock" size={15} />
+              스킬 시전 순서 타임라인 (최대 70턴)
             </div>
             <SkillTimelineSteps
               steps={timeline}
               resolveHeroByName={resolveHeroByName}
-              formatRound={formatSkillTurnLabel}
-              renderDir={(dir) => {
-                const dirLabel = dir === 'upper' ? '위 스킬' : dir === 'down' ? '아래 스킬' : (dir === 'awaken' ? '각성' : '');
-                return dirLabel || null;
-              }}
+              formatRound={(round) => <RoundMark round={round} />}
+              renderDir={(dir) => <SkillDirBadge dir={dir} />}
               arrowColor="var(--gold-primary)"
               arrowSize={13}
             />

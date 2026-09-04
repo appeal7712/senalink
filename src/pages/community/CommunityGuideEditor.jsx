@@ -7,6 +7,7 @@ import HeroGridPicker from '../../components/HeroGridPicker';
 import HeroPortraitCard from '../../components/HeroPortraitCard';
 import HeroGearPanel, { emptyGearConfig, buildOptionCode } from '../../components/HeroGearPanel';
 import SkillReservationBoard from '../../components/SkillReservationBoard';
+import { RoundMark, SkillDirBadge } from '../../components/SkillTimelineSteps';
 import { SKILL_RESERVE_ICON_SIZE } from '../../lib/skillReserveIcon';
 import { SkillReservePlateIcon } from '../../components/icons/GameIconPlate';
 import Icon from '../../components/icons/Icon';
@@ -55,15 +56,6 @@ function resolveHeroByName(name) {
   return heroes.find((x) => x.name === raw)
     || heroes.find((x) => x.name.replace('(각성)', '').trim() === clean)
     || null;
-}
-
-/** 스킬 시전 순서 턴 라벨 (저장값이 1라여도 1턴으로 표시 · 0-1턴 포함) */
-function formatSkillTurnLabel(round) {
-  const s = String(round || '').trim();
-  if (!s) return '';
-  if (/0\s*[-~∼]\s*1/.test(s)) return '0-1턴';
-  const m = s.match(/(\d+)/);
-  return m ? `${Number(m[1])}턴` : s.replace(/라/g, '턴');
 }
 
 const fieldStyle = {
@@ -483,9 +475,13 @@ export default function CommunityGuideEditor({
                           background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: 5,
                           borderLeft: '3px solid var(--gold-primary)', flexShrink: 0, marginBottom: 4,
                         }}>
-                          <div style={{ fontSize: 11, color: '#fff', fontWeight: 700 }}>
-                            {formatSkillTurnLabel(step.round)} · {step.heroName} · {step.dir === 'upper' ? '위 스킬' : step.dir === 'down' ? '아래 스킬' : '각성'}
-                            {step.text ? ` — ${step.text}` : ''}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                            <RoundMark round={step.round} />
+                            <strong style={{ color: '#fff', display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{step.heroName}</span>
+                              <SkillDirBadge dir={step.dir} />
+                            </strong>
+                            {step.text ? <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>- {step.text}</span> : null}
                           </div>
                           <button
                             type="button"

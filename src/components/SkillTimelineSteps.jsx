@@ -4,6 +4,37 @@ import Icon from './icons/Icon';
 
 const COLS = 3;
 
+/** 스킬 시전 순서 턴 라벨 (저장값이 1라여도 1턴으로 표시 · 0-1턴 포함) */
+export function formatSkillTurnLabel(round) {
+  const s = String(round || '').trim();
+  if (!s) return '';
+  if (/0\s*[-~∼]\s*1/.test(s)) return '0-1턴';
+  const m = s.match(/(\d+)/);
+  return m ? `${Number(m[1])}턴` : s.replace(/라/g, '턴');
+}
+
+/** 길드 허브 공성·강림과 동일 — 위/아래/각성 컬러 뱃지 */
+export function SkillDirBadge({ dir }) {
+  const meta = dir === 'upper'
+    ? { label: '위 스킬', bg: '#5eb0ff' }
+    : dir === 'down'
+      ? { label: '아래 스킬', bg: '#ff7a7a' }
+      : dir === 'awaken'
+        ? { label: '각성', bg: '#e879f9' }
+        : null;
+  if (!meta) return null;
+  return (
+    <span className="kind-pill kind-pill--xs skill-dir-badge" style={{ background: meta.bg }}>
+      {meta.label}
+    </span>
+  );
+}
+
+/** 길드 허브 공성·강림과 동일 — 흰 턴 마크 */
+export function RoundMark({ round }) {
+  return <span className="round-mark">{formatSkillTurnLabel(round)}</span>;
+}
+
 /** 스킬 시전 순서 — 3칸 한 줄, 메모는 해당 칸과 같은 폭·한 줄 … */
 export default function SkillTimelineSteps({
   steps = [],
