@@ -11,21 +11,23 @@ export const PAGE_SEO = {
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
   },
-  [PAGE.HUB]: {
-    title: `길드 허브 | ${SITE_NAME}`,
-    description: '길드원과 공략·세팅을 공유하는 세븐나이츠 리버스 길드 전용 허브입니다.',
-  },
   [PAGE.COMMUNITY]: {
-    title: `공용 허브 | ${SITE_NAME}`,
-    description: 'PvP·PvE 공략과 티어리스트를 모아보는 세븐나이츠 리버스 공용 허브입니다.',
+    title: `공용 허브 | 세븐나이츠 리버스 공략 · ${SITE_NAME}`,
+    description:
+      '세븐나이츠 리버스 PvP·PvE 공략과 티어리스트를 모아보는 공용 허브입니다. 결투장·상급·총력전·레이드 덱을 공유하세요.',
+  },
+  [PAGE.HUB]: {
+    title: `길드 허브 | 세븐나이츠 리버스 길드 관리 · ${SITE_NAME}`,
+    description:
+      '세븐나이츠 리버스 길드원과 공략·세팅을 공유하는 길드 전용 허브입니다. 초대 코드로 입장하세요.',
   },
   [PAGE.TOOLS]: {
-    title: `도구 | ${SITE_NAME}`,
-    description: '승률 계산, 티어리스트 메이커 등 세븐나이츠 리버스 실전 유틸 모음입니다.',
+    title: `도구 | 세븐나이츠 리버스 유틸 · ${SITE_NAME}`,
+    description: '세븐나이츠 리버스 승률 계산, 티어리스트 메이커 등 실전 유틸 모음입니다.',
   },
   [PAGE.DEX]: {
-    title: `도감 | ${SITE_NAME}`,
-    description: '세븐나이츠 리버스 영웅·장비 정보를 한눈에 보는 도감입니다.',
+    title: `도감 | 세븐나이츠 리버스 영웅·장비 · ${SITE_NAME}`,
+    description: '세븐나이츠 리버스 영웅·장비·펫 정보를 한눈에 보는 도감입니다.',
   },
   [PAGE.OPS]: {
     title: DEFAULT_TITLE,

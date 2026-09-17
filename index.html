@@ -71,28 +71,28 @@
                 "@type": "SiteNavigationElement",
                 "position": 1,
                 "name": "길드 허브",
-                "description": "길드원과 공략·세팅을 공유하는 길드 전용 공간",
+                "description": "세븐나이츠 리버스 길드원과 공략·세팅을 공유하는 길드 전용 공간",
                 "url": "https://senalink.kr/hub"
               },
               {
                 "@type": "SiteNavigationElement",
                 "position": 2,
                 "name": "공용 허브",
-                "description": "PvP·PvE 공략과 티어리스트를 모아보는 커뮤니티",
+                "description": "세븐나이츠 리버스 PvP·PvE 공략과 티어리스트를 모아보는 커뮤니티",
                 "url": "https://senalink.kr/community"
               },
               {
                 "@type": "SiteNavigationElement",
                 "position": 3,
                 "name": "도구",
-                "description": "승률 계산·티어리스트 메이커 등 실전 유틸",
+                "description": "세븐나이츠 리버스 승률 계산·티어리스트 메이커 등 실전 유틸",
                 "url": "https://senalink.kr/tools"
               },
               {
                 "@type": "SiteNavigationElement",
                 "position": 4,
                 "name": "도감",
-                "description": "영웅·장비 정보를 한눈에 보는 도감",
+                "description": "세븐나이츠 리버스 영웅·장비 정보를 한눈에 보는 도감",
                 "url": "https://senalink.kr/dex"
               }
             ]
@@ -111,6 +111,21 @@
   </head>
   <body style="background:#0c0b0a;color:#e2e8f0">
     <div id="root"></div>
+    <noscript>
+      <main style="max-width:720px;margin:48px auto;padding:0 20px;font-family:sans-serif;line-height:1.6">
+        <h1>세나링크 — 세븐나이츠 리버스 공략·길드 관리</h1>
+        <p>
+          세븐나이츠 리버스 길드 허브, 공용 허브(PvP·PvE 공략·티어리스트), 도감, 실전 도구를
+          한곳에서 쓰는 사이트입니다. 자바스크립트를 켜면 전체 기능을 이용할 수 있습니다.
+        </p>
+        <ul>
+          <li><a href="/hub">길드 허브</a> — 길드 공략·세팅 공유</li>
+          <li><a href="/community">공용 허브</a> — 세븐나이츠 리버스 공용 공략·티어리스트</li>
+          <li><a href="/dex">도감</a> — 영웅·장비 정보</li>
+          <li><a href="/tools">도구</a> — 승률 계산·티어리스트 메이커</li>
+        </ul>
+      </main>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

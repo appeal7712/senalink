@@ -1,5 +1,9 @@
 import { Component } from 'react';
 
+/**
+ * 렌더 크래시 폴백.
+ * 구글이 이 문구를 사이트링크 스니펫으로 가져가지 않도록 data-nosnippet 유지.
+ */
 export default class AppErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -13,13 +17,19 @@ export default class AppErrorBoundary extends Component {
   render() {
     if (!this.state.err) return this.props.children;
     return (
-      <div style={{
-        minHeight: '100vh', background: '#0c0b0a', color: '#e2e8f0',
-        padding: 32, fontFamily: 'sans-serif',
-      }}>
-        <h1 style={{ fontSize: 20, marginBottom: 12 }}>화면을 그리다가 멈췄습니다</h1>
+      <div
+        data-nosnippet
+        role="alert"
+        style={{
+          minHeight: '100vh', background: '#0c0b0a', color: '#e2e8f0',
+          padding: 32, fontFamily: 'sans-serif',
+        }}
+      >
+        <p style={{ fontSize: 18, fontWeight: 800, marginBottom: 12 }}>
+          일시적인 오류가 났습니다
+        </p>
         <p style={{ color: '#94a3b8', lineHeight: 1.5, marginBottom: 16 }}>
-          아래를 복사해서 채팅에 붙여넣으면 바로 고칠 수 있습니다.
+          새로고침 후에도 같으면 아래 내용을 복사해 알려 주세요.
         </p>
         <pre style={{
           whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontSize: 12,
