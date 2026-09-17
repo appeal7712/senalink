@@ -296,16 +296,16 @@ export default function AllianceModal({ onClose }) {
   }
 
   if (isGuestHome) {
+    const hostName = activeLounge.allianceHostName || '호스트';
     return (
       <AllianceModalShell title="연합 · 2군" onClose={onClose}>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5 }}>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.8)', lineHeight: 1.5, textAlign: 'center' }}>
           이 허브가 <strong style={{ color: '#fff' }}>2군</strong>으로 연결되어 있습니다.
-          <br />
-          1군: <strong style={{ color: '#fff' }}>{activeLounge.allianceHostName || '호스트'}</strong>
           <br />
           1군 공략은 읽기만 가능합니다.
         </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, width: '100%', alignItems: 'stretch' }}>
           <button
             type="button"
             className="btn-ops"
@@ -318,14 +318,33 @@ export default function AllianceModal({ onClose }) {
                 showToast(e?.message || '1군 허브를 열 수 없습니다.', 'error');
               }
             }}
-            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+            style={{ width: '100%', justifyContent: 'center' }}
           >
             <Icon name="hub" size={14} /> 1군 허브 보기
           </button>
+
+          <div
+            style={{
+              margin: '16px 0',
+              padding: '12px 14px',
+              borderRadius: 12,
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.55)', letterSpacing: '0.04em' }}>
+              연결된 1군
+            </div>
+            <div style={{ marginTop: 4, fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1.35 }}>
+              1군 : {hostName}
+            </div>
+          </div>
+
           {isAdmin ? (
             <button
               type="button"
-              className="hub-action-btn"
+              className="btn-danger-solid"
               disabled={busy}
               onClick={() => {
                 if (!window.confirm('1군과의 연합 연결을 해제할까요?')) return;
@@ -335,17 +354,13 @@ export default function AllianceModal({ onClose }) {
                   onClose();
                 }, '연합을 해제했습니다.');
               }}
-              style={{
-                padding: '8px 12px', fontSize: 12, fontWeight: 800,
-                color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)',
-                background: 'rgba(239,68,68,0.12)',
-              }}
+              style={{ width: '100%', justifyContent: 'center' }}
             >
-              연합 해제
+              <Icon name="logout" size={13} /> 연합 해제
             </button>
           ) : null}
         </div>
-        {err ? <p style={{ color: '#f87171', fontSize: 12, fontWeight: 700, margin: 0 }}>{err}</p> : null}
+        {err ? <p style={{ color: '#f87171', fontSize: 12, fontWeight: 700, margin: 0, textAlign: 'center' }}>{err}</p> : null}
       </AllianceModalShell>
     );
   }
