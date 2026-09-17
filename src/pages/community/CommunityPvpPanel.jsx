@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Icon from '../../components/icons/Icon';
 import SafeImg from '../../components/icons/SafeImg';
+import SeasonRuleBadge from '../../components/SeasonRuleBadge';
 import PublicProfileModal from '../../components/PublicProfileModal';
 import { META_DECK_KINDS, metaDeckKindTheme } from '../../components/ArenaDeckKind';
 import CommunityGuideCard from './CommunityGuideCard';
@@ -18,6 +19,7 @@ import {
   saveCommunityGuide,
   subscribeCommunityGuides,
 } from '../../lib/communityGuides';
+import { getAdvancedArenaSeasonRule } from '../../lib/contentSeasonSchedule';
 import { useSuperAdmin } from '../../context/SuperAdminContext';
 import { useUserProfile } from '../../context/UserProfileContext';
 import { showToast } from '../../components/Toast';
@@ -66,6 +68,9 @@ function CommunityArenaSection({ arenaKind, bannerUrl }) {
   const [profileUid, setProfileUid] = useState(null);
   const [filterDeckKind, setFilterDeckKind] = useState('all');
   const [mineOnly, setMineOnly] = useState(false);
+  const [seasonRule, setSeasonRule] = useState(() => (
+    arenaKind === 'advanced' ? getAdvancedArenaSeasonRule() : null
+  ));
 
   const hasNickname = Boolean(String(profile.nickname || '').trim());
   const canCreate = canCreateCommunityGuide({ isSuperAdmin, section: 'pvp', hasNickname });
@@ -75,6 +80,17 @@ function CommunityArenaSection({ arenaKind, bannerUrl }) {
   useEffect(() => {
     setFilterDeckKind('all');
     setMineOnly(false);
+  }, [arenaKind]);
+
+  useEffect(() => {
+    if (arenaKind !== 'advanced') {
+      setSeasonRule(null);
+      return undefined;
+    }
+    const tick = () => setSeasonRule(getAdvancedArenaSeasonRule());
+    tick();
+    const id = window.setInterval(tick, 60_000);
+    return () => window.clearInterval(id);
   }, [arenaKind]);
 
   useEffect(() => {
@@ -168,6 +184,16 @@ function CommunityArenaSection({ arenaKind, bannerUrl }) {
             <div className="community-arena-action-title">
               <Icon name={arenaKind === 'advanced' ? 'arenaAdvanced' : 'arena'} size={15} />
               {activeArena.label} 공략
+              {arenaKind === 'advanced' && seasonRule?.icon ? (
+                <>
+                  <span className="community-arena-season-rule-sep" aria-hidden>|</span>
+                  <SeasonRuleBadge
+                    icon={seasonRule.icon}
+                    title={seasonRule.title}
+                    desc={seasonRule.desc}
+                  />
+                </>
+              ) : null}
             </div>
             <div className="community-arena-action-hint">덱 유형 · 펫 · 장비 · 스킬 예약 · 1인 1공략</div>
           </div>

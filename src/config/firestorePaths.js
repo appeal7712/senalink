@@ -5,6 +5,7 @@ export const COL = {
   SITE: 'site',
   HUBS: 'hubs',
   INVITE_INDEX: 'inviteIndex',
+  ALLIANCE_INDEX: 'allianceIndex',
   PUBLIC_GUILDS: 'publicGuilds',
   USERS: 'users',
   PROFILE_DAILY_RECOMMENDS: 'profileDailyRecommends',
@@ -12,6 +13,9 @@ export const COL = {
   COMMUNITY_TIER_LISTS: 'communityTierLists',
   EXCLUSIVE_GEAR_GUIDES: 'exclusiveGearGuides',
 };
+
+/** 호스트 허브당 연결 가능한 게스트(2군) 허브 상한 */
+export const MAX_ALLIANCE_GUESTS = 3;
 
 export const EXCLUSIVE_GEAR_GUIDE_DOC_ID = 'main';
 

@@ -8,6 +8,7 @@ import { backdropDismissProps } from '../../utils/backdropDismiss';
 import { showToast } from '../Toast';
 import ModalScrim from '../ModalScrim';
 import PublicProfileModal from '../PublicProfileModal';
+import AllianceModal from './AllianceModal';
 
 const ROLE_LABEL = { master: '길드마스터', admin: '관리자', member: '길드원', super: '슈퍼관리자' };
 const ACTION_LABEL = {
@@ -54,22 +55,32 @@ export default function LoungeHome() {
     loungeNotices, loungePosts, loungeHistory,
     addNotice, addPost, deleteNotice, deletePost, canDeleteFeedItem,
     kickMember, appointAdmin, revokeAdmin, transferMaster, maxAdmins, maxMembers,
-    leaveLounge,
+    leaveLounge, isAllianceGuestView, exitAllianceHostView,
   } = useLounge();
 
   const [writeMode, setWriteMode] = useState(null); // 'notice' | 'post' | null
   const [err, setErr] = useState('');
   const [lightbox, setLightbox] = useState(null);
   const [profileUid, setProfileUid] = useState(null);
+  const [allianceOpen, setAllianceOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
+  const [leaveBusy, setLeaveBusy] = useState(false);
 
   if (!activeLounge || !me) return null;
 
   const affiliation = LOUNGE_AFFILIATIONS.find(a => a.id === activeLounge.affiliation);
   const tagLabels = (activeLounge.tags || []).map((id) => loungeTagLabel(id));
   const sortedMembers = [...activeLounge.members].sort((a, b) => {
-    const rank = { master: 0, admin: 1, member: 2 };
+    const rank = { master: 0, admin: 1, member: 2, alliance_guest: 3 };
     return (rank[a.role] ?? 9) - (rank[b.role] ?? 9) || a.nickname.localeCompare(b.nickname, 'ko');
   });
+
+  const allianceBtnLabel = isAllianceGuestView
+    ? '내 허브로'
+    : (activeLounge.allianceEnabled
+      ? '연합 · 1군'
+      : (activeLounge.allianceHostId ? '연합 · 2군' : '연합'));
+
 
   const onKick = async (id) => {
     try {
@@ -274,23 +285,110 @@ export default function LoungeHome() {
         </div>
       </section>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
-        <button type="button" className="hub-action-btn" onClick={() => {
-          if (!confirm('이 길드 허브에서 나갈까요?')) return;
-          void leaveLounge().catch((e) => {
-            showToast(e?.message || '허브 나가기에 실패했습니다.', 'error');
-          });
-        }} style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          padding: '7px 14px', fontSize: 12, fontWeight: 800,
-          background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.4)',
-          color: '#fca5a5', borderRadius: 10, cursor: 'pointer',
-        }}>
-          <Icon name="logout" size={13} /> 허브 나가기
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 10,
+        marginTop: 4,
+        flexWrap: 'wrap',
+        padding: '0 10px',
+      }}>
+        <button
+          type="button"
+          className="btn-success-solid"
+          onClick={() => {
+            if (isAllianceGuestView) {
+              exitAllianceHostView();
+              return;
+            }
+            setAllianceOpen(true);
+          }}
+        >
+          <Icon name="hubMembers" size={13} /> {allianceBtnLabel}
         </button>
+        {!isAllianceGuestView ? (
+          <button
+            type="button"
+            className="btn-danger-solid"
+            onClick={() => setLeaveOpen(true)}
+          >
+            <Icon name="logout" size={13} /> 허브 나가기
+          </button>
+        ) : null}
       </div>
 
-      {writeMode && (
+      {leaveOpen ? (
+        <ModalScrim
+          style={{ zIndex: 10050, padding: '16px' }}
+          {...backdropDismissProps(() => !leaveBusy && setLeaveOpen(false))}
+        >
+          <div
+            className="glass-modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: 'min(400px, 92vw)',
+              padding: '22px 20px',
+              borderRadius: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', lineHeight: 1.55 }}>
+              이 길드 허브에서 나갈까요?
+              <span
+                style={{
+                  display: 'block',
+                  marginTop: 8,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: 'rgba(226,232,240,0.9)',
+                  lineHeight: 1.55,
+                }}
+              >
+                멤버 목록에서 빠지고,
+                <br />
+                다시 들어오려면 초대 코드가 필요합니다.
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="btn-ops"
+                disabled={leaveBusy}
+                onClick={() => setLeaveOpen(false)}
+                style={{ justifyContent: 'center', minWidth: 100 }}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="btn-danger-solid"
+                disabled={leaveBusy}
+                onClick={() => {
+                  setLeaveBusy(true);
+                  void leaveLounge()
+                    .then(() => setLeaveOpen(false))
+                    .catch((e) => {
+                      showToast(e?.message || '허브 나가기에 실패했습니다.', 'error');
+                    })
+                    .finally(() => setLeaveBusy(false));
+                }}
+              >
+                나가기
+              </button>
+            </div>
+          </div>
+        </ModalScrim>
+      ) : null}
+
+      {allianceOpen && !isAllianceGuestView ? (
+        <AllianceModal onClose={() => setAllianceOpen(false)} />
+      ) : null}
+
+      {writeMode && !isAllianceGuestView && (
         <WritePostModal
           mode={writeMode}
           onClose={() => setWriteMode(null)}

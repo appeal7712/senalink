@@ -1,7 +1,3 @@
-﻿// NOT DEPLOYED — mirror of live firestore.rules for local diff only.
-// Deploy ONLY firestore.rules: firebase deploy --only firestore:rules --project senalink
-// Do not copy this file over live rules without 밍봉 review.
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -39,6 +35,33 @@ service cloud.firestore {
 
     function canRunHub(hubId) {
       return isHubAdmin(hubId) || isSuperAdmin();
+    }
+
+    // 연합 게스트: users.hubId 가 host 의 allianceGuests/{guestHubId} 에 있을 때만.
+    // 쓰기 권한에는 절대 쓰지 말 것 — 읽기 전용.
+    function userHubIdOrEmpty() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('hubId', '');
+    }
+
+    function isAllianceGuestOf(hostHubId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && userHubIdOrEmpty() is string
+        && userHubIdOrEmpty().size() > 0
+        && exists(/databases/$(database)/documents/hubs/$(hostHubId)/allianceGuests/$(userHubIdOrEmpty()));
+    }
+
+    function canReadHub(hubId) {
+      return isHubMember(hubId) || isAllianceGuestOf(hubId) || isSuperAdmin();
+    }
+
+    // 연합 메타는 Callable(Admin SDK)만 변경. 클라이언트 hub update 로 위조 금지.
+    function allianceFieldsUnchanged() {
+      return request.resource.data.get('allianceEnabled', null) == resource.data.get('allianceEnabled', null)
+        && request.resource.data.get('allianceCode', null) == resource.data.get('allianceCode', null)
+        && request.resource.data.get('allianceUpdatedAt', null) == resource.data.get('allianceUpdatedAt', null)
+        && request.resource.data.get('allianceHostId', null) == resource.data.get('allianceHostId', null)
+        && request.resource.data.get('allianceHostName', null) == resource.data.get('allianceHostName', null);
     }
 
     // 첨부 이미지는 base64로 같은 문서에 들어간다. 문서 한도(1MiB)를 넘겨 글이 통째로
@@ -316,6 +339,11 @@ service cloud.firestore {
       allow delete: if signedIn() && (isMaster(resource.data.hubId) || isSuperAdmin());
     }
 
+    // 연합 코드 인덱스 — Callable(Admin SDK)만. 클라이언트 직쓰기 금지.
+    match /allianceIndex/{code} {
+      allow read, write: if false;
+    }
+
     match /publicGuilds/{hubId} {
       allow read: if true;
       allow create, update: if canRunHub(hubId)
@@ -326,21 +354,32 @@ service cloud.firestore {
     }
 
     match /hubs/{hubId} {
-      allow read: if isHubMember(hubId) || isSuperAdmin();
+      allow read: if canReadHub(hubId);
       allow create: if signedIn()
         && request.resource.data.masterId == request.auth.uid
         && request.resource.data.keys().hasAll(['name', 'affiliation', 'tags', 'masterId', 'inviteCode']);
-      allow update: if isSuperAdmin()
-        || isMaster(hubId)
-        // 관리자는 마스터십·초대코드는 못 바꿈 (탈취 방지)
-        || (isHubAdmin(hubId)
-          && request.resource.data.masterId == resource.data.masterId
-          && request.resource.data.inviteCode == resource.data.inviteCode);
+      allow update: if allianceFieldsUnchanged()
+        && (isSuperAdmin()
+          || isMaster(hubId)
+          // 관리자는 마스터십·초대코드는 못 바꿈 (탈취 방지)
+          || (isHubAdmin(hubId)
+            && request.resource.data.masterId == resource.data.masterId
+            && request.resource.data.inviteCode == resource.data.inviteCode));
       allow delete: if isMaster(hubId) || isSuperAdmin();
 
+      // 연합 게스트 목록 — Callable만 쓰기. 호스트 멤버·해당 게스트 허브 멤버 읽기.
+      match /allianceGuests/{guestHubId} {
+        allow read: if isHubMember(hubId)
+          || isSuperAdmin()
+          || (signedIn()
+            && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && userHubIdOrEmpty() == guestHubId);
+        allow create, update, delete: if false;
+      }
+
       match /members/{uid} {
-        allow get: if signedIn() && (uid == request.auth.uid || isHubMember(hubId) || isSuperAdmin());
-        allow list: if isHubMember(hubId) || isSuperAdmin();
+        allow get: if signedIn() && (uid == request.auth.uid || canReadHub(hubId));
+        allow list: if canReadHub(hubId);
         // role:member 신규 가입은 joinHub Callable 만 허용.
         // 허브 개설 시 길드마스터 문서만 클라이언트가 직접 create.
         allow create: if signedIn()
@@ -358,13 +397,13 @@ service cloud.firestore {
       }
 
       match /builds/{buildId} {
-        allow read: if isHubMember(hubId) || isSuperAdmin();
+        allow read: if canReadHub(hubId);
         allow create, update: if isHubMember(hubId) || isSuperAdmin();
         allow delete: if isHubAdmin(hubId) || isSuperAdmin();
       }
 
       match /notices/{noticeId} {
-        allow read: if isHubMember(hubId) || isSuperAdmin();
+        allow read: if canReadHub(hubId);
         allow create: if canRunHub(hubId) && validFeedWrite();
         allow update: if (canRunHub(hubId)
           || (isHubMember(hubId) && resource.data.authorId == request.auth.uid))
@@ -374,7 +413,7 @@ service cloud.firestore {
       }
 
       match /posts/{postId} {
-        allow read: if isHubMember(hubId) || isSuperAdmin();
+        allow read: if canReadHub(hubId);
         allow create: if (isHubMember(hubId) || isSuperAdmin()) && validFeedWrite();
         allow update: if (canRunHub(hubId)
           || (isHubMember(hubId) && resource.data.authorId == request.auth.uid))
@@ -384,7 +423,7 @@ service cloud.firestore {
       }
 
       match /history/{eventId} {
-        allow read: if isHubMember(hubId) || isSuperAdmin();
+        allow read: if canReadHub(hubId);
         allow create: if (isHubMember(hubId) || isSuperAdmin())
           && request.resource.data.keys().hasOnly(['actor', 'action', 'target', 'detail', 'createdAt'])
           && request.resource.data.actor is string
@@ -401,7 +440,7 @@ service cloud.firestore {
       }
 
       match /scores/{memberId} {
-        allow read: if isHubMember(hubId) || isSuperAdmin();
+        allow read: if canReadHub(hubId);
         allow write: if canRunHub(hubId);
       }
     }

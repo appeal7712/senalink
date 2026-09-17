@@ -321,6 +321,7 @@ export default function GuildLounge() {
     activeLounge, me, session, canEditBuilds, isAdmin,
     logBuildHistory, freshInvite, dismissFreshInvite,
     authReady, authUser, hubLoadStalled, retryHubLoad,
+    isAllianceGuestView, exitAllianceHostView,
   } = useLounge();
   const { profile, profileReady } = useUserProfile();
 
@@ -446,6 +447,7 @@ export default function GuildLounge() {
 
   // 로컬 변경 → Firestore 저장 (원격 반영분·중복·지연 덮어쓰기 방지)
   useEffect(() => {
+    if (!canEditBuilds) return;
     if (!activeLounge?.id || !buildsReady.current) return;
     if (loadedLoungeId.current !== activeLounge.id) return;
     if (skipNextSave.current) {
@@ -491,7 +493,7 @@ export default function GuildLounge() {
     }, 350);
 
     return () => window.clearTimeout(timer);
-  }, [activeLounge?.id, siegeBuilds, expeditionBuilds, arenaBuilds, totalwarBuilds, gwAttacks, gwDefenses, expeditionAssignments]);
+  }, [canEditBuilds, activeLounge?.id, siegeBuilds, expeditionBuilds, arenaBuilds, totalwarBuilds, gwAttacks, gwDefenses, expeditionAssignments]);
 
   // ── 덱 수정/생성 모달 state ──
   const [editingBuild, setEditingBuild]               = useState(null);
@@ -1370,6 +1372,38 @@ export default function GuildLounge() {
       )}
       
       <LoungeHubHeader />
+
+      {isAllianceGuestView ? (
+        <div
+          className="luxury-panel"
+          style={{
+            marginBottom: 16,
+            padding: '12px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            flexWrap: 'wrap',
+            border: '1px solid rgba(125,211,252,0.35)',
+            background: 'rgba(14, 116, 144, 0.18)',
+          }}
+        >
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#e0f2fe', lineHeight: 1.4 }}>
+            연합 게스트 · 읽기 전용
+            <span style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'rgba(224,242,254,0.8)', marginTop: 2 }}>
+              「{activeLounge.name}」공략을 열람 중입니다. 수정·글쓰기·강퇴는 할 수 없습니다.
+            </span>
+          </div>
+          <button
+            type="button"
+            className="btn-ops"
+            onClick={() => exitAllianceHostView()}
+            style={{ flexShrink: 0, padding: '7px 12px', fontSize: 12 }}
+          >
+            내 허브로 돌아가기
+          </button>
+        </div>
+      ) : null}
 
       {/* ── 2. 서브 탭: 홈(허브) 분리 + 컨텐츠 모드 ── */}
       <div className="luxury-panel tab-bar-wrap" style={{ padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>

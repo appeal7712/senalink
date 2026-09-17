@@ -19,6 +19,17 @@ export function parseInviteCode(raw) {
   return '';
 }
 
+/** 붙여넣은 연합 코드에서 7A-XXXX-XXXX 만 추출 */
+export function parseAllianceCode(raw) {
+  const text = String(raw || '').trim();
+  if (!text) return '';
+  const fromPattern = text.match(/7A-[A-Z0-9]{4}-[A-Z0-9]{4}/i);
+  if (fromPattern?.[0]) return fromPattern[0].toUpperCase();
+  const compact = text.toUpperCase().replace(/\s+/g, '');
+  if (/^7A-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(compact)) return compact;
+  return '';
+}
+
 /** 초대 링크는 항상 /hub?lounge=CODE (현재 path에 붙이지 않음) */
 export function inviteLink(code) {
   const origin = typeof window === 'undefined' ? '' : window.location.origin;

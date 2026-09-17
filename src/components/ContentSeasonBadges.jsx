@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { getContentSeasonStatuses } from '../lib/contentSeasonSchedule';
+import SeasonRuleBadge from './SeasonRuleBadge';
 
 const THEME_CLASS = {
   expedition: 'theme-expedition',
@@ -30,7 +31,7 @@ function isMobileFlipViewport() {
 
 /**
  * 히어로 아래 — 플립 시즌 카드
- * 앞: 아이콘 + 시간대 상태 / 뒤: 이름 + 시즌 종료일 + 게이지
+ * 앞: 아이콘 + 시간대 상태 / 뒤: (상급만 시즌룰 아이콘+텍스트) + 이름 + 종료일 + 게이지
  * PC: hover · 모바일: 탭 + 3초 후 앞면 복귀
  */
 export default function ContentSeasonBadges() {
@@ -74,6 +75,7 @@ export default function ContentSeasonBadges() {
       if (!isMobileFlipViewport()) return;
       const t = e.target;
       if (t instanceof Element && t.closest('.season-card')) return;
+      if (t instanceof Element && t.closest('.skill-tip-pop')) return;
       if (flipTimerRef.current) {
         window.clearTimeout(flipTimerRef.current);
         flipTimerRef.current = 0;
@@ -85,14 +87,34 @@ export default function ContentSeasonBadges() {
     return () => document.removeEventListener('pointerdown', onOutsidePointer);
   }, [flippedId]);
 
-  const flipCardMobile = (id) => {
-    if (!isMobileFlipViewport()) return;
-    setFlippedId(id);
-    if (flipTimerRef.current) window.clearTimeout(flipTimerRef.current);
+  const clearFlipTimer = () => {
+    if (flipTimerRef.current) {
+      window.clearTimeout(flipTimerRef.current);
+      flipTimerRef.current = 0;
+    }
+  };
+
+  const scheduleFlipBack = () => {
+    clearFlipTimer();
     flipTimerRef.current = window.setTimeout(() => {
       setFlippedId(null);
       flipTimerRef.current = 0;
     }, MOBILE_FLIP_HOLD_MS);
+  };
+
+  const flipCardMobile = (id) => {
+    if (!isMobileFlipViewport()) return;
+    setFlippedId(id);
+    scheduleFlipBack();
+  };
+
+  const onSeasonRuleTipChange = (isOpen) => {
+    if (!isMobileFlipViewport()) return;
+    if (isOpen) {
+      clearFlipTimer();
+      return;
+    }
+    if (flippedId != null) scheduleFlipBack();
   };
 
   if (!items.length) return null;
@@ -141,6 +163,14 @@ export default function ContentSeasonBadges() {
 
                 <div className="season-card-face season-card-face--back">
                   <div className="season-card-back-panel">
+                    {item.id === 'advanced_arena' && item.seasonRuleIcon ? (
+                      <SeasonRuleBadge
+                        icon={item.seasonRuleIcon}
+                        title={item.seasonRuleTitle}
+                        desc={item.seasonRuleDesc}
+                        onTipOpenChange={onSeasonRuleTipChange}
+                      />
+                    ) : null}
                     <h3 className="season-card-title">{item.name}</h3>
                     <p className="season-card-end">{item.endsAtLabel || '시즌 일정 확인'}</p>
                     <div

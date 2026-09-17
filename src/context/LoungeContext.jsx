@@ -34,7 +34,7 @@ import { signInWithGoogleNow } from '../lib/googleSignIn';
 import { useSuperAdmin } from './SuperAdminContext';
 import { parseGuildRank, normalizeGuildwarLeague } from '../data/guildRanks';
 import { syncPublicGuild } from '../lib/publicGuilds';
-import { COL } from '../config/firestorePaths';
+import { COL, MAX_ALLIANCE_GUESTS } from '../config/firestorePaths';
 import { isRateLimited } from '../lib/rateLimit';
 import { sanitizeText } from '../lib/sanitize';
 
@@ -46,6 +46,8 @@ export const useLounge = () => {
   if (!ctx) throw new Error('useLounge must be used within LoungeProvider');
   return ctx;
 };
+
+const isObserverOrAllianceGuest = (sess) => !!(sess?.observer || sess?.allianceGuest);
 
 const uid = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 const nowIso = () => new Date().toISOString();
@@ -136,8 +138,19 @@ const readSession = () => {
 
 const writeSession = (session) => {
   try { localStorage.setItem(PROJECT_GUARD_KEY, CURRENT_PROJECT); } catch { /* ignore */ }
-  if (!session) localStorage.removeItem(LOUNGE_STORAGE_KEYS.session);
-  else localStorage.setItem(LOUNGE_STORAGE_KEYS.session, JSON.stringify(session));
+  if (!session) {
+    localStorage.removeItem(LOUNGE_STORAGE_KEYS.session);
+    return;
+  }
+  // 연합 게스트 뷰는 새로고침 시 내 허브로 복귀 (users.hubId 유지)
+  if (session.allianceGuest && session.homeHubId) {
+    localStorage.setItem(
+      LOUNGE_STORAGE_KEYS.session,
+      JSON.stringify({ loungeId: session.homeHubId, memberId: session.memberId }),
+    );
+    return;
+  }
+  localStorage.setItem(LOUNGE_STORAGE_KEYS.session, JSON.stringify(session));
 };
 
 export function LoungeProvider({ children }) {
@@ -164,6 +177,7 @@ export function LoungeProvider({ children }) {
   const [hubLoadStalled, setHubLoadStalled] = useState(false);
   const hubListenFailsRef = useRef(0);
   const hubListenLoungeRef = useRef(null);
+  const [allianceGuests, setAllianceGuests] = useState([]);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -243,11 +257,11 @@ export function LoungeProvider({ children }) {
       if (!snap.exists()) return;
       const hubId = snap.data()?.hubId || null;
       if (!hubId) {
-        setSession((prev) => (prev?.observer ? prev : null));
+        setSession((prev) => (isObserverOrAllianceGuest(prev) ? prev : null));
         return;
       }
       setSession((prev) => {
-        if (prev?.observer) return prev;
+        if (isObserverOrAllianceGuest(prev)) return prev;
         if (prev?.loungeId === hubId) return prev;
         return { loungeId: hubId, memberId: authUser.uid };
       });
@@ -264,7 +278,7 @@ export function LoungeProvider({ children }) {
       setHubRecovering(false);
       return undefined;
     }
-    if (session?.observer) return undefined;
+    if (isObserverOrAllianceGuest(session)) return undefined;
     if (session?.loungeId) {
       setHubRecovering(false);
       return undefined;
@@ -284,7 +298,7 @@ export function LoungeProvider({ children }) {
           const pointed = userSnap.data()?.hubId || null;
           if (pointed) {
             setSession((prev) => {
-              if (prev?.observer) return prev;
+              if (isObserverOrAllianceGuest(prev)) return prev;
               if (prev?.loungeId === pointed) return prev;
               return { loungeId: pointed, memberId: authUser.uid };
             });
@@ -295,7 +309,7 @@ export function LoungeProvider({ children }) {
           if (cancelled) return;
           if (hubId) {
             setSession((prev) => {
-              if (prev?.observer) return prev;
+              if (isObserverOrAllianceGuest(prev)) return prev;
               if (prev?.loungeId) return prev;
               return { loungeId: hubId, memberId: authUser.uid };
             });
@@ -311,7 +325,7 @@ export function LoungeProvider({ children }) {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [authReady, authUser, session?.loungeId, session?.observer]);
+  }, [authReady, authUser, session?.loungeId, session?.observer, session?.allianceGuest]);
 
   // Subscribe hub + subcollections when session has loungeId
   useEffect(() => {
@@ -340,7 +354,7 @@ export function LoungeProvider({ children }) {
     const unsubs = [];
 
     const dropZombieHubSession = () => {
-      if (sessionRef.current?.observer) return;
+      if (isObserverOrAllianceGuest(sessionRef.current)) return;
       if (sessionRef.current?.loungeId !== loungeId) return;
       setSession(null);
       clearUserHubPointer(authUser.uid);
@@ -354,6 +368,15 @@ export function LoungeProvider({ children }) {
       hubListenFailsRef.current = 0;
       if (!snap.exists()) {
         setHubMeta(null);
+        if (sessionRef.current?.allianceGuest) {
+          const homeId = sessionRef.current.homeHubId;
+          if (homeId) {
+            setSession({ loungeId: homeId, memberId: authUser.uid });
+          } else {
+            setSession(null);
+          }
+          return;
+        }
         setSession(null);
         // 옵저버는 남의 허브를 보는 중 — users.hubId(본인 소속)를 지우면 안 된다.
         if (!sessionRef.current?.observer) {
@@ -372,7 +395,13 @@ export function LoungeProvider({ children }) {
       deniedTimer = window.setTimeout(() => {
         void (async () => {
           if (cancelled) return;
-          if (sessionRef.current?.observer) return;
+          if (isObserverOrAllianceGuest(sessionRef.current)) {
+            if (sessionRef.current?.allianceGuest) {
+              const homeId = sessionRef.current.homeHubId;
+              if (homeId) setSession({ loungeId: homeId, memberId: authUser.uid });
+            }
+            return;
+          }
           if (sessionRef.current?.loungeId !== loungeId) return;
           try {
             const memberSnap = await getDoc(doc(db, 'hubs', loungeId, 'members', authUser.uid));
@@ -460,6 +489,20 @@ export function LoungeProvider({ children }) {
       setScoresMap(map);
     }, (err) => console.error('scores snapshot', err)));
 
+    // 호스트만: 연결된 게스트 목록 (게스트 뷰·게스트 허브에서는 비움)
+    if (!sessionRef.current?.allianceGuest) {
+      unsubs.push(onSnapshot(collection(db, 'hubs', loungeId, 'allianceGuests'), (snap) => {
+        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        list.sort((a, b) => String(a.guestName || '').localeCompare(String(b.guestName || '')));
+        setAllianceGuests(list);
+      }, (err) => {
+        console.error('allianceGuests snapshot', err);
+        setAllianceGuests([]);
+      }));
+    } else {
+      setAllianceGuests([]);
+    }
+
     return () => {
       cancelled = true;
       if (deniedTimer) window.clearTimeout(deniedTimer);
@@ -469,16 +512,16 @@ export function LoungeProvider({ children }) {
 
   useEffect(() => {
     setHubLoadStalled(false);
-    if (!loungeId || !authUser || !hubMeta || session?.observer) return undefined;
+    if (!loungeId || !authUser || !hubMeta || isObserverOrAllianceGuest(session)) return undefined;
     if (membersSnapOk) return undefined;
 
     const timer = window.setTimeout(() => {
-      if (sessionRef.current?.observer) return;
+      if (isObserverOrAllianceGuest(sessionRef.current)) return;
       setHubLoadStalled(true);
     }, 15_000);
 
     return () => window.clearTimeout(timer);
-  }, [loungeId, authUser, hubMeta, membersSnapOk, session?.observer, hubListenNonce]);
+  }, [loungeId, authUser, hubMeta, membersSnapOk, session?.observer, session?.allianceGuest, hubListenNonce]);
 
   const retryHubLoad = useCallback(() => {
     setHubLoadStalled(false);
@@ -500,6 +543,16 @@ export function LoungeProvider({ children }) {
 
   const me = useMemo(() => {
     if (!authUser) return null;
+    if (session?.allianceGuest) {
+      return {
+        id: authUser.uid,
+        nickname: session.homeNickname || authUser.displayName || '연합 게스트',
+        role: 'alliance_guest',
+        joinedAt: '',
+        lastActiveAt: '',
+        isAllianceGuest: true,
+      };
+    }
     const found = members.find(m => m.id === authUser.uid);
     if (found) return found;
     if (isSuperAdmin && loungeId && membersReady) {
@@ -513,10 +566,10 @@ export function LoungeProvider({ children }) {
       };
     }
     return null;
-  }, [authUser, members, isSuperAdmin, loungeId, membersReady]);
+  }, [authUser, members, isSuperAdmin, loungeId, membersReady, session?.allianceGuest, session?.homeNickname]);
 
   useEffect(() => {
-    if (!loungeId || !authUser || !me || me.isSuperAdminObserver) return undefined;
+    if (!loungeId || !authUser || !me || me.isSuperAdminObserver || me.isAllianceGuest) return undefined;
     const bump = async () => {
       const patch = { lastActiveAt: nowIso() };
       try {
@@ -542,7 +595,7 @@ export function LoungeProvider({ children }) {
 
   useEffect(() => {
     if (!session || !authUser || !membersReady || !membersSnapOk) return;
-    if (isSuperAdmin || session.observer) return;
+    if (isSuperAdmin || isObserverOrAllianceGuest(session)) return;
     if (members.some(m => m.id === authUser.uid)) {
       setDoc(doc(db, COL.USERS, authUser.uid), {
         hubId: session.loungeId,
@@ -573,13 +626,20 @@ export function LoungeProvider({ children }) {
     return () => { cancelled = true; };
   }, [session, authUser, membersReady, membersSnapOk, members, isSuperAdmin]);
 
+  const isAllianceGuestView = !!session?.allianceGuest;
   const myRole = me?.role || null;
-  const isMaster = myRole === 'master';
-  const isAdmin = myRole === 'admin' || myRole === 'master' || isSuperAdmin;
+  const isMaster = !isAllianceGuestView && myRole === 'master';
+  const isAdmin = !isAllianceGuestView && (myRole === 'admin' || myRole === 'master' || isSuperAdmin);
   const canManageMembers = isAdmin;
   const canPostNotice = isAdmin;
-  const canEditBuilds = !!myRole;
-  const canAppointAdmin = isMaster || isSuperAdmin;
+  const canEditBuilds = !isAllianceGuestView && !!myRole && myRole !== 'alliance_guest';
+  const canAppointAdmin = !isAllianceGuestView && (isMaster || isSuperAdmin);
+
+  const assertWritableHub = useCallback(() => {
+    if (sessionRef.current?.allianceGuest) {
+      throw new Error('연합으로 연결된 허브는 읽기만 가능합니다.');
+    }
+  }, []);
 
   const pushHistory = useCallback(async (hubId, actor, action, target, detail = '') => {
     const id = uid('hist');
@@ -802,13 +862,20 @@ export function LoungeProvider({ children }) {
   }, [authUser, writeUserHub]);
 
   const leaveLounge = useCallback(async () => {
+    if (session?.allianceGuest) {
+      const homeId = session.homeHubId;
+      if (homeId && authUser) {
+        setSession({ loungeId: homeId, memberId: authUser.uid });
+        return;
+      }
+    }
     if (session?.observer) {
       setSession(null);
       return;
     }
     await leaveCurrentHub({ reason: 'leave' });
     setSession(null);
-  }, [session, leaveCurrentHub]);
+  }, [authUser, session, leaveCurrentHub]);
 
   const enterHubAsSuperAdmin = useCallback((hubId) => {
     if (!isSuperAdmin || !authUser) throw new Error('슈퍼관리자만 허브를 열 수 있습니다.');
@@ -816,7 +883,102 @@ export function LoungeProvider({ children }) {
     setSession({ loungeId: hubId, memberId: authUser.uid, observer: true });
   }, [authUser, isSuperAdmin]);
 
+  const enterAllianceHostView = useCallback(() => {
+    if (!authUser || !activeLounge || !me) {
+      throw new Error('허브 세션이 없습니다.');
+    }
+    if (session?.allianceGuest) return;
+    const hostId = String(activeLounge.allianceHostId || '').trim();
+    if (!hostId) {
+      throw new Error('연결된 연합 호스트가 없습니다.');
+    }
+    setSession({
+      loungeId: hostId,
+      memberId: authUser.uid,
+      allianceGuest: true,
+      homeHubId: activeLounge.id,
+      homeNickname: me.nickname || '',
+    });
+  }, [activeLounge, authUser, me, session?.allianceGuest]);
+
+  const exitAllianceHostView = useCallback(() => {
+    if (!session?.allianceGuest) return;
+    const homeId = session.homeHubId;
+    if (!homeId || !authUser) {
+      setSession(null);
+      return;
+    }
+    setSession({ loungeId: homeId, memberId: authUser.uid });
+  }, [authUser, session]);
+
+  const createAlliance = useCallback(async () => {
+    assertWritableHub();
+    if (!isAdmin) throw new Error('연합은 길드마스터·관리자만 만들 수 있습니다.');
+    try {
+      const res = await httpsCallable(functions, 'createAlliance')({});
+      return res?.data || null;
+    } catch (err) {
+      throw new Error(callableErrorMessage(err, '연합 만들기에 실패했습니다.'));
+    }
+  }, [assertWritableHub, isAdmin]);
+
+  const joinAlliance = useCallback(async (allianceCode) => {
+    assertWritableHub();
+    if (!isAdmin) throw new Error('연합 연결은 길드마스터·관리자만 할 수 있습니다.');
+    try {
+      const res = await httpsCallable(functions, 'joinAlliance')({ allianceCode });
+      return res?.data || null;
+    } catch (err) {
+      throw new Error(callableErrorMessage(err, '연합 연결에 실패했습니다.'));
+    }
+  }, [assertWritableHub, isAdmin]);
+
+  const leaveAlliance = useCallback(async () => {
+    assertWritableHub();
+    if (!isAdmin) throw new Error('연합 해제는 길드마스터·관리자만 할 수 있습니다.');
+    try {
+      const res = await httpsCallable(functions, 'leaveAlliance')({});
+      return res?.data || null;
+    } catch (err) {
+      throw new Error(callableErrorMessage(err, '연합 해제에 실패했습니다.'));
+    }
+  }, [assertWritableHub, isAdmin]);
+
+  const revokeAllianceGuest = useCallback(async (guestHubId) => {
+    assertWritableHub();
+    if (!isAdmin) throw new Error('게스트 끊기는 길드마스터·관리자만 할 수 있습니다.');
+    try {
+      const res = await httpsCallable(functions, 'revokeAllianceGuest')({ guestHubId });
+      return res?.data || null;
+    } catch (err) {
+      throw new Error(callableErrorMessage(err, '게스트 허브 연결 해제에 실패했습니다.'));
+    }
+  }, [assertWritableHub, isAdmin]);
+
+  const regenAllianceCode = useCallback(async () => {
+    assertWritableHub();
+    if (!isMaster && !isSuperAdmin) throw new Error('연합 코드 재발급은 길드마스터만 할 수 있습니다.');
+    try {
+      const res = await httpsCallable(functions, 'regenAllianceCode')({});
+      return res?.data || null;
+    } catch (err) {
+      throw new Error(callableErrorMessage(err, '연합 코드 재발급에 실패했습니다.'));
+    }
+  }, [assertWritableHub, isMaster, isSuperAdmin]);
+
+  const dissolveAlliance = useCallback(async () => {
+    assertWritableHub();
+    if (!isMaster && !isSuperAdmin) throw new Error('연합 종료는 길드마스터만 할 수 있습니다.');
+    try {
+      const res = await httpsCallable(functions, 'dissolveAlliance')({});
+      return res?.data || null;
+    } catch (err) {
+      throw new Error(callableErrorMessage(err, '연합 종료에 실패했습니다.'));
+    }
+  }, [assertWritableHub, isMaster, isSuperAdmin]);
+
   const updateHubSettings = useCallback(async (patch) => {
+    assertWritableHub();
     if (!activeLounge || !me || !loungeId) return;
     if (!isAdmin) throw new Error('허브 설정은 관리자만 변경할 수 있습니다.');
 
@@ -877,6 +1039,7 @@ export function LoungeProvider({ children }) {
   }, [activeLounge, isAdmin, isMaster, isSuperAdmin, loungeId, me, pushHistory]);
 
   const regenerateInviteCode = useCallback(async () => {
+    assertWritableHub();
     if (!activeLounge || !me || !loungeId) return;
     if (!isMaster && !isSuperAdmin) throw new Error('초대 코드 재발급은 길드마스터만 가능합니다.');
 
@@ -892,6 +1055,7 @@ export function LoungeProvider({ children }) {
   }, [activeLounge, isMaster, isSuperAdmin, loungeId, me, pushHistory]);
 
   const kickMember = useCallback(async (memberId) => {
+    assertWritableHub();
     if (!activeLounge || !me || !loungeId) return;
     if (!canManageMembers) throw new Error('추방 권한이 없습니다.');
     const target = members.find(m => m.id === memberId);
@@ -905,6 +1069,7 @@ export function LoungeProvider({ children }) {
   }, [activeLounge, canManageMembers, loungeId, me, members, pushHistory]);
 
   const appointAdmin = useCallback(async (memberId) => {
+    assertWritableHub();
     if (!activeLounge || !me || !loungeId) return;
     if (!canAppointAdmin) throw new Error('관리자 임명은 길드마스터만 가능합니다.');
     const target = members.find(m => m.id === memberId);
@@ -919,6 +1084,7 @@ export function LoungeProvider({ children }) {
   }, [activeLounge, canAppointAdmin, loungeId, me, members, pushHistory]);
 
   const revokeAdmin = useCallback(async (memberId) => {
+    assertWritableHub();
     if (!activeLounge || !me || !loungeId) return;
     if (!canAppointAdmin) throw new Error('관리자 해제는 길드마스터만 가능합니다.');
     const target = members.find(m => m.id === memberId);
@@ -928,6 +1094,7 @@ export function LoungeProvider({ children }) {
   }, [activeLounge, canAppointAdmin, loungeId, me, members, pushHistory]);
 
   const transferMaster = useCallback(async (memberId) => {
+    assertWritableHub();
     if (!activeLounge || !me || !loungeId) return;
     if (!isMaster) throw new Error('길드마스터만 위임할 수 있습니다.');
     if (memberId === me.id) throw new Error('자기 자신에게는 위임할 수 없습니다.');
@@ -964,6 +1131,7 @@ export function LoungeProvider({ children }) {
   }, [activeLounge, isMaster, loungeId, me, members, pushHistory]);
 
   const updateMyNickname = useCallback(async (nickname) => {
+    assertWritableHub();
     if (!activeLounge || !me || !loungeId || !authUser) return;
     const nick = String(nickname || '').trim();
     if (!nick) throw new Error('닉네임을 입력해 주세요.');
@@ -977,6 +1145,7 @@ export function LoungeProvider({ children }) {
   }, [activeLounge, authUser, loungeId, me, members, pushHistory]);
 
   const addNotice = useCallback(async ({ title, body, images = [] }) => {
+    assertWritableHub();
     if (!activeLounge || !me || !loungeId) return;
     if (!canPostNotice) throw new Error('공지 작성은 관리자만 가능합니다.');
     if (isRateLimited('addNotice', { maxCalls: 3, windowMs: 60_000 })) throw new Error('너무 빠르게 작성하고 있습니다. 잠시 후 다시 시도해 주세요.');
@@ -997,6 +1166,7 @@ export function LoungeProvider({ children }) {
   }, [activeLounge, canPostNotice, loungeId, me, pushHistory]);
 
   const addPost = useCallback(async ({ title, body, images = [] }) => {
+    assertWritableHub();
     if (!activeLounge || !me || !loungeId) return;
     if (isRateLimited('addPost', { maxCalls: 5, windowMs: 60_000 })) throw new Error('너무 빠르게 작성하고 있습니다. 잠시 후 다시 시도해 주세요.');
     const safeTitle = sanitizeText(title, 50);
@@ -1024,6 +1194,7 @@ export function LoungeProvider({ children }) {
   }, [isAdmin, me]);
 
   const deleteNotice = useCallback(async (noticeId) => {
+    assertWritableHub();
     if (!activeLounge || !me || !loungeId) return;
     const item = notices.find(n => n.id === noticeId);
     if (!item) return;
@@ -1033,6 +1204,7 @@ export function LoungeProvider({ children }) {
   }, [activeLounge, canDeleteFeedItem, loungeId, me, notices, pushHistory]);
 
   const deletePost = useCallback(async (postId) => {
+    assertWritableHub();
     if (!activeLounge || !me || !loungeId) return;
     const item = posts.find(p => p.id === postId);
     if (!item) return;
@@ -1042,11 +1214,13 @@ export function LoungeProvider({ children }) {
   }, [activeLounge, canDeleteFeedItem, loungeId, me, posts, pushHistory]);
 
   const logBuildHistory = useCallback((action, target, detail = '') => {
+    if (sessionRef.current?.allianceGuest) return;
     if (!activeLounge || !me || !loungeId) return;
     pushHistory(loungeId, me.nickname, action, target, detail);
   }, [activeLounge, loungeId, me, pushHistory]);
 
   const updateScore = useCallback(async (memberId, patch) => {
+    assertWritableHub();
     if (!activeLounge || !canManageMembers || !loungeId) return;
     const member = members.find(m => m.id === memberId);
     const prev = scoresMap[memberId] || {
@@ -1096,6 +1270,7 @@ export function LoungeProvider({ children }) {
     isMaster,
     isAdmin,
     isSuperAdmin,
+    isAllianceGuestView,
     canManageMembers,
     canPostNotice,
     canEditBuilds,
@@ -1104,6 +1279,8 @@ export function LoungeProvider({ children }) {
     loungePosts,
     loungeHistory,
     loungeScores,
+    allianceGuests,
+    maxAllianceGuests: MAX_ALLIANCE_GUESTS,
     affiliations: LOUNGE_AFFILIATIONS,
     tags: LOUNGE_TAGS,
     maxTags: MAX_LOUNGE_TAGS,
@@ -1113,6 +1290,14 @@ export function LoungeProvider({ children }) {
     joinLounge,
     leaveLounge,
     enterHubAsSuperAdmin,
+    enterAllianceHostView,
+    exitAllianceHostView,
+    createAlliance,
+    joinAlliance,
+    leaveAlliance,
+    revokeAllianceGuest,
+    regenAllianceCode,
+    dissolveAlliance,
     updateHubSettings,
     regenerateInviteCode,
     kickMember,

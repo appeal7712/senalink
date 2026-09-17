@@ -222,6 +222,21 @@ Provider 순서 (`main.jsx`): **SuperAdmin → UserProfile → Lounge → App**.
 - 상한: `MAX_HUB_MEMBERS=30`, `MAX_ADMINS=3` (`loungeMeta.js`).
 - **`users.hubId` 보호:** 멤버 스냅샷 오류·빈 목록만으로 hubId를 지우지 말 것. 클리어 전 `getDoc(members/{uid})`로 소속 확인. 로그인 후 세션 없으면 Callable **`resolveMyHub`**로 복구(허브 `members` 스캔 → `users.hubId` 복원).
 
+#### 6.3.1 연합 (1군 호스트 ↔ 2군 게스트, 읽기 전용)
+
+길드 허브 **홈 하단**: 왼쪽 **연합** · 오른쪽 **허브 나가기**.
+
+| | 내용 |
+|--|--|
+| 목적 | 2군이 1군 공략을 **열람** (멤버 가입 아님) |
+| 코드 | `7A-XXXX-XXXX` · `allianceIndex/{code}` (초대코드 `7K-` / `inviteIndex`와 분리) |
+| 스키마 | host: `allianceEnabled`/`allianceCode` + `allianceGuests/{guestHubId}` · guest: `allianceHostId`/`allianceHostName` |
+| 상한 | 호스트당 게스트 허브 **최대 3** (`MAX_ALLIANCE_GUESTS`) |
+| 쓰기 | **전부 Callable** — 클라이언트 `allianceIndex`/`allianceGuests` write 금지. hub의 연합 필드는 client update로 변경 불가(`allianceFieldsUnchanged`) |
+| 읽기 | rules: `isAllianceGuestOf(hostId)`일 때만 host hub·서브컬렉션 **read** 추가. **write 완화 없음** |
+| UI | 게스트 뷰: `session.allianceGuest` · `canEditBuilds`/`isAdmin` false · 상단 읽기전용 배너 · builds auto-save 가드 |
+| Callable | `createAlliance` · `joinAlliance` · `leaveAlliance` · `revokeAllianceGuest` · `regenAllianceCode` · `dissolveAlliance`(1군 종료) |
+| 배포 | rules+functions 함께. **라이브는 밍봉 명시 시에만** |
 ### 6.4 프로필 일일 추천
 - 클라이언트: `src/lib/profileRecommend.js`
 - Claim: `profileDailyRecommends/{fromUid}_{toUid}_{YYYY-MM-DD}` + 대상 `users.recommendCount` +1 (같은 배치).
@@ -255,10 +270,12 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | `communityGuides/{id}` | 공개 | Super 전부; signed-in은 PvP(arena/totalwar) 본인 글 |
 | `communityTierLists/{pve\|pvp}` | 공개 | Super만 |
 | `inviteIndex/{code}` | signed-in get | 허브 admin 생성; master/super 삭제 |
+| `allianceIndex/{code}` | **불가** (Callable만) | **불가** (Callable만) |
 | `publicGuilds/{hubId}` | 공개 | 허브 admin/master |
-| `hubs/{hubId}` | 멤버 또는 Super | 생성=본인이 master; 수정 master/admin/super(제약); 삭제 master/super |
-| `hubs/…/members` | 멤버/본인/super | 생성은 개설 시 master; 가입은 **Functions joinHub**; 역할 변경 master/super |
-| `hubs/…/builds` | 멤버/super | 멤버 C/U; 삭제 admin/super |
+| `hubs/{hubId}` | 멤버·**연합 게스트**·Super | 생성=본인이 master; 수정 master/admin/super(제약·연합필드 클라 변경 불가); 삭제 master/super |
+| `hubs/…/allianceGuests` | 호스트 멤버·해당 게스트 허브 멤버·super | **불가** (Callable만) |
+| `hubs/…/members` | 멤버·본인·**연합게스트 read**·super | 생성은 개설 시 master; 가입은 **Functions joinHub**; 역할 변경 master/super |
+| `hubs/…/builds` | 멤버·**연합게스트 read**·super | 멤버 C/U; 삭제 admin/super |
 | `hubs/…/notices, posts` | 멤버/super | 피드 검증; 수정/삭제 admin 또는 작성자 |
 | `hubs/…/history` | 멤버/super | create만 |
 | `hubs/…/scores` | 멤버/super | admin/super |
@@ -288,9 +305,15 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | `joinHub` | Callable | 초대코드 가입 (Admin SDK 트랜잭션, 좀비 hubId 정리) |
 | `resolveMyHub` | Callable | 로그인 유저의 허브 멤버십 재탐색 → `users.hubId` 복구 (모바일에서 hubId만 날아간 경우) |
 | `disbandHub` | Callable | 허브 통째 삭제 (super 또는 마지막 멤버) |
+| `createAlliance` | Callable | 호스트 연합 활성화·코드 발급 (`7A-…`) |
+| `joinAlliance` | Callable | 게스트 허브를 호스트에 연결 (멤버십 불변, 최대 3) |
+| `leaveAlliance` | Callable | 게스트 측 연합 해제 |
+| `revokeAllianceGuest` | Callable | 호스트가 특정 게스트 끊기 |
+| `regenAllianceCode` | Callable | 호스트 마스터 연합 코드 재발급 |
+| `dissolveAlliance` | Callable | 호스트 마스터 연합 종료(코드·게스트 연결 정리) |
 | `purgeIdleHubs` | Schedule 매일 04:00 KST | 60일 유휴 허브 삭제 |
 
-허브 삭제 시 지우는 서브컬렉션: `members`, `history`, `notices`, `posts`, `scores`, `builds`.
+허브 삭제 시 지우는 서브컬렉션: `members`, `history`, `notices`, `posts`, `scores`, `builds`, `allianceGuests` (+ `allianceIndex`·게스트 역포인터 정리).
 
 ---
 
@@ -386,6 +409,13 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 **표시 순서:** 길드전 → 상급결투장 → 총력전 → 강림원정대  
 
 **앞면:** 아이콘 + `frontStatus` · **뒷면:** 이름 + `YYYY.MM.DD 종료` + 게이지  
+
+**상급결투장 시즌 룰 (뒷면 뱃지):**  
+- UI: `SeasonRuleBadge` — 모드 아이콘 + 「Season Rules」텍스트, 유리 테마 바  
+- 데이터: `contentSeasonSchedule.js`의 `ADVANCED_ARENA_SEASON_RULES` (아이콘·`title`·`desc`) · `getAdvancedArenaSeasonRule()`  
+- **표시 위치:** 메인 시즌 카드 뒷면 · **공용 허브 PvP → 상급 결투장** 제목 「상급 결투장 공략」옆 `|` 구분 (`CommunityPvpPanel`)  
+- **툴팁:** PC hover / 모바일 tap — 도감 스킬 팁(`.skill-tip-pop`)과 동일. `desc` 있을 때만 활성  
+- **시즌 바뀔 때:** 밍봉이 이번 모드·설명을 알려주면 `ADVANCED_ARENA_SEASON_RULES`의 해당 항목 `title`/`desc`(필요 시 아이콘·순서)만 갱신. Firestore 없음  
 
 **테두리 (`burning` → `is-live` 스핀 / 아니면 `is-prep` 회색)** — 상세는 정본 §0.1·§0.2.
 
@@ -683,6 +713,12 @@ API:
 ---
 
 ## 17. 패치 내역
+
+### 2026-09-17 (`v2026.09.17.176`) — 길드 연합 · 상급결투장 시즌룰 · 허브 UX
+- **연합 (§6.3.1):** 1군 호스트 ↔ 2군 게스트 읽기 전용. Callable만 CUD (`create/join/leave/revoke/regen/dissolveAlliance`). rules: `isAllianceGuestOf` **read만** 추가, `allianceIndex`/`allianceGuests` 클라 write 금지, hub 연합 필드 `allianceFieldsUnchanged`.
+- **UI:** `AllianceModal` · 홈 연합/나가기 솔리드 버튼 · 나가기·연합 종료 확인 팝업 · 코드 복사/재발급 CopyNotice.
+- **상급결투장:** `SeasonRuleBadge` (메인 시즌 카드 뒷면 · 공용 PvP 제목 옆).
+- Hosting + `firestore:rules` + `functions` 배포 (`senalink`만).
 
 ### 2026-09-03 (`v2026.09.03.174`) — 영웅·프로필·PVE 탭·배경
 - **하연** (스페셜·경계의 수호자·지원·각성) `scraped_heroes` + 초상/스킬/전용장비.

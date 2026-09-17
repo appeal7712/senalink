@@ -19,7 +19,13 @@ import ModalScrim from '../ModalScrim';
 import GuildMark from '../GuildMark';
 import { showToast } from '../Toast';
 
-const ROLE_LABEL = { master: '길드마스터', admin: '관리자', member: '길드원', super: '슈퍼관리자' };
+const ROLE_LABEL = {
+  master: '길드마스터',
+  admin: '관리자',
+  member: '길드원',
+  super: '슈퍼관리자',
+  alliance_guest: '연합 게스트',
+};
 
 const inputStyle = {
   width: '100%', padding: '10px 12px', background: '#07090e', border: '1px solid var(--border-gold)',
@@ -31,6 +37,7 @@ export default function LoungeHubHeader() {
     activeLounge, me, myRole, isMaster, isAdmin, isSuperAdmin, canManageMembers, canAppointAdmin,
     leaveLounge, updateHubSettings, regenerateInviteCode,
     kickMember, appointAdmin, revokeAdmin, transferMaster, maxMembers, maxAdmins,
+    isAllianceGuestView,
   } = useLounge();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -87,8 +94,8 @@ export default function LoungeHubHeader() {
           <div className="hub-header-ranks">
             <GuildRankBars
               lounge={activeLounge}
-              canEdit={canManageMembers || isSuperAdmin}
-              showDueMarks={canManageMembers || isSuperAdmin}
+              canEdit={!isAllianceGuestView && (canManageMembers || isSuperAdmin)}
+              showDueMarks={!isAllianceGuestView && (canManageMembers || isSuperAdmin)}
               onSave={(patch) => updateHubSettings(patch)}
             />
           </div>
@@ -97,8 +104,12 @@ export default function LoungeHubHeader() {
             {canManageMembers && (
               <ActionBtn icon="hubMembers" label="길드원 관리" onClick={() => setMembersOpen(true)} tone="cyan" />
             )}
-            <ActionBtn icon="copy" label="코드 복사" onClick={copyCode} tone="muted" />
-            <ActionBtn icon="copy" label="링크 복사" onClick={copyLink} tone="cyan" />
+            {!isAllianceGuestView ? (
+              <>
+                <ActionBtn icon="copy" label="코드 복사" onClick={copyCode} tone="muted" />
+                <ActionBtn icon="copy" label="링크 복사" onClick={copyLink} tone="cyan" />
+              </>
+            ) : null}
             {isAdmin && (
               <ActionBtn icon="settings" label="설정" onClick={() => setSettingsOpen(true)} />
             )}
@@ -191,6 +202,9 @@ function HubSettingsModal({ onClose, lounge, isMaster, isAdmin, updateHubSetting
   const [description, setDescription] = useState(lounge.description || '');
   const [error, setError] = useState('');
   const [markBusy, setMarkBusy] = useState(false);
+  const [regenOpen, setRegenOpen] = useState(false);
+  const [regenBusy, setRegenBusy] = useState(false);
+  const [copyNotice, setCopyNotice] = useState('');
   const markPreviewRef = useRef(null);
 
   useEffect(() => () => {
@@ -250,11 +264,16 @@ function HubSettingsModal({ onClose, lounge, isMaster, isAdmin, updateHubSetting
 
   const regen = async () => {
     try {
-      if (!confirm('초대 코드를 새로 발급할까요? 기존 코드는 더 이상 사용할 수 없습니다.')) return;
-      const code = await regenerateInviteCode();
-      alert(`새 초대 코드: ${code}`);
+      setRegenBusy(true);
+      setError('');
+      await regenerateInviteCode();
+      setRegenOpen(false);
+      setCopyNotice('코드가 재발급 되었습니다.');
     } catch (e) {
-      alert(e.message);
+      setError(e.message || '재발급에 실패했습니다.');
+      setRegenOpen(false);
+    } finally {
+      setRegenBusy(false);
     }
   };
 
@@ -372,7 +391,7 @@ function HubSettingsModal({ onClose, lounge, isMaster, isAdmin, updateHubSetting
           </Field>
 
           {isMaster && (
-            <button type="button" onClick={regen} className="btn-steel" style={{
+            <button type="button" onClick={() => setRegenOpen(true)} className="btn-steel" style={{
               padding: '10px 12px', fontSize: '12px', alignSelf: 'flex-start'
             }}>
               초대 코드 재발급
@@ -386,6 +405,63 @@ function HubSettingsModal({ onClose, lounge, isMaster, isAdmin, updateHubSetting
       <button type="button" onClick={save} className="btn-ops" style={{ padding: '12px', justifyContent: 'center', fontSize: '14px' }}>
         <Icon name="save" size={14} /> 저장
       </button>
+      {regenOpen ? (
+        <ModalScrim
+          style={{ zIndex: 10050, padding: '16px' }}
+          {...backdropDismissProps(() => !regenBusy && setRegenOpen(false))}
+        >
+          <div
+            className="glass-modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: 'min(400px, 92vw)',
+              padding: '22px 20px',
+              borderRadius: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', lineHeight: 1.55 }}>
+              초대 코드를 재발급할까요?
+              <span
+                style={{
+                  display: 'block',
+                  marginTop: 8,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: 'rgba(226,232,240,0.9)',
+                  lineHeight: 1.55,
+                }}
+              >
+                기존 코드는 더 이상 사용할 수 없습니다.
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="btn-ops"
+                disabled={regenBusy}
+                onClick={() => setRegenOpen(false)}
+                style={{ justifyContent: 'center', minWidth: 100 }}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="btn-ops"
+                disabled={regenBusy}
+                onClick={() => void regen()}
+                style={{ justifyContent: 'center', minWidth: 100 }}
+              >
+                재발급
+              </button>
+            </div>
+          </div>
+        </ModalScrim>
+      ) : null}
+      <CopyNotice message={copyNotice} onClose={() => setCopyNotice('')} />
     </ModalShell>
   );
 }

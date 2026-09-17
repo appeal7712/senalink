@@ -1138,8 +1138,32 @@ h1, h2, h3 {
   filter: none;
 }
 
+/* 연합 모달 — 코드 옆 흰 버튼 (허브 히어로와 동일 copy 아이콘, 흰 배경에서 보이게 invert) */
+.alliance-code-actions .btn-ops {
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  gap: 5px;
+  border-radius: 10px;
+  transform: translateY(-2px);
+}
+.alliance-code-actions .btn-ops:hover {
+  transform: translateY(-4px);
+}
+.alliance-code-actions .btn-ops:active {
+  transform: translateY(-1px);
+}
+/* copy(밝은 PNG)만 invert — edit(btn-edit)은 이미 어두운 에셋이라 invert하면 흰 버튼에서 사라짐 */
+.alliance-code-actions .btn-ops img.icon-inline:not(.icon-inline--color) {
+  filter: invert(1);
+}
+.alliance-code-actions .btn-ops img.icon-inline--copy-invert {
+  filter: invert(1);
+}
+
 .btn-edit,
 .btn-danger-solid,
+.btn-success-solid,
 .btn-like {
   display: inline-flex;
   align-items: center;
@@ -1166,6 +1190,7 @@ h1, h2, h3 {
 }
 .btn-edit:hover,
 .btn-danger-solid:hover,
+.btn-success-solid:hover,
 .btn-like:hover {
   filter: brightness(110%);
   transform: translateY(-6px);
@@ -1176,12 +1201,14 @@ h1, h2, h3 {
 }
 .btn-edit:active,
 .btn-danger-solid:active,
+.btn-success-solid:active,
 .btn-like:active {
   transform: translateY(-2px);
   transition: transform 34ms, box-shadow 34ms;
 }
 .btn-edit:focus:not(:focus-visible),
 .btn-danger-solid:focus:not(:focus-visible),
+.btn-success-solid:focus:not(:focus-visible),
 .btn-like:focus:not(:focus-visible) {
   outline: none;
 }
@@ -1222,6 +1249,30 @@ h1, h2, h3 {
   box-shadow:
     0 1px 0 0 rgba(0, 0, 0, 0.25),
     0 2px 0 0 #991b1b;
+}
+.btn-success-solid {
+  background: #3dce9a;
+  color: #161616;
+  min-width: 4.75em;
+  box-sizing: border-box;
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 4px 0 0 #2a9d76;
+}
+.btn-success-solid:hover {
+  background: #32c08f;
+  box-shadow:
+    0 4px 0 0 rgba(0, 0, 0, 0.25),
+    0 6px 0 0 #2a9d76;
+}
+.btn-success-solid:active {
+  background: #32c08f;
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #2a9d76;
+}
+.btn-success-solid img.icon-inline:not(.icon-inline--color) {
+  filter: invert(1);
 }
 .btn-like {
   background: #fff;
@@ -3300,13 +3351,80 @@ h1, h2, h3 {
 .season-card-back-panel {
   position: absolute;
   inset: 0;
-  padding: 12px 12px 12px;
+  padding: 8px 12px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 5px;
   text-align: center;
+}
+/* 상급결투장 뒷면 — 커스텀 바 + 모드 아이콘 + Season Rules 텍스트 */
+.season-rule-badge {
+  position: relative;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  width: auto;
+  max-width: 100%;
+  height: 34px;
+  padding: 0 12px 0 5px;
+  margin: -4px 0 1px;
+  border: none;
+  background: transparent;
+  box-sizing: border-box;
+  isolation: isolate;
+  font: inherit;
+  color: inherit;
+  cursor: default;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.season-rule-badge.has-tip {
+  cursor: help;
+}
+.season-rule-badge.has-tip:hover .season-rule-badge-bar,
+.season-rule-badge.is-open .season-rule-badge-bar {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.1);
+}
+.season-rule-badge-bar {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 999px;
+  background: var(--glass-inset);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+.season-rule-badge-type,
+.season-rule-badge-text {
+  position: relative;
+  z-index: 1;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  flex-shrink: 0;
+}
+.season-rule-badge-type {
+  width: 26px;
+  height: 26px;
+  margin-left: 2px;
+  object-fit: contain;
+  border-radius: 0;
+}
+.season-rule-badge-text {
+  width: auto;
+  height: 14px;
+  object-fit: contain;
+  opacity: 0.95;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
 }
 .season-card-badge {
   padding: 2px 10px;
@@ -11484,6 +11602,16 @@ h1, h2, h3 {
   font-size: 12px;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.78);
+}
+.community-arena-season-rule-sep {
+  margin: 0 2px 0 4px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.35);
+  user-select: none;
+}
+.community-arena-action-title .season-rule-badge {
+  margin: 0;
+  flex-shrink: 0;
 }
 .community-arena-action-art {
   position: relative;

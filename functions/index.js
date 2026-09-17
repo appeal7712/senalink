@@ -12,11 +12,17 @@ const REGION = 'asia-northeast3';
 const HUB_IDLE_DAYS = 60;
 const HUB_IDLE_MS = HUB_IDLE_DAYS * 24 * 60 * 60 * 1000;
 const MAX_HUB_MEMBERS = 30;
-const SUBCOLLECTIONS = ['members', 'history', 'notices', 'posts', 'scores', 'builds'];
+const MAX_ALLIANCE_GUESTS = 3;
+const SUBCOLLECTIONS = ['members', 'history', 'notices', 'posts', 'scores', 'builds', 'allianceGuests'];
 
 const ONE_HUB_MSG = '이미 길드 허브에 소속되어 있습니다. 다른 허브로 가려면 먼저 현재 허브에서 나가 주세요.';
 const NEED_NICKNAME_MSG = '먼저 마이페이지에서 닉네임을 설정해 주세요.';
 const NICK_TAKEN_MSG = '이 허브에 같은 닉네임을 쓰는 사람이 있습니다. 마이페이지에서 닉네임을 바꿔 주세요.';
+const ALLIANCE_ADMIN_MSG = '연합은 길드마스터·관리자만 다룰 수 있습니다.';
+const ALLIANCE_FULL_MSG = `연합 게스트 허브는 최대 ${MAX_ALLIANCE_GUESTS}개까지입니다.`;
+const ALLIANCE_ALREADY_HOST_MSG = '이미 연합 호스트입니다. 게스트로 다른 허브에 연결할 수 없습니다.';
+const ALLIANCE_ALREADY_GUEST_MSG = '이미 다른 연합에 연결되어 있습니다. 먼저 연합을 해제해 주세요.';
+const ALLIANCE_SELF_MSG = '자기 허브에는 연합으로 연결할 수 없습니다.';
 
 const db = getFirestore();
 
@@ -41,6 +47,101 @@ function parseInviteCode(raw) {
   const compact = text.toUpperCase().replace(/\s+/g, '');
   if (/^7K-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(compact)) return compact;
   return '';
+}
+
+/** 연합 코드 7A-XXXX-XXXX */
+function parseAllianceCode(raw) {
+  const text = String(raw || '').trim();
+  if (!text) return '';
+  const fromPattern = text.match(/7A-[A-Z0-9]{4}-[A-Z0-9]{4}/i);
+  if (fromPattern?.[0]) return fromPattern[0].toUpperCase();
+  const compact = text.toUpperCase().replace(/\s+/g, '');
+  if (/^7A-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(compact)) return compact;
+  return '';
+}
+
+function randomAllianceChunk() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let out = '';
+  for (let i = 0; i < 4; i += 1) {
+    out += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return out;
+}
+
+function makeAllianceCode() {
+  return `7A-${randomAllianceChunk()}-${randomAllianceChunk()}`;
+}
+
+async function claimAllianceIndex(hostHubId, preferredCode) {
+  let code = preferredCode || makeAllianceCode();
+  for (let i = 0; i < 12; i += 1) {
+    const ref = db.doc(`allianceIndex/${code}`);
+    try {
+      await ref.create({ hostHubId });
+      return code;
+    } catch (err) {
+      code = makeAllianceCode();
+    }
+  }
+  throw new HttpsError('resource-exhausted', '연합 코드를 발급하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+}
+
+async function assertHubAdmin(uid, hubId) {
+  const adminSnap = await db.doc(`admins/${uid}`).get();
+  if (adminSnap.data()?.role === 'super') return { role: 'super', isSuper: true };
+  const memberSnap = await db.doc(`hubs/${hubId}/members/${uid}`).get();
+  if (!memberSnap.exists) {
+    throw new HttpsError('permission-denied', ALLIANCE_ADMIN_MSG);
+  }
+  const role = String(memberSnap.data()?.role || '');
+  if (role !== 'master' && role !== 'admin') {
+    throw new HttpsError('permission-denied', ALLIANCE_ADMIN_MSG);
+  }
+  return { role, isSuper: false };
+}
+
+async function clearGuestAlliancePointer(guestHubId, expectedHostId) {
+  const guestRef = db.doc(`hubs/${guestHubId}`);
+  const snap = await guestRef.get();
+  if (!snap.exists) return;
+  const data = snap.data() || {};
+  if (expectedHostId && data.allianceHostId && data.allianceHostId !== expectedHostId) return;
+  await guestRef.set({
+    allianceHostId: null,
+    allianceHostName: null,
+    updatedAt: nowIso(),
+  }, { merge: true });
+}
+
+async function unlinkAllianceGuest(hostHubId, guestHubId) {
+  const guestRef = db.doc(`hubs/${hostHubId}/allianceGuests/${guestHubId}`);
+  await guestRef.delete().catch(() => {});
+  await clearGuestAlliancePointer(guestHubId, hostHubId);
+}
+
+async function clearHostAlliance(hubId, hubData) {
+  const code = String(hubData?.allianceCode || '').trim();
+  if (code) {
+    try { await db.doc(`allianceIndex/${code}`).delete(); } catch (err) {
+      logger.warn('allianceIndex delete', hubId, err);
+    }
+  }
+  const guestsSnap = await db.collection(`hubs/${hubId}/allianceGuests`).get();
+  await Promise.all(guestsSnap.docs.map(async (d) => {
+    await clearGuestAlliancePointer(d.id, hubId);
+  }));
+  // allianceGuests collection deleted via SUBCOLLECTIONS in wipeHub
+}
+
+async function clearAsGuestAlliance(hubId, hubData) {
+  const hostId = String(hubData?.allianceHostId || '').trim();
+  if (!hostId) return;
+  try {
+    await db.doc(`hubs/${hostId}/allianceGuests/${hubId}`).delete();
+  } catch (err) {
+    logger.warn('guest link delete on wipe', hubId, hostId, err);
+  }
 }
 
 function activityMs(data) {
@@ -79,11 +180,16 @@ async function wipeHub(hubId) {
   const hubSnap = await hubRef.get();
   if (!hubSnap.exists) return { ok: false, reason: 'missing' };
 
-  const inviteCode = hubSnap.data()?.inviteCode || null;
+  const hubData = hubSnap.data() || {};
+  const inviteCode = hubData.inviteCode || null;
   const membersSnap = await hubRef.collection('members').get();
   const memberUids = membersSnap.docs.map((d) => d.id);
 
   await Promise.all(memberUids.map((uid) => clearUserHub(uid, hubId)));
+
+  // 호스트·게스트 연합 링크 정리 (서브컬렉션 삭제 전)
+  await clearAsGuestAlliance(hubId, hubData);
+  await clearHostAlliance(hubId, hubData);
 
   for (const name of SUBCOLLECTIONS) {
     await deleteCollection(hubRef.collection(name));
@@ -418,3 +524,279 @@ exports.purgeIdleHubs = onSchedule(
     return { idle: idle.length, wiped };
   },
 );
+
+/**
+ * 연합 만들기 — 호스트 허브 master/admin.
+ * users.hubId / members 불변. 코드만 발급.
+ */
+exports.createAlliance = onCall({ region: REGION }, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+  }
+  const uid = request.auth.uid;
+  const userSnap = await db.doc(`users/${uid}`).get();
+  const hubId = String(userSnap.data()?.hubId || '').trim();
+  if (!hubId) {
+    throw new HttpsError('failed-precondition', '소속 허브가 없습니다.');
+  }
+  await assertHubAdmin(uid, hubId);
+
+  const hubRef = db.doc(`hubs/${hubId}`);
+  const hubSnap = await hubRef.get();
+  if (!hubSnap.exists) {
+    throw new HttpsError('not-found', '허브를 찾을 수 없습니다.');
+  }
+  const hubData = hubSnap.data() || {};
+  if (hubData.allianceHostId) {
+    throw new HttpsError('failed-precondition', ALLIANCE_ALREADY_GUEST_MSG);
+  }
+
+  const ts = nowIso();
+  let code = String(hubData.allianceCode || '').trim().toUpperCase();
+  if (hubData.allianceEnabled && code) {
+    const idx = await db.doc(`allianceIndex/${code}`).get();
+    if (idx.exists && idx.data()?.hostHubId === hubId) {
+      return { hubId, allianceCode: code, already: true };
+    }
+  }
+
+  if (code) {
+    try { await db.doc(`allianceIndex/${code}`).delete(); } catch (_) { /* ignore */ }
+  }
+  code = await claimAllianceIndex(hubId);
+  await hubRef.set({
+    allianceEnabled: true,
+    allianceCode: code,
+    allianceUpdatedAt: ts,
+    allianceHostId: null,
+    allianceHostName: null,
+    updatedAt: ts,
+  }, { merge: true });
+
+  return { hubId, allianceCode: code, already: false };
+});
+
+/** 연합 코드로 게스트 허브 연결 — 호출자 hub 유지, 읽기만 */
+exports.joinAlliance = onCall({ region: REGION }, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+  }
+  const uid = request.auth.uid;
+  const code = parseAllianceCode(request.data?.allianceCode || request.data?.code);
+  if (!code) {
+    throw new HttpsError('invalid-argument', '연합 코드를 확인할 수 없습니다. (예: 7A-XXXX-XXXX)');
+  }
+
+  const userSnap = await db.doc(`users/${uid}`).get();
+  const guestHubId = String(userSnap.data()?.hubId || '').trim();
+  if (!guestHubId) {
+    throw new HttpsError('failed-precondition', '소속 허브가 없습니다. 먼저 허브에 가입해 주세요.');
+  }
+  await assertHubAdmin(uid, guestHubId);
+
+  const indexSnap = await db.doc(`allianceIndex/${code}`).get();
+  if (!indexSnap.exists) {
+    throw new HttpsError('not-found', '연합 코드를 찾을 수 없습니다.');
+  }
+  const hostHubId = String(indexSnap.data()?.hostHubId || '').trim();
+  if (!hostHubId) {
+    throw new HttpsError('not-found', '연합 코드를 찾을 수 없습니다.');
+  }
+  if (hostHubId === guestHubId) {
+    throw new HttpsError('failed-precondition', ALLIANCE_SELF_MSG);
+  }
+
+  const hostRef = db.doc(`hubs/${hostHubId}`);
+  const guestRef = db.doc(`hubs/${guestHubId}`);
+  const [hostSnap, guestSnap] = await Promise.all([hostRef.get(), guestRef.get()]);
+  if (!hostSnap.exists) {
+    throw new HttpsError('not-found', '호스트 허브를 찾을 수 없습니다.');
+  }
+  if (!guestSnap.exists) {
+    throw new HttpsError('not-found', '게스트 허브를 찾을 수 없습니다.');
+  }
+
+  const hostData = hostSnap.data() || {};
+  const guestData = guestSnap.data() || {};
+  if (!hostData.allianceEnabled || String(hostData.allianceCode || '').toUpperCase() !== code) {
+    throw new HttpsError('failed-precondition', '연합 코드가 만료되었거나 변경되었습니다.');
+  }
+  if (guestData.allianceEnabled) {
+    throw new HttpsError('failed-precondition', ALLIANCE_ALREADY_HOST_MSG);
+  }
+  const existingHost = String(guestData.allianceHostId || '').trim();
+  if (existingHost && existingHost !== hostHubId) {
+    throw new HttpsError('failed-precondition', ALLIANCE_ALREADY_GUEST_MSG);
+  }
+  if (existingHost === hostHubId) {
+    return { hostHubId, guestHubId, already: true };
+  }
+
+  const guestsSnap = await hostRef.collection('allianceGuests').get();
+  if (guestsSnap.size >= MAX_ALLIANCE_GUESTS) {
+    throw new HttpsError('resource-exhausted', ALLIANCE_FULL_MSG);
+  }
+
+  const ts = nowIso();
+  const guestName = String(guestData.name || '게스트 허브').trim().slice(0, 40);
+  const hostName = String(hostData.name || '호스트 허브').trim().slice(0, 40);
+
+  await hostRef.collection('allianceGuests').doc(guestHubId).set({
+    guestHubId,
+    guestName,
+    linkedAt: ts,
+    linkedByUid: uid,
+  });
+  await guestRef.set({
+    allianceHostId: hostHubId,
+    allianceHostName: hostName,
+    updatedAt: ts,
+  }, { merge: true });
+
+  return { hostHubId, guestHubId, hostName, already: false };
+});
+
+/** 게스트 측 연합 해제 */
+exports.leaveAlliance = onCall({ region: REGION }, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+  }
+  const uid = request.auth.uid;
+  const userSnap = await db.doc(`users/${uid}`).get();
+  const guestHubId = String(userSnap.data()?.hubId || '').trim();
+  if (!guestHubId) {
+    throw new HttpsError('failed-precondition', '소속 허브가 없습니다.');
+  }
+  await assertHubAdmin(uid, guestHubId);
+
+  const guestSnap = await db.doc(`hubs/${guestHubId}`).get();
+  if (!guestSnap.exists) {
+    throw new HttpsError('not-found', '허브를 찾을 수 없습니다.');
+  }
+  const hostHubId = String(guestSnap.data()?.allianceHostId || '').trim();
+  if (!hostHubId) {
+    return { ok: true, already: true };
+  }
+  await unlinkAllianceGuest(hostHubId, guestHubId);
+  return { ok: true, hostHubId, guestHubId };
+});
+
+/** 호스트가 특정 게스트 끊기 */
+exports.revokeAllianceGuest = onCall({ region: REGION }, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+  }
+  const uid = request.auth.uid;
+  const guestHubId = String(request.data?.guestHubId || '').trim();
+  if (!guestHubId) {
+    throw new HttpsError('invalid-argument', '게스트 허브를 확인할 수 없습니다.');
+  }
+  const userSnap = await db.doc(`users/${uid}`).get();
+  const hostHubId = String(userSnap.data()?.hubId || '').trim();
+  if (!hostHubId) {
+    throw new HttpsError('failed-precondition', '소속 허브가 없습니다.');
+  }
+  await assertHubAdmin(uid, hostHubId);
+
+  const linkSnap = await db.doc(`hubs/${hostHubId}/allianceGuests/${guestHubId}`).get();
+  if (!linkSnap.exists) {
+    return { ok: true, already: true };
+  }
+  await unlinkAllianceGuest(hostHubId, guestHubId);
+  return { ok: true, hostHubId, guestHubId };
+});
+
+/** 호스트 연합 코드 재발급 (master 또는 super) */
+exports.regenAllianceCode = onCall({ region: REGION }, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+  }
+  const uid = request.auth.uid;
+  const userSnap = await db.doc(`users/${uid}`).get();
+  const hubId = String(userSnap.data()?.hubId || '').trim();
+  if (!hubId) {
+    throw new HttpsError('failed-precondition', '소속 허브가 없습니다.');
+  }
+  const authz = await assertHubAdmin(uid, hubId);
+  if (!authz.isSuper && authz.role !== 'master') {
+    throw new HttpsError('permission-denied', '연합 코드 재발급은 길드마스터만 할 수 있습니다.');
+  }
+
+  const hubRef = db.doc(`hubs/${hubId}`);
+  const hubSnap = await hubRef.get();
+  if (!hubSnap.exists) {
+    throw new HttpsError('not-found', '허브를 찾을 수 없습니다.');
+  }
+  const hubData = hubSnap.data() || {};
+  if (!hubData.allianceEnabled) {
+    throw new HttpsError('failed-precondition', '먼저 연합을 만들어 주세요.');
+  }
+
+  const oldCode = String(hubData.allianceCode || '').trim();
+  if (oldCode) {
+    try { await db.doc(`allianceIndex/${oldCode}`).delete(); } catch (_) { /* ignore */ }
+  }
+  const code = await claimAllianceIndex(hubId);
+  const ts = nowIso();
+  await hubRef.set({
+    allianceEnabled: true,
+    allianceCode: code,
+    allianceUpdatedAt: ts,
+    updatedAt: ts,
+  }, { merge: true });
+
+  return { hubId, allianceCode: code };
+});
+
+/**
+ * 호스트 연합 종료 — 코드·인덱스·게스트 연결 전부 정리.
+ * 잘못 1군으로 연 경우에도 되돌릴 수 있음.
+ */
+exports.dissolveAlliance = onCall({ region: REGION }, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+  }
+  const uid = request.auth.uid;
+  const userSnap = await db.doc(`users/${uid}`).get();
+  const hubId = String(userSnap.data()?.hubId || '').trim();
+  if (!hubId) {
+    throw new HttpsError('failed-precondition', '소속 허브가 없습니다.');
+  }
+  const authz = await assertHubAdmin(uid, hubId);
+  if (!authz.isSuper && authz.role !== 'master') {
+    throw new HttpsError('permission-denied', '연합 종료는 길드마스터만 할 수 있습니다.');
+  }
+
+  const hubRef = db.doc(`hubs/${hubId}`);
+  const hubSnap = await hubRef.get();
+  if (!hubSnap.exists) {
+    throw new HttpsError('not-found', '허브를 찾을 수 없습니다.');
+  }
+  const hubData = hubSnap.data() || {};
+  if (hubData.allianceHostId) {
+    throw new HttpsError('failed-precondition', '2군으로 연결된 허브입니다. 「연합 해제」를 사용해 주세요.');
+  }
+  if (!hubData.allianceEnabled && !hubData.allianceCode) {
+    return { ok: true, already: true };
+  }
+
+  const guestsSnap = await hubRef.collection('allianceGuests').get();
+  await Promise.all(guestsSnap.docs.map((d) => unlinkAllianceGuest(hubId, d.id)));
+
+  const oldCode = String(hubData.allianceCode || '').trim();
+  if (oldCode) {
+    try { await db.doc(`allianceIndex/${oldCode}`).delete(); } catch (_) { /* ignore */ }
+  }
+
+  const ts = nowIso();
+  await hubRef.set({
+    allianceEnabled: false,
+    allianceCode: null,
+    allianceUpdatedAt: ts,
+    allianceHostId: null,
+    allianceHostName: null,
+    updatedAt: ts,
+  }, { merge: true });
+
+  return { ok: true, hubId, revokedGuests: guestsSnap.size };
+});

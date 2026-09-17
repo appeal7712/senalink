@@ -210,6 +210,49 @@ function evalTotalWar(nowMs, anchorYmd) {
 }
 
 /** 상급 결투장 — 2주, 마감 목 02:00 / 앞면: 시즌 진행 중 */
+/**
+ * 상급결투장 시즌 룰 (2주 사이클 순회)
+ * 아이콘·툴팁 문구는 밍봉이 시즌 바뀔 때 알려주면 여기만 갱신.
+ * desc 없으면 뱃지 툴팁 비활성.
+ */
+const ADVANCED_ARENA_SEASON_RULES = [
+  {
+    icon: '/images/content-season/season-rule/mode-normal.png',
+    title: '일반 모드',
+    desc: '',
+  },
+  {
+    icon: '/images/content-season/season-rule/mode-3v3.png',
+    title: '3대3 모드',
+    desc: '',
+  },
+  {
+    icon: '/images/content-season/season-rule/mode-4v4.png',
+    title: '4대4 모드',
+    desc: '4대4로 진행됩니다.',
+  },
+  {
+    icon: '/images/content-season/season-rule/mode-no-accessory.png',
+    title: '장신구 금지',
+    desc: '',
+  },
+  {
+    icon: '/images/content-season/season-rule/mode-hero-ban.png',
+    title: '영웅 밴',
+    desc: '',
+  },
+];
+
+function advancedArenaSeasonRule(seasonStartMs, anchorYmd) {
+  const fallback = ADVANCED_ARENA_SEASON_RULES[0];
+  const a = parseAnchorDate(anchorYmd);
+  if (!a || seasonStartMs == null) return fallback;
+  const anchorMs = kstWallToUtcMs(a.year, a.month, a.day, 0, 0, 0);
+  const idx = Math.floor((seasonStartMs - anchorMs) / (14 * DAY_MS));
+  const n = ADVANCED_ARENA_SEASON_RULES.length;
+  return ADVANCED_ARENA_SEASON_RULES[((idx % n) + n) % n] || fallback;
+}
+
 function evalAdvancedArena(nowMs, anchorYmd) {
   const start = cycleStartMs(anchorYmd, 14, nowMs);
   if (start == null) return null;
@@ -235,6 +278,7 @@ function evalAdvancedArena(nowMs, anchorYmd) {
     }
     const live = nowMs >= seasonStart && nowMs < seasonEnd;
     if (live) {
+      const rule = advancedArenaSeasonRule(seasonStart, anchorYmd);
       return baseItem({
         id, name, icon: 'swords', burning: true,
         frontStatus: '시즌 진행 중',
@@ -242,10 +286,14 @@ function evalAdvancedArena(nowMs, anchorYmd) {
         endsAtLabel: formatEndsAtLabel(seasonEnd),
         progress: progressBetween(seasonStart, seasonEnd, nowMs),
         status: '시즌 진행 중',
+        seasonRuleIcon: rule.icon,
+        seasonRuleTitle: rule.title,
+        seasonRuleDesc: rule.desc,
       });
     }
   }
 
+  const rule = advancedArenaSeasonRule(start, anchorYmd);
   return baseItem({
     id, name, icon: 'swords', burning: false,
     frontStatus: '시즌 준비',
@@ -253,6 +301,9 @@ function evalAdvancedArena(nowMs, anchorYmd) {
     endsAtLabel: formatEndsAtLabel(endMs),
     progress: nowMs >= endMs ? 1 : 0,
     status: '시즌 준비',
+    seasonRuleIcon: rule.icon,
+    seasonRuleTitle: rule.title,
+    seasonRuleDesc: rule.desc,
   });
 }
 
@@ -409,4 +460,15 @@ export function getContentSeasonStatuses(date = new Date(), anchors = CONTENT_SE
     evalTotalWar(nowMs, anchors.totalWarThursday),
     evalExpedition(nowMs, anchors.expeditionMonday),
   ].filter(Boolean);
+}
+
+/** 상급결투장 현재 시즌 룰 (메인 뱃지 · 공용 PvP 공유) */
+export function getAdvancedArenaSeasonRule(date = new Date(), anchors = CONTENT_SEASON_ANCHORS) {
+  const item = evalAdvancedArena(date.getTime(), anchors.advancedArenaThursday);
+  if (!item?.seasonRuleIcon) return null;
+  return {
+    icon: item.seasonRuleIcon,
+    title: item.seasonRuleTitle || '',
+    desc: item.seasonRuleDesc || '',
+  };
 }
