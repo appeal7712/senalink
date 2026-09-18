@@ -351,6 +351,22 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 - **방어 리스트:** PC·모바일 모두 **1열** (공용 PvP 결투장과 동일). `.gw-defense-grid--stack`. 접힌 헤더 lead: **그립 `|` 덱 티어 `|`** 초상·메타 | 수정·삭제·대체 덱. 펼침: 덱(세팅 확인) → 스킬 예약 → **기타 디테일**. **방어 덱 수정 모달**은 결투장과 동일 PC 통스크롤(`arena-body-scroll-modal` · §12.4) — 헤더만 덱 티어·세팅·덱 유형·기타 디테일·속공 수치 유지. 모달 클래스 `gw-defense-edit-modal`.
 - **기타 디테일 박스:** PC에서 스킬 예약과 **같은 열 폭** (`max-width` 제한 없음). 모바일에서 `.build-panel-body { display: contents }` 사용 시 **반드시 `order: 4`** — 없으면 order 0으로 맨 위에 붙음.
 
+#### PvE 접힘 카드 (공성 · 강림 · 공용 PvE)
+
+길드전 방어와 같은 `community-pvp-card` 접힘/펼침. 별점 UI는 `DeckTierStars` / `DeckTierBlock` 공유.
+
+| | 길드 허브 공성·강림 | 공용 허브 PvE | 길드전 방어 |
+|--|--|--|--|
+| 별점 필드 | 빌드 객체 `tier` (1–5, 없으면 표시·저장 시 **3**) | `communityGuides.tier` 동일 | `gwDefenses[].tier` |
+| 라벨 | **추천도** (제목 아래, 가운데 정렬 + `|--------|` 구분선) | 동일 | **덱 티어** (lead 칸) |
+| 접힘 헤더 | 제목(+추천도) `|` 초상 `|` 작성자 \| 수정·삭제 | 동일 | 그립 `|` 덱 티어 `|` … |
+| 강림 특례 | 1·2라운드 초상 행 + 그립 드래그 재정렬(방어와 동일) | — | — |
+| 긴 제목 | `OverflowTitle` tip (PC hover / 모바일 tap) | 동일 | — |
+
+- 스키마: **optional** 숫자 필드만 추가. rules·Functions 변경 없음. 구 문서에 `tier` 없어도 읽기 OK (`normalizeDeckTier`).
+- 허브 저장: `builds/main` `setDoc(…, { merge: true })` — 기존 카테고리 키 보존 전제 유지.
+- 허브 히어로(`.hub-header`) 모바일 스택은 접힘 카드와 같이 **≤1024**.
+
 #### 길드전 화면 폭 브레이크포인트 (요지)
 
 | 폭 | 공격 | 방어 |
@@ -703,7 +719,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.08.30.151** (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.09.18.179** (푸터 `APP_VERSION` 확인)
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 
 ---
@@ -713,6 +729,12 @@ API:
 ---
 
 ## 17. 패치 내역
+
+### 2026-09-18 (`v2026.09.18.179`) — PvE 접힘 카드 · 추천도
+- **공성·강림·공용 PvE:** 길드전 방어형 접힘/펼침 카드. 제목 아래 **추천도** 1–5★ (`DeckTierStars`, 필드 `tier` optional·기본 3). 방어 lead 「덱 티어」와 라벨·배치 분리.
+- **강림:** 1·2라운드 초상 + 그립 드래그 재정렬. 제목 `OverflowTitle` tip.
+- **세팅 확인:** 속공 순서 이름+ellipsis. 허브 히어로 모바일 **≤1024** 스택 동기.
+- Hosting만 (rules·Functions·스키마 파괴 없음 — `tier` optional 추가).
 
 ### 2026-09-17 (`v2026.09.17.176`) — 길드 연합 · 상급결투장 시즌룰 · 허브 UX
 - **연합 (§6.3.1):** 1군 호스트 ↔ 2군 게스트 읽기 전용. Callable만 CUD (`create/join/leave/revoke/regen/dissolveAlliance`). rules: `isAllianceGuestOf` **read만** 추가, `allianceIndex`/`allianceGuests` 클라 write 금지, hub 연합 필드 `allianceFieldsUnchanged`.

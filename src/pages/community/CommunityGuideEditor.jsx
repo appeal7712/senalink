@@ -15,6 +15,7 @@ import ModalScrim from '../../components/ModalScrim';
 import PvpModeToggle, { normalizePvpMode } from '../../components/PvpModeToggle';
 import { MetaDeckKindToggle, normalizeMetaDeckKind } from '../../components/ArenaDeckKind';
 import { ARENA_TIERS, normalizeArenaTier } from '../../data/arenaTiers';
+import DeckTierStars, { normalizeDeckTier } from '../../components/DeckTierStars';
 import { communitySkillMode } from '../../data/communityCatalog';
 import { emptyCommunityGuide } from '../../lib/communityGuides';
 import { backdropDismissProps } from '../../utils/backdropDismiss';
@@ -87,6 +88,7 @@ export default function CommunityGuideEditor({
   useEffect(() => () => resetDeckDragState(), []);
 
   const [title, setTitle] = useState(initial.title || '');
+  const [deckTier, setDeckTier] = useState(() => normalizeDeckTier(initial.tier));
   const [arenaTier, setArenaTier] = useState(normalizeArenaTier(initial.arenaTier || 'bronze'));
   const [deckKind, setDeckKind] = useState(normalizeMetaDeckKind(initial.deckKind));
   const [mode, setMode] = useState(normalizePvpMode(initial.mode));
@@ -180,6 +182,7 @@ export default function CommunityGuideEditor({
         authorId,
         arenaKind: isArena ? lockedArenaKind : null,
         arenaTier: isArena ? arenaTier : null,
+        tier: contentMode === 'pve' ? normalizeDeckTier(deckTier) : normalizeDeckTier(initial.tier),
         deckKind: isArena ? deckKind : initial.deckKind,
         mode: (isArena || skillMeta.layout === 'pvp') ? mode : initial.mode,
         formationId,
@@ -236,6 +239,17 @@ export default function CommunityGuideEditor({
                 style={{ width: '100%', padding: '6px 12px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: 6, fontSize: 12, fontWeight: 800, boxSizing: 'border-box' }}
               />
             </div>
+
+            {contentMode === 'pve' && (
+              <div className="editing-build-arena-toggle-col" style={{
+                padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0,
+                border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12,
+                background: 'rgba(255,255,255,0.05)', minWidth: 120,
+              }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>추천도</div>
+                <DeckTierStars tier={deckTier} onChange={setDeckTier} />
+              </div>
+            )}
 
             {isArena && (
               <div className="editing-build-arena-toggles" style={{

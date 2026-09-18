@@ -227,6 +227,7 @@ export default function CommunityPvePanel() {
               onEdit={setEditing}
               onDelete={handleDelete}
               onOpenProfile={setProfileUid}
+              collapsible
             />
           );
         })}

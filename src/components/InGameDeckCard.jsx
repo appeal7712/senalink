@@ -27,6 +27,7 @@ import { buildOptionCode } from './HeroGearPanel';
 import { backdropDismissProps } from '../utils/backdropDismiss';
 import { closeOverlayFromUI, pushOverlay } from '../utils/overlayHistory';
 import CopyNotice from './lounge/CopyNotice';
+import OverflowTitle from './OverflowTitle';
 import { shareSettingPng } from '../lib/copyNodeImage';
 import HeroPortraitCard from './HeroPortraitCard';
 
@@ -1096,7 +1097,11 @@ export default function InGameDeckCard({
                     <div className="setting-overview-head-title">
                       <span className="setting-overview-head-title-label">덱 이름</span>
                       <span className="setting-overview-head-title-sep">:</span>
-                      <span className="setting-overview-head-title-value">{settingDeckTitle}</span>
+                      <OverflowTitle
+                        className="setting-overview-head-title-value"
+                        as="span"
+                        text={settingDeckTitle}
+                      />
                     </div>
                   ) : null}
                 </div>
@@ -1139,11 +1144,23 @@ export default function InGameDeckCard({
                         const ignored = speedIgnoredSet.has(name);
                         return (
                           <Fragment key={`${name}_${idx}`}>
-                            {idx > 0 && <Icon name="arrowRight" size={14} className="speed-order-arrow" color={ignored ? '#64748b' : 'var(--gold-primary)'} />}
-                            <div className={`speed-order-chip${ignored ? ' is-off' : ''}`}>
+                            {idx > 0 && (
+                              <Icon
+                                name="arrowRight"
+                                size={14}
+                                strokeWidth={2.4}
+                                className="speed-order-arrow"
+                                color={ignored ? '#64748b' : 'var(--gold-primary)'}
+                              />
+                            )}
+                            <div
+                              className={`speed-order-chip${ignored ? ' is-off' : ''}`}
+                              title={name}
+                              aria-label={ignored ? `${name} · 속공 제외` : `${idx + 1}순위 ${name}`}
+                            >
                               <span className="speed-order-num">{ignored ? '제외' : idx + 1}</span>
                               <div className="speed-order-face">
-                                <HeroPortraitCard hero={h} showStars showRole showName={false} />
+                                <HeroPortraitCard hero={h} showStars={false} showRole={false} showName={false} />
                               </div>
                               <strong>{name}</strong>
                             </div>

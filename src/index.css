@@ -856,6 +856,13 @@ h1, h2, h3 {
   outline: 2px solid rgba(125, 211, 252, 0.55);
   outline-offset: 2px;
 }
+.expedition-collapse-card.is-dragging-source {
+  opacity: 0.42;
+}
+.expedition-collapse-card.is-drop-target {
+  outline: 2px solid rgba(125, 211, 252, 0.55);
+  outline-offset: 2px;
+}
 .gw-defense-tier-block {
   flex: 0 0 auto;
   display: flex;
@@ -3868,7 +3875,8 @@ h1, h2, h3 {
   align-items: center;
   justify-content: center;
 }
-@media (max-width: 980px) {
+/* 길드 허브 히어로: 접힘 카드(≤1024)와 동시에 모바일 스택 */
+@media (max-width: 1024px) {
   .hub-header-main {
     grid-template-columns: 1fr;
     justify-items: center;
@@ -4322,51 +4330,74 @@ h1, h2, h3 {
 
 .speed-order-strip {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 6px;
   align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+.speed-order-arrow {
+  flex: 0 0 auto;
+  opacity: 0.95;
 }
 .speed-order-chip {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
+  justify-content: flex-start;
+  gap: 5px;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 6px 7px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.10);
   border: 1px solid rgba(255, 255, 255, 0.14);
+  overflow: hidden;
 }
 .speed-order-chip.is-off {
   background: rgba(255, 255, 255, 0.04);
   opacity: 0.55;
 }
 .speed-order-num {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 900;
-  padding: 2px 7px;
-  border-radius: 6px;
+  min-width: 1.3em;
+  padding: 3px 6px;
+  border-radius: 7px;
   background: var(--gold-primary);
   color: #000;
-  flex-shrink: 0;
+  flex: 0 0 auto;
+  line-height: 1.2;
+  text-align: center;
+  box-sizing: border-box;
 }
 .speed-order-chip.is-off .speed-order-num {
   background: #475569;
   color: #e2e8f0;
 }
 .speed-order-face {
-  width: 32px;
+  width: 30px;
   height: auto;
   border-radius: 0;
-  overflow: visible;
+  overflow: hidden;
   border: none;
-  flex-shrink: 0;
+  flex: 0 0 auto;
 }
 .speed-order-face .hero-portrait-card {
   width: 100%;
 }
+/* flex 안에서 ellipsis: basis 0으로 남은 칸을 다 쓰고, 넘칠 때만 … */
 .speed-order-chip strong {
+  display: block;
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
   font-size: 13px;
+  font-weight: 800;
   color: #fff;
+  line-height: 1.25;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gear-overview-grid {
@@ -4583,7 +4614,7 @@ h1, h2, h3 {
   display: inline-flex !important;
 }
 .setting-capture-pc .speed-order-strip {
-  flex-wrap: wrap !important;
+  flex-wrap: nowrap !important;
 }
 
 .setting-overview-actions .btn-ops {
@@ -9889,20 +9920,29 @@ h1, h2, h3 {
   }
 
   .speed-order-strip {
-    gap: 6px;
+    gap: 4px;
   }
 
   .speed-order-chip {
-    padding: 4px 8px;
-    gap: 6px;
+    padding: 5px 6px;
+    gap: 5px;
+  }
+
+  .speed-order-num {
+    font-size: 12px;
+    min-width: 1.25em;
+    padding: 2px 5px;
   }
 
   .speed-order-face {
-    width: 22px;
-    height: 22px;
+    width: 26px;
   }
 
   .speed-order-chip strong {
+    display: block;
+    flex: 1 1 0;
+    width: 0;
+    min-width: 0;
     font-size: 12px;
   }
 
@@ -10991,6 +11031,25 @@ h1, h2, h3 {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.community-pvp-card-title.has-overflow-tip {
+  cursor: help;
+}
+.community-pvp-card-title.has-overflow-tip:hover,
+.community-pvp-card-title.has-overflow-tip.is-open {
+  color: var(--gold-light, #f0c14b);
+}
+.setting-overview-head-title-value.has-overflow-tip {
+  cursor: help;
+}
+.overflow-title-tip {
+  max-width: min(320px, 86vw);
+  text-align: center;
+}
+.overflow-title-tip .skill-tip-pop-body {
+  font-weight: 800;
+  white-space: normal;
+  word-break: keep-all;
+}
 .community-pvp-card-rule {
   color: rgba(255, 255, 255, 0.22);
   font-weight: 700;
@@ -11123,6 +11182,157 @@ h1, h2, h3 {
   padding: 6px 4px 10px !important;
   gap: 8px !important;
 }
+/* 공성·공용 PvE: 펼침 시 타임라인도 방어/PvP 플레이북과 동일하게 본문 안 배치 */
+.community-pvp-card-body .build-panel-timeline {
+  flex: 0 1 auto;
+  min-height: 0;
+  padding: 10px 12px;
+}
+.community-pvp-card.is-expanded .build-panel-timeline {
+  padding: 8px 10px;
+}
+.community-pvp-card.is-expanded .build-panel-timeline-title {
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.community-pvp-card-body.expedition-collapse-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 12px;
+}
+
+/* PvE 접힘: 제목 + 그 아래 추천도 (공성·강림·공용 PvE) */
+.pve-collapse-title-block {
+  flex: 0 0 11em;
+  width: 11em;
+  min-width: 11em;
+  max-width: 11em;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0;
+  box-sizing: border-box;
+}
+.siege-collapse-card .pve-collapse-title-block .community-pvp-card-title,
+.expedition-collapse-card .pve-collapse-title-block .community-pvp-card-title,
+.community-pve-collapse-card .pve-collapse-title-block .community-pvp-card-title {
+  flex: unset;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  text-align: center;
+}
+/* 제목 |--------| 추천도 */
+.deck-tier-block--inline.pve-collapse-recommend,
+.pve-collapse-recommend {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  margin-top: 5px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  box-sizing: border-box;
+}
+.pve-collapse-recommend .gw-defense-tier-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  height: 15px;
+  color: rgba(255, 255, 255, 0.62);
+  letter-spacing: 0.02em;
+}
+.pve-collapse-recommend .deck-tier-stars {
+  display: inline-flex;
+  align-items: center;
+  height: 15px;
+  line-height: 1;
+}
+.pve-collapse-recommend .deck-tier-stars > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 15px;
+  line-height: 1;
+  /* ★ 글리프 광학 보정 — 라벨과 같은 시각 중앙 */
+  transform: translateY(0.5px);
+}
+.expedition-collapse-lead {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* 강림 2줄이라 그립만 살짝 키움 (헤더 전체 높이에 맞추지 않음) */
+.expedition-collapse-card .gw-defense-drag-handle {
+  padding: 10px 4px;
+}
+.expedition-collapse-card .gw-defense-drag-grip {
+  width: 11px;
+  height: 22px;
+  background-size: 5.5px 4.5px;
+}
+.expedition-collapse-stage {
+  /* 영웅 블록만 감싸기 — 오른쪽 빈칸까지 스테이지가 늘어나지 않음 */
+  flex: 0 1 auto;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+}
+.expedition-collapse-rounds {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  width: max-content;
+  max-width: 100%;
+  align-items: stretch;
+}
+.expedition-collapse-round-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+  padding: 4px 0;
+  box-sizing: border-box;
+}
+/* 1·2라운드 구분선 — 영웅 블록 안쪽만 |--------| */
+.expedition-collapse-round-row + .expedition-collapse-round-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  padding-top: 7px;
+  margin-top: 2px;
+}
+.expedition-collapse-round-label {
+  flex: 0 0 auto;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  min-width: 3.6em;
+}
+.expedition-collapse-round-row .community-pvp-card-heroes {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+/* 영웅 | 와 작성자/수정삭제 사이 여유 */
+.expedition-collapse-card .community-pvp-card-author {
+  margin-left: auto;
+}
+.expedition-collapse-card > .community-pvp-card-head {
+  align-items: center;
+}
+.expedition-collapse-card .community-pvp-card-main {
+  align-items: center;
+}
 @media (max-width: 1024px) {
   /*
    * 이 카드만 ≤1024 스택 (790·1000 등에서 수정/삭제 잘림 방지)
@@ -11214,6 +11424,75 @@ h1, h2, h3 {
   }
   .community-pvp-card-tier--with-meta {
     display: inline-flex;
+  }
+
+  /* 공성·공용 PvE: 제목(+추천도) | 버튼 → 초상 → 작성자 */
+  .siege-collapse-card > .community-pvp-card-head,
+  .community-pve-collapse-card > .community-pvp-card-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title actions"
+      "stage stage"
+      "author author";
+  }
+  .siege-collapse-card .pve-collapse-title-block,
+  .community-pve-collapse-card .pve-collapse-title-block {
+    grid-area: title;
+    flex: unset;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  /* 강림: 그립 | 제목(+추천도) | 버튼 → 1·2라운드 초상 → 작성자 */
+  .expedition-collapse-card > .community-pvp-card-head {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "lead title actions"
+      "stage stage stage"
+      "author author author";
+  }
+  .expedition-collapse-card .expedition-collapse-lead {
+    grid-area: lead;
+    justify-self: center;
+  }
+  .expedition-collapse-card .expedition-collapse-lead .community-pvp-card-rule {
+    display: none;
+  }
+  .expedition-collapse-card .pve-collapse-title-block {
+    grid-area: title;
+    flex: unset;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+  .expedition-collapse-card .pve-collapse-title-block .community-pvp-card-title {
+    flex: unset;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+  .expedition-collapse-card .expedition-collapse-stage {
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    justify-self: center;
+  }
+  .expedition-collapse-card .expedition-collapse-rounds {
+    align-items: stretch;
+    width: max-content;
+    max-width: 100%;
+  }
+  .expedition-collapse-card .expedition-collapse-round-row {
+    justify-content: center;
+    width: 100%;
+  }
+  .expedition-collapse-card .expedition-collapse-round-row .community-pvp-card-heroes {
+    flex: 0 0 auto;
+    justify-content: center;
+  }
+  .expedition-collapse-card .community-pvp-card-author {
+    margin-left: 0;
   }
 }
 

@@ -7,6 +7,8 @@ import { SKILL_RESERVE_ICON_SIZE } from '../../lib/skillReserveIcon';
 import { SkillReservePlateIcon } from '../../components/icons/GameIconPlate';
 import Icon from '../../components/icons/Icon';
 import { AuthorMeta } from '../../components/PublicProfileModal';
+import OverflowTitle from '../../components/OverflowTitle';
+import { DeckTierBlock } from '../../components/DeckTierStars';
 import { ArenaDeckKindBadge, metaDeckKindTheme } from '../../components/ArenaDeckKind';
 import { PvpModeBadge } from '../../components/PvpModeToggle';
 import { arenaTierById, arenaTierColor } from '../../data/arenaTiers';
@@ -34,7 +36,7 @@ export default function CommunityGuideCard({
   onEdit,
   onDelete,
   onOpenProfile,
-  /** PvP(결투장)만 접기 카드. PvE는 기존 펼침 레이아웃 */
+  /** PvP·PvE 모두 collapsible이면 접기 카드 (길드전 방어 / 공용 PvP와 동일) */
   collapsible = false,
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -53,7 +55,7 @@ export default function CommunityGuideCard({
     : (guide.reservedSkills?.length ? guide.reservedSkills : guide.skillSequence || []);
   const timeline = isTimeline ? (guide.skillSequence || []) : [];
   const heroNames = guide.heroNames || [];
-  const useCollapse = collapsible && isPvpLayout;
+  const useCollapse = !!collapsible;
 
   const actions = (
     <div className="community-pvp-card-actions" onClick={(e) => e.stopPropagation()}>
@@ -196,7 +198,7 @@ export default function CommunityGuideCard({
 
   return (
     <div
-      className={`luxury-panel community-pvp-card${expanded ? ' is-expanded' : ''}`}
+      className={`luxury-panel community-pvp-card${!isPvpLayout ? ' community-pve-collapse-card' : ''}${expanded ? ' is-expanded' : ''}`}
       style={{ boxShadow: `inset 3px 0 0 ${tierAccent}` }}
     >
       <div
@@ -213,7 +215,28 @@ export default function CommunityGuideCard({
       >
         {/* main | actions — 버튼은 항상 오른쪽 칸(잘림 방지) */}
         <div className="community-pvp-card-main">
-          <div className="community-pvp-card-title">{guide.title || '이름 없는 공략'}</div>
+          {!isPvpLayout ? (
+            <div className="pve-collapse-title-block">
+              <OverflowTitle
+                className="community-pvp-card-title"
+                text={guide.title || '이름 없는 공략'}
+                stopClickPropagation
+              />
+              <DeckTierBlock
+                tier={guide.tier}
+                readOnly
+                label="추천도"
+                layout="inline"
+                className="pve-collapse-recommend"
+              />
+            </div>
+          ) : (
+            <OverflowTitle
+              className="community-pvp-card-title"
+              text={guide.title || '이름 없는 공략'}
+              stopClickPropagation
+            />
+          )}
           <span className="community-pvp-card-rule" aria-hidden>|</span>
           <div className="community-pvp-card-stage">
             <div className="community-pvp-card-heroes-row">
@@ -230,7 +253,7 @@ export default function CommunityGuideCard({
                   );
                 })}
               </div>
-              {tier ? (
+              {isPvpLayout && tier ? (
                 <span className="community-pvp-card-tier community-pvp-card-tier--beside">
                   <img src={tier.iconUrl} alt="" />
                   {tier.label}
@@ -238,9 +261,9 @@ export default function CommunityGuideCard({
               ) : null}
             </div>
             <div className="community-pvp-card-meta">
-              {arenaKind ? <ArenaDeckKindBadge kind={guide.deckKind} /> : null}
-              <PvpModeBadge mode={guide.mode} size="sm" />
-              {tier ? (
+              {isPvpLayout && arenaKind ? <ArenaDeckKindBadge kind={guide.deckKind} /> : null}
+              {isPvpLayout ? <PvpModeBadge mode={guide.mode} size="sm" /> : null}
+              {isPvpLayout && tier ? (
                 <span className="community-pvp-card-tier community-pvp-card-tier--with-meta">
                   <img src={tier.iconUrl} alt="" />
                   {tier.label}
@@ -264,7 +287,7 @@ export default function CommunityGuideCard({
       </div>
 
       {expanded ? (
-        <div className="community-pvp-card-body build-panel">
+        <div className={`community-pvp-card-body build-panel${!isPvpLayout ? ' build-panel--pve' : ''}`}>
           {expandedBody}
         </div>
       ) : null}

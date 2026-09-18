@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { heroes, sortHeroesForList } from '../data/heroes';
 import InGameDeckCard from './InGameDeckCard';
@@ -43,6 +44,8 @@ import {
   useDeckEditScrollWheelForward,
 } from '../lib/deckEditScrollModal';
 import PublicProfileModal, { AuthorMeta } from './PublicProfileModal';
+import OverflowTitle from './OverflowTitle';
+import DeckTierStars, { DeckTierBlock, normalizeDeckTier } from './DeckTierStars';
 import { useUserProfile } from '../context/UserProfileContext';
 import { LOUNGE_STORAGE_KEYS } from '../data/loungeMeta';
 
@@ -346,6 +349,11 @@ export default function GuildLounge() {
   const [gwDefenses, setGwDefenses]             = useState([]);
   const [selectedGwAttackId, setSelectedGwAttackId] = useState(null);
   const [expeditionAssignments, setExpeditionAssignments] = useState(EMPTY_ASSIGNMENTS);
+  /** 공성·강림 공략 카드 접힘/펼침 (길드전 방어 community-pvp-card 와 동일) */
+  const [expandedHubBuildId, setExpandedHubBuildId] = useState(null);
+  /** 강림원정대 카드 드래그 순서 (길드전 방어와 동일) */
+  const [expeditionDragGhost, setExpeditionDragGhost] = useState(null);
+  const expeditionDragGhostRef = useRef(null);
   const [assignModalBoss, setAssignModalBoss] = useState(null);
   const [inspectingCounter, setInspectingCounter]   = useState(null);
   const [profileUid, setProfileUid] = useState(null);
@@ -503,6 +511,7 @@ export default function GuildLounge() {
   const [isNewCreateMode, setIsNewCreateMode]         = useState(false);
   const [editingCategory, setEditingCategory]         = useState('siege');
   const [buildTitle, setBuildTitle]                   = useState('');
+  const [editingDeckTier, setEditingDeckTier]         = useState(3);
   const [editingHeroNames, setEditingHeroNames]       = useState(['미호', '나타', '리나', '에반', '비스킷']);
   const [targetSlotIdx, setTargetSlotIdx]             = useState(0);
   const [roleFilter, setRoleFilter]                   = useState('all');
@@ -712,6 +721,14 @@ export default function GuildLounge() {
     pushOverlay(() => setInspectingCounter(null));
   }, [isInspectingCounterOpen]);
 
+  useEffect(() => {
+    setExpandedHubBuildId(null);
+  }, [activeTab, siegeDay, expeditionBoss]);
+
+  useEffect(() => {
+    expeditionDragGhostRef.current = expeditionDragGhost;
+  }, [expeditionDragGhost]);
+
   const navigateHubTab = (tabId) => {
     if (tabId === activeTab) return;
     pushHubTab(tabId);
@@ -817,6 +834,7 @@ export default function GuildLounge() {
     setIsNewCreateMode(true);
     setEditingCategory(cat);
     setBuildTitle(NEW_BUILD_TITLE[cat] || '새 전술 빌드');
+    setEditingDeckTier(3);
     setEditingPvpMode('속공');
     setEditingArenaKind('attack');
     if (cat === 'expedition') {
@@ -858,6 +876,7 @@ export default function GuildLounge() {
     setEditingBuild(build);
     setEditingCategory(cat);
     setBuildTitle(build.title);
+    setEditingDeckTier(normalizeDeckTier(build.tier));
     setEditingPvpMode(build.mode === '내실' ? '내실' : '속공');
     setEditingArenaKind(normalizeArenaKind(build.deckKind));
     if (cat === 'expedition') {
@@ -975,6 +994,7 @@ export default function GuildLounge() {
           return {
             id: editingBuild.id,
             title: buildTitle,
+            tier: normalizeDeckTier(editingDeckTier),
             // 구형 폴백용(1라운드 펫). 실제 표시·편집은 rounds[n].petId
             petId: rounds[1]?.petId || editingPetId,
             rounds,
@@ -988,6 +1008,7 @@ export default function GuildLounge() {
       : {
           id: editingBuild.id,
           title: buildTitle,
+          tier: (editingCategory === 'siege') ? normalizeDeckTier(editingDeckTier) : editingBuild.tier,
           formationId: editingBuild.formationId || 'protect',
           petId: editingPetId,
           heroNames: editingHeroNames,
@@ -1054,11 +1075,29 @@ export default function GuildLounge() {
   }));
 
   // 공성전/강림원정대(PvE)와 결투장/총력전(PvP) 공략 게시판 카드 — 공통 렌더러
+  const renderCollapseHeroes = (heroNames = []) => (
+    <div className="community-pvp-card-heroes">
+      {heroNames.filter(Boolean).map((name, i) => {
+        const h = resolveHeroByName(name);
+        return (
+          <div key={`${name}-${i}`} className="community-pvp-card-hero">
+            <div className="community-pvp-card-hero-face">
+              {h ? <HeroPortraitCard hero={h} showStars showRole showName={false} /> : null}
+            </div>
+            <span className="community-pvp-card-hero-name">{String(name).replace('(각성)', '').trim()}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+
   const renderBuildPanel = (build, category) => {
     const meta = CONTENT_META[category] || CONTENT_META.siege;
     const isPvp = meta.mode === 'pvp';
     const editOnRight = editButtonOnRight(category);
     const arenaKind = category === 'arena' ? arenaKindTheme(build.deckKind) : null;
+    const useCollapse = category === 'siege';
+    const isExpanded = expandedHubBuildId === build.id;
 
     const requestEdit = () => {
       if (!canDeleteBuild(build)) {
@@ -1090,12 +1129,33 @@ export default function GuildLounge() {
         }));
         logBuildHistory('delete_build', build.title || build.id, buildHistoryScopeLabel('siege', { siegeDay }));
       }
+      if (expandedHubBuildId === build.id) setExpandedHubBuildId(null);
     };
 
-    return (
-      <div key={build.id} className="luxury-panel build-panel" style={arenaKind ? {
-        boxShadow: `inset 3px 0 0 ${arenaKind.text}`,
-      } : undefined}>
+    const actionButtons = (
+      <div className="community-pvp-card-actions" onClick={(e) => e.stopPropagation()}>
+        {category === 'arena' && (
+          <DeckLikeButton
+            likedBy={build.likedBy}
+            myId={me?.id}
+            onToggle={() => toggleShareLike('arena', build.id)}
+          />
+        )}
+        {editOnRight && canDeleteBuild(build) && (
+          <button type="button" onClick={requestEdit} className="btn-edit">
+            <Icon name="edit" size={14} /> 수정
+          </button>
+        )}
+        {canDeleteBuild(build) && (
+          <button type="button" onClick={requestDelete} className="btn-danger-solid">
+            <Icon name="close" size={14} /> 삭제
+          </button>
+        )}
+      </div>
+    );
+
+    const expandedBody = (
+      <>
         <div className="build-panel-deck">
           <InGameDeckCard
             embedded
@@ -1113,7 +1173,7 @@ export default function GuildLounge() {
             speedIgnoredNames={build.speedIgnoredNames}
             onEditClick={editOnRight || !canDeleteBuild(build) ? undefined : requestEdit}
             pvpMode={isPvp ? build.mode : null}
-            headerSlot={isPvp ? (
+            headerSlot={isPvp && !useCollapse ? (
               <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', flexWrap: 'wrap' }}>
                 {arenaKind ? <ArenaDeckKindBadge kind={build.deckKind} /> : null}
                 <PvpModeBadge mode={build.mode} size="sm" />
@@ -1123,47 +1183,41 @@ export default function GuildLounge() {
         </div>
 
         <div className="build-panel-body">
-          <div className="build-title-strip" style={{
-            borderLeft: `3px solid ${arenaKind ? arenaKind.text : 'var(--gold-primary)'}`
-          }}>
-            <div className="build-title-heading" style={{ minWidth: 0, flex: '1 1 180px' }}>
-              {arenaKind ? <ArenaDeckKindBadge kind={build.deckKind} /> : null}
-              <h3 className="build-title-name">{build.title}</h3>
-              <AuthorMeta
-                author={build.author}
-                authorId={build.authorId}
-                updatedAt={build.updatedAt}
-                onOpenProfile={setProfileUid}
-              />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: 'auto' }}>
-              {category === 'arena' && (
-                <DeckLikeButton
-                  likedBy={build.likedBy}
-                  myId={me?.id}
-                  onToggle={() => toggleShareLike('arena', build.id)}
+          {!useCollapse && (
+            <div className="build-title-strip" style={{
+              borderLeft: `3px solid ${arenaKind ? arenaKind.text : 'var(--gold-primary)'}`
+            }}>
+              <div className="build-title-heading" style={{ minWidth: 0, flex: '1 1 180px' }}>
+                {arenaKind ? <ArenaDeckKindBadge kind={build.deckKind} /> : null}
+                <h3 className="build-title-name">{build.title}</h3>
+                <AuthorMeta
+                  author={build.author}
+                  authorId={build.authorId}
+                  updatedAt={build.updatedAt}
+                  onOpenProfile={setProfileUid}
                 />
-              )}
-              {editOnRight && canDeleteBuild(build) && (
-                <button
-                  type="button"
-                  onClick={requestEdit}
-                  className="btn-edit"
-                >
-                  <Icon name="edit" size={14} /> 수정
-                </button>
-              )}
-              {canDeleteBuild(build) && (
-                <button
-                  type="button"
-                  onClick={requestDelete}
-                  className="btn-danger-solid"
-                >
-                  <Icon name="close" size={14} /> 삭제
-                </button>
-              )}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: 'auto' }}>
+                {category === 'arena' && (
+                  <DeckLikeButton
+                    likedBy={build.likedBy}
+                    myId={me?.id}
+                    onToggle={() => toggleShareLike('arena', build.id)}
+                  />
+                )}
+                {editOnRight && canDeleteBuild(build) && (
+                  <button type="button" onClick={requestEdit} className="btn-edit">
+                    <Icon name="edit" size={14} /> 수정
+                  </button>
+                )}
+                {canDeleteBuild(build) && (
+                  <button type="button" onClick={requestDelete} className="btn-danger-solid">
+                    <Icon name="close" size={14} /> 삭제
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {isPvp ? (
             <div className="build-panel-playbook">
@@ -1195,6 +1249,77 @@ export default function GuildLounge() {
             </div>
           )}
         </div>
+      </>
+    );
+
+    if (!useCollapse) {
+      return (
+        <div key={build.id} className="luxury-panel build-panel" style={arenaKind ? {
+          boxShadow: `inset 3px 0 0 ${arenaKind.text}`,
+        } : undefined}>
+          {expandedBody}
+        </div>
+      );
+    }
+
+    return (
+      <div
+        key={build.id}
+        className={`luxury-panel community-pvp-card siege-collapse-card${isExpanded ? ' is-expanded' : ''}`}
+        style={{ boxShadow: 'inset 3px 0 0 var(--gold-primary)' }}
+      >
+        <div
+          className={`community-pvp-card-head${isExpanded ? ' is-on' : ''}`}
+          onClick={() => setExpandedHubBuildId(isExpanded ? null : build.id)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setExpandedHubBuildId(isExpanded ? null : build.id);
+            }
+          }}
+        >
+          <div className="community-pvp-card-main">
+            <div className="pve-collapse-title-block">
+              <OverflowTitle
+                className="community-pvp-card-title"
+                text={build.title || '이름 없는 공략'}
+                stopClickPropagation
+              />
+              <DeckTierBlock
+                tier={normalizeDeckTier(build.tier)}
+                readOnly
+                label="추천도"
+                layout="inline"
+                className="pve-collapse-recommend"
+              />
+            </div>
+            <span className="community-pvp-card-rule" aria-hidden>|</span>
+            <div className="community-pvp-card-stage">
+              <div className="community-pvp-card-heroes-row">
+                {renderCollapseHeroes(build.heroNames)}
+              </div>
+            </div>
+            <span className="community-pvp-card-rule" aria-hidden>|</span>
+            <div className="community-pvp-card-author">
+              <div className="community-pvp-card-author-hit" onClick={(e) => e.stopPropagation()}>
+                <AuthorMeta
+                  author={build.author}
+                  authorId={build.authorId}
+                  updatedAt={build.updatedAt}
+                  onOpenProfile={setProfileUid}
+                />
+              </div>
+            </div>
+          </div>
+          {actionButtons}
+        </div>
+        {isExpanded ? (
+          <div className="community-pvp-card-body build-panel">
+            {expandedBody}
+          </div>
+        ) : null}
       </div>
     );
   };
@@ -1243,8 +1368,131 @@ export default function GuildLounge() {
     );
   };
 
-  const renderExpeditionBuildPanel = (build) => {
+  const clearExpeditionDropHighlight = () => {
+    document.querySelectorAll('.expedition-collapse-card.is-drop-target').forEach((el) => {
+      el.classList.remove('is-drop-target');
+    });
+  };
+
+  const reorderExpeditionBuilds = (fromId, toId) => {
+    if (!canEditBuilds || !fromId || !toId || fromId === toId) return;
+    setExpeditionBuilds((prev) => {
+      const list = [...(prev[expeditionBoss] || [])];
+      const fromIdx = list.findIndex((b) => b.id === fromId);
+      const toIdx = list.findIndex((b) => b.id === toId);
+      if (fromIdx < 0 || toIdx < 0) return prev;
+      const [item] = list.splice(fromIdx, 1);
+      list.splice(toIdx, 0, item);
+      return { ...prev, [expeditionBoss]: list };
+    });
+    logBuildHistory('update_build', '강림 공략 순서', buildHistoryScopeLabel('expedition', { expeditionBoss }));
+  };
+
+  const finishExpeditionPointerDrag = (clientX, clientY, ghost) => {
+    clearExpeditionDropHighlight();
+    document.querySelectorAll('.expedition-collapse-card.is-dragging-source').forEach((el) => {
+      el.classList.remove('is-dragging-source');
+    });
+    if (!ghost) {
+      setExpeditionDragGhost(null);
+      return;
+    }
+    const under = document.elementFromPoint(clientX, clientY);
+    const card = under?.closest?.('.expedition-collapse-card');
+    const toId = card?.getAttribute('data-expedition-id');
+    if (toId) reorderExpeditionBuilds(ghost.fromId, toId);
+    setExpeditionDragGhost(null);
+  };
+
+  const expeditionDragLabel = (build) => {
+    const title = String(build?.title || '').trim();
+    if (title) return title;
+    const names = (normalizeExpeditionRounds(build)[1]?.heroNames || [])
+      .filter(Boolean)
+      .map((n) => String(n).replace('(각성)', '').trim())
+      .slice(0, 3);
+    return names.length ? names.join(' · ') : '강림 공략';
+  };
+
+  const renderExpeditionDragHandle = (build, idx) => (
+    <button
+      type="button"
+      className="gw-defense-drag-handle"
+      draggable
+      title="끌어 옮겨 배치 순서 변경"
+      aria-label={`${idx + 1}번째 · 드래그로 순서 변경`}
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => {
+        if (e.pointerType === 'mouse') return;
+        e.stopPropagation();
+        e.preventDefault();
+        const card = e.currentTarget.closest('.expedition-collapse-card');
+        if (!card) return;
+        const rect = card.getBoundingClientRect();
+        e.currentTarget.setPointerCapture(e.pointerId);
+        setExpeditionDragGhost({
+          fromId: build.id,
+          title: expeditionDragLabel(build),
+          x: rect.left,
+          y: rect.top,
+          w: rect.width,
+          h: Math.min(rect.height, 72),
+          ox: e.clientX - rect.left,
+          oy: e.clientY - rect.top,
+        });
+      }}
+      onPointerMove={(e) => {
+        if (e.pointerType === 'mouse') return;
+        if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+        setExpeditionDragGhost((g) => {
+          if (!g) return null;
+          return { ...g, x: e.clientX - g.ox, y: e.clientY - g.oy };
+        });
+        clearExpeditionDropHighlight();
+        const under = document.elementFromPoint(e.clientX, e.clientY);
+        under?.closest?.('.expedition-collapse-card:not(.is-dragging-source)')?.classList.add('is-drop-target');
+      }}
+      onPointerUp={(e) => {
+        if (e.pointerType === 'mouse') return;
+        finishExpeditionPointerDrag(e.clientX, e.clientY, expeditionDragGhostRef.current);
+      }}
+      onPointerCancel={() => {
+        clearExpeditionDropHighlight();
+        document.querySelectorAll('.expedition-collapse-card.is-dragging-source').forEach((el) => {
+          el.classList.remove('is-dragging-source');
+        });
+        setExpeditionDragGhost(null);
+      }}
+      onDragStart={(e) => {
+        e.stopPropagation();
+        e.dataTransfer.setData('application/x-expedition-build-id', build.id);
+        e.dataTransfer.setData('text/plain', build.id);
+        e.dataTransfer.effectAllowed = 'move';
+        const card = e.currentTarget.closest('.expedition-collapse-card');
+        if (card) {
+          try {
+            e.dataTransfer.setDragImage(card, Math.min(56, card.offsetWidth / 4), Math.min(36, card.offsetHeight / 2));
+          } catch { /* ignore */ }
+          card.classList.add('is-dragging-source');
+        }
+      }}
+      onDragEnd={() => {
+        clearExpeditionDropHighlight();
+        document.querySelectorAll('.expedition-collapse-card.is-dragging-source').forEach((el) => {
+          el.classList.remove('is-dragging-source');
+        });
+      }}
+    >
+      <span className="gw-defense-drag-grip" aria-hidden="true" />
+    </button>
+  );
+
+  const renderExpeditionBuildPanel = (build, idx = 0) => {
     const rounds = normalizeExpeditionRounds(build);
+    const isExpanded = expandedHubBuildId === build.id;
+    const isDragging = expeditionDragGhost?.fromId === build.id;
+    const r1Heroes = rounds[1]?.heroNames || build.heroNames || [];
+    const r2Heroes = rounds[2]?.heroNames || [];
     const requestEdit = () => {
       if (!canDeleteBuild(build)) {
         alert('공략 수정은 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
@@ -1263,67 +1511,138 @@ export default function GuildLounge() {
         [expeditionBoss]: (prev[expeditionBoss] || []).filter((b) => b.id !== build.id),
       }));
       logBuildHistory('delete_build', build.title || build.id, buildHistoryScopeLabel('expedition', { expeditionBoss }));
+      if (expandedHubBuildId === build.id) setExpandedHubBuildId(null);
     };
 
+    const actionButtons = (
+      <div className="community-pvp-card-actions" onClick={(e) => e.stopPropagation()}>
+        {canDeleteBuild(build) && (
+          <button type="button" onClick={requestEdit} className="btn-edit">
+            <Icon name="edit" size={14} /> 수정
+          </button>
+        )}
+        {canDeleteBuild(build) && (
+          <button type="button" onClick={requestDelete} className="btn-danger-solid">
+            <Icon name="close" size={14} /> 삭제
+          </button>
+        )}
+      </div>
+    );
+
     return (
-      <div key={build.id} className="luxury-panel expedition-tint expedition-build-panel" style={{
-        padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px',
-      }}>
-        <div className="build-title-strip" style={{
-          borderLeft: `3px solid ${expTheme.text}`
-        }}>
-          <div className="build-title-heading" style={{ minWidth: 0, flex: '1 1 180px' }}>
-            <h3 className="build-title-name">{build.title}</h3>
-            <AuthorMeta
-              author={build.author}
-              authorId={build.authorId}
-              updatedAt={build.updatedAt}
-              onOpenProfile={setProfileUid}
-            />
+      <div
+        key={build.id}
+        data-expedition-id={build.id}
+        className={`luxury-panel expedition-tint community-pvp-card expedition-collapse-card${isExpanded ? ' is-expanded' : ''}${isDragging ? ' is-dragging-source' : ''}`}
+        style={{ boxShadow: `inset 3px 0 0 ${expTheme.text}` }}
+        onDragOver={(e) => {
+          if (!canEditBuilds) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          e.currentTarget.classList.add('is-drop-target');
+        }}
+        onDragLeave={(e) => {
+          e.currentTarget.classList.remove('is-drop-target');
+        }}
+        onDrop={(e) => {
+          if (!canEditBuilds) return;
+          e.preventDefault();
+          e.stopPropagation();
+          clearExpeditionDropHighlight();
+          const fromId = e.dataTransfer.getData('application/x-expedition-build-id') || e.dataTransfer.getData('text/plain');
+          reorderExpeditionBuilds(fromId, build.id);
+        }}
+      >
+        <div
+          className={`community-pvp-card-head${isExpanded ? ' is-on' : ''}`}
+          onClick={() => {
+            if (expeditionDragGhost) return;
+            setExpandedHubBuildId(isExpanded ? null : build.id);
+          }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (expeditionDragGhost) return;
+              setExpandedHubBuildId(isExpanded ? null : build.id);
+            }
+          }}
+        >
+          <div className="community-pvp-card-main">
+            {canEditBuilds ? (
+              <div className="gw-defense-lead expedition-collapse-lead">
+                {renderExpeditionDragHandle(build, idx)}
+                <span className="community-pvp-card-rule" aria-hidden>|</span>
+              </div>
+            ) : null}
+            <div className="pve-collapse-title-block">
+              <OverflowTitle
+                className="community-pvp-card-title"
+                text={build.title || '이름 없는 공략'}
+                stopClickPropagation
+              />
+              <DeckTierBlock
+                tier={normalizeDeckTier(build.tier)}
+                readOnly
+                label="추천도"
+                layout="inline"
+                className="pve-collapse-recommend"
+              />
+            </div>
+            <span className="community-pvp-card-rule" aria-hidden>|</span>
+            <div className="community-pvp-card-stage expedition-collapse-stage">
+              <div className="expedition-collapse-rounds">
+                <div className="expedition-collapse-round-row">
+                  <span className="expedition-collapse-round-label">1라운드</span>
+                  {renderCollapseHeroes(r1Heroes)}
+                </div>
+                <div className="expedition-collapse-round-row">
+                  <span className="expedition-collapse-round-label">2라운드</span>
+                  {renderCollapseHeroes(r2Heroes)}
+                </div>
+              </div>
+            </div>
+            <span className="community-pvp-card-rule" aria-hidden>|</span>
+            <div className="community-pvp-card-author">
+              <div className="community-pvp-card-author-hit" onClick={(e) => e.stopPropagation()}>
+                <AuthorMeta
+                  author={build.author}
+                  authorId={build.authorId}
+                  updatedAt={build.updatedAt}
+                  onOpenProfile={setProfileUid}
+                />
+              </div>
+            </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: 'auto' }}>
-            {canDeleteBuild(build) && (
-              <button
-                type="button"
-                onClick={requestEdit}
-                className="btn-edit"
-              >
-                <Icon name="edit" size={14} /> 수정
-              </button>
-            )}
-            {canDeleteBuild(build) && (
-              <button
-                type="button"
-                onClick={requestDelete}
-                className="btn-danger-solid"
-              >
-                <Icon name="close" size={14} /> 삭제
-              </button>
-            )}
-          </div>
+          {actionButtons}
         </div>
 
-        <div className="expedition-round-block">
-          <div className="expedition-round-title">
-            <Icon name="expedition" size={16} />
-            1라운드
+        {isExpanded ? (
+          <div className="community-pvp-card-body expedition-collapse-body">
+            <div className="expedition-round-block">
+              <div className="expedition-round-title">
+                <Icon name="expedition" size={16} />
+                1라운드
+              </div>
+              <div className="expedition-round-row">
+                {renderExpeditionRoundDeck(rounds[1], build.title || '')}
+                {renderExpeditionRoundGuide(1, rounds[1])}
+              </div>
+            </div>
+            <div className="expedition-round-divider" />
+            <div className="expedition-round-block">
+              <div className="expedition-round-title">
+                <Icon name="expedition" size={16} />
+                2라운드
+              </div>
+              <div className="expedition-round-row">
+                {renderExpeditionRoundDeck(rounds[2], build.title || '')}
+                {renderExpeditionRoundGuide(2, rounds[2])}
+              </div>
+            </div>
           </div>
-          <div className="expedition-round-row">
-            {renderExpeditionRoundDeck(rounds[1], build.title || '')}
-            {renderExpeditionRoundGuide(1, rounds[1])}
-          </div>
-        </div>
-        <div className="expedition-round-divider" />
-        <div className="expedition-round-block">
-          <div className="expedition-round-title">
-            <Icon name="expedition" size={16} />
-            2라운드
-          </div>
-          <div className="expedition-round-row">
-            {renderExpeditionRoundDeck(rounds[2], build.title || '')}
-            {renderExpeditionRoundGuide(2, rounds[2])}
-          </div>
-        </div>
+        ) : null}
       </div>
     );
   };
@@ -1584,7 +1903,7 @@ export default function GuildLounge() {
             />
           )}
 
-          {(expeditionBuilds[expeditionBoss] || []).map(build => renderExpeditionBuildPanel(build))}
+          {(expeditionBuilds[expeditionBoss] || []).map((build, idx) => renderExpeditionBuildPanel(build, idx))}
 
         </div>
       )}
@@ -1757,6 +2076,16 @@ export default function GuildLounge() {
                   <span style={{ fontSize: '12px', color: '#fff', fontWeight: 800, whiteSpace: 'nowrap' }}>제목:</span>
                   <input type="text" value={buildTitle} onChange={e => setBuildTitle(e.target.value)} placeholder="예: 월요일 마법 공성 (루디) - 600만 극딜 전술" style={{ width: '100%', padding: '6px 12px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '6px', fontSize: '12px', fontWeight: 800, boxSizing: 'border-box' }} />
                 </div>
+                {(editingCategory === 'siege' || editingCategory === 'expedition') && (
+                  <div className="editing-build-arena-toggle-col" style={{
+                    padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0,
+                    border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12,
+                    background: 'rgba(255,255,255,0.05)', minWidth: 120,
+                  }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>추천도</div>
+                    <DeckTierStars tier={editingDeckTier} onChange={setEditingDeckTier} />
+                  </div>
+                )}
                 {editingCategory === 'arena' ? (
                   <div className="editing-build-arena-toggles" style={{
                     display: 'flex', alignItems: 'stretch', flexShrink: 0,
@@ -2270,6 +2599,22 @@ export default function GuildLounge() {
 
       {profileUid && (
         <PublicProfileModal uid={profileUid} onClose={() => setProfileUid(null)} />
+      )}
+
+      {expeditionDragGhost && createPortal(
+        <div
+          className="gw-counter-prio-ghost"
+          style={{
+            width: expeditionDragGhost.w,
+            minHeight: expeditionDragGhost.h,
+            transform: `translate3d(${expeditionDragGhost.x}px, ${expeditionDragGhost.y}px, 0)`,
+          }}
+          aria-hidden="true"
+        >
+          <span className="gw-defense-drag-grip" style={{ width: 12, height: 14, color: 'rgba(125,211,252,0.9)' }} />
+          <span className="gw-counter-prio-ghost-title">{expeditionDragGhost.title}</span>
+        </div>,
+        document.body,
       )}
 
     </div>

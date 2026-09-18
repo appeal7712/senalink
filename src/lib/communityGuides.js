@@ -8,6 +8,7 @@ import { pets } from '../data/pets';
 import { normalizeMetaDeckKind } from '../components/ArenaDeckKind';
 import { normalizePvpMode } from '../components/PvpModeToggle';
 import { normalizeArenaTier } from '../data/arenaTiers';
+import { normalizeDeckTier } from '../components/DeckTierStars';
 
 /** 섹션당 실시간 구독 상한. section + updatedAt desc (복합 인덱스). */
 const GUIDE_LISTEN_LIMIT = 100;
@@ -44,6 +45,7 @@ export function emptyCommunityGuide(partial = {}) {
     speedIgnoredNames: [],
     mode: '속공',
     deckKind: 'attack',
+    tier: 3,
     decks: null,
     likedBy: [],
     ...partial,
@@ -93,6 +95,7 @@ export function normalizeCommunityGuide(raw = {}, id = '') {
     speedIgnoredNames: Array.isArray(raw.speedIgnoredNames) ? raw.speedIgnoredNames : [],
     mode: normalizePvpMode(raw.mode),
     deckKind: normalizeMetaDeckKind(raw.deckKind),
+    tier: normalizeDeckTier(raw.tier),
     decks,
     likedBy: Array.isArray(raw.likedBy) ? raw.likedBy.filter(Boolean) : [],
   };

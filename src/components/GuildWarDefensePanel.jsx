@@ -17,6 +17,7 @@ import { backdropDismissProps } from '../utils/backdropDismiss';
 import { closeOverlayFromUI, collapseOverlayHistory, pushOverlay } from '../utils/overlayHistory';
 import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, markDeckHtml5DragStarted, shouldSuppressDeckClick, resetDeckDragState } from '../utils/deckDrag';
 import ModalScrim from './ModalScrim';
+import DeckTierStars, { normalizeDeckTier } from './DeckTierStars';
 import {
   deckEditScrollBodyWrapperProps,
   deckEditScrollGridBodyStyle,
@@ -93,16 +94,7 @@ const formatSpeedBadge = (d) => {
 };
 
 function TierStars({ tier, onChange, readOnly = false }) {
-  return (
-    <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
-      {[1, 2, 3, 4, 5].map(n => (
-        <span key={n} onClick={() => !readOnly && onChange && onChange(n)}
-          style={{ cursor: readOnly ? 'default' : 'pointer', color: n <= tier ? 'var(--gold-primary)' : 'rgba(255,255,255,0.15)', fontSize: readOnly ? '15px' : '22px', lineHeight: 1 }}>
-          ★
-        </span>
-      ))}
-    </div>
-  );
+  return <DeckTierStars tier={tier} onChange={onChange} readOnly={readOnly} />;
 }
 
 function SpeedBadge({ text, className = '' }) {
