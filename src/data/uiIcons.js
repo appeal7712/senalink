@@ -13,7 +13,8 @@ export const UI_IMAGE_ICONS = {
   speed: { src: '/images/ui/speed-attack.png', w: 44, h: 31 },
   copy: { src: '/images/ui/setting-share.png', w: 50, h: 50, activeInvert: false },
   edit: { src: '/images/ui/btn-edit.png', w: 34, h: 30, activeInvert: false, displayScale: 0.8 },
-  close: { src: '/images/ui/btn-delete.png', w: 60, h: 60, activeInvert: false, displayScale: 1.2 },
+  /* 삭제 PNG가 원래 커서 — 수정(0.8)과 같은 시각 크기로 맞춤 */
+  close: { src: '/images/ui/btn-delete.png', w: 60, h: 60, activeInvert: false, displayScale: 0.8 },
   altDeck: { src: '/images/ui/alt-deck.png', w: 50, h: 50, activeInvert: false },
   share: { src: '/images/ui/share.png', w: 44, h: 44 },
   settings: { src: '/images/ui/settings.png', w: 44, h: 42 },

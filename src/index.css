@@ -4395,6 +4395,7 @@ h1, h2, h3 {
   font-weight: 800;
   color: #fff;
   line-height: 1.25;
+  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -11139,6 +11140,21 @@ h1, h2, h3 {
   flex-shrink: 0;
   margin-left: 0;
 }
+/* 수정·삭제 버튼 높이·아이콘 크기 통일 (공성·강림·공용·방어 공통) */
+.community-pvp-card-actions .btn-edit,
+.community-pvp-card-actions .btn-danger-solid {
+  height: 29px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+.community-pvp-card-actions .btn-edit .icon-inline,
+.community-pvp-card-actions .btn-danger-solid .icon-inline {
+  height: 12px !important;
+  width: auto !important;
+  max-height: 12px;
+  object-fit: contain;
+}
 .community-pvp-card-body {
   padding: 0 14px 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -11380,9 +11396,11 @@ h1, h2, h3 {
   .community-pvp-card-actions .btn-edit,
   .community-pvp-card-actions .btn-danger-solid,
   .community-pvp-card-actions .gw-defense-alt-btn {
-    padding: 6px 8px;
+    height: 28px;
+    padding: 0 8px;
     font-size: 11px;
     white-space: nowrap;
+    box-sizing: border-box;
   }
   .community-pvp-card-stage {
     grid-area: stage;
