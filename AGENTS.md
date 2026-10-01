@@ -747,7 +747,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.10.02.182** (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.10.02.183** (푸터 `APP_VERSION` 확인)
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 
 ---
@@ -757,6 +757,11 @@ API:
 ---
 
 ## 17. 패치 내역
+
+### 2026-10-02 (`v2026.10.02.183`) — 세공 NPC 답변 · 고대 부적 색
+- **연속 3회 성공 NPC:** 답변 버튼 「알겠어…」 옆 「니가 뭔데?」 추가 → 같은 팝업에서 `npc-sulk.webp` + 「흥! 니 맘대로 해라!!」 장면(버튼 「흥!」). 장면 정의는 `CraftSimulator.jsx` `NPC_SCENES`(`replies[].next`로 다음 장면).
+- **고대 세공 부적:** 배경을 분홍빛(`#e8588a → #7a1a44`)으로 — 전설 부적(빨강)과 구분.
+- Hosting만 (rules·Functions·스키마 무변경).
 
 ### 2026-10-02 (`v2026.10.02.182`) — 세공 시뮬레이터 · 장신구 등급 수정
 - **도구 `/tools/craft` 세공 시뮬레이터:** `CraftSimulator.jsx` + `lib/craftSim.js` + `styles/craftSim.css` + `public/images/craft/`. Firestore·네트워크 없음(브라우저 안에서만 계산·기록).

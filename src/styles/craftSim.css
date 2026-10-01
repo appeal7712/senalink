@@ -502,7 +502,7 @@
 .craft-charm--advanced .craft-charm-img { background: linear-gradient(160deg, #3fbf7a, #14532d); }
 .craft-charm--rare .craft-charm-img { background: linear-gradient(160deg, #4f7cf6, #1e2f7a); }
 .craft-charm--legendary .craft-charm-img { background: linear-gradient(160deg, #e04848, #6e1414); }
-.craft-charm--ancient .craft-charm-img { background: linear-gradient(160deg, #e0564a, #7a1616); }
+.craft-charm--ancient .craft-charm-img { background: linear-gradient(160deg, #e8588a, #7a1a44); }
 .craft-charm--safe .craft-charm-img { background: linear-gradient(160deg, #a35cf0, #4a1a86); }
 
 .craft-charm-img img {
@@ -1421,10 +1421,30 @@
   animation: craft-npc-blink 0.7s steps(1) infinite;
 }
 
-.craft-npc-ok {
-  min-width: 160px;
+.craft-npc-replies {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
   margin-top: 14px;
+}
+
+.craft-npc-ok {
+  flex: 0 1 160px;
+  min-width: 0;
+  white-space: nowrap;
   animation: craft-fade 0.3s 1.1s both;
+}
+
+.craft-npc--sulk {
+  --npc-tone: #9ab8ff;
+  --npc-tone-soft: rgba(120, 160, 255, 0.36);
+}
+
+.craft-npc--sulk .craft-npc-sparks { display: none; }
+
+.craft-npc--sulk .craft-npc-portrait {
+  animation: craft-npc-huff 0.6s 0.35s ease-out both;
 }
 
 @media (max-width: 480px) {
@@ -1462,6 +1482,11 @@
   100% { transform: translate(14px, -240px) scale(1); opacity: 0; }
 }
 @keyframes craft-npc-blink { 50% { opacity: 0; } }
+@keyframes craft-npc-huff {
+  0%, 100% { transform: translateY(0) scale(1); }
+  35% { transform: translateY(-6px) scale(1.03); }
+  65% { transform: translateY(1px) scale(0.995); }
+}
 
 /* ── 키프레임 ── */
 @keyframes craft-spin { to { transform: rotate(360deg); } }

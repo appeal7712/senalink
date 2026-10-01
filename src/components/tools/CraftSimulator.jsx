@@ -46,13 +46,22 @@ const NPC_SCENES = {
     img: '/images/craft/npc-lucky.webp',
     badge: `연속 ${NPC_STREAK}회 성공`,
     line: '지금은 여기다 운을 다 쓴 것 같아..\n다음에 세공하자',
-    button: '알겠어…',
+    replies: [
+      { label: '알겠어…' },
+      { label: '니가 뭔데?', next: 'sulk' },
+    ],
+  },
+  sulk: {
+    img: '/images/craft/npc-sulk.webp',
+    badge: `연속 ${NPC_STREAK}회 성공`,
+    line: '흥! 니 맘대로 해라!!',
+    replies: [{ label: '흥!' }],
   },
   jinx: {
     img: '/images/craft/npc-jinx.webp',
     badge: `연속 ${NPC_STREAK}회 실패`,
     line: '액땜했다\n빨리 진짜 세공 시도해!',
-    button: '바로 간다!',
+    replies: [{ label: '바로 간다!' }],
   },
 };
 
@@ -198,7 +207,27 @@ function ResultOverlay({ result, onClose }) {
 }
 
 function NpcStreakModal({ kind, onClose }) {
-  const scene = NPC_SCENES[kind];
+  const [sceneKey, setSceneKey] = useState(kind);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <ModalScrim className="craft-npc-scrim" {...backdropDismissProps(onClose)}>
+      <NpcScene
+        key={sceneKey}
+        sceneKey={sceneKey}
+        onReply={(reply) => (reply.next ? setSceneKey(reply.next) : onClose())}
+      />
+    </ModalScrim>
+  );
+}
+
+function NpcScene({ sceneKey, onReply }) {
+  const scene = NPC_SCENES[sceneKey];
   const full = scene.line.length;
   const [reduceMotion] = useState(() => !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
   const [typed, setTyped] = useState(() => (reduceMotion ? full : 0));
@@ -220,17 +249,10 @@ function NpcStreakModal({ kind, onClose }) {
     };
   }, [full, reduceMotion]);
 
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
   const done = typed >= full;
 
   return (
-    <ModalScrim className="craft-npc-scrim" {...backdropDismissProps(onClose)}>
-      <div className={`craft-npc craft-npc--${kind}`} role="dialog" aria-modal="true" aria-label={scene.badge}>
+      <div className={`craft-npc craft-npc--${sceneKey}`} role="dialog" aria-modal="true" aria-label={scene.badge}>
         <div className="craft-npc-badge">{scene.badge}</div>
         <div className="craft-npc-stage">
           <span className="craft-npc-glow" aria-hidden />
@@ -255,11 +277,19 @@ function NpcStreakModal({ kind, onClose }) {
           </span>
           <span className="craft-npc-text craft-npc-text--ghost" aria-hidden>{scene.line}</span>
         </button>
-        <button type="button" className="craft-btn craft-btn--main craft-npc-ok" onClick={onClose}>
-          {scene.button}
-        </button>
+        <div className="craft-npc-replies">
+          {scene.replies.map((reply, i) => (
+            <button
+              key={reply.label}
+              type="button"
+              className={`craft-btn ${i === 0 ? 'craft-btn--main' : 'craft-btn--sub'} craft-npc-ok`}
+              onClick={() => onReply(reply)}
+            >
+              {reply.label}
+            </button>
+          ))}
+        </div>
       </div>
-    </ModalScrim>
   );
 }
 
