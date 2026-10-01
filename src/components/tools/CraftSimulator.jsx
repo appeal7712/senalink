@@ -45,7 +45,7 @@ const NPC_SCENES = {
   lucky: {
     img: '/images/craft/npc-lucky.webp',
     badge: `연속 ${NPC_STREAK}회 성공`,
-    line: '지금은 여기다 운을 다 쓴 것 같아..\n다음에 세공하자',
+    line: '지금은 여기다 운을 다 쓴 것 같아..\n진짜 세공은 다음에 하자',
     replies: [
       { label: '알겠어…' },
       { label: '니가 뭔데?', next: 'sulk' },
