@@ -4,6 +4,7 @@ import { TOOL_ITEMS } from '../../data/tools';
 import GuildWarWinCalc from '../../components/tools/GuildWarWinCalc';
 import TierListMaker from '../../components/tools/TierListMaker';
 import ExclusiveGearGuide from '../../components/tools/ExclusiveGearGuide';
+import CraftSimulator from '../../components/tools/CraftSimulator';
 import {
   navigateToTools,
   toolIdFromPath,
@@ -95,6 +96,11 @@ export default function ToolsPage() {
       {active === 'exclusive-gear' && (
         <div className="tools-body" ref={bodyRef}>
           <ExclusiveGearGuide />
+        </div>
+      )}
+      {active === 'craft' && (
+        <div className="tools-body" ref={bodyRef}>
+          <CraftSimulator />
         </div>
       )}
     </div>

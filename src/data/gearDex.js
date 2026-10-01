@@ -55,7 +55,7 @@ function displayAccName(name) {
 
 const LEGENDARY_NAMES = ['불사의 반지', '권능의 반지', '부활의 반지'];
 const RARE_KEYS = ['토벌', '철벽', '건강', '공성', '기합', '근성', '섬멸'];
-const NORMAL_KEYS = ['저항', '적중', '집중', '자연', '보호', '행운'];
+const NORMAL_KEYS = ['저항', '적중', '집중', '자연', '보호', '행운', '복수', '수호'];
 const RARITY_RANK = { legendary: 0, rare: 1, advanced: 2, normal: 3 };
 
 function classifyAccessory(name) {
