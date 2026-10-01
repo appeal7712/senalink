@@ -171,7 +171,7 @@ function RateInput({ value, onCommit, label, disabled = false }) {
 
 function ResultOverlay({ result, onClose }) {
   if (!result) return null;
-  const { kind, acc, star, rate, tries, pityNote } = result;
+  const { kind, acc, star, rate, tries, pityNote, charmUsed } = result;
   const title = kind === 'legend' ? '전설 옵션 세공!' : kind === 'success' ? '세공 성공!' : '세공 실패';
   return (
     <div className={`craft-result craft-result--${kind}`} role="dialog" aria-live="assertive" aria-label={title}>
@@ -185,7 +185,9 @@ function ResultOverlay({ result, onClose }) {
       <div className="craft-result-card">
         <div className="craft-result-title">{title}</div>
         {kind === 'fail' ? (
-          <p className="craft-result-sub">재료 장신구와 사용한 부적이 소멸했습니다.</p>
+          <p className="craft-result-sub">
+            {charmUsed ? '재료 장신구와 사용한 부적이 소멸했습니다.' : '재료 장신구가 소멸했습니다.'}
+          </p>
         ) : (
           <>
             <RingIcon acc={acc} star={star} size="lg" plus={false} />
@@ -413,7 +415,7 @@ export default function CraftSimulator() {
         ? '전설 옵션 등장 — 누적 증가 확률이 초기화됩니다.'
         : `다음 세공 전설 옵션 확률 ${formatRate(nextRate)} (+${trimRate(pityStep * tries)}%p)`;
     }
-    const outcome = { ...last, tries, pityNote };
+    const outcome = { ...last, tries, pityNote, charmUsed: mode === 'fixed' && charms.length > 0 };
     const usedCharms = mode === 'fixed' ? charms : [];
     const finalBonus = bonus;
     let npcKind = null;
