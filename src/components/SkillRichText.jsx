@@ -167,7 +167,7 @@ export default function SkillRichText({ text, skillTooltips = {}, className = ''
   return (
     <div className={`skill-rich-text ${className}`.trim()} ref={rootRef}>
       {lines.map((line, lIdx) => {
-        const targetMatch = line.match(/^\[(.*?)\]$/);
+        const targetMatch = line.match(/^\[([^[\]]+)\]$/);
         if (targetMatch) {
           const label = targetMatch[1];
           const isAlly = /아군|자신/.test(label);

@@ -33,7 +33,7 @@ export const HERO_FACTION_ORDER = {
   ],
   aisha: ['달빛의 섬', '천자의 땅', '어둠의 안식처', '신지', '삼국호걸'],
   normal: ['에반 원정대', '그림자단', '모험가', '성십자단', '테라영지'],
-  other: ['콜라보레이션', '기타 영웅'],
+  other: ['나혼자만 레벨업', '귀멸의 칼날'],
 };
 
 /** special → 준스페셜(asgard/aisha) → normal → other */

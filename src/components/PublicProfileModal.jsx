@@ -13,7 +13,7 @@ import { backdropDismissProps } from '../utils/backdropDismiss';
 
 const TW_ALL = [
   ...TOTALWAR_TIERS,
-  { id: 'legend_plus', label: '전설 이상', color: '#f472b6', iconUrl: '/images/totalwar/legend_plus.png' },
+  { id: 'legend_plus', label: '신화', color: '#f472b6', iconUrl: '/images/totalwar/myth.png' },
 ];
 
 function formatScore(n) {

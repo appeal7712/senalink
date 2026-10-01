@@ -428,10 +428,10 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 
 **상급결투장 시즌 룰 (뒷면 뱃지):**  
 - UI: `SeasonRuleBadge` — 모드 아이콘 + 「Season Rules」텍스트, 유리 테마 바  
-- 데이터: `contentSeasonSchedule.js`의 `ADVANCED_ARENA_SEASON_RULES` (아이콘·`title`·`desc`) · `getAdvancedArenaSeasonRule()`  
+- 데이터: `contentSeasonSchedule.js`의 `ADVANCED_ARENA_SEASON_MODES` (아이콘·`title`·`desc`) + **`CURRENT_ADVANCED_ARENA_MODE`** (기본 `normal` = 「기본 모드 · 5대5의 기본 규칙으로 진행됩니다.」) · `getAdvancedArenaSeasonRule()`. **자동 순회 없음** — 게임 모드 순서가 고정이 아님  
 - **표시 위치:** 메인 시즌 카드 뒷면 · **공용 허브 PvP → 상급 결투장** 제목 「상급 결투장 공략」옆 `|` 구분 (`CommunityPvpPanel`)  
 - **툴팁:** PC hover / 모바일 tap — 도감 스킬 팁(`.skill-tip-pop`)과 동일. `desc` 있을 때만 활성  
-- **시즌 바뀔 때:** 밍봉이 이번 모드·설명을 알려주면 `ADVANCED_ARENA_SEASON_RULES`의 해당 항목 `title`/`desc`(필요 시 아이콘·순서)만 갱신. Firestore 없음  
+- **시즌 바뀔 때:** 밍봉이 이번 모드를 알려주면 `CURRENT_ADVANCED_ARENA_MODE` 키만 교체(필요 시 해당 모드 `title`/`desc`/아이콘 보강). 별말 없으면 **기본 모드 유지**. Firestore 없음  
 
 **테두리 (`burning` → `is-live` 스핀 / 아니면 `is-prep` 회색)** — 상세는 정본 §0.1·§0.2.
 
@@ -644,6 +644,34 @@ API:
 
 이미 영웅만 넣고 전용장비를 빼먹으면 도구 그리드에 아이콘이 비거나 누락된다.
 
+> **주의:** sync 스크립트는 `asset/영웅 목록` 전체를 돌며 `Tex_ItemIcon_*`을 `*_전용장비.png`로 **asset 파일명 변경**까지 한다. 아직 추가하지 않을 영웅 폴더(Tex_ 원본만 있는 폴더)가 있으면 스크립트 대신 같은 방식(PIL RGBA PNG 저장 + 메타 끝에 항목 추가)으로 해당 영웅만 처리.
+
+#### 13.1.4 콜라보 영웅 (기타 탭)
+
+| 항목 | 값 |
+|------|-----|
+| asset | `asset/영웅 목록/기타/콜라보레이션(작품명)/이름(역할)(각성?)` |
+| `category` / `group` | `"other"` / 작품명 (예: `나혼자만 레벨업`, `귀멸의 칼날`) — 새 작품이면 `HERO_FACTION_ORDER.other`에 추가 |
+| `id` | `collab_` + 이름(**공백 제거**, 예: `collab_카마도탄지로`). `name`은 띄어쓰기 그대로 |
+| `title` | `{작품명} 콜라보` |
+| 이미지 | `public/images/{id}/` (portrait.png · card.webp · skills · exclusive-gear.png). 구 콜라보 4명은 초상만 `/images/{이름}/` (레거시) |
+| 새 특수 효과 | 스킬 `tooltips`(호버) + `systemRules.js` `effects_registry` (상태이상 & 특수 효과 도감) |
+
+#### 13.1.5 스킬 텍스트 포맷 규칙 (도감 표시 — 루디 각성처럼)
+
+`SkillRichText`가 `description` / `skillEnhance` / `transcendenceEffects`를 줄 단위로 그린다.
+
+| 규칙 | 예 |
+|------|-----|
+| **대상 줄** = 한 줄 전체가 대괄호 **하나**뿐일 때만 대상 뱃지(아군/자신=파랑, 적=빨강) | `[모든 아군]` |
+| 대상 블록: 대상 줄 → 효과 줄들 → 다음 대상 전 **빈 줄 1개** (`effects[]`에서 자동 생성) | `[자신]\n불굴 …\n\n[모든 적군]\n…` |
+| 효과 줄 꼬리표 | `[55% 확률]` `[2턴 지속]` `[상시]` `[피격 3회]` `(전투당 1회 발동)` |
+| 강화·초월 한 줄 | `[자신] 효과 추가 : 행동 제어 면역 [3턴 지속]` — 앞 `[대상]`은 **일반 텍스트**로 표시(뱃지 아님). 여러 개면 ` / `로 연결 |
+| 대괄호·소괄호 **짝 맞추기** | 원본 asset 문구 그대로, 임의 축약·괄호 삭제 금지 |
+| 툴팁 | asset `tooltips` 전체를 **모든 스킬**의 `tooltips`에 복사. 처음 나온 효과는 `systemRules.js` `effects_registry`에도 추가 |
+
+> 과거 버그: 대상 판별 정규식이 `^\[(.*?)\]$`라 `[자신] 효과 추가 : … [3턴 지속]` 같은 줄이 통째로 뱃지가 되며 앞뒤 괄호가 잘려 보였음 → `^\[([^[\]]+)\]$`로 수정. 데이터 쪽 수정 불필요.
+
 #### 13.1.2 일반 → 각성 업데이트
 
 | 단계 | 할 일 |
@@ -719,7 +747,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.09.18.180** (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.10.01.181** (푸터 `APP_VERSION` 확인)
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 
 ---
@@ -729,6 +757,15 @@ API:
 ---
 
 ## 17. 패치 내역
+
+### 2026-10-01 (`v2026.10.01.181`) — 귀멸의 칼날 콜라보 · 신화 티어 · 시즌 룰 · 스킬 텍스트
+- **영웅:** 카마도 탄지로 · 아가츠마 젠이츠 (기타·`귀멸의 칼날`·공격형·각성, id `collab_카마도탄지로` / `collab_아가츠마젠이츠`) + 초상·카드·스킬·전용장비. 기유·시노부는 미추가.
+- **도감 기타 탭:** `콜라보레이션` → `나혼자만 레벨업`, `기타 영웅` 제거, `귀멸의 칼날` 추가.
+- **특수 효과 도감:** 내비치는 세계 · 지연 버프 (특수 유틸리티) + 스킬 툴팁.
+- **스킬 텍스트:** `SkillRichText` 대상 뱃지 판별 수정 — `[자신] 효과 추가 : …` 줄 괄호 잘림 83건 해소 (§13.1.5).
+- **마이페이지 총력전:** `legend_plus` 라벨 「전설 이상」→「신화」+ 아이콘 (저장 id 유지, rules 무변경).
+- **상급결투장 시즌 룰:** 자동 순회 제거, `CURRENT_ADVANCED_ARENA_MODE = 'normal'` (기본 모드).
+- Hosting만 (rules·Functions·스키마 무변경).
 
 ### 2026-09-18 (`v2026.09.18.180`) — 수정·삭제 버튼 · 속공 이름 정렬
 - **수정/삭제:** 삭제 PNG `displayScale`을 수정과 동일(0.8)로 맞춤. 접힘 카드 액션 버튼 높이·아이콘 크기 통일.

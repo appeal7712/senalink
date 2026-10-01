@@ -454,5 +454,13 @@
   "하연": {
     "heroName": "하연",
     "iconUrl": "/images/하연/exclusive-gear.png"
+  },
+  "collab_카마도탄지로": {
+    "heroName": "카마도 탄지로",
+    "iconUrl": "/images/collab_카마도탄지로/exclusive-gear.png"
+  },
+  "collab_아가츠마젠이츠": {
+    "heroName": "아가츠마 젠이츠",
+    "iconUrl": "/images/collab_아가츠마젠이츠/exclusive-gear.png"
   }
 }

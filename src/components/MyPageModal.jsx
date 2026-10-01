@@ -10,7 +10,7 @@ import { backdropDismissProps } from '../utils/backdropDismiss';
 
 const ALL_TIERS = [
   ...TOTALWAR_TIERS,
-  { id: 'legend_plus', label: '전설 이상', deckCount: 5, color: '#f472b6', iconUrl: '/images/totalwar/legend_plus.png' },
+  { id: 'legend_plus', label: '신화', deckCount: 5, color: '#f472b6', iconUrl: '/images/totalwar/myth.png' },
 ];
 
 const formatScore = (n) => (n || 0).toLocaleString('ko-KR');

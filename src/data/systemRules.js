@@ -107,7 +107,9 @@ export const systemRulesData = {
       { name: "영멸", description: "적용 중 사망 시 불사/부활/불굴 불가" },
       { name: "생명력 전환", description: "현재 HP를 지정 비율로 즉시 전환 (면역/무효화/저항 무시)" },
       { name: "처형", description: "HP가 시전자 공격력 일정 비율 이하 시 즉시 사망 (저항 무시)" },
-      { name: "쿨타임 증가", description: "스킬 쿨타임 증가 및 스킬 예약 취소" }
+      { name: "쿨타임 증가", description: "스킬 쿨타임 증가 및 스킬 예약 취소" },
+      { name: "내비치는 세계", description: "자신의 모든 공격에 관통 효과 적용 및 약점 공격 확률 100% 증가" },
+      { name: "지연 버프", description: "2턴 후 버프 만료 시 모든 피해 무효화 [피격 3회]와 물리 공격력 증가 25% 2턴 획득 (2턴 전 해제 시 후속 효과 미발동, 턴제 버프 감소로 만료 시 발동)" }
     ]
   }
 };

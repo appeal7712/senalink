@@ -815,5 +815,17 @@
     "name": "하연",
     "cardUrl": "/images/하연/card.webp",
     "source": "asset_portrait"
+  },
+  "collab_카마도탄지로": {
+    "id": "collab_카마도탄지로",
+    "name": "카마도 탄지로",
+    "cardUrl": "/images/collab_카마도탄지로/card.webp",
+    "source": "asset_portrait"
+  },
+  "collab_아가츠마젠이츠": {
+    "id": "collab_아가츠마젠이츠",
+    "name": "아가츠마 젠이츠",
+    "cardUrl": "/images/collab_아가츠마젠이츠/card.webp",
+    "source": "asset_portrait"
   }
 }

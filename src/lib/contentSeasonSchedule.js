@@ -211,46 +211,42 @@ function evalTotalWar(nowMs, anchorYmd) {
 
 /** 상급 결투장 — 2주, 마감 목 02:00 / 앞면: 시즌 진행 중 */
 /**
- * 상급결투장 시즌 룰 (2주 사이클 순회)
- * 아이콘·툴팁 문구는 밍봉이 시즌 바뀔 때 알려주면 여기만 갱신.
+ * 상급결투장 시즌 룰 — 게임 순서가 고정이 아니라 자동 순회하지 않는다.
+ * 시즌이 바뀌면 CURRENT_ADVANCED_ARENA_MODE 키만 교체 (기본값 normal).
  * desc 없으면 뱃지 툴팁 비활성.
  */
-const ADVANCED_ARENA_SEASON_RULES = [
-  {
+const ADVANCED_ARENA_SEASON_MODES = {
+  normal: {
     icon: '/images/content-season/season-rule/mode-normal.png',
-    title: '일반 모드',
-    desc: '',
+    title: '기본 모드',
+    desc: '5대5의 기본 규칙으로 진행됩니다.',
   },
-  {
+  threeVsThree: {
     icon: '/images/content-season/season-rule/mode-3v3.png',
     title: '3대3 모드',
     desc: '',
   },
-  {
+  fourVsFour: {
     icon: '/images/content-season/season-rule/mode-4v4.png',
     title: '4대4 모드',
     desc: '4대4로 진행됩니다.',
   },
-  {
+  noAccessory: {
     icon: '/images/content-season/season-rule/mode-no-accessory.png',
     title: '장신구 금지',
     desc: '',
   },
-  {
+  heroBan: {
     icon: '/images/content-season/season-rule/mode-hero-ban.png',
     title: '영웅 밴',
     desc: '',
   },
-];
+};
 
-function advancedArenaSeasonRule(seasonStartMs, anchorYmd) {
-  const fallback = ADVANCED_ARENA_SEASON_RULES[0];
-  const a = parseAnchorDate(anchorYmd);
-  if (!a || seasonStartMs == null) return fallback;
-  const anchorMs = kstWallToUtcMs(a.year, a.month, a.day, 0, 0, 0);
-  const idx = Math.floor((seasonStartMs - anchorMs) / (14 * DAY_MS));
-  const n = ADVANCED_ARENA_SEASON_RULES.length;
-  return ADVANCED_ARENA_SEASON_RULES[((idx % n) + n) % n] || fallback;
+const CURRENT_ADVANCED_ARENA_MODE = 'normal';
+
+function advancedArenaSeasonRule() {
+  return ADVANCED_ARENA_SEASON_MODES[CURRENT_ADVANCED_ARENA_MODE] || ADVANCED_ARENA_SEASON_MODES.normal;
 }
 
 function evalAdvancedArena(nowMs, anchorYmd) {
@@ -278,7 +274,7 @@ function evalAdvancedArena(nowMs, anchorYmd) {
     }
     const live = nowMs >= seasonStart && nowMs < seasonEnd;
     if (live) {
-      const rule = advancedArenaSeasonRule(seasonStart, anchorYmd);
+      const rule = advancedArenaSeasonRule();
       return baseItem({
         id, name, icon: 'swords', burning: true,
         frontStatus: '시즌 진행 중',
@@ -293,7 +289,7 @@ function evalAdvancedArena(nowMs, anchorYmd) {
     }
   }
 
-  const rule = advancedArenaSeasonRule(start, anchorYmd);
+  const rule = advancedArenaSeasonRule();
   return baseItem({
     id, name, icon: 'swords', burning: false,
     frontStatus: '시즌 준비',
