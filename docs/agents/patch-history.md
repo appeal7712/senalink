@@ -5,6 +5,13 @@
 
 ## 17. 패치 내역
 
+### 2026-10-03 (Functions SDK, 호스팅 버전 `v2026.10.03.186` 그대로) — firebase-functions 6.6 → 7.4
+- 배포 시 「outdated version of firebase-functions」 경고 제거. `functions/package.json` `firebase-functions` `^6.3.2` → `^7.4.0`만 변경 (firebase-admin 13.10 그대로).
+- v7 breaking(`functions.config()` 제거·Node 16 중단·에뮬 `onRequest` 500·v1 `Event` 개명) 전부 미사용 — 코드 무변경. rules·스키마·Hosting 무변경.
+- 에뮬레이터에서 Callable 9개 v6와 동일 응답 확인 → 14개 재배포, 라이브 `redeemCoupon`·`resolveMyHub`(미로그인 → UNAUTHENTICATED) 정상.
+- 롤백: `firebase-functions`를 `^6.3.2`로 되돌리고 `npm install` 후 functions 재배포.
+- `--only functions`.
+
 ### 2026-10-03 (Functions 런타임, 호스팅 버전 `v2026.10.03.186` 그대로) — Node 20 → 24
 - Node 20 지원 종료(2026-10-30) 대응. `functions/package.json` `engines.node` `"20"` → `"24"`만 변경. 함수 코드·rules·스키마·Hosting 무변경.
 - 기존 14개 함수 전부 같은 코드로 nodejs24 재배포 (`functions:list` 전부 `nodejs24` 확인, 라이브 `redeemCoupon` 정상 응답).
