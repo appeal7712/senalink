@@ -5,6 +5,11 @@
 
 ## 17. 패치 내역
 
+### 2026-10-03 (`v2026.10.03.189`) — HD 배경 · 세공 제목 아이콘
+- **배경 HD:** 원본 1024px를 Real-ESRGAN(`realesrgan-x4plus`, 로컬 실행·워터마크 없음)으로 4배 → 2560px JPG q90. 유리 `public/bg-arena-sky-hd.jpg`(494KB), 선명 다크 `public/bg-dark-growing-hd.jpg`(259KB). 구 PNG(`bg-arena-sky.png`, `bg-dark-growing.png`)는 보존(미사용).
+- **세공 시뮬레이터:** 제목 아이콘을 선 아이콘 → `/images/ui/accessory-ring.png`(`.craft-sim-title-icon` 22px).
+- Hosting만 (rules·Functions·스키마 무변경).
+
 ### 2026-10-03 (`v2026.10.03.188`) — 배경 교체 · 세공 빈 칸 · 길드 순위 문구
 - **배경:** 유리 테마 `public/bg-arena-sky.png`(asset `Tex_RealTimeArenaBGA03`), 선명 다크 `public/bg-dark-growing.png`(asset `Tex_GrowingBGA01`). 선명 다크의 어두운 그라데이션 오버레이 제거(이미지만). 구 `bg-senari.png`는 파일만 보존(미사용).
 - **세공 시뮬레이터:** 빈 반지 칸의 큰 `+` → 흐린 반지 실루엣(`/images/ui/accessory-ring.png`) + 우하단 작은 원형 `+` (`.craft-ring-empty-icon` / `.craft-ring-empty-add`).

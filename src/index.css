@@ -80,7 +80,7 @@ body {
   background-color: #0b1220;
   background-image:
     linear-gradient(180deg, rgba(8, 12, 22, 0.18) 0%, rgba(8, 12, 22, 0.08) 42%, rgba(8, 12, 22, 0.28) 100%),
-    url('/bg-arena-sky.png');
+    url('/bg-arena-sky-hd.jpg');
   background-size: cover;
   background-position: center 36%;
   background-repeat: no-repeat;

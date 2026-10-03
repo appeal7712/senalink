@@ -28,6 +28,13 @@
   color: var(--gold-primary);
 }
 
+.craft-sim-title-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
 .craft-sim-copy {
   margin: 0;
   font-size: 13px;

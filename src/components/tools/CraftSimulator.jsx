@@ -505,7 +505,7 @@ export default function CraftSimulator() {
     <div className="craft-sim">
       <div className="craft-sim-head luxury-panel">
         <div>
-          <h2 className="craft-sim-title"><Icon name="ring" size={18} /> 세공 시뮬레이터</h2>
+          <h2 className="craft-sim-title"><img className="craft-sim-title-icon" src="/images/ui/accessory-ring.png" alt="" aria-hidden="true" /> 세공 시뮬레이터</h2>
           <p className="craft-sim-copy">
             실제 재화 소모 없이 장신구 세공을 연습해 보세요. 결과는 이 화면에서만 기록되며 저장되지 않습니다.
           </p>

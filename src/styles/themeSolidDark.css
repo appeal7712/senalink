@@ -26,7 +26,7 @@ html[data-ui-theme="solid"] body {
 
 html[data-ui-theme="solid"] #root::before {
   background-color: #0a0c10;
-  background-image: url('/bg-dark-growing.png');
+  background-image: url('/bg-dark-growing-hd.jpg');
 }
 
 /* 유리 블러 전역 제거 */
