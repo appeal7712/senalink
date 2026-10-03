@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "node .cursor/hooks/guard-shell.mjs",
+        "matcher": "firebase|gcloud|gsutil|git (push|add|commit)",
+        "timeout": 10
+      }
+    ]
+  }
+}

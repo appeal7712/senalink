@@ -1,0 +1,20 @@
+---
+description: Live senalink data safety — attached when editing Firebase rules, Functions, or Firestore write paths
+globs: firestore.rules,storage.rules,firestore.indexes.json,firebase.json,functions/**,src/context/LoungeContext.jsx,src/context/UserProfileContext.jsx,src/lib/communityGuides.js,src/lib/communityTierLists.js,src/lib/profileRecommend.js,src/lib/siteMain.js,src/lib/siteVisitStats.js,src/config/firestorePaths.js
+alwaysApply: false
+---
+
+# Live data safety (senalink) — AGENTS.md §2.1
+
+This file touches **live user/hub data or its permissions**. Before editing, answer:
+
+1. Does any existing `users` / `hubs/**` document become unreadable or unwritable under the new rules? (Tightening a field whitelist can reject updates to old docs.)
+2. Is there a `setDoc` without `{ merge: true }` or a full-replace `update`? (`builds/main` must keep other category keys.)
+3. Did the rules diff add an `allow`? If so, stop and explain the impact to 밍봉 first.
+4. Does a Function delete/update hubs or users? Re-check `resolveMyHub` and `users.hubId` clearing.
+
+Hard rules:
+- New fields are **optional with defaults**; old clients and old docs must keep working.
+- Joining a hub stays **Callable `joinHub`** only; alliance writes stay Callable only.
+- No bulk delete/seed against the live project. Deploy rules/functions only when 밍봉 explicitly asks, and know how to roll back.
+- Deploy only the changed Functions (`--only functions:name1,functions:name2`), Functions before Hosting when the client calls a new Callable.

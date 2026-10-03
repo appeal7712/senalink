@@ -1,6 +1,7 @@
 import Icon from './icons/Icon';
 import ProfileDropdown from './ProfileDropdown';
 import DailyTarotButton from './DailyTarotButton';
+import CouponButton from './CouponButton';
 import { PAGE } from '../config/routes';
 
 export default function GNB({ activeTab, setActiveTab }) {
@@ -35,6 +36,7 @@ export default function GNB({ activeTab, setActiveTab }) {
 
         <div className="gnb-status">
           <DailyTarotButton />
+          <CouponButton />
           <ProfileDropdown />
         </div>
       </div>

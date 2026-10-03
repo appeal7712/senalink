@@ -5,6 +5,7 @@ const { onDocumentCreated, onDocumentDeleted } = require('firebase-functions/v2/
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { logger } = require('firebase-functions');
+const couponSync = require('./couponSync');
 
 initializeApp();
 
@@ -800,3 +801,72 @@ exports.dissolveAlliance = onCall({ region: REGION }, async (request) => {
 
   return { ok: true, hubId, revokedGuests: guestsSnap.size };
 });
+
+/**
+ * 쿠폰 목록 동기화 — 매일 00:00 KST. 7katlas 목록을 site/coupons 에 저장.
+ * 파싱 실패·빈 목록이면 기존 문서를 그대로 둔다.
+ */
+exports.syncCoupons = onSchedule(
+  {
+    schedule: '0 0 * * *',
+    timeZone: 'Asia/Seoul',
+    region: REGION,
+    retryCount: 1,
+    timeoutSeconds: 60,
+  },
+  async () => {
+    const coupons = await couponSync.fetchCouponList();
+    await db.doc('site/coupons').set({
+      coupons,
+      count: coupons.length,
+      source: '7katlas',
+      syncedAt: nowIso(),
+    });
+    logger.info(`syncCoupons: ${coupons.length} coupons`);
+    return { count: coupons.length };
+  },
+);
+
+const COUPON_RATE_WINDOW_MS = 10 * 60 * 1000;
+const COUPON_RATE_MAX = 60;
+const couponRateByIp = new Map();
+
+function couponRateLimited(ip) {
+  const now = Date.now();
+  if (couponRateByIp.size > 5000) {
+    for (const [k, v] of couponRateByIp) {
+      if (now - v.start > COUPON_RATE_WINDOW_MS) couponRateByIp.delete(k);
+    }
+  }
+  const key = ip || 'unknown';
+  const entry = couponRateByIp.get(key);
+  if (!entry || now - entry.start > COUPON_RATE_WINDOW_MS) {
+    couponRateByIp.set(key, { start: now, count: 1 });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > COUPON_RATE_MAX;
+}
+
+/**
+ * 쿠폰 사용 중계 — 넷마블 쿠폰 API는 브라우저 CORS가 막혀 있어 서버에서 대신 호출.
+ * 로그인 불필요 · Firestore 무접근 · UID는 저장/로그하지 않음.
+ */
+exports.redeemCoupon = onCall(
+  { region: REGION, maxInstances: 10, timeoutSeconds: 20 },
+  async (request) => {
+    const uid = String(request.data?.uid || '').trim();
+    const code = String(request.data?.code || '').trim().toUpperCase();
+    if (!couponSync.UID_RE.test(uid)) return { status: 'invalid_uid' };
+    if (!couponSync.CODE_RE.test(code)) return { status: 'invalid_code' };
+    if (couponRateLimited(request.rawRequest?.ip)) {
+      throw new HttpsError('resource-exhausted', '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.');
+    }
+    try {
+      return { status: await couponSync.redeemAtNetmarble(uid, code) };
+    } catch (err) {
+      logger.warn('redeemCoupon relay failed', err?.name || 'error');
+      return { status: 'error' };
+    }
+  },
+);

@@ -148,9 +148,13 @@ function evalTotalWar(nowMs, anchorYmd) {
   // 시즌 중 일일 6슬롯: 금 09:00 ~ 화 09:00
   if (nowMs >= fri09 && nowMs < tue09) {
     const frontStatus = totalWarFrontStatus(kst);
-    const round = nowMs >= fri14
-      ? Math.min(22, Math.max(1, Math.floor((nowMs - fri14) / DAY_MS) + 1))
-      : null;
+    // 전투 1회 = 1라운드 (05~08 · 17~20, 하루 2회). R1 = 금 14:00, 이후 매 09:00·21:00(준비 시작)에 +1.
+    const fri21 = start + DAY_MS + 21 * HOUR_MS;
+    const round = nowMs < fri14
+      ? null
+      : nowMs < fri21
+        ? 1
+        : Math.min(22, 2 + Math.floor((nowMs - fri21) / (12 * HOUR_MS)));
     return twItem({
       burning: frontStatus === '전투 진행 중',
       frontStatus,

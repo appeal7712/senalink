@@ -15,6 +15,7 @@ Hard constraints (also in AGENTS.md):
 - **Never damage live user/hub data** — no reckless rules loosening, no wipe `setDoc`, no bulk delete on senalink. See AGENTS.md **§2.1**.
 - Deck editor: skill order list height fixed in px; scroll only in `.skill-timeline-scroller`.
 - Hero pick lists: **각성 → 스페셜(소속순) → 준스페셜(아스가르드·아이샤) → 일반** via `src/data/heroes.js` (`sortHeroesForList` / `compareHeroesForList`). See AGENTS.md §12.1.
-- Bump `src/config/appVersion.js` when shipping a deploy.
-- **화면 테마** (유리 / 선명 다크) → AGENTS.md **§10.8** (`uiTheme.js`, `themeSolidDark.css`, `UiThemeToggle`).
-- **「미리보기 허브 켜줘」** / 로컬 허브 테스트 → AGENTS.md **§4.1** (에뮬레이터 + `npm run dev`, 라이브 데이터와 무관).
+- Bump `src/config/appVersion.js` when shipping a deploy. Deploy requests → skill **`senalink-deploy`**.
+- **화면 테마** (유리 / 선명 다크) → **§10.8** in `docs/agents/features.md` (`uiTheme.js`, `themeSolidDark.css`, `UiThemeToggle`).
+- **「미리보기 허브 켜줘」** / 로컬 허브 테스트 → **§4.1** `docs/agents/preview-hub.md` / skill **`senalink-preview-hub`** (에뮬레이터 + `npm run dev`, 라이브 데이터와 무관).
+- Detailed sections (§4.1, §10, §12.2–12.5, §13, §17) live in `docs/agents/` — see AGENTS.md §1.1 문서 지도.

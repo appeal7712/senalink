@@ -1,5 +1,6 @@
 import Icon from './icons/Icon';
-import { EQUIPMENT_SET_ICONS, accessories, weaponOptions, armorOptions } from '../data/equipments';
+import { EQUIPMENT_SET_ICONS, weaponOptions, armorOptions } from '../data/equipments';
+import AccessorySlots from './AccessorySlots';
 
 export const emptyGearConfig = () => ({
   setName: '복수자',
@@ -68,12 +69,13 @@ export default function HeroGearPanel({
     : (filled[0]?.idx ?? 0);
   const cfg = configs[activeIdx] || emptyGearConfig();
 
-  const update = (field, value) => {
+  const updateMany = (patch) => {
     const next = [...configs];
     while (next.length <= activeIdx) next.push(emptyGearConfig());
-    next[activeIdx] = { ...(next[activeIdx] || emptyGearConfig()), [field]: value };
+    next[activeIdx] = { ...(next[activeIdx] || emptyGearConfig()), ...patch };
     onChange(next);
   };
+  const update = (field, value) => updateMany({ [field]: value });
 
   const shellStyle = embedded
     ? { flex: 1, minWidth: 0, minHeight: 0, height: '100%', background: 'transparent', border: 'none', borderRadius: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '10px', boxSizing: 'border-box' }
@@ -165,24 +167,7 @@ export default function HeroGearPanel({
       </div>
 
       <div style={{ flexShrink: 0 }}>
-        <div style={{ fontSize: '11px', color: '#c084fc', marginBottom: '6px', fontWeight: 800 }}>장신구</div>
-        <div className="hero-gear-panel-accessory-grid">
-          {accessories.map(acc => {
-            const isCur = (cfg.accessory || '불사의 반지') === acc.name;
-            return (
-              <button key={acc.id} type="button" onClick={() => update('accessory', acc.name)} title={acc.effect}
-                style={{
-                  padding: '8px 8px', borderRadius: '8px', cursor: 'pointer',
-                  border: isCur ? '1.5px solid #c084fc' : '1px solid rgba(255,255,255,0.1)',
-                  background: isCur ? 'rgba(192,132,252,0.22)' : 'rgba(255,255,255,0.04)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-                }}>
-                <span style={{ fontSize: '12px', fontWeight: 900, color: isCur ? '#e9d5ff' : '#cbd5e1', whiteSpace: 'nowrap' }}>{acc.shortLabel || acc.name}</span>
-                <img src={acc.iconUrl} alt="" style={{ width: '28px', height: '28px', objectFit: 'contain', flexShrink: 0 }} />
-              </button>
-            );
-          })}
-        </div>
+        <AccessorySlots gear={cfg} onChange={updateMany} />
       </div>
 
       {showDetail && (

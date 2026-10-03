@@ -15,6 +15,26 @@
 React + Vite + Firebase (Auth / Firestore / Storage / Functions asia-northeast3).  
 라우터는 React Router가 아니라 `src/config/routes.js` + History API (`App.jsx`).
 
+### 1.1 문서 지도 (필요할 때만 열기)
+
+이 파일은 **모든 작업에 항상 읽히는 핵심**만 둔다. 상세는 아래 문서로 분리했다(원문 그대로, 절 번호 § 동일). 이 파일에 없는 §번호는 해당 문서에서 찾을 것.
+
+| 문서 | 내용 (§) | 언제 |
+|------|----------|------|
+| [docs/agents/preview-hub.md](docs/agents/preview-hub.md) | §4.1 미리보기 허브 | 「미리보기 허브 켜줘」·로컬 테스트 |
+| [docs/agents/features.md](docs/agents/features.md) | §10 기능별 동작 (CMS·길드전·세팅 확인·시즌 카드·테마·쿠폰) | 해당 기능 패치 |
+| [docs/agents/ui-layout.md](docs/agents/ui-layout.md) | §12.2–12.5 모바일 CSS·덱 수정 모달 | 모바일·덱 수정 모달 CSS |
+| [docs/agents/encyclopedia.md](docs/agents/encyclopedia.md) | §13 도감 (영웅·펫·장비·장신구) | 영웅·장비 추가/변경 |
+| [docs/agents/patch-history.md](docs/agents/patch-history.md) | §17 패치 내역 | 배포 시 맨 위에 추가 |
+| [docs/content-season-schedule.md](docs/content-season-schedule.md) | 시즌 카드 정본 | 시즌 카드 패치 전 필수 |
+
+| 자동화 | 위치 | 역할 |
+|--------|------|------|
+| 스킬 `senalink-deploy` | `.cursor/skills/senalink-deploy/` | 배포 전 점검 → 버전·패치 내역 → 배포 → 커밋·푸시 |
+| 스킬 `senalink-preview-hub` | `.cursor/skills/senalink-preview-hub/` | 에뮬레이터 + dev 서버로 로컬 연습장 |
+| 훅 `guard-shell` | `.cursor/hooks.json` → `.cursor/hooks/guard-shell.mjs` | senalink 외 프로젝트 배포·Firestore 일괄 삭제·강제 푸시·시크릿 커밋 차단, 배포·rules·functions 명령은 확인 요청 |
+| 규칙 `firebase-safety` | `.cursor/rules/firebase-safety.mdc` | rules·functions·저장 경로 파일을 열면 §2.1 자동 첨부 |
+
 ---
 
 ## 2. 반드시 지킬 Cursor 규칙
@@ -24,6 +44,7 @@ React + Vite + Firebase (Auth / Firestore / Storage / Functions asia-northeast3)
 | `.cursor/rules/local-only-until-launch.mdc` | 이 폴더만 패치, senalink만, 배포는 명시 요청 시 |
 | `.cursor/rules/center-and-fill-layout.mdc` | 덱+타임라인 2열: 행 stretch·덱 **세로 중앙**. 덱 수정 모달 「스킬 순서」높이 **px 고정**, 스크롤은 `.skill-timeline-scroller` 안만 |
 | `.cursor/rules/read-agents-md.mdc` | 비트리비얼 작업 전 이 문서 참고. **「미리보기 허브 켜줘」→ §4.1** |
+| `.cursor/rules/firebase-safety.mdc` | rules·Functions·Firestore 저장 경로 파일 편집 시 자동 첨부 — §2.1 요약 |
 
 배포 시 관례: `src/config/appVersion.js`의 `APP_VERSION` bump → 푸터 `SiteFooter`에 표시.
 
@@ -121,59 +142,8 @@ npx firebase deploy --only functions --project senalink         # functions 변�
 
 ### 4.1 미리보기 허브 (로컬 연습장) — **에이전트 필독**
 
-밍봉이 **「미리보기 허브 켜줘」** · **「로컬에서 테스트」** · **「연습장」** 등을 말하면 **이 절을 따른다.**  
-라이브에 따로 만든 허브가 **아니다.** PC에서 Firebase **에뮬레이터**를 켜고 `npm run dev`로 붙이는 방식이다.
-
-#### 한 줄 요약
-
-| | 로컬 미리보기 | 라이브 |
-|--|--------------|--------|
-| 데이터 | 내 PC 에뮬레이터 (비어 있음·재시작 시 초기화 가능) | 실제 `senalink` Firestore |
-| 허브 로그인 | 구글 **없이** 익명 자동 로그인 | 구글 로그인 필수 |
-| 배포 영향 | **없음** — 같은 소스, 환경만 다름 | Hosting 배포 시에만 반영 |
-
-**로컬 패치 → 미리보기 허브에서 확인 → 밍봉이 배포 요청할 때만 라이브** 가 기본 워크플로다. 라이브를 먼저 올려서 UI를 보지 말 것.
-
-#### 코드가 라이브와 다른가?
-
-**아니다.** 미리보기 전용 분기 파일을 따로 두지 않는다.
-
-- `.env.development` — `VITE_USE_EMULATORS=true` (저장소에 포함, **`npm run dev`만** 사용)
-- `src/lib/firebase.js` — `usingEmulators = import.meta.env.DEV && VITE_USE_EMULATORS === 'true'` 일 때만 `127.0.0.1` 에뮬레이터 포트로 연결
-- `src/context/LoungeContext.jsx` — `useGoogleForHub = USE_GOOGLE_AUTH && !usingEmulators` → 로컬에선 구글 없이 허브 생성 가능
-- `src/components/lounge/LoungeGate.jsx` — 로컬이면 **「로컬 연습장 · 구글 없이…」** 문구 표시
-
-`npm run build` / Hosting 배포 시 `import.meta.env.DEV`가 false → **에뮬레이터 분기는 절대 안 탐.** 로컬에서 본 UI 패치를 그대로 배포해도 된다(배포는 명시 요청 시만).
-
-#### 에이전트: 미리보기 허브 켜는 순서
-
-1. **터미널 상태 확인** — 이미 `emulators` / `dev`가 떠 있으면 재실행하지 말고 URL만 안내.
-2. **터미널 1** (프로젝트 루트):
-   ```bash
-   npm run emulators
-   ```
-   - Auth `9099` · Firestore `8080` · Functions `5001` · Storage `9199` · Emulator UI `http://127.0.0.1:4000`
-3. **터미널 2**:
-   ```bash
-   npm run dev
-   ```
-   - Vite `http://127.0.0.1:5173`
-4. 브라우저: **`http://127.0.0.1:5173/hub`**
-5. **닉네임** — `NicknameGate`로 2–12자 닉 저장(라이브와 동일).
-6. **허브 생성** — 「허브 생성」→ **해시태그 1개 이상** 필수(없으면 생성 실패).
-7. 길드전·공격·파생덱 등 패치 확인 후, 배포는 **밍봉/김봉 명시 시만** `npm run build` + `firebase deploy --only hosting --project senalink`.
-
-#### 사전 조건 (처음이거나 연결 실패 시)
-
-- `.env.local` — `.env.example` 참고해 `VITE_FIREBASE_*` 채움(gitignore, **senalink 프로젝트 ID** 그대로 써도 됨. dev일 때 트래픽은 에뮬레이터로만 감).
-- 에뮬레이터 미기동 시 허브 화면: *「로컬 에뮬레이터에 연결하지 못했습니다…」* → 터미널 1에서 `npm run emulators` 재확인.
-- `/ops` 로컬: `npm run seed:admin -- <익명UID>` 후 Ops 페이지에서 「로컬 관리자로 들어가기」(`SuperAdminContext.enterLocalOpsAdmin`).
-
-#### 하지 말 것
-
-- 미리보기 허브를 위해 **라이브 Firestore에 테스트 허브를 만들거나** 프로덕션 데이터를 건드리지 말 것.
-- 로컬 전용으로 `USE_GOOGLE_AUTH`·rules·`VITE_USE_EMULATORS`를 **배포 빌드에 섞이게** 바꾸지 말 것.
-- 밍봉 요청 없이 Hosting 배포하지 말 것.
+밍봉이 **「미리보기 허브 켜줘」** · 「로컬에서 테스트」 · 「연습장」이라고 하면 → **[docs/agents/preview-hub.md](docs/agents/preview-hub.md)** 순서대로 (스킬 `senalink-preview-hub`).
+요지: `npm run emulators` + `npm run dev` → `http://127.0.0.1:5173/hub`. 라이브 데이터와 무관하고 코드는 라이브와 동일(`import.meta.env.DEV`일 때만 에뮬레이터 연결). **라이브에 테스트 허브를 만들지 말 것.**
 
 ---
 
@@ -312,159 +282,24 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | `regenAllianceCode` | Callable | 호스트 마스터 연합 코드 재발급 |
 | `dissolveAlliance` | Callable | 호스트 마스터 연합 종료(코드·게스트 연결 정리) |
 | `purgeIdleHubs` | Schedule 매일 04:00 KST | 60일 유휴 허브 삭제 |
+| `syncCoupons` | Schedule 매일 00:00 KST | 7katlas 쿠폰 목록(+한글 번역) → `site/coupons` (파싱 실패 시 기존 유지) |
+| `redeemCoupon` | Callable (로그인 불필요) | 넷마블 쿠폰 API 중계 (`{uid, code}` → `{status}`) · Firestore 무접근 · IP당 10분 60회 |
 
 허브 삭제 시 지우는 서브컬렉션: `members`, `history`, `notices`, `posts`, `scores`, `builds`, `allianceGuests` (+ `allianceIndex`·게스트 역포인터 정리).
 
 ---
 
-## 10. 기능 영역별 동작
+## 10. 기능 영역별 동작 → [docs/agents/features.md](docs/agents/features.md)
 
-### 10.1 메인 CMS · 입장 배너 · 방문자
+해당 기능을 만질 때 그 절만 열어 볼 것. 목차와 절대 규칙:
 
-| 항목 | 위치 |
-|------|------|
-| 문서 | `site/main` |
-| 기본값 | `src/data/siteMain.defaults.js` |
-| 구독/저장 | `src/lib/siteMain.js` → `useSiteMain()` |
-| Ops 편집 | `/ops` → **메인페이지** → `MainSiteEditor.jsx` (저장만, 「비우기」없음) |
-| 필드 | headline, subhead, highlight, metaDecks(4), pickRates(5), news[], entranceBanner, updatedAt/By |
-| 입장 배너 UI | `SiteEntranceBanner.jsx` (오늘 안 보기: localStorage) |
-| 방문 집계 | `siteVisitStats.js` — 쓰기: **32 샤드** `site/stats/visitShards/{id}` 랜덤 +1(충돌 시 다른 샤드). 읽기: 레거시 `site/stats` + 샤드 합산. 브라우저당 KST 하루 1회(`senalink_site_visit_day`). 히어로·ops 표시. 시크릿 창 어뷰징 완전차단 불가 |
-| 기용률·뉴스 2열 | PC: 기용률 패널이 행 높이 기준, 뉴스(`.main-news-scroller`)만 내부 스크롤. 모바일(≤900px): 1열, 뉴스 `max-height` 후 스크롤 |
-
-### 10.2 길드 허브 vs 커뮤니티 (빌드 분리)
-
-| | 길드 허브 | 커뮤니티 |
-|--|----------|----------|
-| 데이터 | `hubs/{hubId}/builds/main` **단일 문서 번들** | `communityGuides/{id}` **문서 다수** |
-| UI | `GuildLounge.jsx` | `pages/community/*` + `lib/communityGuides.js` |
-| 내용 | siege, expedition, arena, totalwar, gwAttacks/Defenses, … | section pve/pvp, category, 영웅/장비/스킬, likes… |
-| 접근 | 허브 멤버만 | 공개 읽기; PvP는 닉네임 유저 작성; PvE·티어리스트는 Super |
-| 티어 | 허브 내 UI | `communityTierLists/pve` · `pvp` |
-
-규칙 주석: community guides는 길드 builds와 **완전 분리**.
-
-길드전 공격/방어 패널: `GuildWarAttackPanel.jsx`, `GuildWarDefensePanel.jsx`.
-
-- **공격 상대 목록:** 최대 ~12행 높이에서 내부 스크롤(`.gw-attack-list-body`). 선택 카드는 더 진한 테두리·배경. 카운터는 별도 레이어(`.gw-counter-layer`).
-- **카운터 우선순위:** `counters[]` **배열 순서 = 1위부터**. 왼쪽 그립 드래그로 재정렬(스키마 추가 없음). 리드 UI: **그립 `|` 우선순위 `|` 초상** (구분선은 lead 안에 두어 모바일에서도 유지).
-- **방어 리스트:** PC·모바일 모두 **1열** (공용 PvP 결투장과 동일). `.gw-defense-grid--stack`. 접힌 헤더 lead: **그립 `|` 덱 티어 `|`** 초상·메타 | 수정·삭제·대체 덱. 펼침: 덱(세팅 확인) → 스킬 예약 → **기타 디테일**. **방어 덱 수정 모달**은 결투장과 동일 PC 통스크롤(`arena-body-scroll-modal` · §12.4) — 헤더만 덱 티어·세팅·덱 유형·기타 디테일·속공 수치 유지. 모달 클래스 `gw-defense-edit-modal`.
-- **기타 디테일 박스:** PC에서 스킬 예약과 **같은 열 폭** (`max-width` 제한 없음). 모바일에서 `.build-panel-body { display: contents }` 사용 시 **반드시 `order: 4`** — 없으면 order 0으로 맨 위에 붙음.
-
-#### PvE 접힘 카드 (공성 · 강림 · 공용 PvE)
-
-길드전 방어와 같은 `community-pvp-card` 접힘/펼침. 별점 UI는 `DeckTierStars` / `DeckTierBlock` 공유.
-
-| | 길드 허브 공성·강림 | 공용 허브 PvE | 길드전 방어 |
-|--|--|--|--|
-| 별점 필드 | 빌드 객체 `tier` (1–5, 없으면 표시·저장 시 **3**) | `communityGuides.tier` 동일 | `gwDefenses[].tier` |
-| 라벨 | **추천도** (제목 아래, 가운데 정렬 + `|--------|` 구분선) | 동일 | **덱 티어** (lead 칸) |
-| 접힘 헤더 | 제목(+추천도) `|` 초상 `|` 작성자 \| 수정·삭제 | 동일 | 그립 `|` 덱 티어 `|` … |
-| 강림 특례 | 1·2라운드 초상 행 + 그립 드래그 재정렬(방어와 동일) | — | — |
-| 긴 제목 | `OverflowTitle` tip (PC hover / 모바일 tap) | 동일 | — |
-
-- 스키마: **optional** 숫자 필드만 추가. rules·Functions 변경 없음. 구 문서에 `tier` 없어도 읽기 OK (`normalizeDeckTier`).
-- 허브 저장: `builds/main` `setDoc(…, { merge: true })` — 기존 카테고리 키 보존 전제 유지.
-- 허브 히어로(`.hub-header`) 모바일 스택은 접힘 카드와 같이 **≤1024**.
-
-#### 길드전 화면 폭 브레이크포인트 (요지)
-
-| 폭 | 공격 | 방어 |
-|----|------|------|
-| **≤1020** | 1열·인라인 카운터. **1020~671:** 카운터 행 `lead \| 초상 \| 제목·작성자 \| 액션` (한 줄). **이 블록 CSS는 베이스 `.gw-attack-detail` / `.gw-attack-inline-counters`보다 아래에 둘 것** | (공용 PvP ≤1024 스택과 별도) |
-| **≤670** | 카운터 행만 다시 **제목 위 / 초상 아래** 스택 (좁아지면 옆 배치가 답답) | — |
-| **981–1024** | — | 공용 PvP는 스택이어도 **방어만 PC 한 줄 유지** |
-| **≤980** | — | 방어 헤더 1행 그리드 `tier \| stage \| actions`. lead 안 `|`는 **숨기지 말 것** (공용 `.community-pvp-card-rule{display:none}`을 방어 lead에서 덮어씀) |
-| **≤480** | 「상대 덱 목록」·카운터 툴바: 제목/추가 버튼 **세로 분리** + 라벨 `nowrap`/ellipsis (한 글자씩 세로 찢김 방지) | 대체 덱 툴바도 동일 분리 |
-| **≤400** | **초소형만.** 상대 덱: 제목은 초상 **옆** 유지 + 수정·삭제 **세로**(제목을 미리 위로 올리지 말 것). 카운터: 「우선순위」라벨 숨김·숫자는 **살짝만** 축소(14px), 초상 **가운데·축소 CSS 금지**, 제목\|작성자도 가운데 | — |
-| **≤380** | 패딩·버튼 타이트 | 대체 덱/수정·삭제 버튼만 더 작게 |
-
-**현실 폭:** 요즘 폰 CSS는 대개 **360 / 375 / 390+**. 350 미만은 거의 없음 → **≤400 특례면 충분**, 300대만 겨냥한 과한 축소는 피할 것.
-
-초대 링크: 항상 **`/hub?lounge={code}`** (`inviteLink`). `?lounge=`가 `/` 등에 있으면 `/hub`로 리다이렉트. 미로그인 시 Join 모달 자동 오픈 금지 → 구글 로그인 → `NicknameGate` → Join.
-
-### 10.3 Ops 관리자 (`/ops`)
-
-`OpsPage.jsx` — Super만 탭 진입:
-
-1. **메인페이지** — `MainSiteEditor` (+ `OpsMetaDeckModal`)
-2. **길드 허브 감독** — `HubOversee` (`hubOversee.js`)
-3. **유저 감독** — `UserOversee` (`userOversee.js`) — 목록·집계만, **강제탈퇴 UI 없음**
-
-### 10.4 「수정 및 고정자」 시각
-
-`AuthorMeta` / `formatUpdateAtDisplay` (`PublicProfileModal.jsx`):  
-저장은 ISO 유지, **표시만** `YYYY-MM-DD|HH:mm` · **Asia/Seoul 24시**.
-
-### 10.5 도구 · 도감
-
-- 도구: `ToolsPage` / `data/tools.js` (승확 계산기·세공 시뮬레이터·티어리스트 메이커 등). 세공 시뮬레이터 확률·규칙은 `src/lib/craftSim.js`가 단일 소스
-- 도감: `EncyclopediaPage` → `DbHub` → `HeroDB` / `EquipDB` / `SystemDB`
-- **도감 영웅 DB 레이아웃:** PC **3열**은 **≥981** 유지. **1열 스택은 ≤980만** (예전 1100 중간 브레이크 없음).
-- **모바일 도감 영웅 상세(≤760/≤980 블록):** `.hero-db-detail`은 `max-height`/`overflow` 풀어 **스킬 설명 내부 스크롤 없이** 페이지로 펼침. 영웅 **목록** 칸 스크롤·PC(고정 높이 3열)는 유지.
-
-### 10.6 세팅 확인 (`InGameDeckCard`)
-
-- 모달 클래스 `.setting-overview-modal` — 화면 폭 **고정** `min(760px, 96vw)` (덱마다 `fit-content`로 가로가 들쭉날쭉하지 않게).
-- 모바일(≤760px) 세팅 개요: 장비 1열, `.setting-overview-deck`는 `height:auto` — **배치·펫 잘림 방지**. PC·`.setting-capture-pc`(공유 PNG 980px)와 분리.
-- **모달 뒤 블러:** body portal이라 스크림 `backdrop-filter`만으로는 뒤가 비침. **`body:has(> .modal-scrim) .app-shell` / `#root::before` 의 `filter: blur(22px)`는 의도된 것 — 성능 핑계로 제거하지 말 것.**
-- 서브모달 오픈: 아래에 스크림이 있을 때만 `flushSync`+cover(길드전 카운터 등). **단독 오픈은 rAF 양보** 후 열어 버튼 `:active`가 보이게. 데이터 로딩 경로와 무관.
-
-### 10.7 컨텐츠 시즌 카드 (메인)
-
-메인 히어로 아래 플립 카드 4장. Firestore 없음 · KST만 계산 · 앵커 기준 자동 사이클.
-
-| 파일 | 역할 |
-|------|------|
-| **`docs/content-season-schedule.md`** | **정본** — 일정·`frontStatus` 문자열·함정·체크리스트. **패치 전 필수 열람** |
-| `src/config/contentSeasonAnchors.js` | 라이브 앵커일 (일정 틀어지면 여기만) |
-| `src/lib/contentSeasonSchedule.js` | `frontStatus` · `burning` · `endsAtLabel` · progress |
-| `src/components/ContentSeasonBadges.jsx` | UI (PC hover / 모바일 탭+3초 복귀) |
-| `public/images/content-season/` | 아이콘 |
-
-**표시 순서:** 길드전 → 상급결투장 → 총력전 → 강림원정대  
-
-**앞면:** 아이콘 + `frontStatus` · **뒷면:** 이름 + `YYYY.MM.DD 종료` + 게이지  
-
-**상급결투장 시즌 룰 (뒷면 뱃지):**  
-- UI: `SeasonRuleBadge` — 모드 아이콘 + 「Season Rules」텍스트, 유리 테마 바  
-- 데이터: `contentSeasonSchedule.js`의 `ADVANCED_ARENA_SEASON_MODES` (아이콘·`title`·`desc`) + **`CURRENT_ADVANCED_ARENA_MODE`** (기본 `normal` = 「기본 모드 · 5대5의 기본 규칙으로 진행됩니다.」) · `getAdvancedArenaSeasonRule()`. **자동 순회 없음** — 게임 모드 순서가 고정이 아님  
-- **표시 위치:** 메인 시즌 카드 뒷면 · **공용 허브 PvP → 상급 결투장** 제목 「상급 결투장 공략」옆 `|` 구분 (`CommunityPvpPanel`)  
-- **툴팁:** PC hover / 모바일 tap — 도감 스킬 팁(`.skill-tip-pop`)과 동일. `desc` 있을 때만 활성  
-- **시즌 바뀔 때:** 밍봉이 이번 모드를 알려주면 `CURRENT_ADVANCED_ARENA_MODE` 키만 교체(필요 시 해당 모드 `title`/`desc`/아이콘 보강). 별말 없으면 **기본 모드 유지**. Firestore 없음  
-
-**테두리 (`burning` → `is-live` 스핀 / 아니면 `is-prep` 회색)** — 상세는 정본 §0.1·§0.2.
-
-| 컨텐츠 | 스핀 | 회색 고정 (요지) |
-|--------|------|------------------|
-| 길드전 | `길드전 진행 중`만 | 매칭·정산·휴전일·설정·배치·시즌 준비 |
-| 총력전 | `전투 진행 중`만 | 라운드 준비·결산·시즌 준비 |
-| 상급·원정 | `시즌 진행 중` | `시즌 준비` |
-
-**길드전 핵심 (수→토):** 목 02~09 `정산` → 목 09~금 09 `휴전일`(금 08~09 포함) → 금 09 방어덱 설정 → 배치 → 토 08~09 `상대 길드 매칭` → 전투.  
-**총력전:** 목~금 14:00 = `시즌 준비`(입장 멘트 없음) · R1~22 = 금 14:00 기점.  
-패치 시 **정본을 코드보다 우선**하고, 문자열은 정본 §0.2와 코드가 일치해야 한다.
-
-### 10.8 화면 테마 — 유리 / 선명 다크
-
-OS 라이트·다크가 아니라 **사이트 스킨** 두 가지. Firestore·계정 동기화 없음.
-
-| 모드 | `data-ui-theme` | 느낌 |
-|------|-----------------|------|
-| **유리** (기본) | `glass` | 반투명·`backdrop-filter`·기존 세나링크 |
-| **선명 다크** | `solid` | 불투명 패널·블러 제거·가독성 우선 |
-
-| 파일 | 역할 |
-|------|------|
-| `src/lib/uiTheme.js` | `initUiTheme` / `setUiTheme` · `localStorage` 키 `senalink_ui_theme` |
-| `src/styles/themeSolidDark.css` | `html[data-ui-theme="solid"]` 토큰·오버라이드·프로필 테마 토글 CSS |
-| `src/main.jsx` | `initUiTheme()` + `themeSolidDark.css` import |
-| `index.html` `<head>` | 짧은 인라인 스크립트로 React 전 테마 적용 (깜빡임 방지) |
-| `src/components/UiThemeToggle.jsx` | GNB **마이프로필** 드롭다운 하단 달·해 스위치 |
-
-**저장:** 브라우저 `localStorage`만 (기기별). 첫 방문·저장 없음 → **유리**. 시스템 `prefers-color-scheme` 미연동.
-
-**패치 시:** 패널·GNB·모달은 `--glass-bg` / `--glass-modal` / `--glass-blur` 쓰게 유지. 하드코딩 `rgba`+`blur`면 선명 다크에서 유리처럼 남음 (예: `.gnb-dropdown-panel`은 변수 사용). 선명 모드에서 모달 뒤 `.app-shell` blur는 끔 — 유리 모드 blur(§10.6)는 유지.
+- 10.1 메인 CMS · 입장 배너 · 방문자 (`site/main`, `site/stats/visitShards`)
+- 10.2 길드 허브 vs 커뮤니티 빌드 분리 · 길드전 공격/방어 · PvE 접힘 카드(공성·강림 그립 순서 이동) · 길드전 폭 브레이크포인트
+- 10.3 Ops · 10.4 「수정 및 고정자」 시각 · 10.5 도구·도감
+- 10.6 세팅 확인 (`InGameDeckCard`) — **모달 뒤 `.app-shell` blur(22px)는 의도된 것, 제거 금지**
+- 10.7 컨텐츠 시즌 카드 — 정본 `docs/content-season-schedule.md` **패치 전 필수 열람**, 정본이 코드보다 우선
+- 10.8 화면 테마 유리/선명 다크 (`uiTheme.js`, `themeSolidDark.css`, `UiThemeToggle`)
+- 10.9 쿠폰 (GNB 「쿠폰」, `site/coupons`, Callable `redeemCoupon`) — UID는 localStorage만, 클라 write 규칙 추가 금지
 
 ---
 
@@ -532,186 +367,24 @@ API:
 
 새 영웅 추가 시 `group`/`category`/`isAwakened`를 맞추고, 새 스페셜 소속이면 `HERO_FACTION_ORDER`에만 넣으면 된다.
 
-### 12.2 모바일 전용 CSS 패치 원칙
+### 12.2–12.5 모바일 CSS · 아이콘 · 덱 수정 모달 → [docs/agents/ui-layout.md](docs/agents/ui-layout.md)
 
-밍봉이 **「모바일만」** 이라고 하면:
+모바일 CSS·덱 수정 모달을 만지기 전에 반드시 열 것. 핵심만:
 
-1. 스타일은 **해당 화면의 실제 브레이크포인트 안만** 추가/수정 (길드전 공격 **1020**, 방어 **980**, 일반 허브/세팅 **760·900** 등). 공통(베이스) 셀렉터에 넣으면 PC가 같이 바뀐다.
-2. **절대** `@media (min-width: 981px)` 등 PC 블록에 모바일용 규칙을 넣지 말 것 (과거에 방어 리스트 여백 패치가 PC 블록에 잘못 들어간 적 있음). 덱 수정 PC는 **`deckEditScrollModal.css`만**.
-3. 길드전 방어 1열·대체 덱·세팅 확인 PC·공유 캡처는 요청 없이 함부로 되돌리지 말 것.
-4. **한글 세로 찢김:** flex/grid가 칸을 쥐어짜면 `white-space: nowrap` + `min-width: 0` + ellipsis, 또는 제목/버튼을 **세로 스택**. `flex-wrap`만으로 제목이 초상 **아래**로 가면 안 되면 grid로 의도한 순서를 고정.
-5. 모바일 `.build-panel-body { display: contents }` + `order` 패턴: **새 자식(기타 디테일 등)에도 order를 명시**하지 않으면 맨 위로 간다.
-
-### 12.3 아이콘 · 성능 (참고)
-
-- UI 아이콘 `hero` / `pet`: `public/images/ui/hero-icon.png`, `pet-icon.png` → `Icon.jsx` (`hero`/`pet`). 프로필 `user` 아이콘과 혼용 금지.
-- 세팅 공유 PNG: `warmSettingCapture`는 **공유 클릭 시에만** (`copyNodeImage.js`). 모달 오픈 경로에서 미리 워밍하지 말 것.
-- 모달 뒤 블러: `.app-shell` **blur(22px)** 유지 — 성능 핑계로 제거하지 말 것 (§10.6).
-
-### 12.4 덱 수정 모달 — PC 본문 통스크롤 (`deckEditScrollModal`)
-
-**덱 수정 모달 모바일(가로 ≤980px)** 은 `index.css` `@media (max-width: 980px)` 블록만 — **이 패턴의 PC CSS·헬퍼로 모바일 건드리지 말 것.** (사이트 GNB 등 다른 UI의 980 브레이크포인트와 별개.)
-
-| 파일 | 역할 |
-|------|------|
-| `src/styles/deckEditScrollModal.css` | PC **`min-width: 981px`** 레이아웃·토큰·스크롤 |
-| `src/lib/deckEditScrollModal.js` | kind `arena` \| `pve` · 클래스·스타일·휠 전달 훅 |
-| `src/main.jsx` | `deckEditScrollModal.css` import |
-
-| kind | 모달 클래스 | 적용 화면 |
-|------|-------------|-----------|
-| `arena` | `.arena-body-scroll-modal` | 길드 결투장 · 커뮤니티 결투장/상급 · **길드전 방어 덱 수정** (`gw-defense-edit-modal` 추가) |
-| `pve` | `.pve-body-scroll-modal` | 길드 **공성전·강림원정대** (3열+타임라인) |
-
-#### 브레이크포인트 (가로 × 세로)
-
-| 조건 | 동작 |
-|------|------|
-| **가로 ≥981** | PC 2열(결투장) / 3열(PvE) · `deckEditScrollModal.css` |
-| **가로 ≤980** | 모바일 세로 스택 · `index.css` 덱 수정 블록만 (건드릴 때 극도로 주의) |
-| **세로 ≥1021** (PC 폭) | `.deck-edit-scroll-body` **스크롤 없음** (`overflow-y: hidden`) |
-| **세로 ≤1020** (PC 폭) | 본문(`.deck-edit-scroll-body`)만 스크롤 |
-
-#### 스크롤 규칙 (PC)
-
-- **본문 스크롤:** `.deck-edit-scroll-body` 하나만 (세로 부족 시).
-- **내부 스크롤 허용:** 영웅 목록 (`.arena-hero-grid` / `.pve-hero-grid`) · PvE 스킬 순서 (`.skill-timeline-scroller` — 높이 px 고정, `.cursor/rules` 준수).
-- **그 외 영역** (장비·덱·세팅 디테일·타임라인 추가 등): 내부 스크롤 금지 — `useDeckEditScrollWheelForward`가 모달 capture에서 휠을 본문으로 전달.
-- **세팅 디테일:** 좌열 `flex: 1` — 덱 바로 아래부터 좌열 하단까지 박스·textarea가 **가득 채움**. `margin-top: auto`로 위·아래 빈 공간 만들지 말 것.
-
-#### PvE 토큰 (arena와 분리)
-
-- 공성·강림: `--deck-gear-h: 520px` (강림 라운드 라벨·세팅 디테일 여유; 결투장 496px).
-- 레이아웃 **높이 구간마다 바꾸지 않음** — 1020 기준으로 바뀌는 것은 본문 `overflow-y` 뿐.
-
-#### 길드전 방어 덱 수정 (`GuildWarDefensePanel.jsx`)
-
-- PC: `deckEditScrollModal` **kind `arena`** 와 100% 동일 본문.
-- 헤더 유지: 덱 티어 · 세팅 · 덱 유형 · 기타 디테일 · 속공 수치(속공 모드 시).
-- **`981–1179` 중간 폭:** `.gw-defense-edit-modal` 헤더 토글 `nowrap` + 가로 스크롤; `header-main` `min-width:0`·닫기 `flex-shrink:0`으로 **속공 수치가 X와 겹치지 않게**. **≤980 폰 헤더(세로 스택)는 기존 `index.css` 그대로.**
-
-**별도 패턴:** 길드전 **공격 카운터** `.gw-counter-edit-modal` — `index.css` (덱 수정 통스크롤과 분리).
-
-클래스·인라인 스타일은 **`deckEditScrollModal.js` 헬퍼** 우선 · PC 그리드 밴드에이드를 `index.css` 베이스에 넣지 말 것.
-
-### 12.5 덱 수정 모달 패치 시 마음가짐 (회귀 방지)
-
-1. **한 가지씩, 검증 후 다음** — 스크롤·높이·영웅 그리드·타임라인을 한 번에 바꾸면 한쪽 고치면 다른 쪽 깨짐 (실제로 v106~v138 여러 사이클 소요).
-2. **가로 브레이크포인트와 세로 브레이크포인트 분리** — 980(모바일 레이아웃) / 1021(본문 스크롤 on·off) / 1020(휠·overflow 보조)를 섞어 한 미디어쿼리로 처리하지 말 것.
-3. **레이아웃 토큰은 1벌** — 뷰포트 높이마다 그리드·칸 크기를 다시 정의하지 말 것. 넘치면 본문만 스크롤.
-4. **「모바일 완벽」이면 모바일 CSS 손대지 않기** — PC만 `deckEditScrollModal.css` (`min-width: 981px`). 방어·결투장 모바일 `index.css` ≤980 규칙은 밍봉 명시 없이 수정 금지.
-5. **내부 스크롤은 최소** — 영웅 목록(+ PvE 스킬 리스트)만. 장비 패널·좌열에 `overflow-y: auto` 추가 제안하지 말 것.
-6. **헬퍼·DOM 구조 공유** — `GuildLounge` · `CommunityGuideEditor` · `GuildWarDefensePanel`은 동일 `deckEditScrollBodyWrapperProps` / `useDeckEditScrollWheelForward` 패턴.
-7. **배포 전 체크리스트 (PC 981+, 풀 높이 / 줄인 높이 각각):** 본문 스크롤 유무 · 휠이 장비/디테일/빈 여백에서 먹는지 · 세팅 디테일 좌열 가득 참 · 영웅 목록만 내부 스크롤 · PvE 타임라인 scroller 높이 고정 유지.
+- 「모바일만」 요청 → 그 화면의 브레이크포인트 블록 안에서만 수정. PC `min-width` 블록·`deckEditScrollModal.css`에 모바일 규칙 금지.
+- 덱 수정 모달: PC(≥981) = `deckEditScrollModal.css`/`.js`만, 모바일(≤980) = `index.css` 블록만. 본문 `.deck-edit-scroll-body`만 스크롤, 내부 스크롤은 영웅 목록·PvE `.skill-timeline-scroller`(높이 px 고정)만.
+- 세팅 공유 PNG 워밍은 공유 클릭 시에만. 한 번에 하나씩 고치고 검증 후 다음.
 
 ---
 
-## 13. 도감 업데이트 유의 사항 (영웅 · 펫 · 장비 · 전용장비)
+## 13. 도감 업데이트 (영웅 · 펫 · 장비 · 전용장비) → [docs/agents/encyclopedia.md](docs/agents/encyclopedia.md)
 
-앱이 **실제로 import하는 파일**만 고치면 UI에 반영된다. `asset/`은 원본·재생성 소스.
+신규 영웅·각성·스킬 변경·콜라보·펫·장비·장신구 작업 시 반드시 열 것. 핵심만:
 
-**목록 정렬 (전역, 까먹지 말 것):** §12.1  
-각성 → 스페셜(`HERO_FACTION_ORDER.special` 소속순) → 준스페셜(아스가르드·아이샤) → 일반 → 기타.  
-`heroes.js`의 `sortHeroesForList` / `compareHeroesForList`가 단일 소스. 새 소속이면 `HERO_FACTION_ORDER`에만 추가.
-
-런타임 영웅: `scraped_heroes.json` ← `heroes.js` ← `HeroDB` / 피커 / 세팅·스킬 예약.
-
-### 13.1 영웅 — 신규 캐릭터 추가 (체크리스트)
-
-밍봉이 `asset/영웅 목록/.../이름(역할)(각성?)` 폴더를 채워 둔 뒤:
-
-| 단계 | 할 일 |
-|------|--------|
-| 1 | **폴더 위치 = 소속.** 예: `스페셜 영웅/경계의 수호자/하연(지원형)(각성)` → `group: "경계의 수호자"`, `category: "special"`, `role`은 괄호, `isAwakened`는 `(각성)` 여부 |
-| 2 | 폴더 안: `skills/*.json`(스킬·쿨·effects·tooltips) · 스킬 PNG · `*_초상화.png` · **`이름_전용장비.png`(필수에 가깝게 — 아래 13.1.1)** |
-| 3 | `src/data/scraped_heroes.json`에 엔트리 추가/병합. 스킬 `type`/`direction`: Normal→`basic_attack`, Active1→`active`+`upper`, Active2→`active`+`down`, Passive→`passive`, Awakening→`awaken_skill`+`awaken`. `cooldown` null→0. `iconUrl`=`/images/{id}/skills/{스킬명}.png` |
-| 4 | `public/images/{id}/portrait.png` + 스킬 PNG 복사. 카드는 `card.webp`(+ `heroCardMeta.json`) — 초상에서 생성해도 됨 (`scripts/fetch_hero_cards.py` 또는 초상→webp) |
-| 5 | 새 진영이면 `src/data/heroes.js`의 `HERO_FACTION_ORDER`만 확인. **목록 재정렬 수동 금지** — `heroes` export가 이미 `sortHeroesForList` |
-| 6 | **전용장비** — §13.1.1 |
-| 7 | `/dex` 도감 · 덱 수정 영웅 목록 · 스킬 예약에 뜨는지 확인. 배포 시 `APP_VERSION` bump |
-
-> `scripts/legacy/rebuild_heroes_json.py` 등은 **옛 폴더 경로**를 가리킬 수 있음. formal 기준으로만 쓰거나 수동 병합.
-
-#### 13.1.1 전용장비 (신규·각성 시 같이)
-
-도구 **「전용장비 옵션 추천」** 그리드는 `exclusiveGearMeta.generated.json`(+ `scraped_heroes`)를 본다. **신규 영웅이면 캐릭뿐 아니라 전용장비 아이콘도 반드시 넣는다.**
-
-| 단계 | 할 일 |
-|------|--------|
-| 1 | `asset/.../영웅폴더/{이름}_전용장비.png` 배치 |
-| 2 | `python scripts/sync_exclusive_gear_from_asset.py` → `public/images/{id}/exclusive-gear.png` + `src/data/exclusiveGearMeta.generated.json` |
-| 3 | (선택) Ops/도구에서 조율 옵션 추천 문구는 Firestore `exclusiveGearGuides` — 아이콘만이면 메타 sync로 충분 |
-
-이미 영웅만 넣고 전용장비를 빼먹으면 도구 그리드에 아이콘이 비거나 누락된다.
-
-> **주의:** sync 스크립트는 `asset/영웅 목록` 전체를 돌며 `Tex_ItemIcon_*`을 `*_전용장비.png`로 **asset 파일명 변경**까지 한다. 아직 추가하지 않을 영웅 폴더(Tex_ 원본만 있는 폴더)가 있으면 스크립트 대신 같은 방식(PIL RGBA PNG 저장 + 메타 끝에 항목 추가)으로 해당 영웅만 처리.
-
-#### 13.1.4 콜라보 영웅 (기타 탭)
-
-| 항목 | 값 |
-|------|-----|
-| asset | `asset/영웅 목록/기타/콜라보레이션(작품명)/이름(역할)(각성?)` |
-| `category` / `group` | `"other"` / 작품명 (예: `나혼자만 레벨업`, `귀멸의 칼날`) — 새 작품이면 `HERO_FACTION_ORDER.other`에 추가 |
-| `id` | `collab_` + 이름(**공백 제거**, 예: `collab_카마도탄지로`). `name`은 띄어쓰기 그대로 |
-| `title` | `{작품명} 콜라보` |
-| 이미지 | `public/images/{id}/` (portrait.png · card.webp · skills · exclusive-gear.png). 구 콜라보 4명은 초상만 `/images/{이름}/` (레거시) |
-| 새 특수 효과 | 스킬 `tooltips`(호버) + `systemRules.js` `effects_registry` (상태이상 & 특수 효과 도감) |
-
-#### 13.1.5 스킬 텍스트 포맷 규칙 (도감 표시 — 루디 각성처럼)
-
-`SkillRichText`가 `description` / `skillEnhance` / `transcendenceEffects`를 줄 단위로 그린다.
-
-| 규칙 | 예 |
-|------|-----|
-| **대상 줄** = 한 줄 전체가 대괄호 **하나**뿐일 때만 대상 뱃지(아군/자신=파랑, 적=빨강) | `[모든 아군]` |
-| 대상 블록: 대상 줄 → 효과 줄들 → 다음 대상 전 **빈 줄 1개** (`effects[]`에서 자동 생성) | `[자신]\n불굴 …\n\n[모든 적군]\n…` |
-| 효과 줄 꼬리표 | `[55% 확률]` `[2턴 지속]` `[상시]` `[피격 3회]` `(전투당 1회 발동)` |
-| 강화·초월 한 줄 | `[자신] 효과 추가 : 행동 제어 면역 [3턴 지속]` — 앞 `[대상]`은 **일반 텍스트**로 표시(뱃지 아님). 여러 개면 ` / `로 연결 |
-| 대괄호·소괄호 **짝 맞추기** | 원본 asset 문구 그대로, 임의 축약·괄호 삭제 금지 |
-| 툴팁 | asset `tooltips` 전체를 **모든 스킬**의 `tooltips`에 복사. 처음 나온 효과는 `systemRules.js` `effects_registry`에도 추가 |
-
-> 과거 버그: 대상 판별 정규식이 `^\[(.*?)\]$`라 `[자신] 효과 추가 : … [3턴 지속]` 같은 줄이 통째로 뱃지가 되며 앞뒤 괄호가 잘려 보였음 → `^\[([^[\]]+)\]$`로 수정. 데이터 쪽 수정 불필요.
-
-#### 13.1.2 일반 → 각성 업데이트
-
-| 단계 | 할 일 |
-|------|--------|
-| 1 | asset에 `(각성)` 폴더·JSON·초상·스킬 아이콘·전용장비 갱신 |
-| 2 | `scraped_heroes.json` 해당 영웅: `isAwakened: true`, 스킬에 **Awakening** 추가, 쿨/설명/아이콘 경로 갱신 |
-| 3 | `public/images/{id}/` 초상·스킬·전용장비 덮어쓰기 |
-| 4 | 정렬은 자동(각성이 일반보다 앞). 같은 소속끼리는 이름순 |
-
-#### 13.1.3 스킬 이름·아이콘만 변경
-
-| 단계 | 할 일 |
-|------|--------|
-| 1 | asset `skills/*.json` + 새 스킬 PNG |
-| 2 | `scraped_heroes.json`의 `skills[].name` / `iconUrl` / 필요 시 description·effects 동기화 |
-| 3 | `public/images/{id}/skills/`에 **새 파일명**으로 PNG 복사 (옛 아이콘 파일은 남겨도 UI는 `iconUrl`만 봄) |
-
-### 13.2 펫
-
-| 단계 | 할 일 |
-|------|--------|
-| 1 | **`src/data/pets.js`에 엔트리 추가** (앱은 여기만 봄) |
-| 2 | `/images/pets/{이름}.png` (또는 `portraitUrl`에 맞춤) |
-| 3 | (선택) `asset/펫 목록/모든 펫.json` 동기화 — 자동 import 아님 |
-
-### 13.3 장비 · 장신구
-
-| 단계 | 할 일 |
-|------|--------|
-| 1 | `asset/장비, 장신구/`에 PNG·메타 추가 |
-| 2 | `python scripts/import_gear_assets.py` → `src/data/gearDex.generated.json` + `public/images/equipment|accessories` |
-| 3 | **덱 에디터·길드전·ops 메타덱 세트/옵션**은 `src/data/equipments.js` (주석: 단일 소스) |
-| 4 | 도감 화면은 `gearDex.js`가 generated + legendary(`equipments.js`) 병합 |
-
-장비·장신구 단일 소스: **`equipments.js` + gearDex** (`equipment.js` 단수 스키마는 제거됨).  
-전용장비(영웅 전용)는 §13.1.1 — 일반 장비 도감과 경로가 다름.
-
-### 13.4 도감 UI 탭
-
-`DbHub` — 영웅 / 장비 / 시스템(`systemRules.js`) / 펫.
+- 앱이 import하는 파일만 UI에 반영: 영웅 `src/data/scraped_heroes.json`(+`public/images/{id}/`), 펫 `src/data/pets.js`, 장비 `equipments.js` + `gearDex`. `asset/`은 원본·재생성 소스.
+- 신규 영웅이면 **전용장비 아이콘도 같이** (`exclusiveGearMeta.generated.json`).
+- 목록 정렬 수동 금지 — §12.1 `sortHeroesForList`.
+- 장신구 세공: `accessory2`는 optional. **기본값에 `accessory2`를 넣지 말 것**(구 문서 해석이 깨짐). 해석·표시는 `lib/accessoryCraft.js`.
 
 ---
 
@@ -730,6 +403,7 @@ API:
 11. 세팅 확인 모달 뒤 전체 blur(`.app-shell` filter) 제거 제안하지 말 것 (§10.6).
 12. 덱 수정 모달 패치 시 §12.5 회귀 체크리스트 참고.
 13. 커밋/푸시는 밍봉 요청 시. 시크릿(`.env*`)·`.firebase/hosting.*.cache` 커밋 금지.
+14. 배포 요청을 받으면 스킬 **`senalink-deploy`** 순서대로 (점검 → 버전·패치 내역 → Functions 먼저, Hosting 나중 → 라이브 확인 → 커밋·푸시).
 
 ---
 
@@ -747,7 +421,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.10.02.185** (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.10.03.186** (푸터 `APP_VERSION` 확인)
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 
 ---
@@ -756,169 +430,7 @@ API:
 
 ---
 
-## 17. 패치 내역
+## 17. 패치 내역 → [docs/agents/patch-history.md](docs/agents/patch-history.md)
 
-### 2026-10-02 (`v2026.10.02.185`) — 세공 실패 문구
-- 고정 세공 실패 결과: 부적 미사용 시 「재료 장신구가 소멸했습니다.」, 사용 시 기존 「재료 장신구와 사용한 부적이 소멸했습니다.」. Hosting만.
-
-### 2026-10-02 (`v2026.10.02.184`) — 세공 NPC 멘트
-- 연속 3회 성공 대사: 「…다음에 세공하자」→「지금은 여기다 운을 다 쓴 것 같아.. 진짜 세공은 다음에 하자」. Hosting만.
-
-### 2026-10-02 (`v2026.10.02.183`) — 세공 NPC 답변 · 고대 부적 색
-- **연속 3회 성공 NPC:** 답변 버튼 「알겠어…」 옆 「니가 뭔데?」 추가 → 같은 팝업에서 `npc-sulk.webp` + 「흥! 니 맘대로 해라!!」 장면(버튼 「흥!」). 장면 정의는 `CraftSimulator.jsx` `NPC_SCENES`(`replies[].next`로 다음 장면).
-- **고대 세공 부적:** 배경을 분홍빛(`#e8588a → #7a1a44`)으로 — 전설 부적(빨강)과 구분.
-- Hosting만 (rules·Functions·스키마 무변경).
-
-### 2026-10-02 (`v2026.10.02.182`) — 세공 시뮬레이터 · 장신구 등급 수정
-- **도구 `/tools/craft` 세공 시뮬레이터:** `CraftSimulator.jsx` + `lib/craftSim.js` + `styles/craftSim.css` + `public/images/craft/`. Firestore·네트워크 없음(브라우저 안에서만 계산·기록).
-  - 고정 옵션 세공: 성급 조합 기본 확률 + 부적 1개(+5/10/20/40/100). 베이스와 같은 효과 재료는 잠금.
-  - 임의 옵션 세공: 재료는 등급(전설/희귀/고급/일반)만 선택. 공식 확률표 기준, ★6 재료만 전설 옵션 누적 증가(전설 등장 시 초기화). 「내 전설 옵션 확률」 직접 입력.
-  - 4/5/6★ 반지 디자인(`public/images/craft/rings/4|5`, 6★은 도감 아이콘). 도감은 6★만.
-  - 전설+전설 고정 세공 연속 3회 성공/실패 시 NPC 팝업(`npc-lucky.webp` / `npc-jinx.webp`, `ModalScrim`).
-- **도감 장신구 등급:** 복수·수호의 반지 고급→**일반** (`gearDex.js` `NORMAL_KEYS`). 공식 옵션 그룹과 일치.
-- **도구 순서:** 세공 시뮬레이터 ↔ 티어리스트 메이커 자리 교체.
-- Hosting만 (rules·Functions·스키마 무변경).
-
-### 2026-10-01 (`v2026.10.01.181`) — 귀멸의 칼날 콜라보 · 신화 티어 · 시즌 룰 · 스킬 텍스트
-- **영웅:** 카마도 탄지로 · 아가츠마 젠이츠 (기타·`귀멸의 칼날`·공격형·각성, id `collab_카마도탄지로` / `collab_아가츠마젠이츠`) + 초상·카드·스킬·전용장비. 기유·시노부는 미추가.
-- **도감 기타 탭:** `콜라보레이션` → `나혼자만 레벨업`, `기타 영웅` 제거, `귀멸의 칼날` 추가.
-- **특수 효과 도감:** 내비치는 세계 · 지연 버프 (특수 유틸리티) + 스킬 툴팁.
-- **스킬 텍스트:** `SkillRichText` 대상 뱃지 판별 수정 — `[자신] 효과 추가 : …` 줄 괄호 잘림 83건 해소 (§13.1.5).
-- **마이페이지 총력전:** `legend_plus` 라벨 「전설 이상」→「신화」+ 아이콘 (저장 id 유지, rules 무변경).
-- **상급결투장 시즌 룰:** 자동 순회 제거, `CURRENT_ADVANCED_ARENA_MODE = 'normal'` (기본 모드).
-- Hosting만 (rules·Functions·스키마 무변경).
-
-### 2026-09-18 (`v2026.09.18.180`) — 수정·삭제 버튼 · 속공 이름 정렬
-- **수정/삭제:** 삭제 PNG `displayScale`을 수정과 동일(0.8)로 맞춤. 접힘 카드 액션 버튼 높이·아이콘 크기 통일.
-- **세팅 확인 속공 순서:** 영웅 이름 `text-align: center` (짧은 이름 우측 빈칸 완화).
-- Hosting만.
-
-### 2026-09-18 (`v2026.09.18.179`) — PvE 접힘 카드 · 추천도
-- **공성·강림·공용 PvE:** 길드전 방어형 접힘/펼침 카드. 제목 아래 **추천도** 1–5★ (`DeckTierStars`, 필드 `tier` optional·기본 3). 방어 lead 「덱 티어」와 라벨·배치 분리.
-- **강림:** 1·2라운드 초상 + 그립 드래그 재정렬. 제목 `OverflowTitle` tip.
-- **세팅 확인:** 속공 순서 이름+ellipsis. 허브 히어로 모바일 **≤1024** 스택 동기.
-- Hosting만 (rules·Functions·스키마 파괴 없음 — `tier` optional 추가).
-
-### 2026-09-17 (`v2026.09.17.176`) — 길드 연합 · 상급결투장 시즌룰 · 허브 UX
-- **연합 (§6.3.1):** 1군 호스트 ↔ 2군 게스트 읽기 전용. Callable만 CUD (`create/join/leave/revoke/regen/dissolveAlliance`). rules: `isAllianceGuestOf` **read만** 추가, `allianceIndex`/`allianceGuests` 클라 write 금지, hub 연합 필드 `allianceFieldsUnchanged`.
-- **UI:** `AllianceModal` · 홈 연합/나가기 솔리드 버튼 · 나가기·연합 종료 확인 팝업 · 코드 복사/재발급 CopyNotice.
-- **상급결투장:** `SeasonRuleBadge` (메인 시즌 카드 뒷면 · 공용 PvP 제목 옆).
-- Hosting + `firestore:rules` + `functions` 배포 (`senalink`만).
-
-### 2026-09-03 (`v2026.09.03.174`) — 영웅·프로필·PVE 탭·배경
-- **하연** (스페셜·경계의 수호자·지원·각성) `scraped_heroes` + 초상/스킬/전용장비.
-- **벨리카** 일반→각성 (`isAwakened`, 각성기「마녀의 그림자」, Active2 쿨 80).
-- **루디** 스킬명·아이콘만 (규탄의 검격 / 영겁의 성채 / 철옹의 방벽; 각성「영광의 심판」유지).
-- **마이프로필:** `combatPower`(내 전투력 총합) 본인 입력·공개 프로필 표시. `firestore.rules` 화이트리스트 optional 필드 추가(완화 아님).
-- **공용 허브 PVE:** 시련의 탑 탭 칸 추가(Coming Soon, Firestore 구독 없음).
-- **도감:** 영웅 DB 3열↔1열 전환 **≤980**만 (981–1100 중간 레이아웃 제거).
-- **배경:** `public/bg-senari.png` → 세나리 배경 화면2.
-- **AGENTS.md §13** 신규·각성·스킬-only·**전용장비 동시 추가** 체크리스트 보강.
-- Hosting + `firestore:rules` 배포.
-
-### 2026-08-30 — 내부 정리 Phase 2 (배포·라이브 데이터 무변경)
-- **루트 clutter 제거:** `gelidus_success.html` → `scripts/legacy/fixtures/`, `category_success.html`·`asset_list.csv` 삭제.
-- **git:** `.firebase/hosting.*.cache` 추적 해제 (`.gitignore`와 일치).
-- **`firestore.rules.example`:** 라이브 `firestore.rules`와 동기화 (참고용만, 배포 대상 아님).
-- **`.env.example`:** `VITE_USE_EMULATORS`·`tmp_negi_chars_ko.json` 안내 추가.
-- **`.gitignore`:** `firestore-debug.log`, 스크래퍼 산출물 패턴 추가.
-
-### 2026-08-30 (`v2026.08.30.151`) — 선명 다크 테마 · 마이페이지 · 길드전 공격 UI
-- **화면 테마 (§10.8):** `glass`(유리, 기본) / `solid`(선명 다크). `uiTheme.js` + `themeSolidDark.css` + `index.html` 선적용. 마이프로필 드롭다운 `UiThemeToggle`. `localStorage` `senalink_ui_theme` (계정·시스템 테마 미연동).
-- **마이페이지:** 프로필(사진·닉)과 게임 정보(총력전·결투장·파괴신) `glass-inset` 패널 분리.
-- **GNB:** 도구 flyout `.gnb-dropdown-panel` → `var(--glass-modal)` (선명 다크에서 불투명).
-- **길드전 공격:** 상대·파생 덱·카운터 레이아웃·색 계층·모바일 인라인 카운터 등 UI 정리. 그립 드래그 안내 문구 제거.
-- Hosting만 (rules·Functions·스키마 무변경).
-
-### 2026-08-30 (`v2026.08.30.150`) — 길드전 공격 그립 안내 문구 제거
-- Hosting만.
-
-### 2026-08-29 — 문서: 미리보기 허브 (§4.1)
-- **AGENTS.md §4.1:** 로컬 연습장 = Firebase 에뮬레이터 + `npm run dev` 워크플로·에이전트 켜는 순서·라이브와 코드 동일함을 정리. §14 체크리스트·`read-agents-md` 규칙에 트리거 추가.
-
-### 2026-08-29 (`v2026.08.29.142`) — 길드전 방어 속공 수치·닫기 X 겹침
-- **방어 덱 수정 헤더:** 981–1179 구간 토글 가로 스크롤·`header-main`/`author-row` flex로 속공 수치 박스가 닫기 X와 겹치지 않게. ≤980·1180+ 무변경.
-
-### 2026-08-29 (`v2026.08.29.141`) — 덱 수정 영웅 목록 반응형 열
-- **PC 덱 수정:** 영웅 그리드 고정 18/10열 → `auto-fill minmax(64px,1fr)` — 폭 줄면 열 수 감소·초상 크기 유지.
-
-### 2026-08-29 (`v2026.08.29.140`) — PvE 장신구 버튼 981–1080 오버플로
-- **공성·강림 덱 수정:** `deckEditScrollModal.css` 981–1080에서 장신구(부활·토벌&공성) 버튼이 장비 칸 밖으로 튀지 않게.
-
-### 2026-08-29 (`v2026.08.29.139`) — 덱 수정 모바일 전환 980 통일
-- **공성·강림·결투장·총력:** 덱 수정 모달 PC `min-width:981` / 모바일 `max-width:980` — 1080 폭에서 공성·강림도 결투장과 동일 PC 레이아웃.
-- **길드전 방어:** 981–1080 헤더 토글 규칙은 별도 블록으로 유지.
-
-### 2026-08-29 (`v2026.08.29.138`) — 길드전 방어 헤더 981–1080
-- **방어 덱 수정:** `.gw-defense-edit-modal` — 태블릿 폭 헤더 토글 한 줄(`nowrap`·가로 스크롤). ≤980 모바일 헤더 무변경.
-
-### 2026-08-29 (`v2026.08.29.137`) — 길드전 방어 덱 수정 = 결투장 PC 통스크롤
-- **`GuildWarDefensePanel`:** `arena-body-scroll-modal` + `deckEditScrollModal` 헬퍼·휠 전달.
-- 헤더 필드 유지: 티어·세팅·덱 유형·기타 디테일·속공 수치.
-
-### 2026-08-29 (`v2026.08.29.136`) — 세팅 디테일 좌열 가득 채움
-- **좌열:** `flex:1` 디테일 패널 — 덱 아래 빈 공간·`margin-top:auto` 제거. textarea가 남는 세로 채움.
-
-### 2026-08-29 (`v2026.08.29.134`–`135`) — 풀 높이 본문 스크롤 0 · 세로 부족 시 디테일 빈공간
-- **1021+:** 본문 `overflow-y:hidden` 복원 (결투장과 동일).
-- **≤1020:** 디테일 위 빈공간 수정 시도 → v136에서 flex 채움으로 정리.
-
-### 2026-08-29 (`v2026.08.29.131`–`133`) — 휠 전달 · 1080 모바일 · PvE 높이
-- **휠:** 모달 capture → 본문 스크롤 (영웅·스킬 scroller만 내부 예외).
-- **덱 수정 모바일:** 가로 **1080** 이하 세로 스택 (`index.css` 블록 분리; 사이트 GNB 980과 별개).
-- **PC 브레이크포인트:** `deckEditScrollModal.css` **1081+**.
-- **PvE:** `--deck-gear-h:520px` 등 강림 세팅 디테일 잘림 방지.
-
-### 2026-08-29 (`v2026.08.29.136` 커밋 `ddf69c7`) — 덱 수정 PC 통스크롤 정리 (문서·헬퍼 통합)
-- **`deckEditScrollModal.js` / `.css`** · `GuildLounge` · `CommunityGuideEditor` · `AGENTS.md` §12.4 초안.
-
-### 2026-08-29 — 공성·강림 덱 수정 모달 PC 통스크롤 + 영웅 10열
-- **PvE kind:** `pve-body-scroll-modal` — 공성전·강림원정대 (길드 허브)
-- **헬퍼/CSS 통합:** `deckEditScrollModal.js` · `deckEditScrollModal.css` (arena + pve)
-- **장비:** 공성·강림도 `HeroGearPanel` embedded (결투장과 동일)
-- **영웅 목록:** PvE PC 풀화면 10열 (기존 ~12열)
-
-### 2026-08-29 — 결투장 덱 수정 모달 구조화
-- **CSS:** `src/styles/deckEditScrollModal.css` (PC only, arena 섹션) · `index.css`에서 분리
-- **헬퍼:** `src/lib/deckEditScrollModal.js` — GuildLounge·CommunityGuideEditor 공통
-- **문서:** AGENTS.md §12.4 · 모바일 CSS 무변경
-
-### 2026-08-27 (`v2026.08.27.71`) — 카운터 중폭 한 줄 · 메타 점
-- **공격 카운터:** 1020~671은 초상 오른쪽 제목·작성자, ≤670만 위/아래 스택. 제목·작성자 구분은 `·`.
-- **문서:** §10.2 표에 ≤670 행 추가.
-
-### 2026-08-27 (`v2026.08.27.69`) — 길드전 공격·방어 좁은폭 · 구분선 · 기타 디테일
-- **공격(≤1020 / ≤480 / ≤400):** 인라인 카운터·툴바 스택·한글 nowrap. ≤400만 수정·삭제 세로·카운터 초상/제목 가운데(숫자 과축소·제목 선제 상단 이동 금지). 우선순위 오른쪽 `|`.
-- **방어(≤980):** 헤더 `그립 | 덱 티어 |` 모바일에서도 표시. 펼침 기타 디테일 `order:4`(세팅확인·스킬예약 아래). PC 기타 디테일 폭 = 스킬 예약.
-- **문서:** §10.2 브레이크포인트 표 · §12.2–12.3 좁은폭/아이콘·캡처 워밍 규칙. Hosting만 (rules·Functions·스키마 무변경).
-
-### 2026-08-25 (`v2026.08.25.77`) — 태블릿 구글 로그인 복구
-- **원인:** `firebase@12.17.x` Auth IndexedDB가 팝업/탭 로그인 시 opener `hidden`이면 `Database is closing/hidden`으로 실패 ([firebase-js-sdk#10264](https://github.com/firebase/firebase-js-sdk/issues/10264)).
-- **조치:** 클라이언트 `firebase`를 **`12.16.0` 고정**(caret 없음). 앱 로직·rules·Functions 무변경. Hosting만 재배포.
-- **임시 핀:** 공식 Auth 픽스 버전이 안정되면 재검토 후 올리기.
-
-### 2026-08-25 (`v2026.08.25.68`) — 시즌 보드 · 모바일 · 세팅 공유
-- **모바일 UI:** 세팅 공유 캡처(초상/스킬 아이콘), 길드전 공격 접힘·카운터 행, 도감 시스템 공식·스킬 툴팁 등 다수 손봄 (PC 레이아웃·권한 스키마 무변경 원칙 유지).
-- **메인 시즌 진행판:** 길드전·상급결투장·총력전·강림원정대 플립 카드 (`ContentSeasonBadges` + `contentSeasonSchedule` · 앵커·정본 `docs/content-season-schedule.md`). Firestore 없음, KST 자동 사이클.
-- **세팅 공유 캡처:** 모바일에서 이미지 누락 완화 (`copyNodeImage` dataURL 이식 + 뷰포트 안 캡처 호스트).
-- **메인 기용률/뉴스:** PC 2열 높이 맞춤 — 기용률 기준, 뉴스만 내부 스크롤.
-- **인프라(동봉):** `visitShards` 분산 방문 카운터(rules), `communityGuides` 인덱스, `resolveMyHub` collectionGroup·허브 엠블럼 prefix 삭제.
-
-### 2026-08-24 (`v2026.08.24.64`) — 모바일 UI 안정 (PC 레이아웃·권한 무변경)
-- **세팅 공유:** 이미지 fetch→dataURL 이식 + 캡처 호스트를 뷰포트 안(투명)에 두어 모바일에서 초상/스킬 아이콘 누락 완화.
-- **길드전 공격:** 진입 시 상대 덱 접힘(`selectedGwAttackId=null`). 모바일 카운터 행은 수정·삭제를 오른쪽 세로 배치(아래 줄 공백 제거).
-- **도감 시스템:** 효과 적중/저항 공식 모바일 1열. 스킬 툴팁 뷰포트 clamp(좌우·위아래).
-
-### 2026-08-24 (`v2026.08.24.63`) — 방문자 분산 카운터
-- **site/stats:** Firestore distributed counter — `visitShards/{0–31}`에만 신규 +1. 표시는 레거시 `site/stats` + 샤드 합산(기존 total 보존). rules는 레거시와 동일하게 **정확히 +1**만 허용(완화 없음). **rules+hosting 동시 배포 필요.**
-
-### 2026-08-24 (`v2026.08.24.62`) — 운영 안정성 (권한·데이터 스키마 파괴 없음)
-- **communityGuides:** `/community` 공용 공략(`section` pve·pvp 각각) `orderBy(updatedAt desc)` + limit 100. 길드 허브 `builds`와 무관. 인덱스 미준비 시 구 쿼리 폴백.
-- **site/stats:** (63에서 샤딩으로 대체) 재시도만으로는 단일 문서 한계 미해소.
-- **resolveMyHub:** `members.uid` collectionGroup 우선 + 구형 문서는 허브 페이지 스캔 폴백·uid 백필. 가입/개설 시 `members.uid` 기록.
-- **허브 해체 Storage:** `hubEmblems/{hubId}/` prefix 전체 삭제(byUser 경로 포함).
-- **보류:** Ops 전체 로딩 페이지네이션, builds/main 카테고리 분리, 인앱 구글 로그인 UX — 추후.
-
-### 2026-08-24 (`v2026.08.24.61`)
-- **메인페이지 길드 순위 모바일 최적화**: 모바일(`@media (max-width: 760px)`)에서 길드 순위 행의 1열 폭(`32px`), 순위 뱃지(`22px`), 길드마크(`24px`) 축소 및 소속 뱃지(`font-size: 10px`, `padding: 2px 7px`), 리그 칩(`font-size: 9px`, `padding: 2px 6px`) 컴팩트화로 좁은 화면(iPhone 등)에서 길드명과 뱃지가 겹치는 문제 해결 (PC 스타일 무영향).
+배포할 때마다 그 파일 **맨 위**에 새 항목 추가 (날짜 · `APP_VERSION` · 바뀐 점 · 배포 범위 Hosting/rules/functions).
 

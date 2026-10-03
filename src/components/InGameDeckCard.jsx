@@ -4,7 +4,9 @@ import { lockBodyScroll, unlockBodyScroll } from '../lib/bodyScrollLock';
 import { heroes } from '../data/heroes';
 import { pets } from '../data/pets';
 import { formationsData } from '../data/formations';
-import { EQUIPMENT_SET_ICONS, findAccessory } from '../data/equipments';
+import { EQUIPMENT_SET_ICONS } from '../data/equipments';
+import { resolveAccessoryPair, ringLabel, ringParts } from '../lib/accessoryCraft';
+import '../styles/accessorySlots.css';
 import Icon from './icons/Icon';
 import { FORMATION_ICON_SIZE, FORMATION_ICON_SIZE_COMPACT } from '../data/uiIcons';
 import { SKILL_RESERVE_ICON_SIZE, SKILL_RESERVE_ICON_SIZE_SM, SKILL_RESERVE_ICON_SIZE_LG } from '../lib/skillReserveIcon';
@@ -324,7 +326,7 @@ export default function InGameDeckCard({
     const gear = hero.gearConfig || {};
     const setName = gear.setName || '복수자';
     const setIcon = EQUIPMENT_SET_ICONS[setName] || '/images/equipment/복수자.png';
-    const acc = findAccessory(gear.accessory);
+    const [acc, accCraft] = resolveAccessoryPair(gear);
     const optionCode = buildOptionCode(gear);
     const tips = String(gear.detailNote || '')
       .split(/\n+/)
@@ -412,11 +414,32 @@ export default function InGameDeckCard({
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
           textAlign: 'center'
         }}>
+          {accCraft ? (
+            <div className="acc-pair">
+              <span className="acc-pair-sizer" aria-hidden="true"><span>&nbsp;</span><span>&nbsp;</span></span>
+              {[acc, accCraft].map((ring, i) => {
+                const { name: ringName, status } = ringParts(ring);
+                return (
+                  <Fragment key={i}>
+                    {i ? <span className="acc-pair-plus" aria-hidden="true">+</span> : null}
+                    <div className="acc-pair-half" title={ringLabel(ring)}>
+                      <img src={ring.iconUrl} alt="" className="acc-pair-icon" />
+                      <div className="acc-pair-text">
+                        <div className="acc-pair-name">{ringName}</div>
+                        {status ? <div className="acc-pair-status">{status}</div> : null}
+                      </div>
+                    </div>
+                  </Fragment>
+                );
+              })}
+            </div>
+          ) : (<>
           <img src={acc.iconUrl} alt="" style={{ width: '28px', height: '28px', objectFit: 'contain', flexShrink: 0 }} />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: '10px', color: 'var(--gold-light)', fontWeight: 800 }}>장신구</div>
-            <div style={{ fontSize: '13px', fontWeight: 900, color: '#fff' }}>{acc.shortLabel || acc.name}</div>
+            <div style={{ fontSize: '13px', fontWeight: 900, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ringLabel(acc)}</div>
           </div>
+          </>)}
         </div>
       </div>
     );

@@ -7,7 +7,8 @@ import GuildWarAttackPanel from './GuildWarAttackPanel';
 import GuildWarDefensePanel from './GuildWarDefensePanel';
 import TotalWarPanel from './TotalWarPanel';
 import { TOTALWAR_TIERS } from '../data/totalwarTiers';
-import { EQUIPMENT_SET_ICONS, accessories, weaponOptions, armorOptions } from '../data/equipments';
+import { EQUIPMENT_SET_ICONS, weaponOptions, armorOptions } from '../data/equipments';
+import AccessorySlots from './AccessorySlots';
 import { pets } from '../data/pets';
 import { SKILL_RESERVE_ICON_SIZE } from '../lib/skillReserveIcon';
 import { SkillReservePlateIcon } from './icons/GameIconPlate';
@@ -1091,7 +1092,7 @@ export default function GuildLounge() {
     </div>
   );
 
-  const renderBuildPanel = (build, category) => {
+  const renderBuildPanel = (build, category, idx = 0) => {
     const meta = CONTENT_META[category] || CONTENT_META.siege;
     const isPvp = meta.mode === 'pvp';
     const editOnRight = editButtonOnRight(category);
@@ -1262,25 +1263,55 @@ export default function GuildLounge() {
       );
     }
 
+    const isDragging = expeditionDragGhost?.fromId === build.id;
+
     return (
       <div
         key={build.id}
-        className={`luxury-panel community-pvp-card siege-collapse-card${isExpanded ? ' is-expanded' : ''}`}
+        data-siege-id={build.id}
+        className={`luxury-panel community-pvp-card siege-collapse-card${canEditBuilds ? ' is-reorderable' : ''}${isExpanded ? ' is-expanded' : ''}${isDragging ? ' is-dragging-source' : ''}`}
         style={{ boxShadow: 'inset 3px 0 0 var(--gold-primary)' }}
+        onDragOver={(e) => {
+          if (!canEditBuilds) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          e.currentTarget.classList.add('is-drop-target');
+        }}
+        onDragLeave={(e) => {
+          e.currentTarget.classList.remove('is-drop-target');
+        }}
+        onDrop={(e) => {
+          if (!canEditBuilds) return;
+          e.preventDefault();
+          e.stopPropagation();
+          clearExpeditionDropHighlight('siege');
+          const fromId = e.dataTransfer.getData(COLLAPSE_REORDER.siege.mime) || e.dataTransfer.getData('text/plain');
+          reorderExpeditionBuilds(fromId, build.id, 'siege');
+        }}
       >
         <div
           className={`community-pvp-card-head${isExpanded ? ' is-on' : ''}`}
-          onClick={() => setExpandedHubBuildId(isExpanded ? null : build.id)}
+          onClick={() => {
+            if (expeditionDragGhost) return;
+            setExpandedHubBuildId(isExpanded ? null : build.id);
+          }}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
+              if (expeditionDragGhost) return;
               setExpandedHubBuildId(isExpanded ? null : build.id);
             }
           }}
         >
           <div className="community-pvp-card-main">
+            {canEditBuilds ? (
+              <div className="gw-defense-lead siege-collapse-lead">
+                {renderExpeditionDragHandle(build, idx, 'siege')}
+                <span className="community-pvp-card-rule" aria-hidden>|</span>
+              </div>
+            ) : null}
             <div className="pve-collapse-title-block">
               <OverflowTitle
                 className="community-pvp-card-title"
@@ -1368,53 +1399,81 @@ export default function GuildLounge() {
     );
   };
 
-  const clearExpeditionDropHighlight = () => {
-    document.querySelectorAll('.expedition-collapse-card.is-drop-target').forEach((el) => {
+  const COLLAPSE_REORDER = {
+    expedition: { card: '.expedition-collapse-card', attr: 'data-expedition-id', mime: 'application/x-expedition-build-id' },
+    siege: { card: '.siege-collapse-card', attr: 'data-siege-id', mime: 'application/x-siege-build-id' },
+  };
+
+  const clearExpeditionDropHighlight = (kind = 'expedition') => {
+    document.querySelectorAll(`${COLLAPSE_REORDER[kind].card}.is-drop-target`).forEach((el) => {
       el.classList.remove('is-drop-target');
     });
   };
 
-  const reorderExpeditionBuilds = (fromId, toId) => {
+  const clearCollapseDraggingSource = (kind) => {
+    document.querySelectorAll(`${COLLAPSE_REORDER[kind].card}.is-dragging-source`).forEach((el) => {
+      el.classList.remove('is-dragging-source');
+    });
+  };
+
+  const moveBuildInList = (list, fromId, toId) => {
+    const next = [...(list || [])];
+    const fromIdx = next.findIndex((b) => b.id === fromId);
+    const toIdx = next.findIndex((b) => b.id === toId);
+    if (fromIdx < 0 || toIdx < 0) return null;
+    const [item] = next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, item);
+    return next;
+  };
+
+  const reorderExpeditionBuilds = (fromId, toId, kind = 'expedition') => {
     if (!canEditBuilds || !fromId || !toId || fromId === toId) return;
+    if (kind === 'siege') {
+      setSiegeBuilds((prev) => {
+        const list = moveBuildInList(prev[siegeDay], fromId, toId);
+        return list ? { ...prev, [siegeDay]: list } : prev;
+      });
+      logBuildHistory('update_build', '공성 공략 순서', buildHistoryScopeLabel('siege', { siegeDay }));
+      return;
+    }
     setExpeditionBuilds((prev) => {
-      const list = [...(prev[expeditionBoss] || [])];
-      const fromIdx = list.findIndex((b) => b.id === fromId);
-      const toIdx = list.findIndex((b) => b.id === toId);
-      if (fromIdx < 0 || toIdx < 0) return prev;
-      const [item] = list.splice(fromIdx, 1);
-      list.splice(toIdx, 0, item);
-      return { ...prev, [expeditionBoss]: list };
+      const list = moveBuildInList(prev[expeditionBoss], fromId, toId);
+      return list ? { ...prev, [expeditionBoss]: list } : prev;
     });
     logBuildHistory('update_build', '강림 공략 순서', buildHistoryScopeLabel('expedition', { expeditionBoss }));
   };
 
   const finishExpeditionPointerDrag = (clientX, clientY, ghost) => {
-    clearExpeditionDropHighlight();
-    document.querySelectorAll('.expedition-collapse-card.is-dragging-source').forEach((el) => {
-      el.classList.remove('is-dragging-source');
-    });
+    const kind = ghost?.kind || 'expedition';
+    const cfg = COLLAPSE_REORDER[kind];
+    clearExpeditionDropHighlight(kind);
+    clearCollapseDraggingSource(kind);
     if (!ghost) {
       setExpeditionDragGhost(null);
       return;
     }
     const under = document.elementFromPoint(clientX, clientY);
-    const card = under?.closest?.('.expedition-collapse-card');
-    const toId = card?.getAttribute('data-expedition-id');
-    if (toId) reorderExpeditionBuilds(ghost.fromId, toId);
+    const card = under?.closest?.(cfg.card);
+    const toId = card?.getAttribute(cfg.attr);
+    if (toId) reorderExpeditionBuilds(ghost.fromId, toId, kind);
     setExpeditionDragGhost(null);
   };
 
-  const expeditionDragLabel = (build) => {
+  const expeditionDragLabel = (build, kind = 'expedition') => {
     const title = String(build?.title || '').trim();
     if (title) return title;
-    const names = (normalizeExpeditionRounds(build)[1]?.heroNames || [])
+    const heroNames = kind === 'siege'
+      ? (build?.heroNames || [])
+      : (normalizeExpeditionRounds(build)[1]?.heroNames || []);
+    const names = heroNames
       .filter(Boolean)
       .map((n) => String(n).replace('(각성)', '').trim())
       .slice(0, 3);
-    return names.length ? names.join(' · ') : '강림 공략';
+    if (names.length) return names.join(' · ');
+    return kind === 'siege' ? '공성 공략' : '강림 공략';
   };
 
-  const renderExpeditionDragHandle = (build, idx) => (
+  const renderExpeditionDragHandle = (build, idx, kind = 'expedition') => (
     <button
       type="button"
       className="gw-defense-drag-handle"
@@ -1426,13 +1485,14 @@ export default function GuildLounge() {
         if (e.pointerType === 'mouse') return;
         e.stopPropagation();
         e.preventDefault();
-        const card = e.currentTarget.closest('.expedition-collapse-card');
+        const card = e.currentTarget.closest(COLLAPSE_REORDER[kind].card);
         if (!card) return;
         const rect = card.getBoundingClientRect();
         e.currentTarget.setPointerCapture(e.pointerId);
         setExpeditionDragGhost({
+          kind,
           fromId: build.id,
-          title: expeditionDragLabel(build),
+          title: expeditionDragLabel(build, kind),
           x: rect.left,
           y: rect.top,
           w: rect.width,
@@ -1448,27 +1508,25 @@ export default function GuildLounge() {
           if (!g) return null;
           return { ...g, x: e.clientX - g.ox, y: e.clientY - g.oy };
         });
-        clearExpeditionDropHighlight();
+        clearExpeditionDropHighlight(kind);
         const under = document.elementFromPoint(e.clientX, e.clientY);
-        under?.closest?.('.expedition-collapse-card:not(.is-dragging-source)')?.classList.add('is-drop-target');
+        under?.closest?.(`${COLLAPSE_REORDER[kind].card}:not(.is-dragging-source)`)?.classList.add('is-drop-target');
       }}
       onPointerUp={(e) => {
         if (e.pointerType === 'mouse') return;
         finishExpeditionPointerDrag(e.clientX, e.clientY, expeditionDragGhostRef.current);
       }}
       onPointerCancel={() => {
-        clearExpeditionDropHighlight();
-        document.querySelectorAll('.expedition-collapse-card.is-dragging-source').forEach((el) => {
-          el.classList.remove('is-dragging-source');
-        });
+        clearExpeditionDropHighlight(kind);
+        clearCollapseDraggingSource(kind);
         setExpeditionDragGhost(null);
       }}
       onDragStart={(e) => {
         e.stopPropagation();
-        e.dataTransfer.setData('application/x-expedition-build-id', build.id);
+        e.dataTransfer.setData(COLLAPSE_REORDER[kind].mime, build.id);
         e.dataTransfer.setData('text/plain', build.id);
         e.dataTransfer.effectAllowed = 'move';
-        const card = e.currentTarget.closest('.expedition-collapse-card');
+        const card = e.currentTarget.closest(COLLAPSE_REORDER[kind].card);
         if (card) {
           try {
             e.dataTransfer.setDragImage(card, Math.min(56, card.offsetWidth / 4), Math.min(36, card.offsetHeight / 2));
@@ -1477,10 +1535,8 @@ export default function GuildLounge() {
         }
       }}
       onDragEnd={() => {
-        clearExpeditionDropHighlight();
-        document.querySelectorAll('.expedition-collapse-card.is-dragging-source').forEach((el) => {
-          el.classList.remove('is-dragging-source');
-        });
+        clearExpeditionDropHighlight(kind);
+        clearCollapseDraggingSource(kind);
       }}
     >
       <span className="gw-defense-drag-grip" aria-hidden="true" />
@@ -1807,7 +1863,7 @@ export default function GuildLounge() {
             }}
           />
 
-          {(siegeBuilds[siegeDay] || []).map(build => renderBuildPanel(build, 'siege'))}
+          {(siegeBuilds[siegeDay] || []).map((build, idx) => renderBuildPanel(build, 'siege', idx))}
 
         </div>
       )}
@@ -2344,25 +2400,14 @@ export default function GuildLounge() {
 
                     {/* 장신구 2줄 → flex 2 */}
                     <div className="editing-build-gear-section editing-build-gear-section--accessories" style={{ flex: 2, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ fontSize: '11px', color: '#c084fc', marginBottom: '6px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}><Icon name="ring" size={11} /> 장신구 선택</div>
-                      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', gap: '6px' }}>
-                        {accessories.map(acc => {
-                          const isCur = (heroGearConfigs[selectedHeroGearIdx]?.accessory || '불사의 반지') === acc.name;
-                          return (
-                            <button key={acc.id} onClick={() => handleUpdateSelectedHeroGear('accessory', acc.name)}
-                              title={acc.effect}
-                              style={{
-                                minHeight: 0, height: '100%', padding: '4px 8px', borderRadius: '8px', cursor: 'pointer',
-                                border: isCur ? '1.5px solid #c084fc' : '1px solid rgba(255,255,255,0.1)',
-                                background: isCur ? 'rgba(192,132,252,0.22)' : 'rgba(255,255,255,0.04)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.12s ease'
-                              }}>
-                              <span style={{ fontSize: '12px', fontWeight: 900, color: isCur ? '#e9d5ff' : '#cbd5e1', whiteSpace: 'nowrap' }}>{acc.shortLabel || acc.name}</span>
-                              <img src={acc.iconUrl} alt="" style={{ width: '26px', height: '26px', objectFit: 'contain', flexShrink: 0 }} />
-                            </button>
-                          );
-                        })}
-                      </div>
+                      <AccessorySlots
+                        gear={heroGearConfigs[selectedHeroGearIdx]}
+                        onChange={({ accessory, accessory2 }) => {
+                          handleUpdateSelectedHeroGear('accessory', accessory);
+                          handleUpdateSelectedHeroGear('accessory2', accessory2);
+                        }}
+                        style={{ flex: 1, minHeight: 0 }}
+                      />
                     </div>
               </div>
               )}

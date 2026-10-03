@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { heroes } from '../../data/heroes';
 import { pets } from '../../data/pets';
-import { EQUIPMENT_SET_ICONS, accessories, weaponOptions, armorOptions } from '../../data/equipments';
+import { EQUIPMENT_SET_ICONS, weaponOptions, armorOptions } from '../../data/equipments';
+import AccessorySlots from '../../components/AccessorySlots';
 import InGameDeckCard from '../../components/InGameDeckCard';
 import HeroGridPicker from '../../components/HeroGridPicker';
 import Icon from '../../components/icons/Icon';
@@ -265,21 +266,14 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
                   </select>
                 </label>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
-                {accessories.map((acc) => {
-                  const on = (g.accessory || '불사의 반지') === acc.name;
-                  return (
-                    <button key={acc.id} type="button" onClick={() => patchGear('accessory', acc.name)} style={{
-                      padding: '8px 6px', fontSize: 11, fontWeight: 800, borderRadius: 8, cursor: 'pointer',
-                      border: on ? '1.5px solid var(--gold-primary)' : '1px solid rgba(255,255,255,0.1)',
-                      background: on ? 'rgba(236,232,224,0.22)' : 'rgba(255,255,255,0.04)',
-                      color: on ? 'var(--gold-light)' : '#cbd5e1',
-                    }}>
-                      {acc.shortLabel || acc.name}
-                    </button>
-                  );
+              <AccessorySlots
+                gear={g}
+                onChange={(patch) => setGear((prev) => {
+                  const next = padGear5(prev);
+                  next[slot] = { ...next[slot], ...patch };
+                  return next;
                 })}
-              </div>
+              />
               <textarea
                 value={g.detailNote || ''}
                 onChange={(e) => patchGear('detailNote', e.target.value)}

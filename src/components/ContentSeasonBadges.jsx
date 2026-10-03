@@ -17,6 +17,11 @@ const SEASON_ICON_SRC = {
   expedition: '/images/content-season/expedition.png',
 };
 
+const ROUND_TOTAL = {
+  guildwar: 18,
+  totalwar: 22,
+};
+
 const MOBILE_FLIP_MQ = '(max-width: 760px)';
 const MOBILE_FLIP_HOLD_MS = 3000;
 
@@ -170,6 +175,14 @@ export default function ContentSeasonBadges() {
                         desc={item.seasonRuleDesc}
                         onTipOpenChange={onSeasonRuleTipChange}
                       />
+                    ) : null}
+                    {item.round && ROUND_TOTAL[item.id] ? (
+                      <span className="season-round-badge">
+                        <span className="season-rule-badge-bar" aria-hidden="true" />
+                        <span className="season-round-badge-text">
+                          {item.round} / {ROUND_TOTAL[item.id]} 라운드
+                        </span>
+                      </span>
                     ) : null}
                     <h3 className="season-card-title">{item.name}</h3>
                     <p className="season-card-end">{item.endsAtLabel || '시즌 일정 확인'}</p>
