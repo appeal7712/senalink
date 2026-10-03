@@ -113,7 +113,7 @@ export default function AccessorySlots({ gear, onChange, className = '', style }
     <div className={`acc-slots ${className}`.trim()} style={style}>
       <span className="acc-slot-label">장신구 · ① 메인</span>
       <span className="acc-slot-label">② 세공{sub ? '' : ' (선택)'}</span>
-      <button type="button" className="acc-slot" onClick={() => setOpenSlot('main')} title={main.effect}>
+      <button type="button" className={`acc-slot acc-slot--${main.rarity}`} onClick={() => setOpenSlot('main')} title={main.effect}>
         <span className="acc-slot-inner">
           <RingTile ring={main} />
           <span className="acc-slot-text">
@@ -124,7 +124,7 @@ export default function AccessorySlots({ gear, onChange, className = '', style }
       </button>
       <button
         type="button"
-        className={`acc-slot${sub ? '' : ' is-empty'}`}
+        className={`acc-slot${sub ? ` acc-slot--${sub.rarity}` : ' is-empty'}`}
         onClick={() => setOpenSlot('sub')}
         title={sub ? sub.effect : '세공 옵션 추가 (선택)'}
       >

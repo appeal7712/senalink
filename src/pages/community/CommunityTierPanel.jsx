@@ -256,6 +256,7 @@ export default function CommunityTierPanel() {
                 <div
                   key={tier.id}
                   className={`hub-tier-row${dragOver === tier.id ? ' is-over' : ''}`}
+                  data-tier={tier.id}
                   style={{ '--hub-tier-cols': ROLE_COLS.length }}
                   onDragOver={allowDrop(tier.id)}
                   onDragLeave={() => setDragOver((cur) => (cur === tier.id ? null : cur))}

@@ -41,6 +41,28 @@
   background: rgba(192, 132, 252, 0.24);
 }
 
+/* 선택된 칸 = 반지 등급 색(.acc-ring--* 와 같은 계열)으로 연하게 */
+.acc-slot--legendary { --acc-tone: 246, 181, 69; }
+.acc-slot--rare { --acc-tone: 139, 124, 246; }
+.acc-slot--advanced { --acc-tone: 63, 191, 122; }
+.acc-slot--normal { --acc-tone: 138, 148, 166; }
+
+.acc-slot--legendary,
+.acc-slot--rare,
+.acc-slot--advanced,
+.acc-slot--normal {
+  border: 1px solid rgba(var(--acc-tone), 0.45);
+  background: rgba(var(--acc-tone), 0.07);
+  color: #e2e8f0;
+}
+
+.acc-slot--legendary:hover,
+.acc-slot--rare:hover,
+.acc-slot--advanced:hover,
+.acc-slot--normal:hover {
+  background: rgba(var(--acc-tone), 0.12);
+}
+
 .acc-slot.is-empty {
   border: 1px dashed rgba(255, 255, 255, 0.28);
   background: rgba(255, 255, 255, 0.04);
@@ -409,7 +431,7 @@
 
 .acc-pair-text {
   min-width: 0;
-  text-align: left;
+  text-align: center;
 }
 
 .acc-pair-name {

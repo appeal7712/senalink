@@ -10907,6 +10907,33 @@ h1, h2, h3 {
   border-radius: 14px;
   overflow: visible;
 }
+/* 티어 줄 = 등급 아이콘 색 (메이커 · 공용 허브 공통) */
+[data-tier='SSS'] { --tier-rgb: 236, 132, 196; }
+[data-tier='S'] { --tier-rgb: 232, 178, 58; }
+[data-tier='A'] { --tier-rgb: 150, 140, 240; }
+[data-tier='B'] { --tier-rgb: 168, 92, 224; }
+[data-tier='C'] { --tier-rgb: 52, 180, 138; }
+[data-tier='D'] { --tier-rgb: 140, 150, 196; }
+[data-tier='F'] { --tier-rgb: 176, 122, 96; }
+
+.tierlist-row[data-tier] .tierlist-rank,
+.hub-tier-row[data-tier] .hub-tier-rank {
+  border-color: rgba(var(--tier-rgb), 0.7);
+  background: linear-gradient(160deg, rgba(var(--tier-rgb), 0.45), rgba(var(--tier-rgb), 0.16));
+}
+
+.tierlist-row[data-tier] .tierlist-drop,
+.hub-tier-row[data-tier] .hub-tier-cell {
+  border-color: rgba(var(--tier-rgb), 0.45);
+  background: linear-gradient(rgba(var(--tier-rgb), 0.12), rgba(var(--tier-rgb), 0.12)), var(--glass-inset);
+}
+
+.tierlist-row[data-tier] .tierlist-drop.is-over,
+.hub-tier-row[data-tier].is-over .hub-tier-cell {
+  border-color: rgba(var(--tier-rgb), 0.85);
+  background: linear-gradient(rgba(var(--tier-rgb), 0.22), rgba(var(--tier-rgb), 0.22)), var(--glass-inset);
+}
+
 .hub-tier-cell-empty {
   width: 100%;
   text-align: center;

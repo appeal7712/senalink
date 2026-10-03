@@ -192,7 +192,7 @@ export default function TierListMaker() {
 
           <div className="tierlist-board">
             {TIER_RANKS.map((tier) => (
-              <div key={tier.id} className="tierlist-row">
+              <div key={tier.id} className="tierlist-row" data-tier={tier.id}>
                 <div className="tierlist-rank" aria-label={`${tier.id} 티어`}>
                   <img src={tier.iconUrl} alt={tier.id} />
                 </div>

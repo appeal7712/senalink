@@ -5,6 +5,12 @@
 
 ## 17. 패치 내역
 
+### 2026-10-03 (`v2026.10.03.187`) — 장신구 칸 등급 색 · 세팅 확인 정렬 · 티어 줄 색
+- **덱 수정 장신구 칸 (`AccessorySlots`):** 선택된 칸을 보라 고정 → 반지 등급 색(`.acc-slot--{rarity}`, `.acc-ring--*`와 같은 계열)으로 연하게, 테두리 1px·배경 7%로 하이라이트 축소. 빈 세공 칸(점선) 그대로.
+- **세팅 확인 메인+세공:** 상태이상(화상·출혈 등) 줄을 반지 이름 기준 가운데 정렬(`.acc-pair-text`). 박스 높이 동일.
+- **티어리스트 (도구 메이커 · 공용 허브):** 줄에 `data-tier` → 등급 칸·영웅 칸을 등급 아이콘 색으로(SSS 분홍 · S 금 · A 연보라 · B 보라 · C 청록 · D 청회 · F 브론즈). 드롭 하이라이트도 등급 색. 테마는 `--glass-inset` 위에 겹쳐 유리/선명 다크 공통.
+- Hosting만 (rules·Functions·스키마 무변경).
+
 ### 2026-10-03 (Functions SDK, 호스팅 버전 `v2026.10.03.186` 그대로) — firebase-functions 6.6 → 7.4
 - 배포 시 「outdated version of firebase-functions」 경고 제거. `functions/package.json` `firebase-functions` `^6.3.2` → `^7.4.0`만 변경 (firebase-admin 13.10 그대로).
 - v7 breaking(`functions.config()` 제거·Node 16 중단·에뮬 `onRequest` 500·v1 `Event` 개명) 전부 미사용 — 코드 무변경. rules·스키마·Hosting 무변경.
