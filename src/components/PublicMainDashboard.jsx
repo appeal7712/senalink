@@ -73,10 +73,10 @@ export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCo
 
           <div className="hero-cta-row">
             <button type="button" className="btn-ops" onClick={onNavigateToLounge}>
-              <Icon name="fortress" size={16} color="#161616" /> 길드 허브 입장하기 <Icon name="arrowRight" size={15} color="#161616" />
+              <Icon name="hub" size={16} color="#161616" /> 길드 허브 입장하기 <Icon name="arrowRight" size={15} color="#161616" />
             </button>
             <button type="button" className="btn-ops" onClick={onNavigateToCommunity}>
-              <Icon name="users" size={16} color="#161616" /> 공용 허브 입장하기 <Icon name="arrowRight" size={15} color="#161616" />
+              <Icon name="hubMembers" size={16} color="#161616" /> 공용 허브 입장하기 <Icon name="arrowRight" size={15} color="#161616" />
             </button>
           </div>
         </div>
