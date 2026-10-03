@@ -26,9 +26,7 @@ html[data-ui-theme="solid"] body {
 
 html[data-ui-theme="solid"] #root::before {
   background-color: #0a0c10;
-  background-image:
-    linear-gradient(180deg, rgba(10, 12, 16, 0.94) 0%, rgba(14, 17, 24, 0.9) 48%, rgba(10, 12, 16, 0.96) 100%),
-    url('/bg-senari.png');
+  background-image: url('/bg-dark-growing.png');
 }
 
 /* 유리 블러 전역 제거 */

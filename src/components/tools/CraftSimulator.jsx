@@ -86,7 +86,8 @@ function RingIcon({ acc, star = 6, size = 'md', plus = true, dim = false, stars 
   if (!acc) {
     return (
       <span className={`craft-ring craft-ring--empty craft-ring--${size}`} aria-hidden>
-        <Icon name="plus" size={size === 'lg' ? 22 : 16} />
+        <img className="craft-ring-empty-icon" src="/images/ui/accessory-ring.png" alt="" draggable={false} />
+        <span className="craft-ring-empty-add">+</span>
       </span>
     );
   }

@@ -46,7 +46,7 @@ export default function GuildRankBoard() {
           <h3 className="guild-board-title">
             <Icon name="medal" size={16} /> 길드 순위
           </h3>
-          <div className="guild-board-hint">관리자가 직접 갱신합니다</div>
+          <div className="guild-board-hint">전시즌 기준 (길드 관리자가 직접 갱신)</div>
         </div>
         <div className="guild-board-modes" role="tablist">
           {BOARDS.map(b => {

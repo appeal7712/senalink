@@ -5,6 +5,12 @@
 
 ## 17. 패치 내역
 
+### 2026-10-03 (`v2026.10.03.188`) — 배경 교체 · 세공 빈 칸 · 길드 순위 문구
+- **배경:** 유리 테마 `public/bg-arena-sky.png`(asset `Tex_RealTimeArenaBGA03`), 선명 다크 `public/bg-dark-growing.png`(asset `Tex_GrowingBGA01`). 선명 다크의 어두운 그라데이션 오버레이 제거(이미지만). 구 `bg-senari.png`는 파일만 보존(미사용).
+- **세공 시뮬레이터:** 빈 반지 칸의 큰 `+` → 흐린 반지 실루엣(`/images/ui/accessory-ring.png`) + 우하단 작은 원형 `+` (`.craft-ring-empty-icon` / `.craft-ring-empty-add`).
+- **메인 길드 순위:** 안내 문구 「전시즌 기준 (길드 관리자가 직접 갱신)」.
+- Hosting만 (rules·Functions·스키마 무변경).
+
 ### 2026-10-03 (`v2026.10.03.187`) — 장신구 칸 등급 색 · 세팅 확인 정렬 · 티어 줄 색
 - **덱 수정 장신구 칸 (`AccessorySlots`):** 선택된 칸을 보라 고정 → 반지 등급 색(`.acc-slot--{rarity}`, `.acc-ring--*`와 같은 계열)으로 연하게, 테두리 1px·배경 7%로 하이라이트 축소. 빈 세공 칸(점선) 그대로.
 - **세팅 확인 메인+세공:** 상태이상(화상·출혈 등) 줄을 반지 이름 기준 가운데 정렬(`.acc-pair-text`). 박스 높이 동일.
