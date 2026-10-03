@@ -5,6 +5,12 @@
 
 ## 17. 패치 내역
 
+### 2026-10-03 (Functions 런타임, 호스팅 버전 `v2026.10.03.186` 그대로) — Node 20 → 24
+- Node 20 지원 종료(2026-10-30) 대응. `functions/package.json` `engines.node` `"20"` → `"24"`만 변경. 함수 코드·rules·스키마·Hosting 무변경.
+- 기존 14개 함수 전부 같은 코드로 nodejs24 재배포 (`functions:list` 전부 `nodejs24` 확인, 라이브 `redeemCoupon` 정상 응답).
+- 롤백: `engines.node`를 `"20"`으로 되돌리고 functions 재배포 (2026-10-30 전까지만 가능).
+- `--only functions`.
+
 ### 2026-10-03 (`v2026.10.03.186`) — 쿠폰 · 장신구 세공 2옵 · 공성 순서 이동 · 시즌 라운드
 - **쿠폰 (§10.9):** GNB 「쿠폰」 버튼·모달. Functions `syncCoupons`(매일 00:00 KST, 7katlas → `site/coupons`) · `redeemCoupon`(넷마블 API 중계, 로그인 불필요, Firestore 무접근). UID·수령 기록은 localStorage만. rules 무변경(`site/{docId}` 기존 공개 read).
 - **장신구 세공 (§13.3):** 덱 장비 ① 메인 + ② 세공(optional `accessory2`) 슬롯·6★ 반지 피커(`AccessorySlots`). 구 문서 호환(`accessory2` 없을 때만 구 2옵 해석). 세팅 확인은 `메인 + 세공` 반반 표시.

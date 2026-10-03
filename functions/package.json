@@ -3,7 +3,7 @@
   "description": "Hub teardown and 60-day idle purge",
   "private": true,
   "engines": {
-    "node": "20"
+    "node": "24"
   },
   "main": "index.js",
   "dependencies": {

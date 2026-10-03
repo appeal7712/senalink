@@ -102,7 +102,7 @@ UI·CSS·도감 JSON·정렬만 바꾸는 패치는 데이터 위험이 낮다. 
 sevennight_guild_web_formal/
 ├── AGENTS.md                 ← 이 문서
 ├── firebase.json / .firebaserc / firestore.rules / storage.rules / firestore.indexes.json
-├── functions/                ← Cloud Functions (Node 20, asia-northeast3)
+├── functions/                ← Cloud Functions (Node 24, asia-northeast3)
 ├── public/                   ← Vite 정적 (images, robots, sitemap…)
 ├── asset/                    ← 원본 게임 에셋 (영웅/펫/장비 JSON·PNG)
 ├── scripts/                  ← import_gear_assets.py, fetch_hero_cards.py, seed-emulator-admin.mjs
@@ -394,7 +394,7 @@ API:
 2. UI·허브 기능 확인은 **§4.1 미리보기 허브**(에뮬레이터 + `npm run dev`) 우선. 라이브에 먼저 올려 보지 말 것.
 3. **§2.1** — 유저·허브 데이터·rules를 손상·완화하지 않는지 확인.
 4. Firestore/Storage **규칙 바꾸면** 해당 rules도 같이 배포 (완화인지 먼저 검토).
-5. Functions 바꾸면 `functions` 배포 + Node 20 유지. 허브/유저 삭제 경로 재확인. **`resolveMyHub` / hubId 클리어 로직** 재확인.
+5. Functions 바꾸면 `functions` 배포 + Node 24 유지(`functions/package.json` `engines.node`, nodejs24 지원 종료 2028-10-31). 허브/유저 삭제 경로 재확인. **`resolveMyHub` / hubId 클리어 로직** 재확인.
 6. 도감 추가 후 피커·초상·진영 누락 없는지 `/dex`와 덱 수정에서 확인.
 7. 허브 가입/역할은 클라이언트 직쓰기가 아니라 **rules + joinHub** 전제.
 8. 커뮤니티 PvE 공략·티어 = Super; PvP만 일반 유저 작성 가능.
@@ -413,7 +413,7 @@ API:
 - 추천수 상위·이상치
 - 허브 인원/최근활동 정렬 강화
 - 입장 배너 저장 전 미리보기
-- Functions Node 런타임 deprecation 대응
+- `firebase-functions` v6 → v7 업그레이드 (breaking changes 검토 필요, 런타임은 2026-10-03 Node 24로 전환 완료)
 
 ---
 
