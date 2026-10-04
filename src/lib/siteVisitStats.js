@@ -16,6 +16,15 @@ export function siteVisitStatsRef() {
   return doc(db, ...STATS_PATH);
 }
 
+/** 방문자 일별 기록 (Functions snapshotVisitDaily 가 저장, 읽기 전용) → { 'YYYY-MM-DD': count } */
+export function subscribeVisitDaily(onData, onError) {
+  return onSnapshot(
+    doc(db, 'site', 'visitDaily'),
+    (snap) => onData((snap.exists() && snap.data()?.days) || {}),
+    (err) => onError?.(err),
+  );
+}
+
 export function siteVisitShardRef(shardId) {
   return doc(db, ...SHARDS_COL, String(shardId));
 }

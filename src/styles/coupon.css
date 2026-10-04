@@ -61,6 +61,20 @@
 .gnb-coupon.is-pending {
   opacity: 0.72;
 }
+/* 모두 사용 — 일일 타로카드 is-claimed 와 동일한 흐림 */
+.gnb-coupon.is-claimed {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.05);
+  opacity: 0.78;
+  box-shadow: none;
+}
+.gnb-coupon.is-claimed:hover {
+  opacity: 0.9;
+  background: rgba(255, 255, 255, 0.08);
+}
+.gnb-coupon.is-claimed .gnb-coupon-label {
+  color: rgba(255, 255, 255, 0.72);
+}
 .gnb-coupon-label {
   position: relative;
   z-index: 1;

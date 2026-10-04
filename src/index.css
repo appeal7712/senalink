@@ -2497,14 +2497,14 @@ h1, h2, h3 {
   100% { background-position: 0% 50%; }
 }
 
-/* PC: 타로 | 쿠폰 | 마이프로필 / 모바일: 마이프로필 | 쿠폰 | 타로 */
+/* PC: 타로 | 쿠폰 | 마이프로필 / 모바일: 타로 | 쿠폰 | 마이프로필 */
 .gnb-status .gnb-daily-tarot { order: 1; }
 .gnb-status .gnb-coupon { order: 2; }
 .gnb-status .gnb-profile { order: 3; }
 
 @media (max-width: 980px) {
-  .gnb-status .gnb-daily-tarot { order: 3; }
-  .gnb-status .gnb-profile { order: 1; }
+  .gnb-status .gnb-daily-tarot { order: 1; }
+  .gnb-status .gnb-profile { order: 3; }
 }
 
 .gnb-profile-label {

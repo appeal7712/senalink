@@ -73,9 +73,14 @@
 
 `OpsPage.jsx` — Super만 탭 진입:
 
-1. **메인페이지** — `MainSiteEditor` (+ `OpsMetaDeckModal`)
-2. **길드 허브 감독** — `HubOversee` (`hubOversee.js`)
-3. **유저 감독** — `UserOversee` (`userOversee.js`) — 목록·집계만, **강제탈퇴 UI 없음**
+1. **대시보드** (기본 탭) — `OpsDashboard` — KPI · 일별 추이(방문자 `site/visitDaily` / 길드 가입 `members.joinedAt` / 허브 개설 `hubs.createdAt`) · 인원 TOP5 · 자동 정리 임박
+2. **메인페이지** — `MainSiteEditor` (+ `OpsMetaDeckModal`)
+3. **길드 허브 감독** — `HubOversee` (`hubOversee.js`) — 표(인원 게이지·마스터·최근 활동) · 정렬·필터 · 상세 패널(길드원·추방·허브 열기)
+4. **유저 감독** — `UserOversee` (`userOversee.js`) — 목록·집계만, **강제탈퇴 UI 없음**. 허브 이름 클릭 → 허브 상세
+
+- 대시보드·허브·유저 탭은 `OpsPage`가 `loadOpsSnapshot()`(`lib/opsInsights.js`)으로 허브 전체 + 허브별 members + users를 **한 번** 읽어 공유(새로고침 시만 재조회). 메인페이지 탭에선 읽지 않음. **읽기 전용**, 규칙 변경 없음.
+- 스타일: `src/styles/opsAdmin.css` (`opsx-*`, OpsPage에서만 import).
+- `site/visitDaily` = `{ days: { 'YYYY-MM-DD': count }, updatedAt }` — Functions `snapshotVisitDaily`(10분마다)만 쓰기. 기존 `site/{docId}` 공개 read 규칙으로 읽힘, 클라 write 불가.
 
 ### 10.4 「수정 및 고정자」 시각
 

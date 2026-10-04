@@ -1,17 +1,87 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSuperAdmin } from '../../context/SuperAdminContext';
 import Icon from '../../components/icons/Icon';
 import MainSiteEditor from './MainSiteEditor';
 import HubOversee from './HubOversee';
 import UserOversee from './UserOversee';
+import OpsDashboard from './OpsDashboard';
+import { loadOpsSnapshot } from '../../lib/opsInsights';
+import '../../styles/opsAdmin.css';
+
+const OPS_TABS = [
+  { id: 'dashboard', label: '대시보드' },
+  { id: 'main', label: '메인페이지' },
+  { id: 'hubs', label: '길드 허브 감독' },
+  { id: 'users', label: '유저 감독' },
+];
+
+function withoutMember(snapshot, hubId, memberId) {
+  if (!snapshot) return snapshot;
+  const list = (snapshot.membersByHub[hubId] || []).filter((m) => m.id !== memberId);
+  return {
+    ...snapshot,
+    membersByHub: { ...snapshot.membersByHub, [hubId]: list },
+    hubs: snapshot.hubs.map((h) => (h.id === hubId
+      ? { ...h, memberCount: list.length, adminCount: list.filter((m) => m.role === 'admin').length }
+      : h)),
+  };
+}
 
 export default function OpsPage({ onOpenHub }) {
   const {
     authReady, adminReady, authUser, isSuperAdmin,
     loginError, signInWithGoogleForOps, enterLocalOpsAdmin, usingEmulators,
   } = useSuperAdmin();
-  const [tab, setTab] = useState('main');
+  const [tab, setTab] = useState('dashboard');
   const [busy, setBusy] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [data, setData] = useState({ key: -1, snapshot: null, error: '' });
+  const [hubFocus, setHubFocus] = useState({ id: null, n: 0 });
+  const requestedKeyRef = useRef(null);
+
+  const wantsData = Boolean(authReady && adminReady && isSuperAdmin) && tab !== 'main';
+
+  useEffect(() => {
+    if (!wantsData || requestedKeyRef.current === reloadKey) return undefined;
+    requestedKeyRef.current = reloadKey;
+    let cancelled = false;
+    let done = false;
+    loadOpsSnapshot()
+      .then((snapshot) => {
+        done = true;
+        if (!cancelled) setData({ key: reloadKey, snapshot, error: '' });
+      })
+      .catch((e) => {
+        done = true;
+        if (!cancelled) {
+          setData((prev) => ({
+            key: reloadKey,
+            snapshot: prev.snapshot,
+            error: e?.message || '데이터를 불러오지 못했습니다.',
+          }));
+        }
+      });
+    return () => {
+      cancelled = true;
+      if (!done) requestedKeyRef.current = null;
+    };
+  }, [wantsData, reloadKey]);
+
+  const dataLoading = wantsData && data.key !== reloadKey;
+  const reload = () => setReloadKey((k) => k + 1);
+  const openHubDetail = (hubId) => {
+    setHubFocus((f) => ({ id: hubId, n: f.n + 1 }));
+    setTab('hubs');
+  };
+  const onMemberRemoved = (hubId, memberId) => {
+    setData((prev) => ({ ...prev, snapshot: withoutMember(prev.snapshot, hubId, memberId) }));
+  };
+  const dataProps = {
+    snapshot: data.snapshot,
+    loading: dataLoading,
+    error: data.error,
+    onReload: reload,
+  };
 
   const onLocal = async () => {
     setBusy(true);
@@ -99,12 +169,8 @@ export default function OpsPage({ onOpenHub }) {
         </div>
       </div>
 
-      <div className="luxury-panel tab-bar-wrap" style={{ padding: '10px 14px', marginBottom: 18, display: 'flex', gap: 8 }}>
-        {[
-          { id: 'main', label: '메인페이지' },
-          { id: 'hubs', label: '길드 허브 감독' },
-          { id: 'users', label: '유저 감독' },
-        ].map((item) => {
+      <div className="luxury-panel tab-bar-wrap opsx-tabbar" style={{ padding: '10px 14px', marginBottom: 18, display: 'flex', gap: 8 }}>
+        {OPS_TABS.map((item) => {
           const on = tab === item.id;
           return (
             <button
@@ -120,9 +186,18 @@ export default function OpsPage({ onOpenHub }) {
         })}
       </div>
 
+      {tab === 'dashboard' && <OpsDashboard {...dataProps} onOpenHub={openHubDetail} />}
       {tab === 'main' && <MainSiteEditor />}
-      {tab === 'hubs' && <HubOversee onOpenHub={onOpenHub} />}
-      {tab === 'users' && <UserOversee />}
+      {tab === 'hubs' && (
+        <HubOversee
+          key={hubFocus.n}
+          {...dataProps}
+          focusHubId={hubFocus.id}
+          onOpenHub={onOpenHub}
+          onMemberRemoved={onMemberRemoved}
+        />
+      )}
+      {tab === 'users' && <UserOversee {...dataProps} onOpenHub={openHubDetail} />}
     </div>
   );
 }

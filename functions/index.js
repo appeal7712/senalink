@@ -827,6 +827,52 @@ exports.syncCoupons = onSchedule(
   },
 );
 
+function kstDateString(date = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+/**
+ * 방문자 일별 기록 — 10분마다 오늘(KST) 방문자 합계를 site/visitDaily.days[YYYY-MM-DD] 에 저장.
+ * site/stats · visitShards 는 읽기만. 같은 날 값은 커질 때만 갱신 (자정 직전 최대 10분 누락 가능).
+ */
+exports.snapshotVisitDaily = onSchedule(
+  {
+    schedule: '*/10 * * * *',
+    timeZone: 'Asia/Seoul',
+    region: REGION,
+    retryCount: 0,
+    timeoutSeconds: 60,
+  },
+  async () => {
+    const today = kstDateString();
+    const [legacySnap, shardsSnap] = await Promise.all([
+      db.doc('site/stats').get(),
+      db.collection('site/stats/visitShards').get(),
+    ]);
+    let count = 0;
+    const legacy = legacySnap.exists ? (legacySnap.data() || {}) : {};
+    if (String(legacy.day || '') === today) count += Number(legacy.dayCount) || 0;
+    shardsSnap.forEach((d) => {
+      const s = d.data() || {};
+      if (String(s.day || '') === today) count += Number(s.dayCount) || 0;
+    });
+
+    const ref = db.doc('site/visitDaily');
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      const prev = Number(snap.exists ? snap.data()?.days?.[today] : 0) || 0;
+      if (count <= prev) return;
+      tx.set(ref, { days: { [today]: count }, updatedAt: nowIso() }, { merge: true });
+    });
+    return { day: today, count };
+  },
+);
+
 const COUPON_RATE_WINDOW_MS = 10 * 60 * 1000;
 const COUPON_RATE_MAX = 60;
 const couponRateByIp = new Map();

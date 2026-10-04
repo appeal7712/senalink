@@ -30,7 +30,7 @@ export default function CouponButton() {
     if (coupons) setPendingCount(countPendingCoupons(coupons));
   };
 
-  const toneClass = !coupons ? ' is-pending' : pendingCount > 0 ? ' is-live' : '';
+  const toneClass = !coupons ? ' is-pending' : pendingCount > 0 ? ' is-live' : ' is-claimed';
 
   return (
     <>

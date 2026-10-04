@@ -283,6 +283,7 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | `dissolveAlliance` | Callable | 호스트 마스터 연합 종료(코드·게스트 연결 정리) |
 | `purgeIdleHubs` | Schedule 매일 04:00 KST | 60일 유휴 허브 삭제 |
 | `syncCoupons` | Schedule 매일 00:00 KST | 7katlas 쿠폰 목록(+한글 번역) → `site/coupons` (파싱 실패 시 기존 유지) |
+| `snapshotVisitDaily` | Schedule 10분마다 (KST) | 오늘 방문자 합계(`site/stats`+`visitShards` 읽기만) → `site/visitDaily.days[YYYY-MM-DD]` (커질 때만) · Ops 대시보드 그래프용 |
 | `redeemCoupon` | Callable (로그인 불필요) | 넷마블 쿠폰 API 중계 (`{uid, code}` → `{status}`) · Firestore 무접근 · IP당 10분 60회 |
 
 허브 삭제 시 지우는 서브컬렉션: `members`, `history`, `notices`, `posts`, `scores`, `builds`, `allianceGuests` (+ `allianceIndex`·게스트 역포인터 정리).
@@ -419,7 +420,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.10.03.190** (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.10.04.191** (푸터 `APP_VERSION` 확인)
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 
 ---
