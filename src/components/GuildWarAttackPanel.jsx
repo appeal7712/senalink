@@ -8,8 +8,10 @@ import HeroGridPicker from './HeroGridPicker';
 import HeroGearPanel, { emptyGearConfig } from './HeroGearPanel';
 import { pets } from '../data/pets';
 import { backdropDismissProps } from '../utils/backdropDismiss';
+import { useUnsavedGuard } from '../utils/unsavedGuard';
 import { closeOverlayFromUI, collapseOverlayHistory, pushOverlay } from '../utils/overlayHistory';
 import ModalScrim from './ModalScrim';
+import { showToast } from './Toast';
 import { formatUpdateAtDisplay } from './PublicProfileModal';
 
 const emptyNames5 = () => ['', '', '', '', ''];
@@ -62,6 +64,16 @@ function GwTrioDeckEditor({
   const names = padNames5(heroNames);
   const filledCount = names.filter(Boolean).length;
 
+  const swapGearSlots = (a, b) => {
+    if (!gearConfigs || !onGearConfigsChange || a === b) return;
+    const cfgs = [...gearConfigs];
+    while (cfgs.length < 5) cfgs.push(emptyGearConfig());
+    const tmp = cfgs[a];
+    cfgs[a] = cfgs[b];
+    cfgs[b] = tmp;
+    onGearConfigsChange(cfgs);
+  };
+
   const pickHero = (name) => {
     const next = [...names];
     if (!next[slotIdx] && filledCount >= 3) {
@@ -91,6 +103,7 @@ function GwTrioDeckEditor({
       next[toIdx] = name;
     }
     onHeroNamesChange(next);
+    if (existingIdx !== -1) swapGearSlots(toIdx, existingIdx);
     setSlotIdx(toIdx);
   };
 
@@ -101,6 +114,7 @@ function GwTrioDeckEditor({
       next[toIdx] = next[payload.fromIdx];
       next[payload.fromIdx] = tmp;
       onHeroNamesChange(next);
+      swapGearSlots(toIdx, payload.fromIdx);
       setSlotIdx(toIdx);
       return;
     }
@@ -194,6 +208,7 @@ function GwTrioDeckEditor({
             fillHeight={false}
             height={100}
             loungeDensity
+            showSearch
           />
         </div>
         {onOtherDetailChange && (
@@ -240,7 +255,7 @@ function GwTrioDeckEditor({
           />
         )}
       </div>
-      <HeroGridPicker heroes={heroes} selectedNames={names.filter(Boolean)} onPick={pickHero} height={160} currentSlotName={names[slotIdx] || ''} />
+      <HeroGridPicker heroes={heroes} selectedNames={names.filter(Boolean)} onPick={pickHero} height={176} currentSlotName={names[slotIdx] || ''} showSearch />
     </div>
   );
 }
@@ -267,6 +282,7 @@ export default function GuildWarAttackPanel({
 
   const [isCounterModalOpen, setIsCounterModalOpen] = useState(false);
   const [counterForm, setCounterForm] = useState({ id: null, title: '', heroNames: emptyNames5(), reservedSkills: [], otherDetail: '', formationId: 'protect', petId: pets[0]?.id, heroGearConfigs: emptyGear5() });
+  const [counterClipboard, setCounterClipboard] = useState(null);
   const [suppressInspectPaint, setSuppressInspectPaint] = useState(false);
   /** 터치·드래그 고스트 { kind, targetId?, fromId, title, rank?, x, y, w, h, ox, oy } */
   const [dragGhost, setDragGhost] = useState(null);
@@ -277,6 +293,8 @@ export default function GuildWarAttackPanel({
 
   const closeTargetModal = () => closeOverlayFromUI(() => setIsTargetModalOpen(false));
   const closeCounterModal = () => closeOverlayFromUI(() => setIsCounterModalOpen(false));
+  const guardTargetClose = useUnsavedGuard(isTargetModalOpen, targetForm);
+  const guardCounterClose = useUnsavedGuard(isCounterModalOpen, counterForm);
   const closeInspectModal = () => closeOverlayFromUI(() => {
     setSuppressInspectPaint(false);
     setInspectingCounter(null);
@@ -451,21 +469,32 @@ export default function GuildWarAttackPanel({
     setCounterForm({ id: null, title: '', heroNames: emptyNames5(), reservedSkills: [], otherDetail: '', formationId: 'protect', petId: pets[0]?.id, heroGearConfigs: emptyGear5() });
     setIsCounterModalOpen(true);
   };
+  const counterFormFrom = (c, id) => ({
+    id, title: c.title || '', heroNames: padNames5(c.heroNames),
+    reservedSkills: [...(c.reservedSkills || [])],
+    otherDetail: c.otherDetail ?? c.gearNote ?? '',
+    formationId: normalizeFormationId(c.formationId),
+    petId: c.petId || pets[0]?.id,
+    heroGearConfigs: (c.heroGearConfigs && c.heroGearConfigs.length === 5)
+      ? c.heroGearConfigs.map(g => ({ ...emptyGearConfig(), ...g }))
+      : emptyGear5(),
+  });
   const openEditCounter = (c) => {
     if (!canDeleteBuild?.(c)) {
       alert('수정은 길드마스터·관리자 또는 작성자만 할 수 있습니다.');
       return;
     }
-    setCounterForm({
-      id: c.id, title: c.title, heroNames: padNames5(c.heroNames),
-      reservedSkills: [...(c.reservedSkills || [])],
-      otherDetail: c.otherDetail ?? c.gearNote ?? '',
-      formationId: normalizeFormationId(c.formationId),
-      petId: c.petId || pets[0]?.id,
-      heroGearConfigs: (c.heroGearConfigs && c.heroGearConfigs.length === 5)
-        ? c.heroGearConfigs.map(g => ({ ...emptyGearConfig(), ...g }))
-        : emptyGear5(),
-    });
+    setCounterForm(counterFormFrom(c, c.id));
+    setIsCounterModalOpen(true);
+  };
+  const copyCounter = (c) => {
+    setCounterClipboard(JSON.parse(JSON.stringify(c)));
+    closeInspectModal();
+    showToast(`「${c.title || '카운터 덱'}」을 복사했어요. 붙여넣을 덱에서 「붙여넣기」를 누르세요.`, 'success');
+  };
+  const pasteCounter = () => {
+    if (!counterClipboard) return;
+    setCounterForm(counterFormFrom(counterClipboard, null));
     setIsCounterModalOpen(true);
   };
   const saveCounter = () => {
@@ -857,6 +886,16 @@ export default function GuildWarAttackPanel({
           <div className="gw-counter-toolbar-copy">
             <span>아군 공격 · 카운터 덱</span>
           </div>
+          {counterClipboard && (
+            <button
+              type="button"
+              onClick={pasteCounter}
+              className="btn-ops gw-counter-add"
+              title={`복사한 「${counterClipboard.title || '카운터 덱'}」 붙여넣기`}
+            >
+              <Icon name="copy" size={13} style={{ filter: 'invert(1)' }} /> 붙여넣기
+            </button>
+          )}
           <button type="button" onClick={openCreateCounter} className="btn-ops gw-counter-add">
             <Icon name="plus" size={13} /> 카운터 공략 추가
           </button>
@@ -1038,8 +1077,8 @@ export default function GuildWarAttackPanel({
 
       {isTargetModalOpen && (
         <ModalScrim style={{ zIndex: 3600, padding: '16px' }}
-          {...backdropDismissProps(closeTargetModal)}>
-          <div onClick={e => e.stopPropagation()} className="glass-modal" style={{ width: 'min(720px, 96vw)', maxHeight: '90vh', overflowY: 'auto', padding: '24px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {...backdropDismissProps(guardTargetClose(closeTargetModal))}>
+          <div onClick={e => e.stopPropagation()} className="glass-modal gw-target-edit-modal" style={{ width: 'min(720px, 96vw)', maxHeight: '90vh', overflowY: 'auto', padding: '24px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
               <h3 style={{ fontSize: '19px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
                 <Icon name="guildwar" size={18} color="var(--gold-primary)" />
@@ -1049,7 +1088,7 @@ export default function GuildWarAttackPanel({
               </h3>
               <button
                 type="button"
-                onClick={closeTargetModal}
+                onClick={guardTargetClose(closeTargetModal)}
                 style={{
                   background: 'none', border: 'none', color: '#fff',
                   width: '30px', height: '30px', cursor: 'pointer',
@@ -1086,7 +1125,7 @@ export default function GuildWarAttackPanel({
 
       {isCounterModalOpen && (
         <ModalScrim style={{ zIndex: 3600, padding: '16px', overflow: 'hidden' }}
-          {...backdropDismissProps(closeCounterModal)}>
+          {...backdropDismissProps(guardCounterClose(closeCounterModal))}>
           <div
             className="luxury-panel glass-modal editing-build-modal gw-counter-edit-modal"
             onClick={e => e.stopPropagation()}
@@ -1107,7 +1146,7 @@ export default function GuildWarAttackPanel({
                     <Icon name="swords" size={17} color="var(--accent-cyan)" />
                     {counterForm.id ? '카운터 덱 수정' : '카운터 덱 추가'}
                   </h3>
-                  <button type="button" className="editing-build-modal-close editing-build-modal-close--mobile" onClick={closeCounterModal} title="모달 닫기">
+                  <button type="button" className="editing-build-modal-close editing-build-modal-close--mobile" onClick={guardCounterClose(closeCounterModal)} title="모달 닫기">
                     <Icon name="closeBtn" size={26} />
                   </button>
                 </div>
@@ -1123,7 +1162,7 @@ export default function GuildWarAttackPanel({
                 </div>
               </div>
               <div className="editing-build-author-row" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <button type="button" className="editing-build-modal-close editing-build-modal-close--desktop" onClick={closeCounterModal} title="모달 닫기">
+                <button type="button" className="editing-build-modal-close editing-build-modal-close--desktop" onClick={guardCounterClose(closeCounterModal)} title="모달 닫기">
                   <Icon name="closeBtn" size={26} />
                 </button>
               </div>
@@ -1146,11 +1185,11 @@ export default function GuildWarAttackPanel({
                 heroNames={counterForm.heroNames}
                 formationId={counterForm.formationId}
                 onFormationChange={fid => setCounterForm({ ...counterForm, formationId: fid })}
-                onHeroNamesChange={n => setCounterForm({ ...counterForm, heroNames: n })}
+                onHeroNamesChange={n => setCounterForm(f => ({ ...f, heroNames: n }))}
                 heroes={heroes}
                 showGear
                 gearConfigs={counterForm.heroGearConfigs}
-                onGearConfigsChange={cfgs => setCounterForm({ ...counterForm, heroGearConfigs: cfgs })}
+                onGearConfigsChange={cfgs => setCounterForm(f => ({ ...f, heroGearConfigs: cfgs }))}
                 petObj={resolvePet(counterForm.petId)}
                 onPetChange={p => setCounterForm({ ...counterForm, petId: p.id })}
                 showReservation
@@ -1188,7 +1227,17 @@ export default function GuildWarAttackPanel({
               }}><Icon name="swords" size={16} color="var(--accent-cyan)" /> {inspectingCounter.title}</h3>
               <button onClick={closeInspectModal} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', flexShrink: 0, padding: 0 }}><Icon name="closeBtn" size={18} /></button>
             </div>
-            <div className="build-title-meta" style={{ width: '100%' }}>등록: <strong>{inspectingCounter.author}</strong> ({formatUpdateAtDisplay(inspectingCounter.updatedAt)})</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', width: '100%' }}>
+              <div className="build-title-meta" style={{ minWidth: 0 }}>등록: <strong>{inspectingCounter.author}</strong> ({formatUpdateAtDisplay(inspectingCounter.updatedAt)})</div>
+              <button
+                type="button"
+                onClick={() => copyCounter(inspectingCounter)}
+                className="btn-ops"
+                style={{ flexShrink: 0, padding: '6px 11px', fontSize: '12px', whiteSpace: 'nowrap' }}
+              >
+                <Icon name="copy" size={13} style={{ filter: 'invert(1)' }} /> 덱 복사
+              </button>
+            </div>
 
             <div className="gw-inspect-stack">
               <div className="gw-inspect-deck">

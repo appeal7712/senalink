@@ -2,6 +2,7 @@ export const pets = [
   {
     "id": "pet_1",
     "name": "이린",
+    "title": "사냥터의 왕",
     "portraitUrl": "/images/pets/이린.png",
     "skills": [
       {
@@ -23,6 +24,7 @@ export const pets = [
   {
     "id": "pet_2",
     "name": "루",
+    "title": "축복의 천사",
     "portraitUrl": "/images/pets/루.png",
     "skills": [
       {
@@ -44,6 +46,7 @@ export const pets = [
   {
     "id": "pet_3",
     "name": "리첼",
+    "title": "고귀한 귀족",
     "portraitUrl": "/images/pets/리첼.png",
     "skills": [
       {
@@ -67,6 +70,7 @@ export const pets = [
   {
     "id": "pet_4",
     "name": "크리",
+    "title": "복수의 악마",
     "portraitUrl": "/images/pets/크리.png",
     "skills": [
       {
@@ -90,6 +94,7 @@ export const pets = [
   {
     "id": "pet_5",
     "name": "파이크",
+    "title": "따뜻한 눈보라",
     "portraitUrl": "/images/pets/파이크.png",
     "skills": [
       {
@@ -113,6 +118,7 @@ export const pets = [
   {
     "id": "pet_6",
     "name": "델로",
+    "title": "작은 사신",
     "portraitUrl": "/images/pets/델로.png",
     "skills": [
       {
@@ -136,6 +142,7 @@ export const pets = [
   {
     "id": "pet_7",
     "name": "윈디",
+    "title": "대마법사의 조력",
     "portraitUrl": "/images/pets/윈디.png",
     "skills": [
       {
@@ -164,6 +171,7 @@ export const pets = [
   {
     "id": "pet_8",
     "name": "제브",
+    "title": "성숙의",
     "portraitUrl": "/images/pets/제브.png",
     "skills": [
       {
@@ -192,6 +200,7 @@ export const pets = [
   {
     "id": "pet_9",
     "name": "유",
+    "title": "총운의 정령",
     "portraitUrl": "/images/pets/유.png",
     "skills": [
       {
@@ -215,6 +224,7 @@ export const pets = [
   {
     "id": "pet_10",
     "name": "요랑",
+    "title": "수호 용",
     "portraitUrl": "/images/pets/요랑.png",
     "skills": [
       {
@@ -248,6 +258,7 @@ export const pets = [
   {
     "id": "pet_11",
     "name": "연지",
+    "title": "잠을 인도하는",
     "portraitUrl": "/images/pets/연지.png",
     "skills": [
       {
@@ -269,6 +280,7 @@ export const pets = [
   {
     "id": "pet_12",
     "name": "카람",
+    "title": "푸른 화령",
     "portraitUrl": "/images/pets/카람.png",
     "skills": [
       {
@@ -292,6 +304,7 @@ export const pets = [
   {
     "id": "pet_13",
     "name": "제오",
+    "title": "검은 돌풍",
     "portraitUrl": "/images/pets/제오.png",
     "skills": [
       {
@@ -319,7 +332,8 @@ export const pets = [
   },
   {
     "id": "pet_14",
-    "name": "멜패로",
+    "name": "멜페로",
+    "title": "혼돈의 흑조",
     "portraitUrl": "/images/pets/멜페로.png",
     "skills": [
       {
@@ -343,6 +357,7 @@ export const pets = [
   {
     "id": "pet_15",
     "name": "믹",
+    "title": "황금 상자",
     "portraitUrl": "/images/pets/믹.png",
     "skills": [
       {
@@ -362,6 +377,7 @@ export const pets = [
   {
     "id": "pet_16",
     "name": "더지",
+    "title": "영리한 탐험가",
     "portraitUrl": "/images/pets/더지.png",
     "skills": [
       {
@@ -381,6 +397,7 @@ export const pets = [
   {
     "id": "pet_17",
     "name": "에리",
+    "title": "행복을 전하는",
     "portraitUrl": "/images/pets/에리.png",
     "skills": [
       {
@@ -400,6 +417,7 @@ export const pets = [
   {
     "id": "pet_18",
     "name": "Mr.아머",
+    "title": "신관의 방패",
     "portraitUrl": "/images/pets/Mr.아머.png",
     "skills": [
       {
@@ -416,6 +434,32 @@ export const pets = [
     ],
     "tooltips": {
       "받는 피해 감소 증가": "받는 피해 감소가 15% 증가합니다"
+    }
+  },
+  {
+    "id": "pet_19",
+    "name": "카마도 네즈코",
+    "title": "혈귀",
+    "portraitUrl": "/images/pets/카마도 네즈코.png",
+    "skills": [
+      {
+        "name": "펫의 응원",
+        "effects": [
+          {
+            "target": "아군(귀멸의 칼날)",
+            "details": [
+              "모든 공격력 증가 [상시]",
+              "방어력 증가 [상시]",
+              "최대 생명력 증가 [상시]"
+            ]
+          }
+        ]
+      }
+    ],
+    "tooltips": {
+      "모든 공격력 증가": "모든 공격력이 9% 증가합니다.",
+      "방어력 증가": "방어력이 13% 증가합니다.",
+      "최대 생명력 증가": "최대 생명력이 13% 증가합니다."
     }
   }
 ];

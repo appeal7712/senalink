@@ -6,7 +6,7 @@ import SkillTimelineSteps, { RoundMark, SkillDirBadge } from '../../components/S
 import { SKILL_RESERVE_ICON_SIZE } from '../../lib/skillReserveIcon';
 import { SkillReservePlateIcon } from '../../components/icons/GameIconPlate';
 import Icon from '../../components/icons/Icon';
-import { AuthorMeta } from '../../components/PublicProfileModal';
+import { AuthorMeta, formatUpdateAtDisplay } from '../../components/PublicProfileModal';
 import OverflowTitle from '../../components/OverflowTitle';
 import { DeckTierBlock } from '../../components/DeckTierStars';
 import { ArenaDeckKindBadge, metaDeckKindTheme } from '../../components/ArenaDeckKind';
@@ -56,6 +56,7 @@ export default function CommunityGuideCard({
   const timeline = isTimeline ? (guide.skillSequence || []) : [];
   const heroNames = guide.heroNames || [];
   const useCollapse = !!collapsible;
+  const updatedDate = formatUpdateAtDisplay(guide.updatedAt).split('|')[0];
 
   const actions = (
     <div className="community-pvp-card-actions" onClick={(e) => e.stopPropagation()}>
@@ -273,14 +274,23 @@ export default function CommunityGuideCard({
           </div>
           <span className="community-pvp-card-rule" aria-hidden>|</span>
           <div className="community-pvp-card-author">
-            <div className="community-pvp-card-author-hit" onClick={(e) => e.stopPropagation()}>
-              <AuthorMeta
-                author={guide.author}
-                authorId={guide.authorId}
-                updatedAt={guide.updatedAt}
-                onOpenProfile={onOpenProfile}
-              />
-            </div>
+            {isPvpLayout ? (
+              <div className="community-pvp-card-author-hit" onClick={(e) => e.stopPropagation()}>
+                <AuthorMeta
+                  author={guide.author}
+                  authorId={guide.authorId}
+                  updatedAt={guide.updatedAt}
+                  onOpenProfile={onOpenProfile}
+                />
+              </div>
+            ) : (
+              <div className="author-meta build-title-meta">
+                <div className="author-meta-line">
+                  <span className="author-meta-prefix">갱신일:</span>
+                  <strong>{updatedDate || '-'}</strong>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         {actions}

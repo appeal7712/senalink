@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import HeroPortraitCard from './HeroPortraitCard';
-import { ROLE_ICONS } from '../data/roleIcons';
+import HeroListFilterBar from './HeroListFilterBar';
 import { sortHeroesForList } from '../data/heroes';
+import { heroMatchesQuery } from '../lib/heroSearch';
 import {
   setDeckDragData,
   startDeckPointerDrag,
@@ -10,15 +11,6 @@ import {
   markDeckHtml5DragStarted,
   shouldSuppressDeckClick,
 } from '../utils/deckDrag';
-
-const ROLE_FILTERS = [
-  { id: 'all',       label: '전체',   icon: null },
-  { id: 'offensive', label: '공격형', icon: ROLE_ICONS.offensive },
-  { id: 'magic',     label: '마법형', icon: ROLE_ICONS.magic },
-  { id: 'defensive', label: '방어형', icon: ROLE_ICONS.defensive },
-  { id: 'support',   label: '지원형', icon: ROLE_ICONS.support },
-  { id: 'universal', label: '만능형', icon: ROLE_ICONS.universal },
-];
 
 // currentSlotName: 현재 편집 중인 슬롯의 영웅은 목록에 남겨 교체를 허용하고,
 // 다른 슬롯에 이미 배치된 영웅은 숨겨 중복 선택을 막는다.
@@ -41,17 +33,13 @@ export default function HeroGridPicker({
     if (roleFilter !== 'all' && h.role !== roleFilter) return false;
     const cleanName = h.name.replace('(각성)', '');
     if (selectedNames.includes(cleanName) && cleanName !== currentSlotName) return false;
-    if (needle && !cleanName.includes(needle) && !String(h.name || '').includes(needle)) return false;
+    if (needle && !heroMatchesQuery(h, needle)) return false;
     return true;
   }));
 
   const portraitW = loungeDensity ? 58 : 62;
   const cellMin = loungeDensity ? 62 : 68;
   const gap = loungeDensity ? 6 : 8;
-  const filterPad = loungeDensity ? '8px 12px' : '5px 10px';
-  const filterFont = loungeDensity ? '13px' : '12px';
-  const filterIcon = loungeDensity ? 16 : 12;
-  const filterRadius = loungeDensity ? 8 : 6;
 
   return (
     <div
@@ -63,31 +51,15 @@ export default function HeroGridPicker({
         ...(fillHeight ? { flex: '1 1 auto', minHeight: 0, height: '100%' } : null),
       }}
     >
-      <div style={{ display: 'flex', gap: loungeDensity ? 6 : 5, flexWrap: 'wrap', flexShrink: 0 }}>
-        {ROLE_FILTERS.map(r => (
-          <button key={r.id} type="button" onClick={() => setRoleFilter(r.id)}
-            style={{
-              padding: filterPad, fontSize: filterFont, fontWeight: 800, borderRadius: filterRadius, border: 'none', cursor: 'pointer',
-              background: roleFilter === r.id ? 'var(--gold-primary)' : 'rgba(255,255,255,0.06)',
-              color: roleFilter === r.id ? '#000' : '#94a3b8', display: 'flex', alignItems: 'center', gap: loungeDensity ? 6 : 4,
-            }}>
-            {r.icon && <img src={r.icon} alt="" style={{ width: filterIcon, height: filterIcon, objectFit: 'contain' }} />}
-            <span>{r.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {showSearch && (
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="이름 검색 · 여포, 미호…"
-          className="ops-glass-field"
-          style={{
-            width: '100%', padding: '8px 10px', flexShrink: 0,
-          }}
+      <div style={{ flexShrink: 0 }}>
+        <HeroListFilterBar
+          role={roleFilter}
+          onRoleChange={setRoleFilter}
+          query={q}
+          onQueryChange={setQ}
+          showSearch={showSearch}
         />
-      )}
+      </div>
 
       <div
         className="hero-grid-picker-grid"

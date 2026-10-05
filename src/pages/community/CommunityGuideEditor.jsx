@@ -1,9 +1,10 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { heroes, sortHeroesForList } from '../../data/heroes';
 import { pets } from '../../data/pets';
-import { ROLE_ICONS } from '../../data/roleIcons';
 import InGameDeckCard from '../../components/InGameDeckCard';
 import HeroGridPicker from '../../components/HeroGridPicker';
+import HeroListFilterBar from '../../components/HeroListFilterBar';
+import { heroMatchesQuery } from '../../lib/heroSearch';
 import HeroPortraitCard from '../../components/HeroPortraitCard';
 import HeroGearPanel, { emptyGearConfig, buildOptionCode } from '../../components/HeroGearPanel';
 import SkillReservationBoard from '../../components/SkillReservationBoard';
@@ -19,6 +20,7 @@ import DeckTierStars, { normalizeDeckTier } from '../../components/DeckTierStars
 import { communitySkillMode } from '../../data/communityCatalog';
 import { emptyCommunityGuide } from '../../lib/communityGuides';
 import { backdropDismissProps } from '../../utils/backdropDismiss';
+import { useUnsavedGuard } from '../../utils/unsavedGuard';
 import {
   deckEditScrollBodyWrapperProps,
   deckEditScrollGridBodyStyle,
@@ -29,15 +31,6 @@ import {
   useDeckEditScrollWheelForward,
 } from '../../lib/deckEditScrollModal';
 import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, markDeckHtml5DragStarted, shouldSuppressDeckClick, resetDeckDragState } from '../../utils/deckDrag';
-
-const ROLE_FILTERS = [
-  { id: 'all', label: '전체', icon: null },
-  { id: 'offensive', label: '공격형', icon: ROLE_ICONS.offensive },
-  { id: 'magic', label: '마법형', icon: ROLE_ICONS.magic },
-  { id: 'defensive', label: '방어형', icon: ROLE_ICONS.defensive },
-  { id: 'support', label: '지원형', icon: ROLE_ICONS.support },
-  { id: 'universal', label: '만능형', icon: ROLE_ICONS.universal },
-];
 
 const padNames5 = (names = []) => {
   const next = (names || []).map((n) => n || '');
@@ -115,6 +108,7 @@ export default function CommunityGuideEditor({
   const [newNote, setNewNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [roleFilter, setRoleFilter] = useState('all');
+  const [heroQuery, setHeroQuery] = useState('');
 
   const petObj = useMemo(() => pets.find((p) => p.id === petId) || pets[0], [petId]);
   const filledNames = heroNames.filter(Boolean);
@@ -124,8 +118,9 @@ export default function CommunityGuideEditor({
     const cleanName = h.name.replace('(각성)', '');
     // 다른 슬롯에 이미 배치된 영웅은 숨김(현재 슬롯은 교체 가능)
     if (filledNames.includes(cleanName) && cleanName !== (heroNames[slot] || '')) return false;
+    if (heroQuery.trim() && !heroMatchesQuery(h, heroQuery.trim())) return false;
     return true;
-  })), [roleFilter, filledNames, heroNames, slot]);
+  })), [roleFilter, heroQuery, filledNames, heroNames, slot]);
 
   const setHeroAt = (idx, name) => {
     const next = padNames5(heroNames);
@@ -143,6 +138,11 @@ export default function CommunityGuideEditor({
       next[toIdx] = next[from];
       next[from] = tmp;
       setHeroNames(next);
+      const nextGear = padGear5(gear);
+      const tmpGear = nextGear[toIdx];
+      nextGear[toIdx] = nextGear[from];
+      nextGear[from] = tmpGear;
+      setGear(nextGear);
       return;
     }
     if (payload.name) setHeroAt(toIdx, payload.name);
@@ -158,6 +158,11 @@ export default function CommunityGuideEditor({
     }]);
     setNewNote('');
   };
+
+  const guardClose = useUnsavedGuard(true, {
+    title, deckTier, arenaTier, deckKind, mode, formationId, heroNames, gear,
+    reserved, timeline, speedOrder, speedIgnored, petId,
+  });
 
   const handleSave = async () => {
     const trimmed = title.trim();
@@ -203,7 +208,7 @@ export default function CommunityGuideEditor({
   };
 
   return (
-    <ModalScrim style={{ zIndex: 3500, padding: 16, overflow: 'hidden' }} {...backdropDismissProps(onClose)}>
+    <ModalScrim style={{ zIndex: 3500, padding: 16, overflow: 'hidden' }} {...backdropDismissProps(guardClose(onClose))}>
       <div
         className={`luxury-panel glass-modal editing-build-modal${deckEditScrollModalClassSuffix(deckEditScrollKind)}`}
         onClick={(e) => e.stopPropagation()}
@@ -225,7 +230,7 @@ export default function CommunityGuideEditor({
                   ? `${lockedArenaKind === 'advanced' ? '상급결투장' : '결투장'} 공략 ${initial.id ? '수정' : '생성'}`
                   : (initial.id ? '공용 공략 수정' : '공용 공략 생성')}
               </h3>
-              <button type="button" className="editing-build-modal-close editing-build-modal-close--mobile" onClick={onClose} title="모달 닫기">
+              <button type="button" className="editing-build-modal-close editing-build-modal-close--mobile" onClick={guardClose(onClose)} title="모달 닫기">
                 <Icon name="closeBtn" size={26} />
               </button>
             </div>
@@ -284,7 +289,7 @@ export default function CommunityGuideEditor({
           </div>
 
           <div className="editing-build-author-row" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <button type="button" className="editing-build-modal-close editing-build-modal-close--desktop" onClick={onClose} title="모달 닫기">
+            <button type="button" className="editing-build-modal-close editing-build-modal-close--desktop" onClick={guardClose(onClose)} title="모달 닫기">
               <Icon name="closeBtn" size={26} />
             </button>
           </div>
@@ -376,22 +381,8 @@ export default function CommunityGuideEditor({
                 <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Icon name="hero" size={14} /> 영웅 목록
                 </div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {ROLE_FILTERS.map((r) => (
-                    <button
-                      key={r.id}
-                      type="button"
-                      onClick={() => setRoleFilter(r.id)}
-                      style={{
-                        padding: '8px 12px', fontSize: 13, fontWeight: 800, borderRadius: 8, border: 'none', cursor: 'pointer',
-                        background: roleFilter === r.id ? 'var(--gold-primary)' : 'rgba(255,255,255,0.06)',
-                        color: roleFilter === r.id ? '#000' : '#94a3b8', display: 'flex', alignItems: 'center', gap: 6,
-                      }}
-                    >
-                      {r.icon && <img src={r.icon} alt="" style={{ width: 16, height: 16, objectFit: 'contain' }} />}
-                      <span>{r.label}</span>
-                    </button>
-                  ))}
+                <div style={{ flex: '1 1 380px', minWidth: 0 }}>
+                  <HeroListFilterBar role={roleFilter} onRoleChange={setRoleFilter} query={heroQuery} onQueryChange={setHeroQuery} />
                 </div>
               </div>
               <div

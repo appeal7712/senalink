@@ -1,6 +1,7 @@
 import Icon from './icons/Icon';
 import { EQUIPMENT_SET_ICONS, weaponOptions, armorOptions } from '../data/equipments';
 import AccessorySlots from './AccessorySlots';
+import ExclusiveGearButton from './ExclusiveGearPicker';
 
 export const emptyGearConfig = () => ({
   setName: '복수자',
@@ -96,6 +97,7 @@ export default function HeroGearPanel({
     <div className={`hero-gear-panel${embedded ? ' hero-gear-panel--embedded' : ''}`} style={shellStyle}>
       <div style={{ fontSize: '13px', fontWeight: 900, color: embedded ? '#fff' : 'var(--gold-primary)', display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
         <Icon name="gearSetting" size={13} /> 장비 세팅
+        <ExclusiveGearButton heroName={heroNames[activeIdx]} gear={cfg} onChange={updateMany} />
       </div>
 
       <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>

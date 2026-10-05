@@ -9,6 +9,7 @@ import TotalWarPanel from './TotalWarPanel';
 import { TOTALWAR_TIERS } from '../data/totalwarTiers';
 import { EQUIPMENT_SET_ICONS, weaponOptions, armorOptions } from '../data/equipments';
 import AccessorySlots from './AccessorySlots';
+import ExclusiveGearButton from './ExclusiveGearPicker';
 import { pets } from '../data/pets';
 import { SKILL_RESERVE_ICON_SIZE } from '../lib/skillReserveIcon';
 import { SkillReservePlateIcon } from './icons/GameIconPlate';
@@ -16,6 +17,8 @@ import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
 import AwakenMark from './AwakenMark';
 import HeroPortraitCard from './HeroPortraitCard';
+import HeroListFilterBar from './HeroListFilterBar';
+import { heroMatchesQuery } from '../lib/heroSearch';
 import SkillTimelineSteps from './SkillTimelineSteps';
 import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, markDeckHtml5DragStarted, shouldSuppressDeckClick, resetDeckDragState } from '../utils/deckDrag';
 import { useLounge } from '../context/LoungeContext';
@@ -30,6 +33,7 @@ import StrategyActionBar from './StrategyActionBar';
 import DeckLikeButton, { likedByList, toggleLikedBy } from './DeckLikeButton';
 import SkillReservationBoard from './SkillReservationBoard';
 import { backdropDismissProps } from '../utils/backdropDismiss';
+import { useUnsavedGuard } from '../utils/unsavedGuard';
 import { closeOverlayFromUI, collapseOverlayHistory, pushHubTab, pushOverlay } from '../utils/overlayHistory';
 import { parseInviteCode } from '../lib/invite';
 import HeroGearPanel from './HeroGearPanel';
@@ -197,14 +201,6 @@ const normalizeTotalwarDecks = (build = {}, count = 2) => {
 };
 
 const resolvePetById = (petId) => pets.find(p => p.id === petId) || pets[0];
-
-const ROLE_ICONS = {
-  offensive: '/images/common/공격형 아이콘.png',
-  magic:     '/images/common/마법형 아이콘.png',
-  defensive: '/images/common/방어형 아이콘.png',
-  support:   '/images/common/지원형 아이콘.png',
-  universal: '/images/common/만능형 아이콘.png',
-};
 
 const CARD_BG = {
   old_seven:    'linear-gradient(180deg, #fde047 0%, #ca8a04 100%)',
@@ -516,6 +512,7 @@ export default function GuildLounge() {
   const [editingHeroNames, setEditingHeroNames]       = useState(['미호', '나타', '리나', '에반', '비스킷']);
   const [targetSlotIdx, setTargetSlotIdx]             = useState(0);
   const [roleFilter, setRoleFilter]                   = useState('all');
+  const [heroQuery, setHeroQuery]                     = useState('');
   const [editingSpeedOrder, setEditingSpeedOrder]     = useState([]);
   const [editingSpeedIgnored, setEditingSpeedIgnored] = useState([]);
   
@@ -622,6 +619,7 @@ export default function GuildLounge() {
 
   const applyTotalwarDeckToEditor = (deck = emptyTotalwarDeck()) => {
     const next = totalwarDeckFromFields(deck);
+    setHeroQuery('');
     setEditingBuild(prev => prev ? { ...prev, formationId: next.formationId } : { id: editingTotalwarId || ('new_' + Date.now()), formationId: next.formationId });
     setEditingHeroNames(next.heroNames);
     setEditingSkillTimeline(next.reservedSkills);
@@ -666,6 +664,11 @@ export default function GuildLounge() {
       setEditingBuild(null);
     });
   };
+  const totalwarFlowOpen = showTotalwarTeamPick || (!!editingBuild && editingCategory === 'totalwar');
+  const guardTotalwarPickClose = useUnsavedGuard(
+    totalwarFlowOpen,
+    totalwarFlowOpen ? { buildTitle, decks: editingTotalwarDecks.map(totalwarDeckFromFields) } : null,
+  );
 
   const returnToTotalwarTeamPick = () => {
     closeOverlayFromUI(returnToTotalwarTeamPickInternal);
@@ -833,6 +836,7 @@ export default function GuildLounge() {
 
   const handleOpenCreateModal = (cat) => {
     setIsNewCreateMode(true);
+    setHeroQuery('');
     setEditingCategory(cat);
     setBuildTitle(NEW_BUILD_TITLE[cat] || '새 전술 빌드');
     setEditingDeckTier(3);
@@ -874,6 +878,7 @@ export default function GuildLounge() {
 
   const handleStartEditBuild = (build, cat) => {
     setIsNewCreateMode(false);
+    setHeroQuery('');
     setEditingBuild(build);
     setEditingCategory(cat);
     setBuildTitle(build.title);
@@ -919,6 +924,17 @@ export default function GuildLounge() {
     setEditingHeroNames(next);
   };
 
+  const swapHeroGearSlots = (a, b) => {
+    if (a === b) return;
+    setHeroGearConfigs(prev => {
+      const next = Array.from({ length: Math.max(5, prev.length) }, (_, i) => prev[i] || { ...defaultGear5()[0] });
+      const tmp = next[a];
+      next[a] = next[b];
+      next[b] = tmp;
+      return next;
+    });
+  };
+
   const handleHeroDrop = (payload, toIdx) => {
     const next = [...editingHeroNames];
     while (next.length < 5) next.push('');
@@ -927,6 +943,7 @@ export default function GuildLounge() {
       next[toIdx] = next[payload.fromIdx];
       next[payload.fromIdx] = tmp;
       setEditingHeroNames(next);
+      swapHeroGearSlots(toIdx, payload.fromIdx);
       setTargetSlotIdx(toIdx);
       setSelectedHeroGearIdx(toIdx);
       return;
@@ -937,6 +954,7 @@ export default function GuildLounge() {
         const tmp = next[toIdx];
         next[toIdx] = next[existingIdx];
         next[existingIdx] = tmp;
+        swapHeroGearSlots(toIdx, existingIdx);
       } else {
         next[toIdx] = payload.name;
       }
@@ -1072,6 +1090,7 @@ export default function GuildLounge() {
     const cleanName = h.name.replace('(각성)', '');
     // 다른 슬롯에 배치된 영웅은 목록에서 숨김
     if (editingHeroNames.some((n, i) => n === cleanName && i !== targetSlotIdx)) return false;
+    if (heroQuery.trim() && !heroMatchesQuery(h, heroQuery.trim())) return false;
     return true;
   }));
 
@@ -2035,7 +2054,7 @@ export default function GuildLounge() {
       {/* ── 총력전 팀 선택 (세팅 창 전 단계) ── */}
       {showTotalwarTeamPick && (
         <ModalScrim style={{ zIndex: 3490, padding: '16px' }}
-          {...backdropDismissProps(closeTotalwarTeamPick)}>
+          {...backdropDismissProps(guardTotalwarPickClose(closeTotalwarTeamPick))}>
           <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} className="glass-modal totalwar-team-pick-modal" style={{
             width: 'min(920px, 96vw)', padding: '24px', borderRadius: '18px',
             display: 'flex', flexDirection: 'column', gap: '18px'
@@ -2045,7 +2064,7 @@ export default function GuildLounge() {
                 <Icon name="totalwar" size={18} color="var(--gold-primary)" />
                 총력전 팀 선택 · {(TOTALWAR_TIERS.find(t => t.id === editingTotalwarTier) || {}).label || ''} 등급
               </h3>
-              <button type="button" onClick={closeTotalwarTeamPick}
+              <button type="button" onClick={guardTotalwarPickClose(closeTotalwarTeamPick)}
                 style={{ background: 'none', border: 'none', color: '#fff', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Icon name="closeBtn" size={26} />
               </button>
@@ -2321,10 +2340,15 @@ export default function GuildLounge() {
                   }}>
                     <div style={{ flexShrink: 0, fontSize: '13px', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: '5px' }}>
                       <Icon name="gearSetting" size={13} /> 장비 세팅
+                      <ExclusiveGearButton
+                        heroName={editingHeroNames[selectedHeroGearIdx]}
+                        gear={heroGearConfigs[selectedHeroGearIdx]}
+                        onChange={({ exclusiveOptions }) => handleUpdateSelectedHeroGear('exclusiveOptions', exclusiveOptions)}
+                      />
                     </div>
 
                     <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                      {editingHeroNames.filter(Boolean).map((hName, idx) => (
+                      {editingHeroNames.map((hName, idx) => hName && (
                         <button key={idx} onClick={() => {
                           setSelectedHeroGearIdx(idx);
                           setTargetSlotIdx(idx);
@@ -2418,25 +2442,8 @@ export default function GuildLounge() {
                       <Icon name="hero" size={14} /> 영웅 목록
                     </div>
 
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                      {[
-                        { id: 'all',       label: '전체', icon: null },
-                        { id: 'offensive', label: '공격형', icon: ROLE_ICONS.offensive },
-                        { id: 'magic',     label: '마법형', icon: ROLE_ICONS.magic },
-                        { id: 'defensive', label: '방어형', icon: ROLE_ICONS.defensive },
-                        { id: 'support',   label: '지원형', icon: ROLE_ICONS.support },
-                        { id: 'universal', label: '만능형', icon: ROLE_ICONS.universal },
-                      ].map(r => (
-                        <button key={r.id} onClick={() => setRoleFilter(r.id)}
-                          style={{
-                            padding: '8px 12px', fontSize: '13px', fontWeight: 800, borderRadius: '8px', border: 'none', cursor: 'pointer',
-                            background: roleFilter === r.id ? 'var(--gold-primary)' : 'rgba(255,255,255,0.06)',
-                            color: roleFilter === r.id ? '#000' : '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px'
-                          }}>
-                          {r.icon && <img src={r.icon} alt="" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />}
-                          <span>{r.label}</span>
-                        </button>
-                      ))}
+                    <div style={{ flex: '1 1 380px', minWidth: 0 }}>
+                      <HeroListFilterBar role={roleFilter} onRoleChange={setRoleFilter} query={heroQuery} onQueryChange={setHeroQuery} />
                     </div>
                   </div>
 

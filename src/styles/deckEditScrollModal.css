@@ -11,8 +11,10 @@
   .editing-build-modal.arena-body-scroll-modal.glass-modal,
   .editing-build-modal.pve-body-scroll-modal.glass-modal {
     --deck-gear-h: 496px;
-    --deck-hero-grid-h: 120px;
-    --deck-pve-hero-grid-h: 152px;
+    /* 영웅 목록 = 딱 2줄 (카드 78.6 × 2 + 줄간격 6 + 위 3·아래 4 여백) — 모든 덱 수정 창 공통 */
+    --deck-hero-list-2rows: 172px;
+    --deck-hero-grid-h: var(--deck-hero-list-2rows);
+    --deck-pve-hero-grid-h: var(--deck-hero-list-2rows);
     --deck-pve-hero-picker-pad-v: 24px;
     --deck-pve-hero-picker-head: 28px;
     --deck-pve-hero-picker-gap: 10px;
@@ -36,8 +38,9 @@
     --deck-pve-body-grid-min-h: calc(
       var(--deck-gear-h) + var(--deck-row-gap) + var(--deck-pve-hero-picker-h)
     );
-    max-height: min(88vh, 900px) !important;
-    height: min(88vh, 900px);
+    /* 높이 = 내용(헤더 + 본문 그리드 min-height 토큰 + 저장 바). 화면이 낮으면 본문만 스크롤 */
+    max-height: 94vh !important;
+    height: auto;
     overflow: hidden !important;
   }
 
@@ -58,14 +61,6 @@
     -webkit-overflow-scrolling: touch;
     padding: 16px 20px;
     box-sizing: border-box;
-  }
-
-  /* 풀 높이(결투장·상급과 동일): 본문 스크롤 없음 · 세로 부족할 때만 위 규칙으로 스크롤 */
-  @media (min-height: 1021px) {
-    .arena-body-scroll-modal .deck-edit-scroll-body,
-    .pve-body-scroll-modal .deck-edit-scroll-body {
-      overflow-y: hidden !important;
-    }
   }
 
   /* ── 공통: 좌열 덱+세팅디테일 · 장비 패널 ─────────────────────────── */
@@ -454,5 +449,24 @@
       min-height: 52px !important;
       max-height: 72px !important;
     }
+  }
+}
+
+/* 길드전 방어 헤더 「기타 디테일」 — 1180+ 에서만 남는 헤더 폭까지 넓힘 (981–1179 가로 스크롤 구간·모바일은 index.css 그대로) */
+@media (min-width: 1180px) {
+  .editing-build-modal.gw-defense-edit-modal .editing-build-modal-header {
+    gap: 14px;
+  }
+
+  .editing-build-modal.gw-defense-edit-modal .editing-build-arena-toggles {
+    flex: 1 0 auto !important;
+  }
+
+  .editing-build-modal.gw-defense-edit-modal .editing-build-other-detail-col {
+    max-width: none !important;
+  }
+
+  .editing-build-modal.gw-defense-edit-modal .editing-build-other-detail-col .editing-build-detail-textarea {
+    font-size: 13px !important;
   }
 }

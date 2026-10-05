@@ -6,6 +6,7 @@ import { pets } from '../data/pets';
 import { formationsData } from '../data/formations';
 import { EQUIPMENT_SET_ICONS } from '../data/equipments';
 import { resolveAccessoryPair, ringLabel, ringParts } from '../lib/accessoryCraft';
+import { exclusiveOptionSummary } from '../lib/exclusiveGearSlots';
 import '../styles/accessorySlots.css';
 import Icon from './icons/Icon';
 import { FORMATION_ICON_SIZE, FORMATION_ICON_SIZE_COMPACT } from '../data/uiIcons';
@@ -328,6 +329,7 @@ export default function InGameDeckCard({
     const setIcon = EQUIPMENT_SET_ICONS[setName] || '/images/equipment/복수자.png';
     const [acc, accCraft] = resolveAccessoryPair(gear);
     const optionCode = buildOptionCode(gear);
+    const exclusiveSummary = exclusiveOptionSummary(gear);
     const tips = String(gear.detailNote || '')
       .split(/\n+/)
       .map(s => s.trim())
@@ -371,7 +373,24 @@ export default function InGameDeckCard({
                 <span style={{ fontSize: '12.5px', fontWeight: 900, color: 'var(--gold-light)' }}>{setName}</span>
               </div>
             </div>
-            {optionCode && (
+            {exclusiveSummary ? (
+              <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', columnGap: '8px', rowGap: '2px', minWidth: 0 }}>
+                {optionCode && (
+                  <div className={compact ? 'gear-block-optcode' : undefined} style={{ fontSize: '13px', fontWeight: 900, color: 'var(--gold-light)', letterSpacing: '0.4px', flexShrink: 0 }}>
+                    {optionCode}
+                  </div>
+                )}
+                <div
+                  title={`전용장비: ${exclusiveSummary}`}
+                  style={{
+                    marginLeft: 'auto', flex: '0 0 auto', maxWidth: '100%', fontSize: '11.5px', fontWeight: 900, color: 'var(--accent-cyan)',
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                  }}
+                >
+                  전장 {exclusiveSummary}
+                </div>
+              </div>
+            ) : optionCode && (
               <div className={compact ? 'gear-block-optcode' : undefined} style={{ fontSize: '13px', fontWeight: 900, color: 'var(--gold-light)', letterSpacing: '0.4px' }}>
                 {optionCode}
               </div>
@@ -1107,7 +1126,7 @@ export default function InGameDeckCard({
       {/* 세팅 확인 — 스킬/속공 + 장비 디테일 한 화면 */}
       {isGearOverviewOpen && (
         <div className="modal-scrim" style={{ zIndex: 8200, padding: '16px' }} {...backdropDismissProps(() => dismissSubModal(closeGearOverview))}>
-          <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} ref={settingCaptureRef} className="glass-modal setting-overview-modal" style={{
+          <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} ref={settingCaptureRef} className={`glass-modal setting-overview-modal${overviewCellCount >= 3 ? ' setting-overview-modal--wide' : ''}`} style={{
             maxHeight: '90vh', padding: '12px 14px', borderRadius: '16px',
             display: 'flex', flexDirection: 'column', gap: '10px', boxSizing: 'border-box'
           }}>

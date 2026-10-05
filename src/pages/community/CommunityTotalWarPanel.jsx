@@ -22,6 +22,7 @@ import { useSuperAdmin } from '../../context/SuperAdminContext';
 import { useUserProfile } from '../../context/UserProfileContext';
 import { showToast } from '../../components/Toast';
 import { backdropDismissProps } from '../../utils/backdropDismiss';
+import { useUnsavedGuard } from '../../utils/unsavedGuard';
 import CommunityTotalWarEditor from './CommunityTotalWarEditor';
 
 function resolveHeroByName(name) {
@@ -95,6 +96,7 @@ export default function CommunityTotalWarPanel() {
     setPickDecks([]);
     setEditTeam(null);
   };
+  const guardPickClose = useUnsavedGuard(pickOpen, { pickTitle, pickDecks });
 
   const openCreate = () => {
     if (!authUser) {
@@ -248,7 +250,7 @@ export default function CommunityTotalWarPanel() {
       })}
 
       {pickOpen && editTeam == null && (
-        <ModalScrim style={{ zIndex: 3490, padding: 16 }} {...backdropDismissProps(closePick)}>
+        <ModalScrim style={{ zIndex: 3490, padding: 16 }} {...backdropDismissProps(guardPickClose(closePick))}>
           <div
             className="glass-modal totalwar-team-pick-modal"
             onClick={(e) => e.stopPropagation()}
@@ -263,7 +265,7 @@ export default function CommunityTotalWarPanel() {
                 <Icon name="totalwar" size={18} color="var(--gold-primary)" />
                 총력전 팀 선택 · {tier.label} 등급
               </h3>
-              <button type="button" onClick={closePick} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
+              <button type="button" onClick={guardPickClose(closePick)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
                 <Icon name="closeBtn" size={26} />
               </button>
             </div>

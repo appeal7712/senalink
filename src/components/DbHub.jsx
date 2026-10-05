@@ -148,7 +148,7 @@ export default function DbHub() {
                   </div>
                   <div>
                     <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>{selectedPet.name}</div>
-                    <div style={{ fontSize: 13, color: '#fde68a', fontWeight: 800, marginTop: 2 }}>세븐나이츠 공식 펫</div>
+                    <div style={{ fontSize: 13, color: '#fde68a', fontWeight: 800, marginTop: 2 }}>{selectedPet.title || '세븐나이츠 공식 펫'}</div>
                   </div>
                 </div>
                 <div style={{
@@ -160,7 +160,7 @@ export default function DbHub() {
                   padding: 16,
                 }}>
                   <div style={{ fontSize: 13, fontWeight: 900, color: '#7dd3fc', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Icon name="book" size={13} /> 스킬 툴팁
+                    <Icon name="sparkle" size={13} /> {selectedPet.skills?.[0]?.name || '펫의 응원'}
                   </div>
                   {selectedPet.tooltips && Object.keys(selectedPet.tooltips).length > 0 ? (
                     Object.entries(selectedPet.tooltips).map(([key, val], idx) => (

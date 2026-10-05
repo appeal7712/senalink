@@ -87,7 +87,11 @@ export default function CommunityTotalWarEditor({
       const tmp = next[toIdx];
       next[toIdx] = next[payload.fromIdx];
       next[payload.fromIdx] = tmp;
-      patchDeck({ heroNames: next });
+      const nextGear = padGear5(current.heroGearConfigs);
+      const tmpGear = nextGear[toIdx];
+      nextGear[toIdx] = nextGear[payload.fromIdx];
+      nextGear[payload.fromIdx] = tmpGear;
+      patchDeck({ heroNames: next, heroGearConfigs: nextGear });
       return;
     }
     if (payload.name) setHeroAt(toIdx, payload.name);

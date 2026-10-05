@@ -3,12 +3,14 @@ import { heroes } from '../../data/heroes';
 import { pets } from '../../data/pets';
 import { EQUIPMENT_SET_ICONS, weaponOptions, armorOptions } from '../../data/equipments';
 import AccessorySlots from '../../components/AccessorySlots';
+import ExclusiveGearButton from '../../components/ExclusiveGearPicker';
 import InGameDeckCard from '../../components/InGameDeckCard';
 import HeroGridPicker from '../../components/HeroGridPicker';
 import Icon from '../../components/icons/Icon';
 import PvpModeToggle, { normalizePvpMode } from '../../components/PvpModeToggle';
 import { MetaDeckKindToggle } from '../../components/ArenaDeckKind';
 import { backdropDismissProps } from '../../utils/backdropDismiss';
+import { useUnsavedGuard } from '../../utils/unsavedGuard';
 import ModalScrim from '../../components/ModalScrim';
 
 const SETS = ['선봉장', '추적자', '성기사', '수문장', '수호자', '암살자', '복수자', '주술사', '조율자'];
@@ -78,6 +80,16 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
     setHeroNames(next);
   };
 
+  const swapGear = (a, b) => {
+    setGear((prev) => {
+      const next = padGear5(prev);
+      const tmp = next[a];
+      next[a] = next[b];
+      next[b] = tmp;
+      return next;
+    });
+  };
+
   const onDrop = (payload, toIdx) => {
     const next = padNames5(heroNames);
     if (payload?.source === 'slot' && typeof payload.fromIdx === 'number') {
@@ -85,6 +97,7 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
       next[toIdx] = next[payload.fromIdx];
       next[payload.fromIdx] = tmp;
       setHeroNames(next);
+      swapGear(toIdx, payload.fromIdx);
       setSlot(toIdx);
       return;
     }
@@ -94,6 +107,7 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
         const tmp = next[toIdx];
         next[toIdx] = next[existingIdx];
         next[existingIdx] = tmp;
+        swapGear(toIdx, existingIdx);
       } else {
         next[toIdx] = payload.name;
       }
@@ -109,6 +123,10 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
       return next;
     });
   };
+
+  const guardClose = useUnsavedGuard(true, {
+    title, tier, usageRate, desc, kind, type, mode, formationId, heroNames, gear, skills, petId,
+  });
 
   const commit = () => {
     onSave({
@@ -134,7 +152,7 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
   };
 
   return (
-    <ModalScrim style={{ zIndex: 5200, padding: 16 }} {...backdropDismissProps(onClose)}>
+    <ModalScrim style={{ zIndex: 5200, padding: 16 }} {...backdropDismissProps(guardClose(onClose))}>
       <div className="luxury-panel glass-modal" onClick={(e) => e.stopPropagation()} style={{
         width: '94vw', maxWidth: 1520, maxHeight: '90vh', padding: 0, display: 'flex', flexDirection: 'column',
         borderRadius: 28, minHeight: 0,
@@ -153,7 +171,7 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
               <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', marginBottom: 4 }}>세팅</div>
               <PvpModeToggle mode={mode} onChange={setMode} />
             </div>
-            <button type="button" onClick={onClose} style={{
+            <button type="button" onClick={guardClose(onClose)} style={{
               background: 'none', border: 'none', color: '#fff',
               width: 30, height: 30, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
@@ -209,8 +227,17 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
             </div>
 
             <div className="glass-inset" style={{ flex: 1, minWidth: 360, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: 5 }}>
                 <Icon name="gearSetting" size={13} /> 장비 세팅 · {heroNames[slot] || '슬롯을 고르세요'}
+                <ExclusiveGearButton
+                  heroName={heroNames[slot]}
+                  gear={g}
+                  onChange={(patch) => setGear((prev) => {
+                    const next = padGear5(prev);
+                    next[slot] = { ...next[slot], ...patch };
+                    return next;
+                  })}
+                />
               </div>
               <div style={{ display: 'flex', gap: 5 }}>
                 {heroNames.map((hName, idx) => (

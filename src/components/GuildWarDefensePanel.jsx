@@ -12,8 +12,10 @@ import PvpModeToggle, { PvpModeBadge } from './PvpModeToggle';
 import { ArenaDeckKindBadge, MetaDeckKindToggle, normalizeMetaDeckKind } from './ArenaDeckKind';
 import { pets } from '../data/pets';
 import { sortHeroesForList } from '../data/heroes';
-import { ROLE_ICONS } from '../data/roleIcons';
+import HeroListFilterBar from './HeroListFilterBar';
+import { heroMatchesQuery } from '../lib/heroSearch';
 import { backdropDismissProps } from '../utils/backdropDismiss';
+import { useUnsavedGuard } from '../utils/unsavedGuard';
 import { closeOverlayFromUI, collapseOverlayHistory, pushOverlay } from '../utils/overlayHistory';
 import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, markDeckHtml5DragStarted, shouldSuppressDeckClick, resetDeckDragState } from '../utils/deckDrag';
 import ModalScrim from './ModalScrim';
@@ -26,15 +28,6 @@ import {
   deckEditScrollModalClassSuffix,
   useDeckEditScrollWheelForward,
 } from '../lib/deckEditScrollModal';
-
-const ROLE_FILTERS = [
-  { id: 'all', label: '전체', icon: null },
-  { id: 'offensive', label: '공격형', icon: ROLE_ICONS.offensive },
-  { id: 'magic', label: '마법형', icon: ROLE_ICONS.magic },
-  { id: 'defensive', label: '방어형', icon: ROLE_ICONS.defensive },
-  { id: 'support', label: '지원형', icon: ROLE_ICONS.support },
-  { id: 'universal', label: '만능형', icon: ROLE_ICONS.universal },
-];
 
 const emptyHeroSlot = () => ({ primaryName: '', altText: '' });
 const emptySlots5 = () => [emptyHeroSlot(), emptyHeroSlot(), emptyHeroSlot(), emptyHeroSlot(), emptyHeroSlot()];
@@ -84,7 +77,6 @@ const flattenDefense = (d = {}) => {
 };
 
 const formatSpeedBadge = (d) => {
-  if (d?.mode === '내실') return '';
   const min = String(d?.speedMin ?? '').trim();
   const max = String(d?.speedMax ?? '').trim();
   if (!min && !max) return '';
@@ -114,6 +106,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
   const [form, setForm] = useState(null);
   const [slotIdx, setSlotIdx] = useState(0);
   const [roleFilter, setRoleFilter] = useState('all');
+  const [heroQuery, setHeroQuery] = useState('');
   const [dragGhost, setDragGhost] = useState(null);
   const dragGhostRef = useRef(null);
 
@@ -122,6 +115,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
   }, [dragGhost]);
 
   const closeDefenseModal = () => closeOverlayFromUI(() => setIsModalOpen(false));
+  const guardDefenseClose = useUnsavedGuard(isModalOpen && !!form, form);
 
   useEffect(() => {
     if (!isModalOpen) return;
@@ -148,6 +142,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
       ...emptySetting(),
     });
     setSlotIdx(0);
+    setHeroQuery('');
     setIsModalOpen(true);
   };
 
@@ -174,6 +169,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
       heroGearConfigs: d.heroGearConfigs,
     });
     setSlotIdx(0);
+    setHeroQuery('');
     setIsModalOpen(true);
   };
 
@@ -189,6 +185,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
       ...emptySetting(),
     });
     setSlotIdx(0);
+    setHeroQuery('');
     setAltsOpenId(parentId);
     setIsModalOpen(true);
   };
@@ -216,6 +213,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
       heroGearConfigs: d.heroGearConfigs,
     });
     setSlotIdx(0);
+    setHeroQuery('');
     setIsModalOpen(true);
   };
 
@@ -343,6 +341,15 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
 
   const patchForm = (updates) => setForm(prev => ({ ...prev, ...updates }));
 
+  const swappedGear = (a, b) => {
+    const cfgs = [...(form.heroGearConfigs || emptyGear5())];
+    while (cfgs.length < 5) cfgs.push(emptyGearConfig());
+    const tmp = cfgs[a];
+    cfgs[a] = cfgs[b];
+    cfgs[b] = tmp;
+    return cfgs;
+  };
+
   const patchGearDetail = (text) => {
     if (!form) return;
     const cfgs = [...(form.heroGearConfigs || emptyGear5())];
@@ -364,10 +371,11 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
       const tmp = next[toIdx];
       next[toIdx] = next[existingIdx];
       next[existingIdx] = tmp;
+      patchForm({ heroSlots: next, heroGearConfigs: swappedGear(toIdx, existingIdx) });
     } else {
       next[toIdx] = { ...(next[toIdx] || emptyHeroSlot()), primaryName: name };
+      patchForm({ heroSlots: next });
     }
-    patchForm({ heroSlots: next });
     setSlotIdx(toIdx);
   };
 
@@ -378,7 +386,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
       const tmp = next[toIdx];
       next[toIdx] = next[payload.fromIdx];
       next[payload.fromIdx] = tmp;
-      patchForm({ heroSlots: next });
+      patchForm({ heroSlots: next, heroGearConfigs: swappedGear(toIdx, payload.fromIdx) });
       setSlotIdx(toIdx);
       return;
     }
@@ -806,9 +814,10 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
       if (roleFilter !== 'all' && h.role !== roleFilter) return false;
       const cleanName = h.name.replace('(각성)', '');
       if (formHeroNames.includes(cleanName) && cleanName !== currentSlotName) return false;
+      if (heroQuery.trim() && !heroMatchesQuery(h, heroQuery.trim())) return false;
       return true;
     }));
-  }, [heroes, roleFilter, formHeroNames, currentSlotName]);
+  }, [heroes, roleFilter, heroQuery, formHeroNames, currentSlotName]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -846,7 +855,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
 
       {isModalOpen && form && (
         <ModalScrim style={{ zIndex: 3600, padding: 16, overflow: 'hidden' }}
-          {...backdropDismissProps(closeDefenseModal)}>
+          {...backdropDismissProps(guardDefenseClose(closeDefenseModal))}>
           <div
             className={`luxury-panel glass-modal editing-build-modal gw-defense-edit-modal${deckEditScrollModalClassSuffix(gwDefenseDeckScrollKind)}`}
             onClick={e => e.stopPropagation()}
@@ -868,7 +877,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                       ? (form.id ? '대체 덱 수정' : '대체 덱 추가')
                       : (form.id ? '방어 세팅 수정' : '방어 세팅 추가')}
                   </h3>
-                  <button type="button" className="editing-build-modal-close editing-build-modal-close--mobile" onClick={closeDefenseModal} title="모달 닫기">
+                  <button type="button" className="editing-build-modal-close editing-build-modal-close--mobile" onClick={guardDefenseClose(closeDefenseModal)} title="모달 닫기">
                     <Icon name="closeBtn" size={26} />
                   </button>
                 </div>
@@ -907,35 +916,31 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                       }}
                     />
                   </div>
-                  {form.mode === '속공' && (
-                    <>
-                      <div style={{ width: 1, background: 'rgba(255,255,255,0.14)', flexShrink: 0 }} />
-                      <div className="editing-build-arena-toggle-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 180 }}>
-                        <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>속공 수치</div>
-                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                          <input
-                            type="number"
-                            value={form.speedMin ?? ''}
-                            onChange={e => patchForm({ speedMin: e.target.value })}
-                            placeholder="이상"
-                            style={{ width: 64, padding: '5px 6px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: 6, fontSize: 12, fontWeight: 800, boxSizing: 'border-box' }}
-                          />
-                          <span style={{ color: '#94a3b8', fontWeight: 800, fontSize: 11, flexShrink: 0 }}>~</span>
-                          <input
-                            type="number"
-                            value={form.speedMax ?? ''}
-                            onChange={e => patchForm({ speedMax: e.target.value })}
-                            placeholder="이하"
-                            style={{ width: 64, padding: '5px 6px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: 6, fontSize: 12, fontWeight: 800, boxSizing: 'border-box' }}
-                          />
-                        </div>
-                      </div>
-                    </>
-                  )}
+                  <div style={{ width: 1, background: 'rgba(255,255,255,0.14)', flexShrink: 0 }} />
+                  <div className="editing-build-arena-toggle-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 180 }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>속공 수치</div>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <input
+                        type="number"
+                        value={form.speedMin ?? ''}
+                        onChange={e => patchForm({ speedMin: e.target.value })}
+                        placeholder="이상"
+                        style={{ width: 64, padding: '5px 6px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: 6, fontSize: 12, fontWeight: 800, boxSizing: 'border-box' }}
+                      />
+                      <span style={{ color: '#94a3b8', fontWeight: 800, fontSize: 11, flexShrink: 0 }}>~</span>
+                      <input
+                        type="number"
+                        value={form.speedMax ?? ''}
+                        onChange={e => patchForm({ speedMax: e.target.value })}
+                        placeholder="이하"
+                        style={{ width: 64, padding: '5px 6px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: 6, fontSize: 12, fontWeight: 800, boxSizing: 'border-box' }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="editing-build-author-row" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <button type="button" className="editing-build-modal-close editing-build-modal-close--desktop" onClick={closeDefenseModal} title="모달 닫기">
+                <button type="button" className="editing-build-modal-close editing-build-modal-close--desktop" onClick={guardDefenseClose(closeDefenseModal)} title="모달 닫기">
                   <Icon name="closeBtn" size={26} />
                 </button>
               </div>
@@ -1019,22 +1024,8 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                   <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Icon name="hero" size={14} /> 영웅 목록 · {formHeroNames.filter(Boolean).length}/3
                   </div>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {ROLE_FILTERS.map((r) => (
-                      <button
-                        key={r.id}
-                        type="button"
-                        onClick={() => setRoleFilter(r.id)}
-                        style={{
-                          padding: '8px 12px', fontSize: 13, fontWeight: 800, borderRadius: 8, border: 'none', cursor: 'pointer',
-                          background: roleFilter === r.id ? 'var(--gold-primary)' : 'rgba(255,255,255,0.06)',
-                          color: roleFilter === r.id ? '#000' : '#94a3b8', display: 'flex', alignItems: 'center', gap: 6,
-                        }}
-                      >
-                        {r.icon && <img src={r.icon} alt="" style={{ width: 16, height: 16, objectFit: 'contain' }} />}
-                        <span>{r.label}</span>
-                      </button>
-                    ))}
+                  <div style={{ flex: '1 1 380px', minWidth: 0 }}>
+                    <HeroListFilterBar role={roleFilter} onRoleChange={setRoleFilter} query={heroQuery} onQueryChange={setHeroQuery} />
                   </div>
                 </div>
                 <div
