@@ -13547,3 +13547,51 @@ html[data-ui-theme="solid"] .mypage-stats-panel {
     height: 14px;
   }
 }
+
+/* 길드 허브 총력전 팀 선택: 카드 모서리 덱 복사(우) · 붙여넣기(좌) */
+.totalwar-team-pick-tool {
+  position: absolute;
+  top: 8px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.totalwar-team-pick-tool.is-copy {
+  right: 8px;
+}
+.totalwar-team-pick-tool.is-paste {
+  left: 8px;
+  border-color: var(--accent-cyan);
+  background: rgba(56, 189, 248, 0.16);
+  color: var(--accent-cyan);
+}
+.totalwar-team-pick-tool.is-copied {
+  border-color: var(--gold-primary);
+  background: rgba(236, 232, 224, 0.18);
+  color: var(--gold-light);
+}
+@media (hover: hover) {
+  .totalwar-team-pick-tool.is-copy:not(.is-copied):hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+  .totalwar-team-pick-tool.is-paste:hover {
+    background: rgba(56, 189, 248, 0.28);
+  }
+}
+@media (max-width: 980px) {
+  .totalwar-team-pick-tool {
+    width: 30px;
+    height: 30px;
+  }
+}

@@ -203,6 +203,19 @@ const PATHS = {
       <path d="M5.5 15H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v.5" />
     </>
   ),
+  duplicate: (
+    <>
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M5 15V6a2 2 0 0 1 2-2h8" />
+    </>
+  ),
+  paste: (
+    <>
+      <path d="M9 4.5H7a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6.5a2 2 0 0 0-2-2h-2" />
+      <rect x="9" y="3" width="6" height="3" rx="1" />
+      <path d="M12 10v6M9.5 13.5 12 16l2.5-2.5" />
+    </>
+  ),
   logout: (
     <>
       <path d="M9 4H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h3" />

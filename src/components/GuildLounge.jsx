@@ -673,6 +673,25 @@ export default function GuildLounge() {
       setEditingBuild(null);
     });
   };
+  const [totalwarDeckClipboard, setTotalwarDeckClipboard] = useState(null);
+  const totalwarDeckSourceKey = (teamIdx) => `${editingTotalwarId}:${teamIdx}`;
+  const copyTotalwarDeck = (teamIdx) => {
+    const deck = editingTotalwarDecks[teamIdx];
+    if (!deck) return;
+    setTotalwarDeckClipboard({
+      deck: JSON.parse(JSON.stringify(totalwarDeckFromFields(deck))),
+      source: totalwarDeckSourceKey(teamIdx),
+    });
+    showToast(`${teamIdx + 1}팀 덱을 복사했어요. 붙여넣을 팀의 붙여넣기 버튼을 누르세요.`, 'success');
+  };
+  const pasteTotalwarDeck = (teamIdx) => {
+    if (!totalwarDeckClipboard) return;
+    const target = editingTotalwarDecks[teamIdx];
+    if ((target?.heroNames || []).some(Boolean) && !window.confirm(`${teamIdx + 1}팀 덱을 복사한 덱으로 바꿀까요?`)) return;
+    const pasted = JSON.parse(JSON.stringify(totalwarDeckClipboard.deck));
+    setEditingTotalwarDecks(prev => prev.map((d, k) => (k === teamIdx ? pasted : d)));
+    showToast(`${teamIdx + 1}팀에 붙여넣었어요. 「공략 저장」을 눌러야 저장돼요.`, 'success');
+  };
   const totalwarFlowOpen = showTotalwarTeamPick || (!!editingBuild && editingCategory === 'totalwar');
   const guardTotalwarPickClose = useUnsavedGuard(
     totalwarFlowOpen,
@@ -2124,16 +2143,42 @@ export default function GuildLounge() {
               {editingTotalwarDecks.map((deck, i) => {
                 const filled = (deck.heroNames || []).filter(Boolean);
                 const leadHero = filled[0] ? resolveHeroByName(filled[0]) : null;
+                const isCopySource = !!totalwarDeckClipboard
+                  && totalwarDeckClipboard.source === totalwarDeckSourceKey(i)
+                  && JSON.stringify(totalwarDeckClipboard.deck) === JSON.stringify(totalwarDeckFromFields(deck));
                 return (
                   <div
                     key={i}
                     style={{
+                      position: 'relative',
                       padding: '14px 10px', borderRadius: '14px',
                       background: 'rgba(255,255,255,0.04)',
                       border: editingTotalwarTeam === i && editingBuild ? '1.5px solid var(--gold-primary)' : '1px solid var(--border-subtle)',
                       color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px'
                     }}
                   >
+                    {totalwarDeckClipboard && !isCopySource && (
+                      <button
+                        type="button"
+                        className="totalwar-team-pick-tool is-paste"
+                        onClick={() => pasteTotalwarDeck(i)}
+                        title={`복사한 덱을 ${i + 1}팀에 붙여넣기`}
+                        aria-label={`복사한 덱을 ${i + 1}팀에 붙여넣기`}
+                      >
+                        <Icon name="paste" size={14} />
+                      </button>
+                    )}
+                    {filled.length > 0 && (
+                      <button
+                        type="button"
+                        className={`totalwar-team-pick-tool is-copy${isCopySource ? ' is-copied' : ''}`}
+                        onClick={() => copyTotalwarDeck(i)}
+                        title={isCopySource ? `${i + 1}팀 덱 복사됨` : `${i + 1}팀 덱 복사`}
+                        aria-label={isCopySource ? `${i + 1}팀 덱 복사됨` : `${i + 1}팀 덱 복사`}
+                      >
+                        <Icon name={isCopySource ? 'check' : 'duplicate'} size={14} />
+                      </button>
+                    )}
                     <div style={{ fontSize: '14px', fontWeight: 900, color: 'var(--gold-light)' }}>{i + 1}팀</div>
                     <div className="totalwar-team-lead-face" style={{
                       width: '48px', flexShrink: 0,
