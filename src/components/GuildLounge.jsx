@@ -19,6 +19,7 @@ import AwakenMark from './AwakenMark';
 import HeroPortraitCard from './HeroPortraitCard';
 import HeroListFilterBar from './HeroListFilterBar';
 import { heroMatchesQuery } from '../lib/heroSearch';
+import { nextEmptySlotAfter } from '../lib/deckSlots';
 import SkillTimelineSteps from './SkillTimelineSteps';
 import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, markDeckHtml5DragStarted, shouldSuppressDeckClick, resetDeckDragState } from '../utils/deckDrag';
 import { useLounge } from '../context/LoungeContext';
@@ -160,6 +161,14 @@ const roundFromFields = (src = {}) => ({
     ...(src.heroGearConfigs?.[i] || {}),
   })),
 });
+
+const editorRoundSnapshot = (src) => {
+  const next = roundFromFields(src);
+  return {
+    ...next,
+    speedOrderNames: next.speedOrderNames.length ? next.speedOrderNames : next.heroNames.filter(Boolean),
+  };
+};
 
 const normalizeExpeditionRounds = (build = {}) => {
   // 구형: 빌드에만 petId 있던 경우 → 라운드에 폴백 (서로 다른 펫은 라운드별 petId)
@@ -669,6 +678,33 @@ export default function GuildLounge() {
     totalwarFlowOpen,
     totalwarFlowOpen ? { buildTitle, decks: editingTotalwarDecks.map(totalwarDeckFromFields) } : null,
   );
+  const buildEditorOpen = !!editingBuild && editingCategory !== 'totalwar';
+  const guardEditorClose = useUnsavedGuard(
+    buildEditorOpen,
+    buildEditorOpen
+      ? {
+          buildTitle,
+          tier: editingDeckTier,
+          mode: editingPvpMode,
+          deckKind: editingArenaKind,
+          ...(editingCategory === 'expedition'
+            ? {
+                rounds: [1, 2].map((r) => editorRoundSnapshot(
+                  r === editingExpeditionRound ? captureCurrentRound() : editingExpeditionRounds[r],
+                )),
+              }
+            : {
+                formationId: editingBuild.formationId || 'protect',
+                petId: editingPetId,
+                heroNames: padHeroNames5(editingHeroNames),
+                skillSequence: editingSkillTimeline.filter(Boolean),
+                speedOrderNames: editingSpeedOrder,
+                speedIgnoredNames: editingSpeedIgnored,
+                heroGearConfigs,
+              }),
+        }
+      : null,
+  );
 
   const returnToTotalwarTeamPick = () => {
     closeOverlayFromUI(returnToTotalwarTeamPickInternal);
@@ -843,11 +879,7 @@ export default function GuildLounge() {
     setEditingPvpMode('속공');
     setEditingArenaKind('attack');
     if (cat === 'expedition') {
-      const round1 = roundFromFields({
-        formationId: 'protect',
-        heroNames: ['미호', '나타', '리나', '에반', '비스킷'],
-        speedOrderNames: ['미호', '나타', '리나', '에반', '비스킷'],
-      });
+      const round1 = emptyExpeditionRound();
       const rounds = { 1: round1, 2: emptyExpeditionRound() };
       setEditingExpeditionRounds(rounds);
       setEditingExpeditionRound(1);
@@ -866,13 +898,16 @@ export default function GuildLounge() {
       setSelectedHeroGearIdx(0);
       setNewSkillHero('');
     } else {
-      setEditingHeroNames(['미호', '나타', '리나', '에반', '비스킷']);
+      setEditingHeroNames(['', '', '', '', '']);
       setEditingSkillTimeline([]);
-      setEditingSpeedOrder(['미호', '나타', '리나', '에반', '비스킷']);
+      setEditingSpeedOrder([]);
       setEditingSpeedIgnored([]);
       setHeroGearConfigs(defaultGear5());
       setEditingBuild({ id: 'new_' + Date.now(), formationId: 'protect' });
       setEditingPetId(pets[0]?.id || 'pet_1');
+      setTargetSlotIdx(0);
+      setSelectedHeroGearIdx(0);
+      setNewSkillHero('');
     }
   };
 
@@ -920,8 +955,14 @@ export default function GuildLounge() {
       return;
     }
     const next = [...editingHeroNames];
+    while (next.length < 5) next.push('');
     next[targetSlotIdx] = hName;
     setEditingHeroNames(next);
+    const nextEmpty = nextEmptySlotAfter(next, targetSlotIdx);
+    if (nextEmpty !== -1) {
+      setTargetSlotIdx(nextEmpty);
+      setSelectedHeroGearIdx(nextEmpty);
+    }
   };
 
   const swapHeroGearSlots = (a, b) => {
@@ -964,8 +1005,12 @@ export default function GuildLounge() {
     }
   };
 
+  const skillStepHero = newSkillHero && editingHeroNames.includes(newSkillHero)
+    ? newSkillHero
+    : (editingHeroNames.find(Boolean) || '');
+
   const handleAddSkillStep = () => {
-    if (!newSkillHero) return;
+    if (!skillStepHero) return;
     const raw = String(turnNumberInput || '').trim();
     const turnMatch = raw.match(/(\d+)/);
     const picked = turnMatch ? Number(turnMatch[1]) : 0;
@@ -977,7 +1022,7 @@ export default function GuildLounge() {
     const roundStr = `${picked}턴`;
     const newStep = {
       round: roundStr,
-      heroName: newSkillHero,
+      heroName: skillStepHero,
       dir: newSkillDir,
       text: newSkillText || ''
     };
@@ -2141,7 +2186,7 @@ export default function GuildLounge() {
                   <button
                     type="button"
                     className="editing-build-modal-close editing-build-modal-close--mobile"
-                    onClick={closeEditorModal}
+                    onClick={() => guardEditorClose(closeEditorModal)()}
                     title="모달 닫기"
                   >
                     <Icon name="closeBtn" size={26} />
@@ -2240,7 +2285,7 @@ export default function GuildLounge() {
                 <button
                   type="button"
                   className="editing-build-modal-close editing-build-modal-close--desktop"
-                  onClick={closeEditorModal}
+                  onClick={() => guardEditorClose(closeEditorModal)()}
                   title="모달 닫기"
                 >
                   <Icon name="closeBtn" size={26} />
@@ -2579,7 +2624,7 @@ export default function GuildLounge() {
                     <div>
                       <div style={{ fontSize: '12px', color: '#fff', marginBottom: '4px', fontWeight: 800 }}>스킬</div>
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <select value={newSkillHero} onChange={e => setNewSkillHero(e.target.value)} style={{ flex: 1, width: '100%', padding: '10px 10px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '7px', fontSize: '14px', fontWeight: 800, colorScheme: 'dark' }}>
+                        <select value={skillStepHero} onChange={e => setNewSkillHero(e.target.value)} style={{ flex: 1, width: '100%', padding: '10px 10px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '7px', fontSize: '14px', fontWeight: 800, colorScheme: 'dark' }}>
                           {editingHeroNames.filter(Boolean).map((hN, i) => (
                             <option key={i} value={hN}>{hN}</option>
                           ))}

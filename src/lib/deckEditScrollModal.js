@@ -5,7 +5,7 @@ import { useEffect } from 'react';
  * 스타일: src/styles/deckEditScrollModal.css (PC min-width 981px only)
  *
  * kind 'arena' — 결투장·상급결투장 (2열 + 영웅)
- * kind 'pve'   — 길드 허브 공성전·강림원정대 (3열 + 타임라인 + 영웅)
+ * kind 'pve'   — 길드 허브 공성전·강림원정대 · 공용 허브 PvE 공략 (3열 + 타임라인 + 영웅)
  */
 
 /** 내부 스크롤 허용 — 영웅 목록 + 스킬 순서 리스트(고정 높이) */

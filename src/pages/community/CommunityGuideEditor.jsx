@@ -2,9 +2,9 @@ import { useMemo, useState, useEffect, useRef } from 'react';
 import { heroes, sortHeroesForList } from '../../data/heroes';
 import { pets } from '../../data/pets';
 import InGameDeckCard from '../../components/InGameDeckCard';
-import HeroGridPicker from '../../components/HeroGridPicker';
 import HeroListFilterBar from '../../components/HeroListFilterBar';
 import { heroMatchesQuery } from '../../lib/heroSearch';
+import { nextEmptySlotAfter } from '../../lib/deckSlots';
 import HeroPortraitCard from '../../components/HeroPortraitCard';
 import HeroGearPanel, { emptyGearConfig, buildOptionCode } from '../../components/HeroGearPanel';
 import SkillReservationBoard from '../../components/SkillReservationBoard';
@@ -70,12 +70,12 @@ export default function CommunityGuideEditor({
 }) {
   const skillMeta = communitySkillMode(initial.category);
   const isArena = initial.category === 'arena';
-  const deckEditScrollKind = getDeckEditScrollKindFromArenaFlag(isArena);
-  const deckEditScrollBodyRef = useRef(null);
-  useDeckEditScrollWheelForward(deckEditScrollBodyRef, !!deckEditScrollKind);
   const isTimeline = skillMeta.mode === 'timeline';
   const maxRes = skillMeta.maxReservations || 3;
   const contentMode = skillMeta.layout === 'pvp' ? 'pvp' : 'pve';
+  const deckEditScrollKind = getDeckEditScrollKindFromArenaFlag(isArena) || (contentMode === 'pve' ? 'pve' : null);
+  const deckEditScrollBodyRef = useRef(null);
+  useDeckEditScrollWheelForward(deckEditScrollBodyRef, !!deckEditScrollKind);
   const lockedArenaKind = initial.arenaKind === 'advanced' ? 'advanced' : 'normal';
 
   useEffect(() => () => resetDeckDragState(), []);
@@ -127,6 +127,15 @@ export default function CommunityGuideEditor({
     if (name && next.some((n, i) => i !== idx && n === name)) return;
     next[idx] = name;
     setHeroNames(next);
+  };
+
+  const pickHero = (name) => {
+    const next = padNames5(heroNames);
+    if (name && next.some((n, i) => i !== slot && n === name)) return;
+    next[slot] = name;
+    setHeroNames(next);
+    const nextEmpty = nextEmptySlotAfter(next, slot);
+    if (nextEmpty !== -1) setSlot(nextEmpty);
   };
 
   const onDrop = (payload, toIdx) => {
@@ -375,82 +384,64 @@ export default function CommunityGuideEditor({
             />
           </div>
 
-          {contentMode === 'pvp' ? (
-            <div className="glass-inset editing-build-hero-picker" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10, width: '100%', boxSizing: 'border-box', flexShrink: 0, minHeight: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', flexShrink: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Icon name="hero" size={14} /> 영웅 목록
-                </div>
-                <div style={{ flex: '1 1 380px', minWidth: 0 }}>
-                  <HeroListFilterBar role={roleFilter} onRoleChange={setRoleFilter} query={heroQuery} onQueryChange={setHeroQuery} />
-                </div>
-              </div>
-              <div
-                className={deckEditScrollHeroGridClass(deckEditScrollKind)}
-                style={deckEditScrollHeroGridStyle(deckEditScrollKind)}
-              >
-                {filteredHeroesByRole.map((h) => {
-                  const cleanName = h.name.replace('(각성)', '');
-                  const isCurrent = (heroNames[slot] || '') === cleanName;
-                  return (
-                    <div
-                      key={h.id}
-                      draggable
-                      onPointerDown={(e) => {
-                        markDeckPointerDown(e);
-                        startDeckPointerDrag(e, { source: 'picker', name: cleanName }, { label: cleanName });
-                      }}
-                      onDragStart={(e) => {
-                        if (!allowHtml5DeckDrag(e)) {
-                          e.preventDefault();
-                          return;
-                        }
-                        markDeckHtml5DragStarted();
-                        setDeckDragData(e, { source: 'picker', name: cleanName });
-                      }}
-                      onClick={() => {
-                        if (shouldSuppressDeckClick()) return;
-                        setHeroAt(slot, cleanName);
-                      }}
-                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', touchAction: 'manipulation' }}
-                    >
-                      <div style={{
-                        width: 58,
-                        outline: isCurrent ? '2px solid var(--accent-cyan)' : 'none',
-                        outlineOffset: 1,
-                        borderRadius: 8,
-                      }}>
-                        <HeroPortraitCard hero={h} showStars showRole showName={false} />
-                      </div>
-                      <div style={{
-                        width: 58, marginTop: 2, background: '#000', borderRadius: 3, padding: '1px 0',
-                        textAlign: 'center', fontSize: 8, color: '#fff', fontWeight: 800,
-                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                      }}>
-                        {cleanName}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <div className="glass-inset editing-build-hero-picker" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10, width: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <div className="glass-inset editing-build-hero-picker" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10, width: '100%', boxSizing: 'border-box', flexShrink: 0, minHeight: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', flexShrink: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Icon name="hero" size={14} /> 영웅 목록
               </div>
-              <div className="editing-build-hero-grid" style={{ minHeight: 168 }}>
-                <HeroGridPicker
-                  heroes={heroes}
-                  selectedNames={filledNames}
-                  currentSlotName={heroNames[slot] || ''}
-                  onPick={(name) => setHeroAt(slot, name)}
-                  fillHeight
-                  showSearch
-                />
+              <div style={{ flex: '1 1 380px', minWidth: 0 }}>
+                <HeroListFilterBar role={roleFilter} onRoleChange={setRoleFilter} query={heroQuery} onQueryChange={setHeroQuery} />
               </div>
             </div>
-          )}
+            <div
+              className={deckEditScrollHeroGridClass(deckEditScrollKind)}
+              style={deckEditScrollHeroGridStyle(deckEditScrollKind)}
+            >
+              {filteredHeroesByRole.map((h) => {
+                const cleanName = h.name.replace('(각성)', '');
+                const isCurrent = (heroNames[slot] || '') === cleanName;
+                return (
+                  <div
+                    key={h.id}
+                    draggable
+                    onPointerDown={(e) => {
+                      markDeckPointerDown(e);
+                      startDeckPointerDrag(e, { source: 'picker', name: cleanName }, { label: cleanName });
+                    }}
+                    onDragStart={(e) => {
+                      if (!allowHtml5DeckDrag(e)) {
+                        e.preventDefault();
+                        return;
+                      }
+                      markDeckHtml5DragStarted();
+                      setDeckDragData(e, { source: 'picker', name: cleanName });
+                    }}
+                    onClick={() => {
+                      if (shouldSuppressDeckClick()) return;
+                      pickHero(cleanName);
+                    }}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', touchAction: 'manipulation' }}
+                  >
+                    <div style={{
+                      width: 58,
+                      outline: isCurrent ? '2px solid var(--accent-cyan)' : 'none',
+                      outlineOffset: 1,
+                      borderRadius: 8,
+                    }}>
+                      <HeroPortraitCard hero={h} showStars showRole showName={false} />
+                    </div>
+                    <div style={{
+                      width: 58, marginTop: 2, background: '#000', borderRadius: 3, padding: '1px 0',
+                      textAlign: 'center', fontSize: 8, color: '#fff', fontWeight: 800,
+                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>
+                      {cleanName}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
           {skillMeta.layout === 'pve' && (
             <div className="editing-build-timeline-col" style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>

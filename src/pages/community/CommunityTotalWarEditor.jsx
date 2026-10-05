@@ -1,13 +1,18 @@
 import { useMemo, useState } from 'react';
-import { heroes } from '../../data/heroes';
+import { heroes, sortHeroesForList } from '../../data/heroes';
 import { pets } from '../../data/pets';
 import InGameDeckCard from '../../components/InGameDeckCard';
-import HeroGridPicker from '../../components/HeroGridPicker';
+import HeroListFilterBar from '../../components/HeroListFilterBar';
+import HeroPortraitCard from '../../components/HeroPortraitCard';
+import { heroMatchesQuery } from '../../lib/heroSearch';
 import HeroGearPanel, { emptyGearConfig, buildOptionCode } from '../../components/HeroGearPanel';
 import Icon from '../../components/icons/Icon';
 import ModalScrim from '../../components/ModalScrim';
 import PvpModeToggle, { normalizePvpMode } from '../../components/PvpModeToggle';
 import { backdropDismissProps } from '../../utils/backdropDismiss';
+import { deckEditScrollHeroGridClass, deckEditScrollHeroGridStyle } from '../../lib/deckEditScrollModal';
+import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, markDeckHtml5DragStarted, shouldSuppressDeckClick } from '../../utils/deckDrag';
+import { nextEmptySlotAfter } from '../../lib/deckSlots';
 
 const padNames5 = (names = []) => {
   const next = (names || []).map((n) => n || '');
@@ -42,6 +47,8 @@ export default function CommunityTotalWarEditor({
   onClose,
 }) {
   const [slot, setSlot] = useState(0);
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [heroQuery, setHeroQuery] = useState('');
 
   const current = {
     formationId: deck?.formationId || 'protect',
@@ -57,6 +64,15 @@ export default function CommunityTotalWarEditor({
     [current.petId],
   );
   const filledNames = (current.heroNames || []).filter(Boolean);
+  const currentSlotName = current.heroNames[slot] || '';
+
+  const filteredHeroes = sortHeroesForList(heroes.filter((h) => {
+    if (roleFilter !== 'all' && h.role !== roleFilter) return false;
+    const cleanName = h.name.replace('(각성)', '');
+    if (filledNames.includes(cleanName) && cleanName !== currentSlotName) return false;
+    if (heroQuery.trim() && !heroMatchesQuery(h, heroQuery.trim())) return false;
+    return true;
+  }));
 
   const patchDeck = (patch) => {
     const next = {
@@ -78,6 +94,15 @@ export default function CommunityTotalWarEditor({
     if (name && next.some((n, i) => i !== idx && n === name)) return;
     next[idx] = name;
     patchDeck({ heroNames: next });
+  };
+
+  const pickHero = (name) => {
+    const next = padNames5(current.heroNames);
+    if (name && next.some((n, i) => i !== slot && n === name)) return;
+    next[slot] = name;
+    patchDeck({ heroNames: next });
+    const nextEmpty = nextEmptySlotAfter(next, slot);
+    if (nextEmpty !== -1) setSlot(nextEmpty);
   };
 
   const onDrop = (payload, toIdx) => {
@@ -164,6 +189,7 @@ export default function CommunityTotalWarEditor({
           className="editing-build-grid editing-build-modal-body is-pvp"
           style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px 20px', gap: 20, alignItems: 'stretch', boxSizing: 'border-box' }}
         >
+          <div className="editing-build-left-stack">
           <div className="editing-build-deck-slot" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <InGameDeckCard
               teamName={`${team + 1}팀`}
@@ -187,25 +213,27 @@ export default function CommunityTotalWarEditor({
             />
           </div>
 
-          <div className="glass-inset editing-build-detail-panel" style={{ padding: '12px 14px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div className="glass-inset editing-build-detail-panel" style={{ padding: '8px 12px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 4 }}>
             <div style={{ fontSize: 11, color: 'var(--accent-cyan)', fontWeight: 800 }}>
               세팅 디테일{current.heroNames[slot] ? ` · ${current.heroNames[slot]}` : ''}
             </div>
             <textarea
               className="editing-build-detail-textarea"
+              rows={3}
               value={current.heroGearConfigs[slot]?.detailNote || ''}
               onChange={(e) => {
                 const next = padGear5(current.heroGearConfigs);
                 next[slot] = { ...next[slot], detailNote: e.target.value };
                 patchDeck({ heroGearConfigs: next });
               }}
-              placeholder={'예:\n치확 67%에 가깝게\n약공 46%에 가깝게\n치피 최대한 땡기기'}
+              placeholder={'예: 치확 67% · 약공 46%에 가깝게'}
               style={{
-                width: '100%', padding: '10px 12px', background: '#07090e', border: '1px solid var(--border-gold)',
+                width: '100%', padding: '8px 12px', background: '#07090e', border: '1px solid var(--border-gold)',
                 color: '#e2e8f0', borderRadius: 7, fontSize: 14, fontWeight: 700, lineHeight: 1.5,
-                boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', minHeight: 110, flex: 1,
+                boxSizing: 'border-box', resize: 'none', fontFamily: 'inherit',
               }}
             />
+          </div>
           </div>
 
           <div
@@ -227,18 +255,48 @@ export default function CommunityTotalWarEditor({
           </div>
 
           <div className="glass-inset editing-build-hero-picker" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10, width: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-              <Icon name="hero" size={14} /> 영웅 목록
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', flexShrink: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Icon name="hero" size={14} /> 영웅 목록
+              </div>
+              <div style={{ flex: '1 1 380px', minWidth: 0 }}>
+                <HeroListFilterBar role={roleFilter} onRoleChange={setRoleFilter} query={heroQuery} onQueryChange={setHeroQuery} />
+              </div>
             </div>
-            <div className="editing-build-hero-grid" style={{ minHeight: 168 }}>
-              <HeroGridPicker
-                heroes={heroes}
-                selectedNames={filledNames}
-                currentSlotName={current.heroNames[slot] || ''}
-                onPick={(name) => setHeroAt(slot, name)}
-                fillHeight
-                showSearch
-              />
+            <div className={deckEditScrollHeroGridClass(null)} style={deckEditScrollHeroGridStyle(null)}>
+              {filteredHeroes.map((h) => {
+                const cleanName = h.name.replace('(각성)', '');
+                return (
+                  <div
+                    key={h.id}
+                    draggable
+                    onPointerDown={(e) => {
+                      markDeckPointerDown(e);
+                      startDeckPointerDrag(e, { source: 'picker', name: cleanName }, { label: cleanName });
+                    }}
+                    onDragStart={(e) => {
+                      if (!allowHtml5DeckDrag(e)) {
+                        e.preventDefault();
+                        return;
+                      }
+                      markDeckHtml5DragStarted();
+                      setDeckDragData(e, { source: 'picker', name: cleanName });
+                    }}
+                    onClick={() => {
+                      if (shouldSuppressDeckClick()) return;
+                      pickHero(cleanName);
+                    }}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', touchAction: 'manipulation' }}
+                  >
+                    <div style={{ width: 58, outline: currentSlotName === cleanName ? '2px solid var(--accent-cyan)' : 'none', outlineOffset: 1, borderRadius: 8 }}>
+                      <HeroPortraitCard hero={h} showStars showRole showName={false} />
+                    </div>
+                    <div style={{ width: 58, marginTop: 2, background: '#000', borderRadius: 3, padding: '1px 0', textAlign: 'center', fontSize: 8, color: '#fff', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {cleanName}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
