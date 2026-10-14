@@ -312,14 +312,13 @@ export default function MainSiteEditor() {
       <section className="luxury-panel ops-pick-rates-panel" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12, overflow: 'visible' }}>
         <div>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#fff' }}>결투장 & 상급결투장 기용률 TOP 5</h3>
-          <div style={{ fontSize: 12, color: '#fff', marginTop: 4, textShadow: '0 1px 6px rgba(0,0,0,0.7)' }}>도감에 있는 영웅을 고르고, 기용률·승률만 숫자로 적으면 됩니다. 유형은 영웅을 고르면 자동으로 들어갑니다.</div>
+          <div style={{ fontSize: 12, color: '#fff', marginTop: 4, textShadow: '0 1px 6px rgba(0,0,0,0.7)' }}>도감에 있는 영웅을 고르고, 기용률만 숫자로 적으면 됩니다. 유형은 영웅을 고르면 자동으로 들어갑니다.</div>
         </div>
         <div className="ops-pick-head">
           <span>순위</span>
           <span>영웅</span>
           <span>유형</span>
           <span>기용률</span>
-          <span>승률</span>
         </div>
         {pickRows.map((row, i) => (
           <div key={i} className="ops-pick-row">
@@ -335,9 +334,6 @@ export default function MainSiteEditor() {
             </div>
             <label className="ops-glass-label">기용률
               <input className="ops-glass-field" value={row.pickRate || ''} placeholder="예: 78.4%" onChange={(e) => updatePick(i, { pickRate: e.target.value })} />
-            </label>
-            <label className="ops-glass-label">승률
-              <input className="ops-glass-field" value={row.winRate || ''} placeholder="예: 64.2%" onChange={(e) => updatePick(i, { winRate: e.target.value })} />
             </label>
           </div>
         ))}

@@ -5,6 +5,11 @@
 
 ## 17. 패치 내역
 
+### 2026-10-14 (`v2026.10.14.196`) — 메인 PVP 기용률 TOP 5 승률 제거
+- 메인 「PVP 영웅 기용률 TOP 5」에서 승률 줄 제거(기용률만 표시). Ops 메인페이지 편집 기용률 TOP 5에서 승률 열·입력칸 제거(`.ops-pick-head/row` 4열).
+- 저장 데이터(`site/main.pickRates[].winRate`)는 건드리지 않음 — 기존 값은 남아 있으나 표시 안 함.
+- Hosting만 (rules·Functions·스키마 무변경).
+
 ### 2026-10-14 (`v2026.10.14.195`) — 귀멸 콜라보 영웅 · PvE 기타 디테일 · 전체 턴 세부 설정
 - **도감:** 콜라보 영웅 코쵸우 시노부·토미오카 기유 추가(`scraped_heroes.json`, `heroCardMeta.json`, 전용장비 `exclusiveGearMeta.generated.json`, `public/images/collab_*`). 시스템 효과 「독 축적(중첩)」·「반점」(`systemRules.js`).
 - **키워드:** `keywords.js` EFFECT_KEYWORDS에서 단독 「약점 공격」 제거(설명 없는 회색 표시 해제, 「약점 공격 확률 증가」는 유지).

@@ -128,7 +128,6 @@ export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCo
                   </div>
                   <div className="rank-pts">
                     {h.pickRate}
-                    <span>승률 {h.winRate}</span>
                   </div>
                 </div>
               );

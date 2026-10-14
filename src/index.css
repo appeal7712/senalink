@@ -2625,7 +2625,7 @@ h1, h2, h3 {
 .ops-pick-head,
 .ops-pick-row {
   display: grid;
-  grid-template-columns: 48px minmax(200px, 1.5fr) 88px 1fr 1fr;
+  grid-template-columns: 48px minmax(200px, 1.5fr) 88px 1fr;
   gap: 8px;
   align-items: end;
 }
