@@ -159,7 +159,7 @@ export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCo
                         target="_blank"
                         rel="noopener noreferrer"
                         className="btn-ops"
-                        style={{ flexShrink: 0, fontSize: 12, padding: '8px 12px', textDecoration: 'none' }}
+                        style={{ flexShrink: 0, alignSelf: 'center', fontSize: 12, padding: '8px 12px', textDecoration: 'none' }}
                       >
                         열기
                       </a>
