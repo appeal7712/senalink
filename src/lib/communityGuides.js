@@ -72,9 +72,10 @@ export function normalizeCommunityGuide(raw = {}, id = '') {
   const decks = isTotalwar && Array.isArray(raw.decks)
     ? raw.decks.map(normalizeTotalwarDeck)
     : null;
+  const section = raw.section === 'pvp' ? 'pvp' : 'pve';
   return {
     id: id || raw.id || '',
-    section: raw.section === 'pvp' ? 'pvp' : 'pve',
+    section,
     category,
     contentKey: raw.contentKey || '',
     arenaKind: isArena ? (raw.arenaKind === 'advanced' ? 'advanced' : 'normal') : null,
@@ -98,6 +99,9 @@ export function normalizeCommunityGuide(raw = {}, id = '') {
     tier: normalizeDeckTier(raw.tier),
     decks,
     likedBy: Array.isArray(raw.likedBy) ? raw.likedBy.filter(Boolean) : [],
+    ...(section === 'pve'
+      ? { otherDetail: typeof raw.otherDetail === 'string' ? raw.otherDetail : '' }
+      : {}),
   };
 }
 

@@ -82,6 +82,7 @@ export default function CommunityGuideEditor({
 
   const [title, setTitle] = useState(initial.title || '');
   const [deckTier, setDeckTier] = useState(() => normalizeDeckTier(initial.tier));
+  const [otherDetail, setOtherDetail] = useState(() => (typeof initial.otherDetail === 'string' ? initial.otherDetail : ''));
   const [arenaTier, setArenaTier] = useState(normalizeArenaTier(initial.arenaTier || 'bronze'));
   const [deckKind, setDeckKind] = useState(normalizeMetaDeckKind(initial.deckKind));
   const [mode, setMode] = useState(normalizePvpMode(initial.mode));
@@ -105,6 +106,7 @@ export default function CommunityGuideEditor({
   const [turnInput, setTurnInput] = useState('0턴');
   const [newHero, setNewHero] = useState('');
   const [newDir, setNewDir] = useState('upper');
+  const [fineTurnPick, setFineTurnPick] = useState(false);
   const [newNote, setNewNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [roleFilter, setRoleFilter] = useState('all');
@@ -157,6 +159,15 @@ export default function CommunityGuideEditor({
     if (payload.name) setHeroAt(toIdx, payload.name);
   };
 
+  const toggleFineTurnPick = () => {
+    if (fineTurnPick) {
+      const picked = Number(String(turnInput).match(/(\d+)/)?.[1]) || 0;
+      setTurnInput(`${Math.min(68, Math.ceil(picked / 4) * 4)}턴`);
+      if (newDir === 'basic') setNewDir('upper');
+    }
+    setFineTurnPick(!fineTurnPick);
+  };
+
   const addTimelineStep = () => {
     if (!newHero) return;
     setTimeline((prev) => [...prev, {
@@ -169,7 +180,7 @@ export default function CommunityGuideEditor({
   };
 
   const guardClose = useUnsavedGuard(true, {
-    title, deckTier, arenaTier, deckKind, mode, formationId, heroNames, gear,
+    title, deckTier, otherDetail, arenaTier, deckKind, mode, formationId, heroNames, gear,
     reserved, timeline, speedOrder, speedIgnored, petId,
   });
 
@@ -197,6 +208,7 @@ export default function CommunityGuideEditor({
         arenaKind: isArena ? lockedArenaKind : null,
         arenaTier: isArena ? arenaTier : null,
         tier: contentMode === 'pve' ? normalizeDeckTier(deckTier) : normalizeDeckTier(initial.tier),
+        ...(contentMode === 'pve' ? { otherDetail: otherDetail.trim() } : {}),
         deckKind: isArena ? deckKind : initial.deckKind,
         mode: (isArena || skillMeta.layout === 'pvp') ? mode : initial.mode,
         formationId,
@@ -255,13 +267,31 @@ export default function CommunityGuideEditor({
             </div>
 
             {contentMode === 'pve' && (
-              <div className="editing-build-arena-toggle-col" style={{
-                padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0,
-                border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12,
-                background: 'rgba(255,255,255,0.05)', minWidth: 120,
+              <div className="editing-build-arena-toggles" style={{
+                display: 'flex', alignItems: 'stretch', flexShrink: 0,
+                border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, overflow: 'hidden',
+                background: 'rgba(255,255,255,0.05)', flexWrap: 'wrap',
               }}>
-                <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>추천도</div>
-                <DeckTierStars tier={deckTier} onChange={setDeckTier} />
+                <div className="editing-build-arena-toggle-col editing-build-other-detail-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 280, flex: 1, maxWidth: 360 }}>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>기타 디테일</div>
+                  <textarea
+                    className="editing-build-detail-textarea"
+                    rows={2}
+                    value={otherDetail}
+                    onChange={(e) => setOtherDetail(e.target.value)}
+                    placeholder="예: 보스 패턴·주의할 점"
+                    style={{
+                      width: '100%', padding: '6px 10px', background: '#07090e', border: '1px solid var(--border-gold)',
+                      color: '#e2e8f0', borderRadius: 7, fontSize: 12, fontWeight: 700, lineHeight: 1.45,
+                      boxSizing: 'border-box', resize: 'none', fontFamily: 'inherit', minHeight: 0,
+                    }}
+                  />
+                </div>
+                <div style={{ width: 1, background: 'rgba(255,255,255,0.14)', flexShrink: 0 }} />
+                <div className="editing-build-arena-toggle-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 120 }}>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>추천도</div>
+                  <DeckTierStars tier={deckTier} onChange={setDeckTier} />
+                </div>
               </div>
             )}
 
@@ -491,10 +521,25 @@ export default function CommunityGuideEditor({
                     </div>
                   </div>
                   <div className="glass-inset editing-build-timeline-add" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>+ 스킬 시전 순서 추가</div>
-                    <div style={{ fontSize: 10, color: '#fff', marginBottom: 3, fontWeight: 800 }}>턴 선택 (0·4·8…68)</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4 }}>
-                      {[0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68].map((n) => {
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>+ 스킬 시전 순서 추가</div>
+                      <button
+                        type="button"
+                        className={`skill-turn-fine-toggle${fineTurnPick ? ' is-on' : ''}`}
+                        aria-pressed={fineTurnPick}
+                        onClick={toggleFineTurnPick}
+                      >
+                        전체 턴 세부 설정
+                      </button>
+                    </div>
+                    <div style={{ fontSize: 10, color: '#fff', marginBottom: 3, fontWeight: 800 }}>
+                      {fineTurnPick ? '턴 선택 (0~69)' : '턴 선택 (0·4·8…68)'}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: fineTurnPick ? 'repeat(10, 1fr)' : 'repeat(6, 1fr)', gap: fineTurnPick ? 3 : 4 }}>
+                      {(fineTurnPick
+                        ? Array.from({ length: 70 }, (_, i) => i)
+                        : [0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68]
+                      ).map((n) => {
                         const r = `${n}턴`;
                         const picked = Number(String(turnInput).match(/(\d+)/)?.[1]);
                         const selected = turnInput === r || picked === n;
@@ -504,7 +549,7 @@ export default function CommunityGuideEditor({
                             type="button"
                             onClick={() => setTurnInput(r)}
                             style={{
-                              padding: '8px 0', fontSize: 13, fontWeight: 800, borderRadius: 6,
+                              padding: fineTurnPick ? '4px 0' : '8px 0', fontSize: fineTurnPick ? 11 : 13, fontWeight: 800, borderRadius: 6,
                               border: selected ? '1px solid var(--gold-light)' : '1px solid rgba(255,255,255,0.08)',
                               cursor: 'pointer',
                               background: selected ? 'var(--gold-primary)' : 'rgba(255,255,255,0.04)',
@@ -522,6 +567,7 @@ export default function CommunityGuideEditor({
                         {filledNames.map((n) => <option key={n} value={n}>{n}</option>)}
                       </select>
                       <select value={newDir} onChange={(e) => setNewDir(e.target.value)} style={fieldStyle}>
+                        {fineTurnPick ? <option value="basic">평타</option> : null}
                         <option value="upper">위 스킬</option>
                         <option value="down">아래 스킬</option>
                         <option value="awaken">각성</option>

@@ -827,5 +827,17 @@
     "name": "아가츠마 젠이츠",
     "cardUrl": "/images/collab_아가츠마젠이츠/card.webp",
     "source": "asset_portrait"
+  },
+  "collab_코쵸우시노부": {
+    "id": "collab_코쵸우시노부",
+    "name": "코쵸우 시노부",
+    "cardUrl": "/images/collab_코쵸우시노부/card.webp",
+    "source": "asset_portrait"
+  },
+  "collab_토미오카기유": {
+    "id": "collab_토미오카기유",
+    "name": "토미오카 기유",
+    "cardUrl": "/images/collab_토미오카기유/card.webp",
+    "source": "asset_portrait"
   }
 }

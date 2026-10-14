@@ -462,5 +462,13 @@
   "collab_아가츠마젠이츠": {
     "heroName": "아가츠마 젠이츠",
     "iconUrl": "/images/collab_아가츠마젠이츠/exclusive-gear.png"
+  },
+  "collab_코쵸우시노부": {
+    "heroName": "코쵸우 시노부",
+    "iconUrl": "/images/collab_코쵸우시노부/exclusive-gear.png"
+  },
+  "collab_토미오카기유": {
+    "heroName": "토미오카 기유",
+    "iconUrl": "/images/collab_토미오카기유/exclusive-gear.png"
   }
 }

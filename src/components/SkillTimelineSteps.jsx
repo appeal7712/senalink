@@ -13,9 +13,11 @@ export function formatSkillTurnLabel(round) {
   return m ? `${Number(m[1])}턴` : s.replace(/라/g, '턴');
 }
 
-/** 길드 허브 공성·강림과 동일 — 위/아래/각성 컬러 뱃지 */
+/** 길드 허브 공성·강림과 동일 — 평타/위/아래/각성 컬러 뱃지 */
 export function SkillDirBadge({ dir }) {
-  const meta = dir === 'upper'
+  const meta = dir === 'basic'
+    ? { label: '평타', bg: '#94a3b8' }
+    : dir === 'upper'
     ? { label: '위 스킬', bg: '#5eb0ff' }
     : dir === 'down'
       ? { label: '아래 스킬', bg: '#ff7a7a' }

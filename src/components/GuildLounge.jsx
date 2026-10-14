@@ -95,15 +95,20 @@ function formatSkillTurnLabel(round) {
 
 /** 덱 수정 · 스킬 시전 순서 추가 — 턴 고르기 (4턴 간격 · 6×3) */
 const SKILL_TURN_PICKS = [0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68];
+/** 「전체 턴 세부 설정」 켬 — 0~69턴 전부 (10열 × 7줄) */
+const SKILL_TURN_PICKS_FINE = Array.from({ length: 70 }, (_, i) => i);
 
-function snapSkillTurnPick(minRound) {
+function snapSkillTurnPick(minRound, fine = false) {
   const n = Math.max(0, Number(minRound) || 0);
-  const hit = SKILL_TURN_PICKS.find((t) => t >= n);
-  return `${hit != null ? hit : SKILL_TURN_PICKS[SKILL_TURN_PICKS.length - 1]}턴`;
+  const picks = fine ? SKILL_TURN_PICKS_FINE : SKILL_TURN_PICKS;
+  const hit = picks.find((t) => t >= n);
+  return `${hit != null ? hit : picks[picks.length - 1]}턴`;
 }
 
 function SkillDirBadge({ dir }) {
-  const meta = dir === 'upper'
+  const meta = dir === 'basic'
+    ? { label: '평타', bg: '#94a3b8' }
+    : dir === 'upper'
     ? { label: '위 스킬', bg: '#5eb0ff' }
     : dir === 'down'
       ? { label: '아래 스킬', bg: '#ff7a7a' }
@@ -518,6 +523,7 @@ export default function GuildLounge() {
   const [editingCategory, setEditingCategory]         = useState('siege');
   const [buildTitle, setBuildTitle]                   = useState('');
   const [editingDeckTier, setEditingDeckTier]         = useState(3);
+  const [editingOtherDetail, setEditingOtherDetail]   = useState('');
   const [editingHeroNames, setEditingHeroNames]       = useState(['미호', '나타', '리나', '에반', '비스킷']);
   const [targetSlotIdx, setTargetSlotIdx]             = useState(0);
   const [roleFilter, setRoleFilter]                   = useState('all');
@@ -532,6 +538,7 @@ export default function GuildLounge() {
   const [turnNumberInput, setTurnNumberInput]           = useState('0턴');
   const [newSkillHero, setNewSkillHero]               = useState('미호');
   const [newSkillDir, setNewSkillDir]                 = useState('upper');
+  const [fineTurnPick, setFineTurnPick]               = useState(false);
   const [newSkillText, setNewSkillText]               = useState('');
   const [editingExpeditionRound, setEditingExpeditionRound] = useState(1);
   const [editingExpeditionRounds, setEditingExpeditionRounds] = useState(() => ({
@@ -551,9 +558,17 @@ export default function GuildLounge() {
 
   useEffect(() => {
     if (lastReservedRound > 0 && parseRoundNumber(turnNumberInput) < lastReservedRound) {
-      setTurnNumberInput(snapSkillTurnPick(lastReservedRound));
+      setTurnNumberInput(snapSkillTurnPick(lastReservedRound, fineTurnPick));
     }
-  }, [lastReservedRound, turnNumberInput]);
+  }, [lastReservedRound, turnNumberInput, fineTurnPick]);
+
+  const toggleFineTurnPick = () => {
+    if (fineTurnPick) {
+      setTurnNumberInput(snapSkillTurnPick(Math.max(lastReservedRound, parseRoundNumber(turnNumberInput))));
+      if (newSkillDir === 'basic') setNewSkillDir('upper');
+    }
+    setFineTurnPick(!fineTurnPick);
+  };
   
   // 6슬롯 정밀 실전 장비 세팅 state
   const [selectedHeroGearIdx, setSelectedHeroGearIdx] = useState(0);
@@ -704,6 +719,7 @@ export default function GuildLounge() {
       ? {
           buildTitle,
           tier: editingDeckTier,
+          otherDetail: editingOtherDetail,
           mode: editingPvpMode,
           deckKind: editingArenaKind,
           ...(editingCategory === 'expedition'
@@ -895,6 +911,9 @@ export default function GuildLounge() {
     setEditingCategory(cat);
     setBuildTitle(NEW_BUILD_TITLE[cat] || '새 전술 빌드');
     setEditingDeckTier(3);
+    setEditingOtherDetail('');
+    setFineTurnPick(false);
+    setNewSkillDir((d) => (d === 'basic' ? 'upper' : d));
     setEditingPvpMode('속공');
     setEditingArenaKind('attack');
     if (cat === 'expedition') {
@@ -937,6 +956,9 @@ export default function GuildLounge() {
     setEditingCategory(cat);
     setBuildTitle(build.title);
     setEditingDeckTier(normalizeDeckTier(build.tier));
+    setEditingOtherDetail(typeof build.otherDetail === 'string' ? build.otherDetail : '');
+    setFineTurnPick(false);
+    setNewSkillDir((d) => (d === 'basic' ? 'upper' : d));
     setEditingPvpMode(build.mode === '내실' ? '내실' : '속공');
     setEditingArenaKind(normalizeArenaKind(build.deckKind));
     if (cat === 'expedition') {
@@ -1035,7 +1057,7 @@ export default function GuildLounge() {
     const picked = turnMatch ? Number(turnMatch[1]) : 0;
     if (lastReservedRound > 0 && picked < lastReservedRound) {
       alert(`${lastReservedRound}턴 이전은 선택할 수 없습니다. ${lastReservedRound}턴부터 추가해 주세요.`);
-      setTurnNumberInput(snapSkillTurnPick(lastReservedRound));
+      setTurnNumberInput(snapSkillTurnPick(lastReservedRound, fineTurnPick));
       return;
     }
     const roundStr = `${picked}턴`;
@@ -1078,6 +1100,7 @@ export default function GuildLounge() {
             id: editingBuild.id,
             title: buildTitle,
             tier: normalizeDeckTier(editingDeckTier),
+            otherDetail: editingOtherDetail.trim(),
             // 구형 폴백용(1라운드 펫). 실제 표시·편집은 rounds[n].petId
             petId: rounds[1]?.petId || editingPetId,
             rounds,
@@ -1092,6 +1115,7 @@ export default function GuildLounge() {
           id: editingBuild.id,
           title: buildTitle,
           tier: (editingCategory === 'siege') ? normalizeDeckTier(editingDeckTier) : editingBuild.tier,
+          otherDetail: editingCategory === 'siege' ? editingOtherDetail.trim() : editingBuild.otherDetail,
           formationId: editingBuild.formationId || 'protect',
           petId: editingPetId,
           heroNames: editingHeroNames,
@@ -1174,6 +1198,20 @@ export default function GuildLounge() {
       })}
     </div>
   );
+
+  const renderBuildOtherDetail = (raw) => {
+    const text = typeof raw === 'string' ? raw.trim() : '';
+    if (!text) return null;
+    return (
+      <div className="gw-defense-other-detail">
+        <div className="gw-defense-note-label">
+          <Icon name="news" size={12} color="#94a3b8" />
+          기타 디테일
+        </div>
+        <div className="gw-defense-note-text">{text}</div>
+      </div>
+    );
+  };
 
   const renderBuildPanel = (build, category, idx = 0) => {
     const meta = CONTENT_META[category] || CONTENT_META.siege;
@@ -1332,6 +1370,7 @@ export default function GuildLounge() {
               />
             </div>
           )}
+          {!isPvp ? renderBuildOtherDetail(build.otherDetail) : null}
         </div>
       </>
     );
@@ -1780,6 +1819,7 @@ export default function GuildLounge() {
                 {renderExpeditionRoundGuide(2, rounds[2])}
               </div>
             </div>
+            {renderBuildOtherDetail(build.otherDetail)}
           </div>
         ) : null}
       </div>
@@ -2242,13 +2282,31 @@ export default function GuildLounge() {
                   <input type="text" value={buildTitle} onChange={e => setBuildTitle(e.target.value)} placeholder="예: 월요일 마법 공성 (루디) - 600만 극딜 전술" style={{ width: '100%', padding: '6px 12px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '6px', fontSize: '12px', fontWeight: 800, boxSizing: 'border-box' }} />
                 </div>
                 {(editingCategory === 'siege' || editingCategory === 'expedition') && (
-                  <div className="editing-build-arena-toggle-col" style={{
-                    padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0,
-                    border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12,
-                    background: 'rgba(255,255,255,0.05)', minWidth: 120,
+                  <div className="editing-build-arena-toggles" style={{
+                    display: 'flex', alignItems: 'stretch', flexShrink: 0,
+                    border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, overflow: 'hidden',
+                    background: 'rgba(255,255,255,0.05)', flexWrap: 'wrap',
                   }}>
-                    <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>추천도</div>
-                    <DeckTierStars tier={editingDeckTier} onChange={setEditingDeckTier} />
+                    <div className="editing-build-arena-toggle-col editing-build-other-detail-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 280, flex: 1, maxWidth: 360 }}>
+                      <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>기타 디테일</div>
+                      <textarea
+                        className="editing-build-detail-textarea"
+                        rows={2}
+                        value={editingOtherDetail}
+                        onChange={e => setEditingOtherDetail(e.target.value)}
+                        placeholder="예: 보스 패턴·주의할 점"
+                        style={{
+                          width: '100%', padding: '6px 10px', background: '#07090e', border: '1px solid var(--border-gold)',
+                          color: '#e2e8f0', borderRadius: 7, fontSize: 12, fontWeight: 700, lineHeight: 1.45,
+                          boxSizing: 'border-box', resize: 'none', fontFamily: 'inherit', minHeight: 0,
+                        }}
+                      />
+                    </div>
+                    <div style={{ width: 1, background: 'rgba(255,255,255,0.14)', flexShrink: 0 }} />
+                    <div className="editing-build-arena-toggle-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 120 }}>
+                      <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>추천도</div>
+                      <DeckTierStars tier={editingDeckTier} onChange={setEditingDeckTier} />
+                    </div>
                   </div>
                 )}
                 {editingCategory === 'arena' ? (
@@ -2628,16 +2686,26 @@ export default function GuildLounge() {
 
                   {/* 스킬 추가 입력 폼 */}
                   <div className="glass-inset editing-build-timeline-add" style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
-                    <div style={{ fontSize: '12px', fontWeight: 800, color: '#fff' }}>+ 스킬 시전 순서 추가</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <div style={{ fontSize: '12px', fontWeight: 800, color: '#fff' }}>+ 스킬 시전 순서 추가</div>
+                      <button
+                        type="button"
+                        className={`skill-turn-fine-toggle${fineTurnPick ? ' is-on' : ''}`}
+                        aria-pressed={fineTurnPick}
+                        onClick={toggleFineTurnPick}
+                      >
+                        전체 턴 세부 설정
+                      </button>
+                    </div>
 
-                    {/* 턴 선택 버튼 — 4턴 간격 · 6×3 (이 그리드만 변경) */}
+                    {/* 턴 선택 버튼 — 기본 4턴 간격 · 6×3 / 세부 설정 시 0~69 · 10열 */}
                     <div>
                       <div style={{ fontSize: '10px', color: '#fff', marginBottom: '3px', fontWeight: 800 }}>
-                        턴 선택 (0·4·8…68)
+                        {fineTurnPick ? '턴 선택 (0~69)' : '턴 선택 (0·4·8…68)'}
                         {lastReservedRound > 0 ? ` · ${lastReservedRound}턴 이전 잠금` : ''}
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px' }}>
-                        {SKILL_TURN_PICKS.map((n) => {
+                      <div style={{ display: 'grid', gridTemplateColumns: fineTurnPick ? 'repeat(10, 1fr)' : 'repeat(6, 1fr)', gap: fineTurnPick ? '3px' : '4px' }}>
+                        {(fineTurnPick ? SKILL_TURN_PICKS_FINE : SKILL_TURN_PICKS).map((n) => {
                           const r = `${n}턴`;
                           const picked = parseRoundNumber(turnNumberInput);
                           const isLocked = lastReservedRound > 0 && n < lastReservedRound;
@@ -2650,7 +2718,7 @@ export default function GuildLounge() {
                               onClick={() => setTurnNumberInput(r)}
                               title={isLocked ? `${lastReservedRound}턴 이전은 선택할 수 없습니다` : undefined}
                               style={{
-                                padding: '8px 0', fontSize: '13px', fontWeight: 800, borderRadius: '6px',
+                                padding: fineTurnPick ? '4px 0' : '8px 0', fontSize: fineTurnPick ? '11px' : '13px', fontWeight: 800, borderRadius: '6px',
                                 border: isSelected ? '1px solid var(--gold-light)' : '1px solid rgba(255,255,255,0.08)',
                                 cursor: isLocked ? 'not-allowed' : 'pointer',
                                 background: isLocked
@@ -2675,6 +2743,7 @@ export default function GuildLounge() {
                           ))}
                         </select>
                         <select value={newSkillDir} onChange={e => setNewSkillDir(e.target.value)} style={{ flex: 1, width: '100%', padding: '10px 10px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '7px', fontSize: '14px', fontWeight: 800, colorScheme: 'dark' }}>
+                          {fineTurnPick ? <option value="basic">평타</option> : null}
                           <option value="upper">위 스킬</option>
                           <option value="down">아래 스킬</option>
                           <option value="awaken">각성</option>

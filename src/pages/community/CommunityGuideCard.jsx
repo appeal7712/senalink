@@ -55,6 +55,7 @@ export default function CommunityGuideCard({
     : (guide.reservedSkills?.length ? guide.reservedSkills : guide.skillSequence || []);
   const timeline = isTimeline ? (guide.skillSequence || []) : [];
   const heroNames = guide.heroNames || [];
+  const otherDetail = typeof guide.otherDetail === 'string' ? guide.otherDetail.trim() : '';
   const useCollapse = !!collapsible;
   const updatedDate = formatUpdateAtDisplay(guide.updatedAt).split('|')[0];
 
@@ -179,6 +180,15 @@ export default function CommunityGuideCard({
             />
           </div>
         )}
+        {!isPvpLayout && otherDetail ? (
+          <div className="gw-defense-other-detail">
+            <div className="gw-defense-note-label">
+              <Icon name="news" size={12} color="#94a3b8" />
+              기타 디테일
+            </div>
+            <div className="gw-defense-note-text">{otherDetail}</div>
+          </div>
+        ) : null}
       </div>
     </>
   );

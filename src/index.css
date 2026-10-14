@@ -13595,3 +13595,31 @@ html[data-ui-theme="solid"] .mypage-stats-panel {
     height: 30px;
   }
 }
+
+/* PvE 스킬 시전 순서 추가 — 「전체 턴 세부 설정」(0~69턴 · 평타) */
+.skill-turn-fine-toggle {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 800;
+  font-family: inherit;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.skill-turn-fine-toggle.is-on {
+  border-color: var(--gold-light);
+  background: var(--gold-primary);
+  color: #000;
+}
+@media (hover: hover) {
+  .skill-turn-fine-toggle:not(.is-on):hover {
+    border-color: rgba(255, 255, 255, 0.45);
+    color: #fff;
+  }
+}
