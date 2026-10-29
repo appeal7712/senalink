@@ -13642,12 +13642,18 @@ html[data-ui-theme="solid"] .mypage-stats-panel {
     grid-auto-columns: minmax(0, 1fr);
     column-gap: 4px !important;
     overflow-x: hidden;
+    align-items: stretch;
   }
 
   .setting-overview-section .skill-reserve-hero {
     flex-direction: column;
     justify-content: flex-start;
     gap: 6px !important;
+  }
+
+  /* 각성기 없는 영웅: 아래 정렬 → 스킬2·스킬1 줄이 각성 영웅과 맞음 */
+  .setting-overview-section .skill-reserve-skills {
+    margin-top: auto;
   }
 
   .setting-overview-section .skill-reserve-portrait {

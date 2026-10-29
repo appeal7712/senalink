@@ -238,7 +238,7 @@ export default function SkillReservationBoard({
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: stackGap, paddingBottom: '6px', flexShrink: 0 }}>
+                <div className="skill-reserve-skills" style={{ display: 'flex', flexDirection: 'column', gap: stackGap, paddingBottom: '6px', flexShrink: 0 }}>
                   {stacked.length === 0 && (
                     <div style={{
                       width: `${iconSize}px`, height: `${iconSize}px`, borderRadius: '10px',

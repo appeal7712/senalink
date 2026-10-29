@@ -5,6 +5,10 @@
 
 ## 17. 패치 내역
 
+### 2026-10-30 (`v2026.10.30.201`) — 모바일 세팅 확인 스킬 예약 줄 맞춤
+- 모바일(≤760px) 세팅 확인 스킬 예약: 각성기 없는 영웅은 스킬 아이콘을 아래 정렬해 스킬2·스킬1 줄이 각성 영웅과 일치(각성기 칸은 비움). `SkillReservationBoard.jsx` 아이콘 열 className `skill-reserve-skills`, `index.css` 모바일 블록.
+- Hosting만 (rules·Functions·스키마 무변경).
+
 ### 2026-10-30 (`v2026.10.30.200`) — 유휴 허브 자동 정리 60일 → 100일
 - `HUB_IDLE_DAYS` 100 (`functions/index.js` `purgeIdleHubs` 판정 · `src/data/loungeMeta.js` 안내 문구 · Ops 대시보드 「자동 정리 임박」 문구).
 - 기준은 그대로 허브 `lastActivityAt`(허브 생성 · `history` 문서 생성 시 `onHubHistoryCreated`로 갱신). 히스토리 표시 보관 30일(`HISTORY_RETENTION_DAYS`)과는 별개.
