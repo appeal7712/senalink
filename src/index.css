@@ -13634,6 +13634,43 @@ html[data-ui-theme="solid"] .mypage-stats-panel {
   }
 }
 
+/* 세팅 확인 스킬 예약 — 폰: 초상화 숨김, 이름 위·스킬 아래로 한 화면에 모두 */
+@media (max-width: 760px) {
+  .setting-overview-section .skill-reserve-row {
+    grid-template-columns: none !important;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    column-gap: 4px !important;
+    overflow-x: hidden;
+  }
+
+  .setting-overview-section .skill-reserve-hero {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 6px !important;
+  }
+
+  .setting-overview-section .skill-reserve-portrait {
+    display: none;
+  }
+
+  .setting-overview-section .skill-reserve-face-col {
+    width: 100%;
+  }
+
+  .setting-overview-section .skill-reserve-name {
+    max-width: 100% !important;
+    font-size: 11px !important;
+    white-space: normal !important;
+    word-break: keep-all;
+    line-height: 1.15;
+    min-height: 2.3em;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+}
+
 /* 길드 허브 탭 — 폰: 아이콘 숨김, 글자 폭 비례로 한 줄에 모두 (스크롤 없음) */
 @media (max-width: 600px) {
   .tab-bar {

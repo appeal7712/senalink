@@ -5,6 +5,11 @@
 
 ## 17. 패치 내역
 
+### 2026-10-30 (`v2026.10.30.199`) — 모바일 세팅 확인 스킬 예약 한 화면
+- 세팅 확인 PvP 스킬 예약(≤760px): 영웅 초상화 숨김, 이름 위·스킬 아이콘 아래, 영웅 칸 균등 분할로 가로 스크롤 없이 한 화면. 긴 이름은 2줄(높이 고정해 아이콘 줄 정렬). PC·공략 카드·예약 편집기는 그대로.
+- `SkillReservationBoard.jsx`에 초상화/이름 영역 className만 추가, 스타일은 `index.css` `.setting-overview-section` 모바일 블록.
+- Hosting만 (rules·Functions·스키마 무변경).
+
 ### 2026-10-29 (`v2026.10.29.198`) — 결투장 리그 · 이벤트 결투장 · 쥬다스/리(각성) · 시스템 아이콘
 - **결투장 리그:** 마이페이지 「결투장 리그」(루키·엘리트·챔피언스, `public/images/community/arena/league-*.png`) → 리그를 골라야 티어 선택 가능(미선택 구 프로필은 잠김 표시). optional `users.arenaLeague`(`rookie`·`elite`·`champions`, `data/arenaTiers.js` `ARENA_LEAGUES`). 공개 프로필·Ops 유저 감독에 리그 표시.
 - **rules:** `users` 화이트리스트(create/update)에 `arenaLeague` 추가 + 값 검증. 새 allow 없음.

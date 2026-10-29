@@ -220,11 +220,11 @@ export default function SkillReservationBoard({
 
             return (
               <div key={`${name}_${i}`} className="skill-reserve-hero">
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '7px', flexShrink: 0, minWidth: 0 }}>
-                  <div style={{ width: `${portraitSize}px`, flexShrink: 0 }}>
+                <div className="skill-reserve-face-col" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '7px', flexShrink: 0, minWidth: 0 }}>
+                  <div className="skill-reserve-portrait" style={{ width: `${portraitSize}px`, flexShrink: 0 }}>
                     {hero ? <HeroPortraitCard hero={hero} showStars showRole showName={false} /> : null}
                   </div>
-                  <div style={{
+                  <div className="skill-reserve-name" style={{
                     fontSize: useCompact ? '12px' : '13px',
                     color: '#e2e8f0',
                     fontWeight: 900,
