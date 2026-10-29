@@ -5,6 +5,15 @@
 
 ## 17. 패치 내역
 
+### 2026-10-29 (`v2026.10.29.198`) — 결투장 리그 · 이벤트 결투장 · 쥬다스/리(각성) · 시스템 아이콘
+- **결투장 리그:** 마이페이지 「결투장 리그」(루키·엘리트·챔피언스, `public/images/community/arena/league-*.png`) → 리그를 골라야 티어 선택 가능(미선택 구 프로필은 잠김 표시). optional `users.arenaLeague`(`rookie`·`elite`·`champions`, `data/arenaTiers.js` `ARENA_LEAGUES`). 공개 프로필·Ops 유저 감독에 리그 표시.
+- **rules:** `users` 화이트리스트(create/update)에 `arenaLeague` 추가 + 값 검증. 새 allow 없음.
+- **상급 결투장 → 이벤트 결투장(화면 이름만):** 공용 허브 탭·배너·힌트·에디터 제목, 메인 시즌 카드, 메인/Ops 「결투장 & 이벤트 결투장」 제목, SEO 설명. 길드 허브는 「결투장」만. 내부 id(`advanced`, `advanced_arena`)·Ops 메타 덱 저장값(`상급결투장`)은 그대로, 표시만 변경.
+- **시즌 룰:** `CURRENT_ADVANCED_ARENA_MODE` = `threeVsThree`(3대3), 툴팁 「3대3으로 진행됩니다.」.
+- **영웅:** 신규 쥬다스(각성, 심연의 사도 · 만능형) — 소속 순서 천상의 수호자 다음. 리 각성(스킬 전체 각성 데이터 · 각성기 파마염주공 · 초상화/카드/전용장비 교체 · 금강불괴 아이콘 파일명 정정). 시스템 특수 유틸리티 「칠흑의 낙인」.
+- **UI:** 각성 영웅 카드 이름 보라색(`#b066ff`). 시스템 탭 아이콘(`public/images/ui/system/`)·전용 장비 특수 옵션 아이콘. 메인 오늘 방문자 표시 ×2·전체 +오늘(표시만, 저장·Ops는 실제 수). 길드 허브 탭 ≤600px 아이콘 숨김·한 줄 맞춤.
+- 배포: firestore:rules → Hosting (Functions 무변경).
+
 ### 2026-10-14 (`v2026.10.14.197`) — 메인 뉴스 「열기」 버튼 세로 중앙
 - 메인 「세나리 뉴스 & 패치 브리핑」 카드의 링크 「열기」 버튼을 태그·제목 영역 세로 중앙에 정렬(`PublicMainDashboard.jsx` 인라인 `alignSelf: 'center'`). 공용 `.btn-ops` 무변경.
 - Hosting만 (rules·Functions·스키마 무변경).

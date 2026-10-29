@@ -212,6 +212,8 @@ prep 카드도 live와 **같은 글라스/블러** (투명도 깎지 말 것).
 
 ## 4. 상급 결투장
 
+> 2026-10-29부터 화면 이름은 **이벤트 결투장**(내부 id `advanced_arena` / `advanced`·앵커 키는 그대로). 시즌 룰은 `contentSeasonSchedule.js` `CURRENT_ADVANCED_ARENA_MODE` — 현재 `threeVsThree`(3대3).
+
 | 항목 | 규칙 |
 |------|------|
 | 주기 | 앵커 목 +14일 |

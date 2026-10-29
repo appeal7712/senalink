@@ -176,7 +176,7 @@ Provider 순서 (`main.jsx`): **SuperAdmin → UserProfile → Lounge → App**.
 
 ### 6.2 사이트 유저 프로필 (`UserProfileContext.jsx`)
 - 문서: `users/{uid}` 실시간 구독 + `saveProfile`.
-- 필드: `nickname`(2–12), `photoURL`, `totalwarTier`, `arenaTier`, `destructionScore`, `combatPower`(선택, 내 전투력 총합·본인 입력), `hubId`, `recommendCount`, `lastProfileRecommendDate`, `dailyTarotPeriodId`(선택, KST 09:00 주기 일일 타로 클릭), `updatedAt`.
+- 필드: `nickname`(2–12), `photoURL`, `totalwarTier`, `arenaTier`, `arenaLeague`(선택, `rookie`·`elite`·`champions` — 결투장 리그, 없으면 미선택), `destructionScore`, `combatPower`(선택, 내 전투력 총합·본인 입력), `hubId`, `recommendCount`, `lastProfileRecommendDate`, `dailyTarotPeriodId`(선택, KST 09:00 주기 일일 타로 클릭), `updatedAt`.
 - **마이페이지:** GNB `ProfileDropdown` → `MyPageModal` (본인만 수정).
 - **일일 타로카드:** GNB `DailyTarotButton` — 외부 링크 + `dailyTarotPeriodId` / localStorage. 규칙 화이트리스트 필드(완화 아님).
 - **닉네임 게이트:** `NicknameGate` — 닉 없을 때 강제 모달 (`/ops` 제외).
@@ -420,7 +420,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.10.14.197** (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.10.29.198** (푸터 `APP_VERSION` 확인)
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 
 ---

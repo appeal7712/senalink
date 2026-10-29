@@ -248,7 +248,7 @@ export default function CommunityGuideEditor({
             <div className="editing-build-modal-title-row">
               <h3 className="editing-build-title" style={{ fontSize: 17, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', margin: 0 }}>
                 {isArena
-                  ? `${lockedArenaKind === 'advanced' ? '상급결투장' : '결투장'} 공략 ${initial.id ? '수정' : '생성'}`
+                  ? `${lockedArenaKind === 'advanced' ? '이벤트 결투장' : '결투장'} 공략 ${initial.id ? '수정' : '생성'}`
                   : (initial.id ? '공용 공략 수정' : '공용 공략 생성')}
               </h3>
               <button type="button" className="editing-build-modal-close editing-build-modal-close--mobile" onClick={guardClose(onClose)} title="모달 닫기">

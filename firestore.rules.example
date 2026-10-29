@@ -182,6 +182,7 @@ service cloud.firestore {
       return ((!('nickname' in d)) || (d.nickname is string && d.nickname.size() >= 2 && d.nickname.size() <= 12))
         && ((!('totalwarTier' in d)) || d.totalwarTier in ['normal', 'advanced', 'rare', 'legend', 'legend_plus'])
         && ((!('arenaTier' in d)) || d.arenaTier in ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'master', 'challenger', 'legend', 'champion'])
+        && ((!('arenaLeague' in d)) || d.arenaLeague in ['rookie', 'elite', 'champions'])
         && ((!('destructionScore' in d)) || ((d.destructionScore is int || d.destructionScore is float) && d.destructionScore >= 0))
         && ((!('combatPower' in d)) || ((d.combatPower is int || d.combatPower is float) && d.combatPower >= 0))
         && ((!('photoURL' in d)) || d.photoURL == null || d.photoURL is string)
@@ -195,7 +196,7 @@ service cloud.firestore {
     // 신규 문서: 허용 키만 (쓰레기 필드 create 방지)
     function validUserCreateKeys() {
       return request.resource.data.keys().hasOnly([
-        'nickname', 'photoURL', 'totalwarTier', 'arenaTier', 'destructionScore',
+        'nickname', 'photoURL', 'totalwarTier', 'arenaTier', 'arenaLeague', 'destructionScore',
         'combatPower',
         'hubId', 'updatedAt', 'recommendCount', 'lastProfileRecommendDate',
         'dailyTarotPeriodId'
@@ -205,7 +206,7 @@ service cloud.firestore {
     // 본인 update: 변경된 키만 화이트리스트 (기존 여분 필드는 유지 가능)
     function onlyAllowedUserFieldChanges() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-        'nickname', 'photoURL', 'totalwarTier', 'arenaTier', 'destructionScore',
+        'nickname', 'photoURL', 'totalwarTier', 'arenaTier', 'arenaLeague', 'destructionScore',
         'combatPower',
         'hubId', 'updatedAt', 'lastProfileRecommendDate', 'dailyTarotPeriodId'
       ]);

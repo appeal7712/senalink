@@ -628,7 +628,7 @@ export default function GuildLounge() {
   const NEW_BUILD_TITLE = {
     siege: '새 공성전 전술 빌드',
     expedition: '새 강림원정대 전술 빌드',
-    arena: '새 결투장&상급 결투장 전술 빌드',
+    arena: '새 결투장 전술 빌드',
     totalwar: '새 총력전 전술 빌드',
   };
 
@@ -1230,7 +1230,7 @@ export default function GuildLounge() {
     };
 
     const deleteLabel = category === 'arena'
-      ? '이 결투장&상급 결투장 공략을 삭제할까요?'
+      ? '이 결투장 공략을 삭제할까요?'
       : category === 'siege'
         ? '이 공성전 공략을 삭제할까요?'
         : '이 공략을 삭제할까요?';
@@ -1919,7 +1919,7 @@ export default function GuildLounge() {
             { id: 'expedition', label: '강림 원정대', short: '원정대', icon: 'expedition' },
             { id: 'gw_attack',  label: '길드전 공격', short: '공격', icon: 'deckEnemy' },
             { id: 'gw_defense', label: '길드전 방어', short: '방어', icon: 'deckAlly' },
-            { id: 'arena',      label: '결투장&상급 결투장', short: '결투장', icon: 'arena' },
+            { id: 'arena',      label: '결투장', short: '결투장', icon: 'arena' },
             { id: 'totalwar',   label: '총력전', short: '총력전', icon: 'totalwar' },
           ].map(tab => {
             const isActive = activeTab === tab.id;
@@ -2087,12 +2087,12 @@ export default function GuildLounge() {
         </div>
       )}
 
-      {/* ── 4-1. [결투장&상급 결투장] (PvP, 스킬 예약 최대 3개) ── */}
+      {/* ── 4-1. [결투장] (PvP, 스킬 예약 최대 3개) ── */}
       {activeTab === 'arena' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <StrategyActionBar
             icon="arena"
-            title="결투장&상급 결투장 공략"
+            title="결투장 공략"
             hint="스킬 예약 최대 3개 · PvP"
             actionLabel="공략 추가"
             onAction={() => {
@@ -2101,7 +2101,7 @@ export default function GuildLounge() {
             }}
           />
           {arenaBuilds.length === 0 && (
-            <div className="luxury-panel" style={{ padding: '40px', textAlign: 'center', color: '#fff', fontWeight: 700 }}>등록된 결투장&상급 결투장 공략이 없습니다. 위 「공략 추가」로 첫 공략을 등록해 보세요.</div>
+            <div className="luxury-panel" style={{ padding: '40px', textAlign: 'center', color: '#fff', fontWeight: 700 }}>등록된 결투장 공략이 없습니다. 위 「공략 추가」로 첫 공략을 등록해 보세요.</div>
           )}
           {arenaBuilds.map(build => renderBuildPanel(build, 'arena'))}
         </div>

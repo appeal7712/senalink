@@ -470,5 +470,9 @@
   "collab_토미오카기유": {
     "heroName": "토미오카 기유",
     "iconUrl": "/images/collab_토미오카기유/exclusive-gear.png"
+  },
+  "쥬다스": {
+    "heroName": "쥬다스",
+    "iconUrl": "/images/쥬다스/exclusive-gear.png"
   }
 }

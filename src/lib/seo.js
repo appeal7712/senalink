@@ -14,7 +14,7 @@ export const PAGE_SEO = {
   [PAGE.COMMUNITY]: {
     title: `공용 허브 | 세븐나이츠 리버스 공략 · ${SITE_NAME}`,
     description:
-      '세븐나이츠 리버스 PvP·PvE 공략과 티어리스트를 모아보는 공용 허브입니다. 결투장·상급·총력전·레이드 덱을 공유하세요.',
+      '세븐나이츠 리버스 PvP·PvE 공략과 티어리스트를 모아보는 공용 허브입니다. 결투장·이벤트 결투장·총력전·레이드 덱을 공유하세요.',
   },
   [PAGE.HUB]: {
     title: `길드 허브 | 세븐나이츠 리버스 길드 관리 · ${SITE_NAME}`,

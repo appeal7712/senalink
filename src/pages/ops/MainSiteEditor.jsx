@@ -270,7 +270,7 @@ export default function MainSiteEditor() {
 
       <section className="luxury-panel" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14, overflow: 'visible' }}>
         <div>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#fff' }}>결투장 & 상급결투장 메타 덱</h3>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#fff' }}>결투장 & 이벤트 결투장 메타 덱</h3>
           <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>결투장 덱 수정이랑 같은 화면입니다. 유형(공덱/마덱/방덱/하이브리드/즉사덱)은 덱마다 직접 고르세요.</div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
@@ -280,7 +280,7 @@ export default function MainSiteEditor() {
               <div key={deck.id || di} style={{ border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                   <span className="kind-pill kind-pill--sm" style={{ background: kind.pill, color: kind.id === 'hybrid' ? '#161616' : undefined }}>{kind.label}</span>
-                  <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 800 }}>{deck.type || '결투장'}</span>
+                  <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 800 }}>{deck.type === '상급결투장' ? '이벤트 결투장' : (deck.type || '결투장')}</span>
                 </div>
                 <MetaDeckKindToggle kind={deck.kind || 'attack'} onChange={(k) => updateDeck(di, { kind: k })} />
                 <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -311,7 +311,7 @@ export default function MainSiteEditor() {
 
       <section className="luxury-panel ops-pick-rates-panel" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12, overflow: 'visible' }}>
         <div>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#fff' }}>결투장 & 상급결투장 기용률 TOP 5</h3>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#fff' }}>결투장 & 이벤트 결투장 기용률 TOP 5</h3>
           <div style={{ fontSize: 12, color: '#fff', marginTop: 4, textShadow: '0 1px 6px rgba(0,0,0,0.7)' }}>도감에 있는 영웅을 고르고, 기용률만 숫자로 적으면 됩니다. 유형은 영웅을 고르면 자동으로 들어갑니다.</div>
         </div>
         <div className="ops-pick-head">

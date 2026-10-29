@@ -17,6 +17,8 @@ const SETS = ['선봉장', '추적자', '성기사', '수문장', '수호자', '
 const WEAPON_OPTS = weaponOptions;
 const ARMOR_OPTS = armorOptions;
 const DECK_TYPES = ['결투장', '상급결투장'];
+/** 저장값은 기존 그대로(상급결투장), 화면 표시만 이벤트 결투장 */
+const DECK_TYPE_LABEL = { 결투장: '결투장', 상급결투장: '이벤트 결투장' };
 
 const emptyGear = () => ({
   setName: '복수자',
@@ -187,7 +189,7 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
             </label>
             <label style={labelStyle}>모드
               <select style={fieldStyle} value={type} onChange={(e) => setType(e.target.value)}>
-                {DECK_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                {DECK_TYPES.map((t) => <option key={t} value={t}>{DECK_TYPE_LABEL[t] || t}</option>)}
               </select>
             </label>
             <label style={labelStyle}>티어

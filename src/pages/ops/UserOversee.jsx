@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import Icon from '../../components/icons/Icon';
 import { formatRelative, toMs } from '../../lib/opsInsights';
-import { arenaTierById } from '../../data/arenaTiers';
+import { arenaLeagueById, arenaTierById } from '../../data/arenaTiers';
 import { TOTALWAR_TIERS } from '../../data/totalwarTiers';
 
 const TOTALWAR_LABEL = Object.fromEntries([
@@ -134,7 +134,9 @@ export default function UserOversee({
           <tbody>
             {pageSlice.map((u) => {
               const hubName = u.hubId ? hubNameById[u.hubId] : null;
-              const arenaLabel = u.arenaTier ? (arenaTierById(u.arenaTier)?.label || u.arenaTier) : '';
+              const leagueLabel = u.arenaLeague ? (arenaLeagueById(u.arenaLeague)?.label || u.arenaLeague) : '';
+              const tierLabel = u.arenaTier ? (arenaTierById(u.arenaTier)?.label || u.arenaTier) : '';
+              const arenaLabel = [leagueLabel, tierLabel].filter(Boolean).join(' ');
               const totalwarLabel = u.totalwarTier ? (TOTALWAR_LABEL[u.totalwarTier] || u.totalwarTier) : '';
               const tiers = [arenaLabel && `결투장 ${arenaLabel}`, totalwarLabel && `총력전 ${totalwarLabel}`].filter(Boolean);
               return (

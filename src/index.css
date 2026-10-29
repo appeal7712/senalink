@@ -1614,15 +1614,9 @@ h1, h2, h3 {
   line-height: 1.15;
   transform: translateY(-2px);
 }
-/* 각성: 글자 자체에 은은한 보라 글로우 (배경 칠 X) */
+/* 각성: 보라색 글자 */
 .hero-portrait-card-name.is-awakened span {
-  color: #f3e8ff;
-  text-shadow:
-    0 0 2px rgba(233, 213, 255, 0.95),
-    0 0 5px rgba(192, 132, 252, 0.9),
-    0 0 9px rgba(168, 85, 247, 0.65),
-    0 1px 2px rgba(0, 0, 0, 0.85);
-  filter: drop-shadow(0 0 2.5px rgba(192, 132, 252, 0.75));
+  color: #b066ff;
 }
 
 /* Small icon-in-circle chip used for stat readouts */
@@ -12896,6 +12890,22 @@ h1, h2, h3 {
   border-color: var(--gold-primary);
 }
 
+/* 결투장 리그 → 티어 순서 선택 */
+.mypage-tier-btn--league img {
+  width: 22px;
+  height: 22px;
+}
+
+.mypage-stats-field .mypage-field-label--sub {
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+.mypage-tier-grid.is-locked .mypage-tier-btn {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .mypage-error {
   color: #fca5a5;
   font-size: 13px;
@@ -13621,5 +13631,35 @@ html[data-ui-theme="solid"] .mypage-stats-panel {
   .skill-turn-fine-toggle:not(.is-on):hover {
     border-color: rgba(255, 255, 255, 0.45);
     color: #fff;
+  }
+}
+
+/* 길드 허브 탭 — 폰: 아이콘 숨김, 글자 폭 비례로 한 줄에 모두 (스크롤 없음) */
+@media (max-width: 600px) {
+  .tab-bar {
+    gap: 4px;
+  }
+
+  .tab-bar .nav-tab-btn {
+    flex: 1 1 auto;
+    padding: 7px 6px !important;
+    font-size: 12px;
+    letter-spacing: -0.02em;
+  }
+
+  .tab-bar .nav-tab-btn .icon-inline,
+  .tab-bar .nav-tab-btn > svg {
+    display: none !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .tab-bar {
+    gap: 2px;
+  }
+
+  .tab-bar .nav-tab-btn {
+    padding: 6px 4px !important;
+    font-size: 11px;
   }
 }

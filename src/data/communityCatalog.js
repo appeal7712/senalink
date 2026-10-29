@@ -77,7 +77,7 @@ export const COMMUNITY_TRIAL_TOWER_COMING_SOON =
 
 export const COMMUNITY_ARENA_KINDS = [
   { id: 'normal', label: '결투장', iconUrl: '/images/ui/arena.png' },
-  { id: 'advanced', label: '상급 결투장', iconUrl: '/images/ui/arena-advanced.png' },
+  { id: 'advanced', label: '이벤트 결투장', iconUrl: '/images/ui/arena-advanced.png' },
 ];
 
 /** 공용 허브 결투장 패널 우측 대형 아트 (탭·뱃지 아이콘과 분리) */
@@ -98,10 +98,10 @@ export const COMMUNITY_PVP_MODES = [
   },
   {
     id: 'arena_advanced',
-    label: '상급 결투장',
+    label: '이벤트 결투장',
     icon: 'arenaAdvanced',
     arenaKind: 'advanced',
-    blurb: '상급 결투장 덱 공유',
+    blurb: '이벤트 결투장 덱 공유',
     banner: COMMUNITY_ARENA_ADVANCED_BANNER,
   },
   {

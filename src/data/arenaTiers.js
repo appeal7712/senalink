@@ -1,4 +1,22 @@
-/** 결투장·상급 결투장 공통 티어 (브론즈 → 챔피언) */
+/** 결투장 리그 (루키 → 엘리트 → 챔피언스) — 리그마다 브론즈~챔피언 티어가 따로 있음 */
+export const ARENA_LEAGUES = [
+  { id: 'rookie', label: '루키 리그', iconUrl: '/images/community/arena/league-rookie.png', color: '#5eb0ff' },
+  { id: 'elite', label: '엘리트 리그', iconUrl: '/images/community/arena/league-elite.png', color: '#a78bfa' },
+  { id: 'champions', label: '챔피언스 리그', iconUrl: '/images/community/arena/league-champions.png', color: '#f87171' },
+];
+
+export const ARENA_LEAGUE_IDS = ARENA_LEAGUES.map((l) => l.id);
+
+export function arenaLeagueById(id) {
+  return ARENA_LEAGUES.find((l) => l.id === id) || null;
+}
+
+/** 미선택(구 프로필)은 null */
+export function normalizeArenaLeague(id) {
+  return ARENA_LEAGUE_IDS.includes(id) ? id : null;
+}
+
+/** 결투장·이벤트 결투장 공통 티어 (브론즈 → 챔피언) */
 export const ARENA_TIERS = [
   { id: 'bronze', label: '브론즈', iconUrl: '/images/community/arena/bronze.png', color: '#c48a4a' },
   { id: 'silver', label: '실버', iconUrl: '/images/community/arena/silver.png', color: '#b8c0cc' },

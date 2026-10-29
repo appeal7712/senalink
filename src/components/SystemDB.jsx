@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { systemRulesData } from '../data/systemRules';
+import exclusiveGearUi from '../data/exclusiveGearUiAssets.generated.json';
 import Icon from './icons/Icon';
+
+/** 조율 아이콘은 흰색 단색이라 밝은(선택) 탭 배경에서만 검정으로 반전 */
+const SYSTEM_TABS = [
+  { id: 'mechanics', iconUrl: '/images/ui/system/tab-mechanics.png', label: '전투 메커니즘 & 판정 룰' },
+  { id: 'potential', iconUrl: '/images/ui/system/tab-potential.png', invertOnActive: true, label: '잠재능력 & 전용 장비' },
+  { id: 'effects', iconUrl: '/images/ui/system/tab-effects.png', label: '상태이상 & 특수 효과 도감' },
+];
 
 export default function SystemDB() {
   const [activeSubTab, setActiveSubTab] = useState('mechanics'); // mechanics, potential, effects
@@ -13,15 +21,18 @@ export default function SystemDB() {
       
       {/* 시스템 DB 서브 탭 서브 네비게이션 */}
       <div className="luxury-panel dex-system-nav" style={{ padding: '12px 20px', display: 'flex', gap: '10px' }}>
-        {[
-          { id: 'mechanics', icon: 'swords', label: '전투 메커니즘 & 판정 룰' },
-          { id: 'potential', icon: 'orb',    label: '잠재능력 & 전용 장비' },
-          { id: 'effects',   icon: 'sparkle',label: '상태이상 & 특수 효과 도감' },
-        ].map(t => (
+        {SYSTEM_TABS.map(t => (
           <button key={t.id} onClick={() => setActiveSubTab(t.id)}
             className={`nav-tab-btn${activeSubTab === t.id ? ' active' : ''}`}
             style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Icon name={t.icon} size={14} color={activeSubTab === t.id ? '#161616' : 'rgba(255,255,255,0.8)'} />
+            <img
+              src={t.iconUrl}
+              alt=""
+              width={18}
+              height={18}
+              draggable={false}
+              style={{ flexShrink: 0, filter: t.invertOnActive && activeSubTab === t.id ? 'invert(1)' : undefined }}
+            />
             {t.label}
           </button>
         ))}
@@ -156,7 +167,9 @@ export default function SystemDB() {
               {Object.entries(exclusive_equipment_stats).map(([k, v]) => (
                 <div key={k} style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid var(--border-gold)', borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '14px' }}>
                   <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--gold-primary)', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Icon name="medal" size={18} />
+                    {exclusiveGearUi.options[k]?.src
+                      ? <img src={exclusiveGearUi.options[k].src} alt="" width={28} height={28} draggable={false} />
+                      : <Icon name="medal" size={18} />}
                   </div>
                   <div>
                     <div style={{ fontSize: '15px', fontWeight: 900, color: '#fff' }}>{k}</div>

@@ -839,5 +839,11 @@
     "name": "토미오카 기유",
     "cardUrl": "/images/collab_토미오카기유/card.webp",
     "source": "asset_portrait"
+  },
+  "쥬다스": {
+    "id": "쥬다스",
+    "name": "쥬다스",
+    "cardUrl": "/images/쥬다스/card.webp",
+    "source": "asset_portrait"
   }
 }

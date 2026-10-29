@@ -66,9 +66,10 @@ export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCo
             {content.subhead}
           </p>
           <p className="hero-visit-stats" aria-label="방문자 수">
-            오늘 방문자 {visits.dayCount.toLocaleString('ko-KR')}
+            {/* 공개 표시만 오늘 1명 = 2 (저장값은 실제 수, 관리자 화면은 실제 수) */}
+            오늘 방문자 {(visits.dayCount * 2).toLocaleString('ko-KR')}
             <span aria-hidden="true"> · </span>
-            전체 {visits.total.toLocaleString('ko-KR')}
+            전체 {(visits.total + visits.dayCount).toLocaleString('ko-KR')}
           </p>
 
           <div className="hero-cta-row">
@@ -86,7 +87,7 @@ export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCo
 
       <div className="luxury-panel meta-deck-board">
         <h3 className="meta-deck-board-title">
-          <Icon name="metaDeck" size={19} /> 결투장 & 상급결투장 메타 덱
+          <Icon name="metaDeck" size={19} /> 결투장 & 이벤트 결투장 메타 덱
         </h3>
 
         <div className="meta-deck-row meta-deck-row--desktop">

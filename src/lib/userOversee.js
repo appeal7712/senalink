@@ -16,6 +16,7 @@ export async function listUsersForOps() {
       updatedAt: data.updatedAt || '',
       totalwarTier: data.totalwarTier || '',
       arenaTier: data.arenaTier || '',
+      arenaLeague: data.arenaLeague || '',
     };
   });
   list.sort((a, b) => {

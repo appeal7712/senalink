@@ -228,7 +228,7 @@ const ADVANCED_ARENA_SEASON_MODES = {
   threeVsThree: {
     icon: '/images/content-season/season-rule/mode-3v3.png',
     title: '3대3 모드',
-    desc: '',
+    desc: '3대3으로 진행됩니다.',
   },
   fourVsFour: {
     icon: '/images/content-season/season-rule/mode-4v4.png',
@@ -247,7 +247,7 @@ const ADVANCED_ARENA_SEASON_MODES = {
   },
 };
 
-const CURRENT_ADVANCED_ARENA_MODE = 'normal';
+const CURRENT_ADVANCED_ARENA_MODE = 'threeVsThree';
 
 function advancedArenaSeasonRule() {
   return ADVANCED_ARENA_SEASON_MODES[CURRENT_ADVANCED_ARENA_MODE] || ADVANCED_ARENA_SEASON_MODES.normal;
@@ -261,7 +261,7 @@ function evalAdvancedArena(nowMs, anchorYmd) {
   // 예: 2026-08-20 → 2026-09-03 02:00
   const endMs = addDaysUtcMs(start, 14) + 2 * HOUR_MS;
   const id = 'advanced_arena';
-  const name = '상급결투장';
+  const name = '이벤트 결투장';
 
   if (nowMs < endMs) {
     // 사이클이 목 00:00에 넘어가면 endMs가 다음 주기로 밀릴 수 있음 —

@@ -8,7 +8,7 @@ import Icon from './icons/Icon';
 import ModalScrim from './ModalScrim';
 import SafeImg from './icons/SafeImg';
 import { TOTALWAR_TIERS } from '../data/totalwarTiers';
-import { arenaTierById } from '../data/arenaTiers';
+import { arenaLeagueById, arenaTierById } from '../data/arenaTiers';
 import { backdropDismissProps } from '../utils/backdropDismiss';
 
 const TW_ALL = [
@@ -67,6 +67,7 @@ export default function PublicProfileModal({ uid, onClose }) {
 
   const tw = TW_ALL.find((t) => t.id === profile?.totalwarTier) || TW_ALL[0];
   const arena = arenaTierById(profile?.arenaTier);
+  const league = arenaLeagueById(profile?.arenaLeague);
   const isSelf = Boolean(authUser?.uid && uid && authUser.uid === uid);
   const recommendCount = Number(profile?.recommendCount) || 0;
 
@@ -158,12 +159,16 @@ export default function PublicProfileModal({ uid, onClose }) {
                 </div>
               </div>
               <div className="glass-inset" style={{ padding: '12px 14px', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+                {league ? <img src={league.iconUrl} alt="" style={{ width: 28, height: 28 }} /> : null}
                 {arena
                   ? <img src={arena.iconUrl} alt="" style={{ width: 28, height: 28 }} />
                   : <Icon name="swords" size={22} color="#94a3b8" />}
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8' }}>결투장 티어</div>
-                  <div style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{arena?.label || '미설정'}</div>
+                  <div style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>
+                    {league ? <span style={{ color: league.color }}>{league.label} · </span> : null}
+                    {arena?.label || '미설정'}
+                  </div>
                 </div>
               </div>
               <div className="glass-inset" style={{ padding: '12px 14px', borderRadius: 12 }}>

@@ -5,7 +5,7 @@ import { useUserProfile } from '../context/UserProfileContext';
 import { useLounge } from '../context/LoungeContext';
 import { uploadAvatar } from '../lib/avatarUpload';
 import { TOTALWAR_TIERS } from '../data/totalwarTiers';
-import { ARENA_TIERS, normalizeArenaTier } from '../data/arenaTiers';
+import { ARENA_LEAGUES, ARENA_TIERS, normalizeArenaLeague, normalizeArenaTier } from '../data/arenaTiers';
 import { backdropDismissProps } from '../utils/backdropDismiss';
 
 const ALL_TIERS = [
@@ -25,6 +25,7 @@ export default function MyPageModal({ onClose, mandatory = false }) {
   const { me, updateMyNickname } = useLounge();
   const [nickname, setNickname] = useState(profile.nickname || '');
   const [tier, setTier] = useState(profile.totalwarTier || 'normal');
+  const [arenaLeague, setArenaLeague] = useState(normalizeArenaLeague(profile.arenaLeague));
   const [arenaTier, setArenaTier] = useState(normalizeArenaTier(profile.arenaTier || 'bronze'));
   const [scoreRaw, setScoreRaw] = useState(formatScore(profile.destructionScore));
   const [combatPowerRaw, setCombatPowerRaw] = useState(formatScore(profile.combatPower));
@@ -84,6 +85,7 @@ export default function MyPageModal({ onClose, mandatory = false }) {
       await saveProfile({
         nickname: trimmed,
         totalwarTier: tier,
+        ...(arenaLeague ? { arenaLeague } : {}),
         arenaTier,
         destructionScore: parseScore(scoreRaw),
         combatPower: parseScore(combatPowerRaw),
@@ -199,13 +201,32 @@ export default function MyPageModal({ onClose, mandatory = false }) {
           </div>
 
           <div className="mypage-stats-field">
-            <span className="mypage-field-label">결투장 티어</span>
+            <span className="mypage-field-label">결투장 리그</span>
             <div className="mypage-tier-grid">
+              {ARENA_LEAGUES.map((l) => (
+                <button
+                  key={l.id}
+                  type="button"
+                  className={`mypage-tier-btn mypage-tier-btn--league${arenaLeague === l.id ? ' is-on' : ''}`}
+                  aria-pressed={arenaLeague === l.id}
+                  onClick={() => setArenaLeague(l.id)}
+                  style={{ '--tier-color': l.color, color: l.color }}
+                >
+                  <img src={l.iconUrl} alt="" />
+                  {l.label}
+                </button>
+              ))}
+            </div>
+            <span className="mypage-field-label mypage-field-label--sub">
+              결투장 티어{arenaLeague ? '' : ' · 리그를 먼저 골라 주세요'}
+            </span>
+            <div className={`mypage-tier-grid${arenaLeague ? '' : ' is-locked'}`}>
               {ARENA_TIERS.map((t) => (
                 <button
                   key={t.id}
                   type="button"
                   className={`mypage-tier-btn mypage-tier-btn--arena${arenaTier === t.id ? ' is-on' : ''}`}
+                  disabled={!arenaLeague}
                   onClick={() => setArenaTier(t.id)}
                 >
                   <img src={t.iconUrl} alt="" />
