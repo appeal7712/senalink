@@ -10,6 +10,29 @@ import ContentSeasonBadges from './ContentSeasonBadges';
 
 const ROLE_LABEL_KR = { offensive: '공격형', magic: '마법형', defensive: '방어형', support: '지원형', universal: '만능형' };
 
+/**
+ * 공개 표시용 방문자 보정 — 오늘 n번째 방문자마다 날짜+순번으로 고정된 1 또는 2.
+ * 새로고침해도 같은 값, 방문자가 늘면 줄지 않음. 저장값·Ops 화면은 실제 수.
+ */
+function visitBonus(day, count) {
+  let bonus = 0;
+  for (let i = 1; i <= count; i += 1) {
+    let h = 2166136261;
+    const key = `${day}:${i}`;
+    for (let k = 0; k < key.length; k += 1) {
+      h ^= key.charCodeAt(k);
+      h = Math.imul(h, 16777619);
+    }
+    h ^= h >>> 16;
+    h = Math.imul(h, 0x85ebca6b);
+    h ^= h >>> 13;
+    h = Math.imul(h, 0xc2b2ae35);
+    h ^= h >>> 16;
+    if ((h >>> 0) % 2 === 1) bonus += 1;
+  }
+  return bonus;
+}
+
 const resolveHeroByName = (name) => {
   if (!name) return null;
   const clean = String(name).replace('(각성)', '').trim();
@@ -20,7 +43,7 @@ const resolveHeroByName = (name) => {
 
 export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCommunity }) {
   const { content, loaded } = useSiteMain();
-  const [visits, setVisits] = useState({ total: 0, dayCount: 0 });
+  const [visits, setVisits] = useState({ total: 0, dayCount: 0, day: '' });
   const metaDecks = (content.metaDecks || []).filter(
     (d) => String(d.title || '').trim() || (d.heroNames || []).some((n) => String(n || '').trim())
   );
@@ -29,12 +52,14 @@ export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCo
 
   useEffect(() => {
     const unsub = subscribeSiteVisitStats(
-      (data) => setVisits({ total: data.total, dayCount: data.dayCount }),
+      (data) => setVisits({ total: data.total, dayCount: data.dayCount, day: data.day || '' }),
       () => {},
     );
     recordSiteVisitOnce().catch(() => {});
     return unsub;
   }, []);
+
+  const todayBonus = visitBonus(visits.day, visits.dayCount);
 
   if (!loaded) {
     return (
@@ -66,10 +91,9 @@ export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCo
             {content.subhead}
           </p>
           <p className="hero-visit-stats" aria-label="방문자 수">
-            {/* 공개 표시만 오늘 1명 = 2 (저장값은 실제 수, 관리자 화면은 실제 수) */}
-            오늘 방문자 {(visits.dayCount * 2).toLocaleString('ko-KR')}
+            오늘 방문자 {(visits.dayCount + todayBonus).toLocaleString('ko-KR')}
             <span aria-hidden="true"> · </span>
-            전체 {(visits.total + visits.dayCount).toLocaleString('ko-KR')}
+            전체 {(visits.total + todayBonus).toLocaleString('ko-KR')}
           </p>
 
           <div className="hero-cta-row">
