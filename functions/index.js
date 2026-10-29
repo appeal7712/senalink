@@ -10,7 +10,7 @@ const couponSync = require('./couponSync');
 initializeApp();
 
 const REGION = 'asia-northeast3';
-const HUB_IDLE_DAYS = 60;
+const HUB_IDLE_DAYS = 100;
 const HUB_IDLE_MS = HUB_IDLE_DAYS * 24 * 60 * 60 * 1000;
 const MAX_HUB_MEMBERS = 30;
 const MAX_ALLIANCE_GUESTS = 3;
@@ -235,7 +235,7 @@ async function listIdleHubIds() {
     for (const d of snap.docs) {
       const data = d.data() || {};
       if (!data.lastActivityAt) {
-        // 기존 허브: 시계를 지금으로 심어서, 함수를 켠 날부터 60일을 준다.
+        // 기존 허브: 시계를 지금으로 심어서, 함수를 켠 날부터 HUB_IDLE_DAYS를 준다.
         try {
           await d.ref.update({ lastActivityAt: nowIso() });
         } catch (err) {

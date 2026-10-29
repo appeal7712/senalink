@@ -37,7 +37,7 @@ export const MAX_ADMINS = 3; // master 포함
 export const MAX_HUB_MEMBERS = 30;
 export const HISTORY_RETENTION_DAYS = 30;
 /** 길드 히스토리가 이 기간 동안 없으면 허브와 관련 데이터를 서버에서 삭제 */
-export const HUB_IDLE_DAYS = 60;
+export const HUB_IDLE_DAYS = 100;
 
 /** 허브 엠블럼(아이콘) 프리셋 — 관리자가 설정에서 변경 */
 export const HUB_EMBLEMS = [

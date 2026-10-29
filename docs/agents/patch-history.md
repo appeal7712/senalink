@@ -5,6 +5,11 @@
 
 ## 17. 패치 내역
 
+### 2026-10-30 (`v2026.10.30.200`) — 유휴 허브 자동 정리 60일 → 100일
+- `HUB_IDLE_DAYS` 100 (`functions/index.js` `purgeIdleHubs` 판정 · `src/data/loungeMeta.js` 안내 문구 · Ops 대시보드 「자동 정리 임박」 문구).
+- 기준은 그대로 허브 `lastActivityAt`(허브 생성 · `history` 문서 생성 시 `onHubHistoryCreated`로 갱신). 히스토리 표시 보관 30일(`HISTORY_RETENTION_DAYS`)과는 별개.
+- 배포: `functions:purgeIdleHubs` → Hosting (rules 무변경).
+
 ### 2026-10-30 (`v2026.10.30.199`) — 모바일 세팅 확인 스킬 예약 한 화면
 - 세팅 확인 PvP 스킬 예약(≤760px): 영웅 초상화 숨김, 이름 위·스킬 아이콘 아래, 영웅 칸 균등 분할로 가로 스크롤 없이 한 화면. 긴 이름은 2줄(높이 고정해 아이콘 줄 정렬). PC·공략 카드·예약 편집기는 그대로.
 - `SkillReservationBoard.jsx`에 초상화/이름 영역 className만 추가, 스타일은 `index.css` `.setting-overview-section` 모바일 블록.

@@ -4,7 +4,7 @@ import { subscribeSiteVisitStats, subscribeVisitDaily } from '../../lib/siteVisi
 import {
   buildDailySeries, buildDailySeriesFromMap, daysUntilPurge, formatRelative, toMs,
 } from '../../lib/opsInsights';
-import { MAX_HUB_MEMBERS } from '../../data/loungeMeta';
+import { HUB_IDLE_DAYS, MAX_HUB_MEMBERS } from '../../data/loungeMeta';
 
 const RANGES = [14, 30, 90];
 const SERIES = [
@@ -219,7 +219,7 @@ export default function OpsDashboard({
 
         <div className="luxury-panel opsx-panel">
           <h3 className="opsx-subtitle">자동 정리 임박 허브</h3>
-          <div className="opsx-muted" style={{ marginBottom: 10 }}>활동 없이 60일이 지나면 자동 삭제돼요 (남은 {PURGE_WARN_DAYS}일 이하)</div>
+          <div className="opsx-muted" style={{ marginBottom: 10 }}>활동 없이 {HUB_IDLE_DAYS}일이 지나면 자동 삭제돼요 (남은 {PURGE_WARN_DAYS}일 이하)</div>
           {!purgeSoon.length && <div className="opsx-empty">임박한 허브가 없습니다.</div>}
           <div className="opsx-rank-list">
             {purgeSoon.map(({ hub, left }) => (
