@@ -642,7 +642,7 @@ export default function TeamBuilderPage() {
                       />
                       {fxTab.ally === 'skill' ? (
                         <>
-                          <SkillEffectList key="ally-skill" cards={buffSkillCards} side="ally" resolveHero={resolveHero} emptyText="스킬 · 발동으로 팀에 거는 버프가 없어요." />
+                          <SkillEffectList key="ally-skill" cards={buffSkillCards} side="ally" resolveHero={resolveHero} emptyText="액티브 · 발동으로 팀에 거는 버프가 없어요." />
                           <SelfBuffSection kind="skill" cards={selfSkillCards} teamSize={myHeroes.length} resolveHero={resolveHero} open={selfOpen} onToggle={setSelfOpen} />
                         </>
                       ) : (
@@ -663,7 +663,7 @@ export default function TeamBuilderPage() {
                     >
                       <FxTabs side="enemy" value={fxTab.enemy} onChange={(v) => setFxTab((t) => ({ ...t, enemy: v }))} passiveCount={fxBoxCount(debuffCards)} skillCount={fxBoxCount(debuffSkillCards, 'skill')} />
                       {fxTab.enemy === 'skill' ? (
-                        <SkillEffectList key="enemy-skill" cards={debuffSkillCards} side="enemy" resolveHero={resolveHero} emptyText="스킬 · 발동으로 거는 디버프가 없어요." />
+                        <SkillEffectList key="enemy-skill" cards={debuffSkillCards} side="enemy" resolveHero={resolveHero} emptyText="액티브 · 발동으로 거는 디버프가 없어요." />
                       ) : (
                         <EffectList key="enemy-passive" cards={debuffCards} side="enemy" teamSize={myHeroes.length} resolveHero={resolveHero} onFind={findCard} emptyText={isPve ? '보스에게 거는 패시브 디버프가 없어요.' : '상대에게 거는 패시브 디버프가 없어요.'} />
                       )}

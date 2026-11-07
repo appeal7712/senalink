@@ -26,7 +26,7 @@ export function groupSkillCards(cards) {
   for (const c of cards) {
     const s = c.sources[0];
     const k = `${s.heroName}|${s.skillName}`;
-    if (!map.has(k)) map.set(k, { id: k, heroName: s.heroName, tag: s.skillTag, cards: [] });
+    if (!map.has(k)) map.set(k, { id: k, heroName: s.heroName, tag: s.skillTag, skillName: s.skillName, skillLabel: s.skillLabel, cards: [] });
     map.get(k).cards.push(c);
   }
   return [...map.values()];

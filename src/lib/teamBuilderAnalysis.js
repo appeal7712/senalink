@@ -1299,7 +1299,9 @@ export function heroSummary(hero, { rareSet } = {}) {
         turns: timing === 'start' ? e.duration.n : null,
         value,
         scope: scopeText(e),
+        scopeKind: e.scope.kind,
         skillLabel: e.skillLabel,
+        skillName: e.skillName,
         source: e.source,
       });
     }

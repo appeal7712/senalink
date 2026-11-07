@@ -2,7 +2,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import HeroPortraitCard from '../../components/HeroPortraitCard';
 import HeroGridPicker from '../../components/HeroGridPicker';
 import Icon from '../../components/icons/Icon';
+import SafeImg from '../../components/icons/SafeImg';
 import { accessories } from '../../data/equipments';
+import { skillIconUrl } from '../../lib/skillIcon';
 import { LEGEND_RINGS, ROLE_TILES, effectLabel, entryValue, fmtFxValue, fmtValue, listLabel, targetLabel } from '../../lib/teamBuilderAnalysis';
 import { fxBoxCount, groupEffectCards, groupSkillCards } from './fxGroups';
 
@@ -513,7 +515,7 @@ const badgeValue = (c) => fmtFxValue(c.value, c.label, c.dir);
 export function FxTabs({ side, value, onChange, passiveCount, skillCount }) {
   const tabs = [
     { id: 'passive', label: '패시브', n: passiveCount },
-    { id: 'skill', label: '스킬 · 발동', n: skillCount },
+    { id: 'skill', label: '액티브 · 발동', n: skillCount },
   ];
   return (
     <div className={`tb-fx-tabs is-${side}`} role="tablist">
@@ -623,11 +625,12 @@ export function SkillEffectList({ cards, side, resolveHero, emptyText }) {
       {rows.map((row, i) => {
         const scopes = [...new Set(row.cards.map((c) => c.sources[0].scope))];
         const oneScope = scopes.length === 1 ? scopes[0] : null;
-        const dirs = [...new Set(row.cards.map((c) => c.dir))];
-        const dir = dirs.length === 1 ? dirs[0] : side === 'enemy' ? 'down' : 'up';
+        const icon = skillIconUrl(resolveHero(row.heroName), row.skillName, row.skillLabel);
         return (
           <li key={row.id} className="tb-fxl-row" style={{ '--i': Math.min(i, 14) }}>
-            <span className={`tb-fxl-dir is-${dir || 'none'}`} aria-hidden="true">{DIR_MARK[dir] || '◆'}</span>
+            <span className="tb-fxl-skicon" title={row.skillName || row.tag}>
+              <SafeImg src={icon} alt={row.skillName || row.tag} fallbackIcon="swords" loading="lazy" />
+            </span>
             <div className="tb-fxl-body">
               <div className="tb-fxl-flows">
                 <span className="tb-fxl-flow">
