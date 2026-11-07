@@ -274,7 +274,7 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose, variant = 'ops
                   rows={3}
                   value={g.detailNote || ''}
                   onChange={(e) => patchGear('detailNote', e.target.value)}
-                  placeholder="예: 치확 67% · 약공 46%에 가깝게"
+                  placeholder="예: 속공 1순위 · 효적 50 이상 · 효저 100 최대한"
                 />
               </div>
             </div>

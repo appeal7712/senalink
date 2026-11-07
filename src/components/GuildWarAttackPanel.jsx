@@ -169,7 +169,7 @@ function GwTrioDeckEditor({
                 rows={3}
                 value={(gearConfigs[slotIdx] || emptyGearConfig()).detailNote || ''}
                 onChange={e => patchGearDetail(e.target.value)}
-                placeholder="예: 치확 67% · 약공 46%에 가깝게"
+                placeholder="예: 속공 1순위 · 효적 50 이상 · 효저 100 최대한"
                 style={{
                   width: '100%', padding: '8px 12px', background: '#07090e', border: '1px solid var(--border-gold)',
                   color: '#e2e8f0', borderRadius: 7, fontSize: 14, fontWeight: 700, lineHeight: 1.5,

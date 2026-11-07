@@ -386,7 +386,7 @@ export default function CommunityGuideEditor({
                 next[slot] = { ...next[slot], detailNote: e.target.value };
                 setGear(next);
               }}
-              placeholder={'예: 치확 67% · 약공 46%에 가깝게'}
+              placeholder={contentMode === 'pvp' ? '예: 속공 1순위 · 효적 50 이상 · 효저 100 최대한' : '예: 치확 67% · 약공 46%에 가깝게'}
               style={{
                 width: '100%', padding: '8px 12px', background: '#07090e', border: '1px solid var(--border-gold)',
                 color: '#e2e8f0', borderRadius: 7, fontSize: 14, fontWeight: 700, lineHeight: 1.5,

@@ -25,8 +25,8 @@ export function ModePicker({ onPick }) {
   const modes = [
     { id: 'arena', icon: 'tbArena', iconSize: 70, title: '결투장', vs: '5 vs 5', desc: '5인 덱 버프 · 디버프 · 세팅 체크' },
     { id: 'guildwar', icon: 'tbGuildwar', iconSize: 76, title: '길드전', vs: '3 vs 3', desc: '3인 덱 · 상대가 노리는 대상까지' },
-    { id: 'pve', icon: 'tbPve', iconSize: 76, title: 'PvE', vs: '5인 · 아군만', desc: '보스 · 탑 덱 · 아군 버프 · 보스 디버프' },
-    { id: 'effects', icon: 'tbEffects', iconSize: 76, title: '효과 사전', vs: '영웅 찾기', desc: '효과로 영웅 찾기 · 비교 · 덱에 넣기' },
+    { id: 'pve', icon: 'tbPve', iconSize: 76, title: 'PvE', vs: '5인 · 아군만', desc: '보스 · 아군 버프 · 보스 디버프' },
+    { id: 'effects', icon: 'tbEffects', iconSize: 76, title: '효과 사전', vs: '영웅 찾기', desc: '효과로 영웅 찾기 · 비교' },
   ];
   return (
     <div className="tb-mode-grid">
