@@ -1,0 +1,107 @@
+/* 영웅 효과 요약 (HeroEffectSummary) — 팀 빌더 「효과 사전」 · 도감 영웅 상세 공용 */
+
+/* 도감 영웅 상세 — 스킬 / 효과 요약 전환 */
+.hero-db-view-switch { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 14px; border-radius: 999px; background: rgba(0, 0, 0, 0.28); border: 1px solid rgba(255, 255, 255, 0.1); }
+
+.hero-db-view-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.hero-db-view-switch button.is-on { background: rgba(255, 255, 255, 0.92); color: #161616; }
+.hero-db-view-switch button.is-on svg { stroke: #161616; }
+.hero-db-view-switch button.is-on img.icon-inline:not(.icon-inline--color) { filter: brightness(0); }
+
+.hes { display: flex; flex-direction: column; gap: 10px; color: #fff; }
+
+.hes-sec {
+  --h: rgba(148, 163, 184, 0.55);
+  padding: 10px 12px 11px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--h) 10%, rgba(8, 12, 22, 0.55));
+  border: 1px solid color-mix(in srgb, var(--h) 45%, transparent);
+  min-width: 0;
+}
+
+.hes-sec.is-ally { --h: #3b82f6; }
+.hes-sec.is-enemy { --h: #ef4444; }
+.hes-sec.is-purple { --h: #a855f7; }
+.hes-sec.is-ring { --h: #facc15; }
+.hes-sec.is-skill { --h: #22d3ee; }
+.hes-sec.is-tower { --h: #34d399; }
+.hes-skill { padding: 0 7px; border-radius: 6px; background: rgba(34, 211, 238, 0.18); border: 1px solid rgba(34, 211, 238, 0.5); color: #a5f3fc; font-size: 10.5px; font-weight: 900; line-height: 18px; white-space: nowrap; }
+.hes-cond-line { width: 100%; padding-left: 2px; font-size: 10.5px; font-weight: 700; color: #fde68a; }
+
+.hes-sec h4 { margin: 0 0 7px; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 900; letter-spacing: -0.01em; }
+.hes-sec h4 b { min-width: 20px; padding: 0 6px; border-radius: 999px; background: color-mix(in srgb, var(--h) 70%, transparent); font-size: 11px; line-height: 18px; text-align: center; }
+
+.hes-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+
+.hes-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 7px;
+  padding: 6px 9px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.hes-dir { width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; background: rgba(59, 130, 246, 0.75); }
+.hes-row.is-enemy .hes-dir { background: rgba(239, 68, 68, 0.75); }
+.hes-name { font-size: 13px; font-weight: 900; }
+.hes-val { padding: 0 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.82); font-size: 11px; font-weight: 800; line-height: 18px; }
+.hes-when { padding: 0 6px; border-radius: 6px; border: 1px solid rgba(250, 204, 21, 0.5); color: #fef08a; font-size: 10.5px; font-weight: 800; line-height: 16px; }
+.hes-when.is-start { border-color: rgba(34, 211, 238, 0.55); color: #a5f3fc; }
+.hes-tag { padding: 0 6px; border-radius: 999px; background: rgba(168, 85, 247, 0.28); border: 1px solid rgba(192, 132, 252, 0.6); color: #e9d5ff; font-size: 10px; font-weight: 900; line-height: 16px; }
+.hes-scope { margin-left: auto; font-size: 11px; font-weight: 700; color: rgba(255, 255, 255, 0.62); }
+
+.hes-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+
+.hes-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.hes-chip em { font-style: normal; font-size: 10.5px; font-weight: 700; color: rgba(255, 255, 255, 0.58); }
+.hes-chip.is-role.is-ally { border-color: rgba(96, 165, 250, 0.55); }
+.hes-chip.is-role.is-enemy { border-color: rgba(248, 113, 113, 0.55); }
+
+.hes-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+
+.hes-rings { display: flex; gap: 10px; }
+.hes-ring { position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px; width: 36px; }
+.hes-ring img { width: 28px; height: 28px; object-fit: contain; display: block; }
+.hes-ring em { font-style: normal; font-size: 10.5px; font-weight: 800; color: rgba(255, 255, 255, 0.8); }
+.hes-ring.is-blocked img { filter: grayscale(1); opacity: 0.35; }
+.hes-ring.is-blocked em { color: #fca5a5; text-decoration: line-through; }
+.hes-ring i { position: absolute; top: -3px; right: 0; width: 15px; height: 15px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #ef4444; color: #fff; font-style: normal; font-size: 9px; font-weight: 900; }
+
+.hes-note { margin: 6px 0 0; font-size: 11px; font-weight: 700; color: rgba(255, 255, 255, 0.6); }
+.hes-cond { margin: 0 0 3px; font-size: 12px; font-weight: 700; color: rgba(255, 255, 255, 0.85); line-height: 1.5; }
+.hes-cond b { color: #fde68a; }
+.hes-tip { margin: 0 0 5px; font-size: 12px; font-weight: 600; line-height: 1.55; color: rgba(255, 255, 255, 0.86); }
+.hes-tip b { margin-right: 4px; color: #e9d5ff; font-weight: 900; }
+.hes-empty { margin: 0; font-size: 12px; font-weight: 700; color: rgba(255, 255, 255, 0.5); }
+
+@media (max-width: 520px) {
+  .hes-split { grid-template-columns: minmax(0, 1fr); }
+  .hes-scope { margin-left: 27px; width: 100%; }
+}

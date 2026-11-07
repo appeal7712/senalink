@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { initUiTheme } from './lib/uiTheme'
 import './index.css'
 import './styles/deckEditScrollModal.css'
+import './styles/hoverGate.css'
 import './styles/themeSolidDark.css'
 import App from './App.jsx'
 

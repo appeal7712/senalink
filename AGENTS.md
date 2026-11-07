@@ -154,6 +154,7 @@ npx firebase deploy --only functions --project senalink         # functions 변�
 | URL | PAGE id | 컴포넌트 |
 |-----|---------|----------|
 | `/` | `public_main` | `PublicMainPage` → `PublicMainDashboard` |
+| `/team`, `/team/arena`, `/team/guildwar`, `/team/pve`, `/team/effects` | `team_builder` | lazy `TeamBuilderPage` (§10.10, GNB 메인↔길드 허브 사이 · pve = 아군만 · effects = 효과 사전) |
 | `/hub`, `/guild` | `guild_room` | `HubPage` → `GuildLounge` |
 | `/community` | `community` | lazy `CommunityPage` |
 | `/tools`, `/tools/*` | `tools` | lazy `ToolsPage` |
@@ -301,6 +302,54 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 - 10.7 컨텐츠 시즌 카드 — 정본 `docs/content-season-schedule.md` **패치 전 필수 열람**, 정본이 코드보다 우선
 - 10.8 화면 테마 유리/선명 다크 (`uiTheme.js`, `themeSolidDark.css`, `UiThemeToggle`)
 - 10.9 쿠폰 (GNB 「쿠폰」, `site/coupons`, Callable `redeemCoupon`) — UID는 localStorage만, 클라 write 규칙 추가 금지
+- 10.10 팀 빌더 (`/team`) — 덱 효과 분석은 `lib/teamBuilderAnalysis.js` 순수 함수, 팁은 `data/teamBuilderTips.js`. 덱 저장은 localStorage만 (Firestore 무접근). 빠른 지도는 아래 §10.10 요약
+
+### 10.10 요약 — 팀 빌더 · 효과 엔진 (자주 고치는 곳)
+
+상세·규칙 전체는 [docs/agents/features.md](docs/agents/features.md) §10.10. 패치 전 이 표로 위치부터 찾을 것.
+
+| 바꾸고 싶은 것 | 위치 |
+|------|------|
+| 스킬 문장 읽기(대상·턴·확률·수치·조건) · 강화/초월 반영 | `src/lib/teamBuilderAnalysis.js` — `collectHeroEntries` · `makeEntries` · `upgradeSegments` · `applyUpgradeRules` · `embeddedEffects` · `skillEffects` |
+| 효과 이름 표시 · 버프/디버프 분류 · 이름 붙은 버프(여포 용이무모 = 물리 공격력) | 같은 파일 `effectLabel`(▲▼ 방향) · `listLabel`(목록 이름 — 증가 · 감소 붙임) · `classify` · `NAMED_STAT_BUFFS` |
+| 패시브 탭 목록 · 겹침(높은 수치 하나만) · 자기 버프 | `effectCards`(`selfOnly`) · `findOverlaps`(팀 버프끼리만, `teamGroups`) · `scopeCovers` · `sharedRecipients`(일부 겹침 → `overlapNote`) · `selfClash` |
+| 스킬 · 발동 탭 목록 | `skillCards`(카드) · `skillCardText`(표시 이름 다듬기) · 화면 `SkillEffectList` |
+| 목록 상자 묶기 · 칸 숫자 | `src/pages/teamBuilder/fxGroups.js` — `groupEffectCards` · `groupSkillCards` · `fxBoxCount` |
+| PvE 전용 줄(탑 전용 · 보스 대상) | `makeEntries` `allowTower` — 탑 줄은 `tower: true`(「탑 전용」 표시), 「보스」 줄은 `SKIP_RE`(결투장 · 길드전은 건너뜀) / `SKIP_PVE_RE`(PvE는 읽음) |
+| 편성 조건 문구(「스킬2 생명력 전환 발동 안 함」) | `formationRequirements().effectText` · `heroSummary().conditions[].effectText` — 둘 다 `skillEffectText` 공용 |
+| 덱 세팅 체크 항목 | `src/pages/teamBuilder/TeamBuilderPage.jsx` `buildChecks` |
+| 상대 덱에서 조심할 것 | 같은 파일 `buildThreats` (노림 문장 `targetingSentence` · 쿨타임 증가 · 물리/마법 면역·감쇄 `damageGuardLines` · 영웅별 팁) |
+| 영웅·효과별 직접 쓴 문구 | `src/data/teamBuilderTips.js` — `SIGNATURE_TIPS`(효과 이름) · `HERO_TIPS`(영웅, `enemy`는 객체 또는 배열) · `BUFF_NOTES`(버프 카드 아래 참고 문구) |
+| 화면 조각(덱 바 · 영웅 선택 창 · 효과 요약 칸 · 버프/디버프 목록 · 주의 카드) | `src/pages/teamBuilder/TeamBuilderParts.jsx` |
+| 스타일(모바일은 파일 끝 `@media` 블록) | `src/styles/teamBuilder.css` |
+| 도감 「효과 요약」 탭 | `src/components/HeroEffectSummary.jsx` + `src/styles/heroEffectSummary.css` (엔진 `heroSummary`) |
+| 엔진이 스킬 문장을 어떻게 읽었는지 확인 | 로컬 전용 점검표 `http://127.0.0.1:5173/dev/tb-audit.html` (`dev/`, 배포본 미포함) |
+
+현재 화면 동작(밍봉 확정 — 바꾸지 말 것):
+- 영웅 효과 요약 칸 · 「필요한 효과로 찾기」는 **기본 닫힘**, 버튼을 눌러야 열림. 영웅 선택 창을 닫으면 찾기도 다시 닫힘.
+- 찾기 그룹 탭 색: 팀 버프 파랑 · 적 디버프 빨강 · 역할 노랑.
+- 버프/디버프 목록: 효과 이름은 **증가 · 감소까지 붙인 원래 이름**(「방어력 감소」 — 「방어력」만 쓰지 말 것, 밍봉 지시) · **칸 안 가운데 정렬**(칸 너비 = 목록에서 가장 긴 이름, `--fxl-name`) + 오른쪽 수치 뱃지(버프 **초록** · 디버프 **보라**, 높이 26px, 이름에 증가 · 감소가 있으면 부호 없이 「29%」).
+- 같은 효과 겹침: 높은 쪽 대상이 낮은 쪽 대상을 **전부 덮을 때만** 「○○는 반영 안 돼요」. 일부만 겹치면 「헤브니아 대상(…)과 겹치는 영웅은 헤브니아 +31%, 나머지는 선란 +25%가 적용돼요」(목록 · 덱 세팅 체크 같은 문장).
+- 칸 · 탭 숫자 = **팀 목록에 보이는 상자 수**(자기 버프는 안 셈). 스킬 · 발동은 **영웅 · 스킬 단위 상자 하나**(대상이 줄마다 다르면 줄에 「→ 대상」).
+- 「자기 자신만 받는 버프」 알약은 **한 줄 고정** — 좁으면 이름 숨기고 얼굴 + 숫자.
+- 수치는 항상 **스킬 강화 + 초월 기준**.
+- 모드 4개: 결투장 · 길드전 · **PvE**(5인 · 아군만 · 탑 전용 · 보스 대상 효과 포함, 상대 덱 없음 — 상단 설명은 「PvE는 아군만 봐요.」만, 탑 전용 문구 넣지 말 것) · 효과 사전.
+- 버프 · 디버프 칸 안 [패시브 | 스킬 · 발동] 탭(`FxTabs`, 기본 패시브). 스킬 · 발동 = `skillCards`(기본 공격 · 스킬 · 각성기 · 조건 발동, 겹침 판정 없음, 지속 · 중첩 · 조건 표시).
+- 「자신」 대상 효과는 **팀 목록 · 팀 겹침 판정에 절대 안 넣음**. 버프 칸 안 아래 「자기 자신만 받는 버프」(`SelfBuffSection`) 영웅 알약 → 눌러야 펼침. 따로 칸 만들지 말 것(밍봉 지시).
+- `/team` 모드 카드: 평소 아이콘 + 이름만, 마우스 올리면 아이콘이 커지며 흐려지고 이름 · 「5 vs 5」 · 설명 표시(CTA 버튼 없음). 폰·터치는 처음부터 글자 표시. 공용 허브 · 도구 · 도감 상단 메뉴는 같은 디자인의 작은 판 `HoverGateCard`(`styles/hoverGate.css`, 상세 features.md §10.5) — 아이콘 원본 해상도가 낮아 카드를 낮게 · 아이콘을 작게 둔 것은 밍봉 지시(크게 키우지 말 것).
+
+**새 영웅 추가 시 팀 빌더 체크** (엔진은 스킬 문장을 규칙으로 읽어서 영웅별 코드는 원래 필요 없음 — 아래만 확인):
+1. 도감 데이터(§13)만 넣으면 팀 빌더 · 효과 사전 · 도감 효과 요약에 자동 반영. 수치는 스킬 `tooltips`(강화 · 초월 포함)에서 읽으므로 tooltips가 비면 수치 없이 이름만 나옴.
+2. 처음 보는 효과 이름: `classify`가 이름의 키워드(증가 · 감소 · 면역 · 보호막 …)로 분류, 키워드가 없으면 `utility`로 **버프/디버프 목록에서 빠짐**(관통 · 처형 · 연속 발동 같은 메커니즘용). 새 버프가 목록에 안 보이면 여기 확인.
+3. 이름만 있는 버프(여포 「용이무모」처럼 실제 능력치를 이름에 안 쓰는 것) → `NAMED_STAT_BUFFS`에 「이름 → 능력치」 추가.
+4. 상대 덱 경고가 필요한 고유 기믹 → `teamBuilderTips.js` `SIGNATURE_TIPS` / `HERO_TIPS`.
+5. 아래 검증(영웅 전체 실행 · 점검표)으로 새 영웅 줄이 다 읽혔는지 확인.
+
+검증 방법(에이전트):
+- 엔진 변경 후: esbuild로 `teamBuilderAnalysis.js`를 번들해 영웅 전체 + 무작위 덱(3인 · 5인, PvE on/off)으로 `analyzeTeam` · `effectCards`(+`selfOnly`) · `skillCards` · `formationRequirements` · `heroSummary` 돌려 오류 0 확인(임시 스크립트는 `%TEMP%`에 두고 저장소에 남기지 말 것). 같이 볼 것: ① 스킬 `details` 줄 중 어떤 entry의 `raw`에도 안 잡힌 줄(2026-11-07 기준 「사용 가능」 안내 2줄만 정상) ② `utility`로 빠진 효과 이름 목록(메커니즘만이어야 함) ③ 이름에 숫자 · 괄호가 남은 효과.
+- 개발 서버(Vite)가 저장 순간 파일을 **빈 내용으로 캐시**하는 일이 있음 → 「일시적인 오류」 + 모듈 export 없음이면, 디스크 파일이 정상인지 보고 파일 수정 시각만 갱신(`(Get-Item 파일).LastWriteTime = Get-Date`) 후 새로고침. 배포 빌드는 디스크를 읽어서 무관.
+- 확인용 탭은 `browser_navigate`에 `newTab: true`로 따로 열 것(`viewId` 없이 열면 밍봉 탭을 가로챔).
+- 브라우저 확인은 **밍봉 탭에서 클릭 금지**(읽기·스크린샷만). 팀 빌더는 store 변경마다 localStorage 전체를 저장해서, 오래된 탭에서 버튼을 누르면 밍봉 덱을 덮어씀. 확인용 탭에는 데모 DOM을 넣어 보고 다른 주소로 이동(탭 닫기 도구는 다른 탭을 닫은 적 있음 → 쓰지 말 것).
 
 ---
 
@@ -319,6 +368,7 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | `copyNodeImage.js` | 세팅 공유 PNG |
 | `deckEditScrollModal.js` | 결투장·공성·강림·방어 덱 수정 모달 PC 클래스·스타일·휠 전달 (§12.4–12.5) |
 | `uiTheme.js` | 화면 테마 유리/선명 · `localStorage` · `html[data-ui-theme]` (§10.8) |
+| `teamBuilderAnalysis.js` | 팀 빌더 · 도감 효과 요약 엔진 (스킬 문장 → 효과 목록, 순수 함수 · Firebase 무관, §10.10) |
 | `seo.js` / `sanitize.js` / `rateLimit.js` / `formatTime.js` | 부가 |
 
 ---
@@ -330,10 +380,11 @@ App
 ├── GlobalNavBar → ProfileDropdown → MyPageModal · UiThemeToggle (§10.8)
 ├── page:
 │   ├── PublicMainDashboard (site/main + 방문수)
+│   ├── TeamBuilderPage (lazy · localStorage만) → TeamBuilderParts · EffectDictionary · HeroEffectSummary (§10.10)
 │   ├── GuildLounge (LoungeContext + builds + 길드전/결투장/…)
 │   ├── GuildWarDefensePanel (방어 덱 수정 · §12.4)
 │   ├── CommunityPage → GuideCard/Editor, TierPanel, TotalWar…
-│   ├── EncyclopediaPage → DbHub
+│   ├── EncyclopediaPage → DbHub → HeroDB(스킬 / 효과 요약 전환) · EquipDB …
 │   ├── ToolsPage
 │   └── OpsPage → MainSiteEditor | HubOversee | UserOversee
 ├── SiteEntranceBanner
@@ -386,6 +437,8 @@ API:
 - 신규 영웅이면 **전용장비 아이콘도 같이** (`exclusiveGearMeta.generated.json`).
 - 목록 정렬 수동 금지 — §12.1 `sortHeroesForList`.
 - 장신구 세공: `accessory2`는 optional. **기본값에 `accessory2`를 넣지 말 것**(구 문서 해석이 깨짐). 해석·표시는 `lib/accessoryCraft.js`.
+- **스킬 텍스트 정본 = [7katlas](https://7katlas.com/codex.html)** (2026-11 전 영웅 동기화, §13.1.2). 각성 영웅은 강화 수치가 기본 수치에 합쳐져 있어 「스킬 강화」 줄이 비는 게 정상. 스킬 문장을 바꾸면 팀 빌더 분석도 같이 바뀌므로 점검표(`/dev/tb-audit.html`)로 확인.
+- 스킬 · UI 아이콘 교체: 이미지 먼저 넣고 코드 참조. UI 아이콘은 `src/data/uiIcons.js` 키(예: 도감 `dexSkill` · `dexEffectSummary` · 장신구 도감 탭 `dexAccessory` · 장비 부위 필터 `statPhysical` / `statMagic` / `statArmor` — `gearDex.js` `SLOT_META.icon`, 원본 `asset/장비, 장신구/능력치 아이콘/`). 흰 아이콘은 선택된 탭에서 `index.css` 규칙으로 자동 검정(`brightness(0)`)이라 따로 만들 필요 없음. 색 있는 원본을 흰색으로 바꿀 때는 **음영을 살려** 밝기 비율만 유지(밍봉 선호 — 고해상도 음영 아이콘이 크게 보일 때 품질이 좋음). 팀 빌더 모드 아이콘 `tbArena` · `tbGuildwar` · `tbEffects`, 도구 준비 중 카드 `toolGacha` · `toolRuby`가 그 예. **UI 아이콘 그림을 바꿀 땐 새 파일 이름으로** (같은 이름 덮어쓰기 → 브라우저 캐시로 밍봉·방문자 화면에 예전 그림이 남음).
 
 ---
 
@@ -405,6 +458,8 @@ API:
 12. 덱 수정 모달 패치 시 §12.5 회귀 체크리스트 참고.
 13. 커밋/푸시는 밍봉 요청 시. 시크릿(`.env*`)·`.firebase/hosting.*.cache` 커밋 금지.
 14. 배포 요청을 받으면 스킬 **`senalink-deploy`** 순서대로 (점검 → 버전·패치 내역 → Functions 먼저, Hosting 나중 → 라이브 확인 → 커밋·푸시).
+15. 팀 빌더 · 효과 엔진 · 스킬 데이터 패치 시 §10.10 요약의 검증 방법(엔진 전체 실행 · 점검표 · 밍봉 탭 클릭 금지)대로 확인.
+16. 커밋 시 경로를 하나씩 지정(`git add .` 금지). 커밋하지 않는 것: `asset/`(원본 에셋) · `scripts/tmp_*` · `tmp_missing_gear.json` · `scripts/sync_exclusive_gear_ui_assets.py` · 줄바꿈만 바뀐 파일(`ExclusiveGearPicker.jsx` · `exclusiveGearSlots.js` · `heroSearch.js` · `unsavedGuard.js` — `git diff -w`가 비면 제외) · 안 쓰는 `public/images/ui/tb-tab2-*.png` · `tb-guildwar.png`(성 아이콘 `tb-guildwar-castle.png`로 교체됨). `dev/`(로컬 점검표)는 커밋 O · 배포본 X.
 
 ---
 
@@ -420,7 +475,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.10.30.202** (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.11.07.203** (푸터 `APP_VERSION` 확인)
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 
 ---

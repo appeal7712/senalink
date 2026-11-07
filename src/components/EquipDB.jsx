@@ -48,7 +48,7 @@ export default function EquipDB() {
       }}>
         {[
           { id: 'equip', icon: 'gearSetting', label: '장비 세트 · 실전 장비' },
-          { id: 'accessory', icon: 'ring', label: '장신구 도감' },
+          { id: 'accessory', icon: 'dexAccessory', label: '장신구 도감' },
         ].map((tab) => {
           const on = pane === tab.id;
           return (

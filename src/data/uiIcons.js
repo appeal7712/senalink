@@ -81,6 +81,28 @@ export const UI_IMAGE_ICONS = {
 
   transcend2: { src: '/images/ui/transcend-2.png', w: 128, h: 128 },
   transcend6: { src: '/images/ui/transcend-6.png', w: 128, h: 128 },
+
+  /* 팀 빌더 (/team) 전용 — 다른 화면의 deckAlly / deckEnemy 는 그대로 */
+  teamBuilder: { src: '/images/ui/team-builder.png', w: 60, h: 60 },
+  tbMyDeck: { src: '/images/ui/tb-my-deck.png', w: 40, h: 40, activeInvert: false },
+  tbEnemyDeck: { src: '/images/ui/tb-enemy-deck.png', w: 40, h: 40, activeInvert: false },
+  tbBuff: { src: '/images/ui/tb-buff-shield.png', w: 23, h: 28, activeInvert: false },
+  tbDebuff: { src: '/images/ui/tb-debuff-shield.png', w: 23, h: 28, activeInvert: false },
+  tbThreat: { src: '/images/ui/tb-threat-warn.png', w: 128, h: 128, activeInvert: false },
+  tbAim: { src: '/images/ui/tb-aim.png', w: 64, h: 64, activeInvert: false },
+  tbVs: { src: '/images/ui/vs.png', w: 120, h: 112, activeInvert: false },
+  tbGuildwar: { src: '/images/ui/tb-guildwar-castle.png', w: 114, h: 114 },
+  tbArena: { src: '/images/ui/tb-arena-wing.png', w: 192, h: 192 },
+  tbEffects: { src: '/images/ui/tb-effects.png', w: 80, h: 80 },
+  toolGacha: { src: '/images/ui/tool-gacha.png', w: 50, h: 50 },
+  toolRuby: { src: '/images/ui/tool-ruby.png', w: 50, h: 50 },
+  toolSpendCalc: { src: '/images/ui/tool-spend-calc.png', w: 44, h: 49 },
+  dexSkill: { src: '/images/ui/dex-skill.png', w: 108, h: 108 },
+  dexEffectSummary: { src: '/images/ui/dex-effect-summary.png', w: 60, h: 60 },
+  dexAccessory: { src: '/images/ui/dex-accessory.png', w: 48, h: 48 },
+  statPhysical: { src: '/images/ui/stat-physical.png', w: 32, h: 32 },
+  statMagic: { src: '/images/ui/stat-magic.png', w: 32, h: 32 },
+  statArmor: { src: '/images/ui/stat-armor.png', w: 32, h: 32 },
 };
 
 const FORMATION_ICON_BY_ID = {

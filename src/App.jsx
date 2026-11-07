@@ -16,6 +16,7 @@ const OpsPage = lazy(() => import('./pages/ops/OpsPage'));
 const CommunityPage = lazy(() => import('./pages/community/CommunityPage'));
 const EncyclopediaPage = lazy(() => import('./pages/encyclopedia/EncyclopediaPage'));
 const ToolsPage = lazy(() => import('./pages/tools/ToolsPage'));
+const TeamBuilderPage = lazy(() => import('./pages/teamBuilder/TeamBuilderPage'));
 
 function RouteFallback() {
   return (
@@ -87,6 +88,9 @@ export default function App() {
                 onNavigateToLounge={() => go(PAGE.HUB)}
                 onNavigateToCommunity={() => go(PAGE.COMMUNITY)}
               />
+            )}
+            {activeTab === PAGE.TEAM && (
+              <Suspense fallback={<RouteFallback />}><TeamBuilderPage /></Suspense>
             )}
             {activeTab === PAGE.HUB && <HubPage />}
             {activeTab === PAGE.COMMUNITY && (

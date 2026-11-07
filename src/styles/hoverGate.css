@@ -1,0 +1,152 @@
+/*
+ * 상단 메뉴 카드 (공용 허브 · 도구 · 도감) — 팀 빌더 모드 카드(teamBuilder.css .tb-mode-card)의 작은 판.
+ * 평소: 가운데 아이콘 + 아래 이름. 올리면: 아이콘이 흐리게 커지며 둥실, 이름 · 설명이 나타남, 카드가 살짝 커지며 기울어짐.
+ * 아이콘 원본이 작은 화면용(50~74px)이라 카드를 낮게 잡고 평소엔 작게 보여 줌 — 키울 때는 항상 흐리게(저해상도가 안 보임).
+ * 마우스가 없는 기기 · 터치 · 폭 760px 이하는 처음부터 아이콘 + 이름 + 설명을 세로로 보여 줌.
+ */
+.hg-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 104px;
+  padding: 12px 14px;
+  text-align: center;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(16, 18, 24, 0.28);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out, background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.hg-card:hover:not(:disabled),
+.hg-card:focus-visible {
+  transform: scale(1.03) rotate(-1deg);
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+}
+.hg-card.is-on,
+.hg-card.is-on:hover {
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.86);
+  color: #161616;
+}
+.hg-card:disabled,
+.hg-card.is-soon {
+  opacity: 0.42;
+  cursor: default;
+}
+
+@keyframes hgFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.hg-art {
+  position: absolute;
+  inset: 0 0 30px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transition: transform 0.2s ease-in-out, filter 0.2s ease-in-out, opacity 0.2s ease-in-out, inset 0.2s ease-in-out;
+}
+.hg-art-in { display: flex; }
+.hg-card img.icon-inline { opacity: 0.92; }
+.hg-card.is-on img.icon-inline:not(.icon-inline--color) { filter: brightness(0); opacity: 1; }
+.hg-card:hover:not(:disabled) .hg-art,
+.hg-card:focus-visible .hg-art { inset: 0; transform: scale(2.2); filter: blur(5px); opacity: 0.6; }
+.hg-card.is-on:hover .hg-art,
+.hg-card.is-on:focus-visible .hg-art { opacity: 0.2; }
+.hg-card:hover:not(:disabled) .hg-art-in,
+.hg-card:focus-visible .hg-art-in { animation: hgFloat 3s ease-in-out infinite; }
+
+.hg-label {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 15px;
+  z-index: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+.hg-card:hover:not(:disabled) .hg-label,
+.hg-card:focus-visible .hg-label { opacity: 0; transform: translateY(6px); }
+
+.hg-text {
+  position: relative;
+  z-index: 2;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transform: translateY(5px);
+  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+}
+.hg-card:hover:not(:disabled) .hg-text,
+.hg-card:focus-visible .hg-text { opacity: 1; transform: none; }
+.hg-card.is-on .hg-text { text-shadow: none; }
+.hg-title { font-size: 16px; font-weight: 900; letter-spacing: -0.02em; }
+.hg-desc {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+}
+.hg-card.is-on .hg-desc { color: rgba(22, 22, 24, 0.72); }
+
+html[data-ui-theme="solid"] .hg-card:not(.is-on) { background: var(--glass-inset); }
+
+@media (hover: none), (pointer: coarse), (max-width: 760px) {
+  .hg-card { height: auto; flex-direction: column; gap: 6px; padding: 12px 10px; border-radius: 14px; }
+  .hg-card:hover:not(:disabled) { transform: none; box-shadow: none; }
+  .hg-art,
+  .hg-card:hover:not(:disabled) .hg-art { position: static; inset: auto; transform: none; filter: none; opacity: 1; }
+  .hg-card:hover:not(:disabled) .hg-art-in { animation: none; }
+  .hg-label { display: none; }
+  .hg-text,
+  .hg-card:hover:not(:disabled) .hg-text { opacity: 1; transform: none; gap: 2px; text-shadow: none; }
+  .hg-title { font-size: 13.5px; }
+  .hg-desc { font-size: 11px; white-space: normal; }
+}
+
+/*
+ * 길드 허브 상단 탭 (GuildLounge `.hub-tab-bar`) — 알약 모양 · 배치 그대로, 올릴 때만 살짝 커지며 기울고 아이콘이 둥실.
+ * 마우스 있는 PC(≥981)만. 탭 줄이 가로 스크롤 칸이라 커진 알약이 잘리지 않게 안쪽 여백을 주고 같은 만큼 바깥 여백을 빼서 높이 유지.
+ */
+@keyframes hgPillFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 981px) {
+  .hub-tab-bar { padding: 4px; margin: -4px; }
+  .hub-tab-bar .nav-tab-btn { transition: color 0.15s ease, background 0.15s ease, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
+  .hub-tab-bar .nav-tab-btn:hover,
+  .hub-tab-bar .nav-tab-btn:focus-visible { transform: scale(1.05) rotate(-1.5deg); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3); }
+  .hub-tab-bar .nav-tab-btn:hover .icon-inline,
+  .hub-tab-bar .nav-tab-btn:focus-visible .icon-inline { animation: hgPillFloat 1.6s ease-in-out infinite; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hg-card:hover:not(:disabled) .hg-art-in,
+  .hg-card:focus-visible .hg-art-in,
+  .hub-tab-bar .nav-tab-btn:hover .icon-inline,
+  .hub-tab-bar .nav-tab-btn:focus-visible .icon-inline { animation: none; }
+}

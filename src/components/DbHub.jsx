@@ -4,6 +4,7 @@ const EquipDB = lazy(() => import('./EquipDB'));
 const SystemDB = lazy(() => import('./SystemDB'));
 import { pets } from '../data/pets';
 import Icon from './icons/Icon';
+import HoverGateCard from './HoverGateCard';
 import { backdropDismissProps } from '../utils/backdropDismiss';
 import ModalScrim from './ModalScrim';
 
@@ -25,40 +26,17 @@ export default function DbHub() {
     <div className="fade-in">
       <div className="container" style={{ paddingTop: 22, paddingBottom: 8 }}>
         <div className="dex-hub-tabs">
-          {HUB_TABS.map((tab) => {
-            const on = subTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setSubTab(tab.id)}
-                className={`nav-tab-btn dex-hub-tab${on ? ' active' : ''}`}
-                style={{
-                  padding: '16px 18px',
-                  textAlign: 'left',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  gap: 6,
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  background: on ? 'rgba(255,255,255,0.86)' : 'rgba(16,18,24,0.28)',
-                  backdropFilter: 'blur(20px)',
-                  borderRadius: 22,
-                }}
-              >
-                <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span className="dex-hub-tab-icon" style={{
-                    width: 32, height: 32, borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    background: on ? 'rgba(22,22,24,0.08)' : 'rgba(255,255,255,0.08)',
-                  }}>
-                    <Icon name={tab.icon} size={15} />
-                  </span>
-                  <span className="dex-hub-tab-label" style={{ fontSize: 16, fontWeight: 700 }}>{tab.label}</span>
-                </span>
-                <span className="dex-hub-tab-desc" style={{ fontSize: 12, fontWeight: 500, opacity: 0.72, paddingLeft: 42 }}>{tab.desc}</span>
-              </button>
-            );
-          })}
+          {HUB_TABS.map((tab) => (
+            <HoverGateCard
+              key={tab.id}
+              icon={tab.icon}
+              title={tab.label}
+              desc={tab.desc}
+              on={subTab === tab.id}
+              aria-pressed={subTab === tab.id}
+              onClick={() => setSubTab(tab.id)}
+            />
+          ))}
         </div>
       </div>
 

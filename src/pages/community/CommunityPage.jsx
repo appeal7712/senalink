@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import Icon from '../../components/icons/Icon';
+import HoverGateCard from '../../components/HoverGateCard';
 import CommunityPvePanel from './CommunityPvePanel';
 import CommunityPvpPanel from './CommunityPvpPanel';
 import CommunityTierPanel from './CommunityTierPanel';
@@ -38,22 +38,16 @@ export default function CommunityPage() {
 
         <div className="community-hero-gates" role="tablist" aria-label="공용 허브 공략">
           {tabs.map((t) => (
-            <button
+            <HoverGateCard
               key={t.id}
-              type="button"
+              icon={t.icon}
+              title={t.label}
+              desc={t.hint}
+              on={tab === t.id}
               role="tab"
               aria-selected={tab === t.id}
-              className={`glass-inset community-hero-gate${tab === t.id ? ' is-on' : ''}`}
               onClick={() => setTab(t.id)}
-            >
-              <span className="community-hero-gate-icon" aria-hidden>
-                <Icon name={t.icon} size={22} />
-              </span>
-              <span className="community-hero-gate-copy">
-                <span className="community-hero-gate-label">{t.label}</span>
-                <span className="community-hero-gate-hint">{t.hint}</span>
-              </span>
-            </button>
+            />
           ))}
         </div>
       </div>

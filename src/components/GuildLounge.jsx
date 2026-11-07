@@ -1905,7 +1905,7 @@ export default function GuildLounge() {
 
       {/* ── 2. 서브 탭: 홈(허브) 분리 + 컨텐츠 모드 ── */}
       <div className="luxury-panel tab-bar-wrap" style={{ padding: '12px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div className="tab-bar" style={{ flex: 1 }}>
+        <div className="tab-bar hub-tab-bar" style={{ flex: 1 }}>
           <button
             className={`nav-tab-btn ${activeTab === 'home' ? 'active' : ''}`}
             onClick={() => navigateHubTab('home')}

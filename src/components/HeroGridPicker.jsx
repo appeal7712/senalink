@@ -25,6 +25,8 @@ export default function HeroGridPicker({
   fillHeight = false,
   /** 길드와 같은 초상·필터 밀도 */
   loungeDensity = false,
+  /** (선택) 이름 아래 작은 표시 — 팀 빌더 「필요한 효과로 찾기」 수치 등 */
+  renderBadge = null,
 }) {
   const [roleFilter, setRoleFilter] = useState('all');
   const [q, setQ] = useState('');
@@ -117,6 +119,7 @@ export default function HeroGridPicker({
               }}>
                 {cleanName}
               </div>
+              {renderBadge ? renderBadge(h) : null}
             </div>
           );
         })}

@@ -10258,6 +10258,14 @@ h1, h2, h3 {
   }
 }
 
+/* GNB 6개 메뉴 — 좁은 폰은 아이콘 없이 글자만 (메뉴 줄이 화면 밖으로 밀리지 않게) */
+@media (max-width: 520px) {
+  .gnb-link img.icon-inline,
+  .gnb-link svg.icon-inline {
+    display: none !important;
+  }
+}
+
 @media (max-width: 420px) {
   .gnb-link {
     padding: 6px 8px;

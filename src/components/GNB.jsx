@@ -7,6 +7,7 @@ import { PAGE } from '../config/routes';
 export default function GNB({ activeTab, setActiveTab }) {
   const menuItems = [
     { id: PAGE.MAIN, icon: 'main', label: '메인' },
+    { id: PAGE.TEAM, icon: 'teamBuilder', label: '팀 빌더' },
     { id: PAGE.HUB, icon: 'hub', label: '길드 허브' },
     { id: PAGE.COMMUNITY, icon: 'hubMembers', label: '공용 허브' },
     { id: PAGE.TOOLS, icon: 'toolsMenu', label: '도구' },

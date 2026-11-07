@@ -16,6 +16,11 @@ export const PAGE_SEO = {
     description:
       '세븐나이츠 리버스 PvP·PvE 공략과 티어리스트를 모아보는 공용 허브입니다. 결투장·이벤트 결투장·총력전·레이드 덱을 공유하세요.',
   },
+  [PAGE.TEAM]: {
+    title: `팀 빌더 | 세븐나이츠 리버스 덱 시너지 분석 · ${SITE_NAME}`,
+    description:
+      '세븐나이츠 리버스 결투장 5vs5 · 길드전 3vs3 덱을 짜면 아군 버프·적군 디버프·고유 기믹·중복 효과와 상대 덱 주의점을 한눈에 정리해 줍니다.',
+  },
   [PAGE.HUB]: {
     title: `길드 허브 | 세븐나이츠 리버스 길드 관리 · ${SITE_NAME}`,
     description:

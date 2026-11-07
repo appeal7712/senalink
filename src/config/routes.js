@@ -1,6 +1,7 @@
 /** 앱 경로 */
 export const PAGE = {
   MAIN: 'public_main',
+  TEAM: 'team_builder',
   HUB: 'guild_room',
   COMMUNITY: 'community',
   TOOLS: 'tools',
@@ -10,6 +11,7 @@ export const PAGE = {
 
 export const PAGE_PATH = {
   [PAGE.MAIN]: '/',
+  [PAGE.TEAM]: '/team',
   [PAGE.HUB]: '/hub',
   [PAGE.COMMUNITY]: '/community',
   [PAGE.TOOLS]: '/tools',
@@ -28,6 +30,7 @@ export function pathToPage(pathname) {
   const p = normalizePath(pathname);
   if (p === '/ops') return PAGE.OPS;
   if (p === '/hub' || p === '/guild') return PAGE.HUB;
+  if (p === '/team' || p.startsWith('/team/')) return PAGE.TEAM;
   if (p === '/community') return PAGE.COMMUNITY;
   if (p === '/tools' || p.startsWith('/tools/')) return PAGE.TOOLS;
   if (p === '/dex' || p === '/encyclopedia') return PAGE.DEX;
@@ -63,6 +66,25 @@ export function navigateTo(page) {
   if (normalizePath(window.location.pathname) === normalizePath(next)) return;
   window.history.pushState({ page }, '', next);
   window.dispatchEvent(new CustomEvent('app:navigate', { detail: { page } }));
+}
+
+/** 팀 빌더 모드 — `/team` (선택 화면) · `/team/arena` (5vs5) · `/team/guildwar` (3vs3) · `/team/pve` (5인 · 아군만) · `/team/effects` (효과 사전) */
+export const TEAM_MODES = ['arena', 'guildwar', 'pve', 'effects'];
+
+export function teamModeFromPath(pathname) {
+  const p = normalizePath(pathname);
+  if (!p.startsWith('/team/')) return null;
+  const id = p.slice('/team/'.length).split('/')[0];
+  return TEAM_MODES.includes(id) ? id : null;
+}
+
+export function navigateToTeam(mode = null) {
+  if (typeof window === 'undefined') return;
+  const next = mode && TEAM_MODES.includes(mode) ? `/team/${mode}` : '/team';
+  if (normalizePath(window.location.pathname) !== normalizePath(next)) {
+    window.history.pushState({ page: PAGE.TEAM, teamMode: mode }, '', next);
+  }
+  window.dispatchEvent(new CustomEvent('app:navigate', { detail: { page: PAGE.TEAM, teamMode: mode } }));
 }
 
 /** 도구 하위 탭 — URL에 tool id를 넣어 ToolsPage가 구분할 수 있게 함 */

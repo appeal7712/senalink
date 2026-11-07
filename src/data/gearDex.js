@@ -37,9 +37,9 @@ export const RARITY_META = {
 };
 
 export const SLOT_META = {
-  physical: { id: 'physical', label: '물리 공격', icon: 'swords' },
-  magic: { id: 'magic', label: '마법 공격', icon: 'orb' },
-  armor: { id: 'armor', label: '방어구', icon: 'shield' },
+  physical: { id: 'physical', label: '물리 공격', icon: 'statPhysical' },
+  magic: { id: 'magic', label: '마법 공격', icon: 'statMagic' },
+  armor: { id: 'armor', label: '방어구', icon: 'statArmor' },
 };
 
 function familyOf(name) {

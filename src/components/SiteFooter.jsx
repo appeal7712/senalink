@@ -6,6 +6,7 @@ import { showToast } from './Toast';
 
 const NAV_LINKS = [
   { id: PAGE.MAIN, label: '메인' },
+  { id: PAGE.TEAM, label: '팀 빌더' },
   { id: PAGE.HUB, label: '길드 허브' },
   { id: PAGE.COMMUNITY, label: '공용 허브' },
   { id: PAGE.TOOLS, label: '도구' },

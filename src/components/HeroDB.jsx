@@ -4,6 +4,7 @@ import Icon from './icons/Icon';
 import SafeImg from './icons/SafeImg';
 import HeroPortraitCard from './HeroPortraitCard';
 import SkillRichText, { SkillUpgradeBlocks } from './SkillRichText';
+import HeroEffectSummary from './HeroEffectSummary';
 
 const ROLE_ICON = {
   offensive: '/images/common/공격형 아이콘.png',
@@ -20,6 +21,7 @@ export default function HeroDB() {
   const [selectedHero, setSelectedHero]   = useState(null);
   const [searchTerm, setSearchTerm]       = useState('');
   const [activeSkillIdx, setActiveSkillIdx] = useState(0);
+  const [detailView, setDetailView]       = useState('skills');
 
   const tabFactions = HERO_FACTION_ORDER;
 
@@ -208,6 +210,17 @@ export default function HeroDB() {
                 </div>
               </div>
 
+              <div className="hero-db-view-switch" role="tablist" aria-label="상세 보기">
+                <button type="button" role="tab" aria-selected={detailView === 'skills'} className={detailView === 'skills' ? 'is-on' : ''} onClick={() => setDetailView('skills')}>
+                  <Icon name="dexSkill" size={13} /> 스킬
+                </button>
+                <button type="button" role="tab" aria-selected={detailView === 'effects'} className={detailView === 'effects' ? 'is-on' : ''} onClick={() => setDetailView('effects')}>
+                  <Icon name="dexEffectSummary" size={13} /> 효과 요약
+                </button>
+              </div>
+
+              {detailView === 'effects' ? <HeroEffectSummary hero={selectedHero} /> : (
+              <>
               {/* 스킬 탭 */}
               <div style={{ marginBottom: '16px', width: '100%' }}>
                 <div style={{ fontSize: '13px', color: 'var(--gold-primary)', fontWeight: 800, marginBottom: '10px' }}>스킬</div>
@@ -235,13 +248,21 @@ export default function HeroDB() {
               {selectedSkill && (
                 <div className="hero-db-skill-inline">
                   <div className="hero-db-skill-inline-head">
-                    <Icon name="swords" size={13} /> 스킬 설명
+                    <Icon name="dexSkill" size={13} /> 스킬 설명
                     <span className="hero-db-skill-inline-hint">효과 글자에 올려보거나 탭하세요</span>
                   </div>
                   <div className="hero-db-skill-inline-card">
                     <div className="hero-db-skill-inline-title">{selectedSkill.name}</div>
                     {selectedSkill.cooldown > 0 ? (
                       <div className="hero-db-skill-inline-cd">쿨타임 {selectedSkill.cooldown}</div>
+                    ) : null}
+                    {selectedSkill.awakenGauge > 0 ? (
+                      <div className="hero-db-skill-inline-cd">
+                        각성 게이지 {selectedSkill.awakenGauge}
+                        {selectedSkill.awakenGaugeDecrease > 0
+                          ? ` · 각성 후 자기 턴마다 ${selectedSkill.awakenGaugeDecrease} 감소 (${Math.ceil(selectedSkill.awakenGauge / selectedSkill.awakenGaugeDecrease)}턴 유지)`
+                          : ''}
+                      </div>
                     ) : null}
                     <SkillRichText
                       text={selectedSkill.description}
@@ -250,6 +271,8 @@ export default function HeroDB() {
                     <SkillUpgradeBlocks skill={selectedSkill} />
                   </div>
                 </div>
+              )}
+              </>
               )}
 
             </div>
