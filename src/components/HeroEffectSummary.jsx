@@ -84,6 +84,18 @@ function Section({ title, tone, count, children }) {
   );
 }
 
+function Sub({ title, count, children }) {
+  return (
+    <div className="hes-sub">
+      <h5>
+        {title}
+        {count != null ? <b>{count}</b> : null}
+      </h5>
+      {children}
+    </div>
+  );
+}
+
 /** 영웅 한 명의 패시브 효과 · 역할 · 전설 장신구 · 편성 조건 요약 (스킬 강화 · 초월 기준) */
 export default function HeroEffectSummary({ hero }) {
   const s = useMemo(() => heroSummary(hero, { rareSet: rareSet() }), [hero]);
@@ -95,29 +107,43 @@ export default function HeroEffectSummary({ hero }) {
 
   return (
     <div className="hes">
-      <Section title="팀에 주는 버프 · 패시브" tone="ally" count={s.buffs.length}>
-        {s.buffs.length
-          ? <ul className="hes-list">{s.buffs.map((fx) => <FxRow key={fx.id} fx={fx} side="ally" />)}</ul>
-          : <p className="hes-empty">팀에 주는 패시브 버프가 없어요.</p>}
+      <Section title="버프" tone="ally">
+        <Sub title="팀에 주는 패시브" count={s.buffs.length}>
+          {s.buffs.length
+            ? <ul className="hes-list">{s.buffs.map((fx) => <FxRow key={fx.id} fx={fx} side="ally" />)}</ul>
+            : <p className="hes-empty">팀에 주는 패시브 버프가 없어요.</p>}
+        </Sub>
+        {skillBuffs.length ? (
+          <Sub title="스킬 · 발동으로 거는 버프" count={skillBuffs.length}>
+            <SkillBoxes groups={skillBuffs} side="ally" />
+          </Sub>
+        ) : null}
+        {s.selfBuffs.length ? (
+          <Sub title="자기 자신만 받는 버프 · 패시브">
+            <div className="hes-chips">
+              {s.selfBuffs.map((fx) => (
+                <span key={fx.id} className="hes-chip">
+                  {fx.label}{fx.value != null ? ` ${fmtFxValue(fx.value, fx.label, fx.dir)}` : ''}
+                  {fx.timing === 'start' ? <em>시작 {fx.turns}턴</em> : null}
+                </span>
+              ))}
+            </div>
+          </Sub>
+        ) : null}
       </Section>
 
-      <Section title="적에게 거는 디버프 · 패시브" tone="enemy" count={s.debuffs.length}>
-        {s.debuffs.length
-          ? <ul className="hes-list">{s.debuffs.map((fx) => <FxRow key={fx.id} fx={fx} side="enemy" />)}</ul>
-          : <p className="hes-empty">적에게 거는 패시브 디버프가 없어요.</p>}
+      <Section title="디버프" tone="enemy">
+        <Sub title="적에게 거는 패시브" count={s.debuffs.length}>
+          {s.debuffs.length
+            ? <ul className="hes-list">{s.debuffs.map((fx) => <FxRow key={fx.id} fx={fx} side="enemy" />)}</ul>
+            : <p className="hes-empty">적에게 거는 패시브 디버프가 없어요.</p>}
+        </Sub>
+        {skillDebuffs.length ? (
+          <Sub title="스킬 · 발동으로 거는 디버프" count={skillDebuffs.length}>
+            <SkillBoxes groups={skillDebuffs} side="enemy" />
+          </Sub>
+        ) : null}
       </Section>
-
-      {skillBuffs.length ? (
-        <Section title="스킬 · 발동으로 거는 버프" tone="skill" count={skillBuffs.length}>
-          <SkillBoxes groups={skillBuffs} side="ally" />
-        </Section>
-      ) : null}
-
-      {skillDebuffs.length ? (
-        <Section title="스킬 · 발동으로 거는 디버프" tone="skill" count={skillDebuffs.length}>
-          <SkillBoxes groups={skillDebuffs} side="enemy" />
-        </Section>
-      ) : null}
 
       {s.tower.length ? (
         <Section title="탑 전용 (무한의 탑 · 시련의 탑)" tone="tower" count={s.tower.length}>
@@ -134,19 +160,6 @@ export default function HeroEffectSummary({ hero }) {
             ))}
           </ul>
           <p className="hes-note">결투장 · 길드전에서는 적용되지 않아 팀 빌더 분석에는 넣지 않아요.</p>
-        </Section>
-      ) : null}
-
-      {s.selfBuffs.length ? (
-        <Section title="자기 자신만 받는 버프 · 패시브" tone="self">
-          <div className="hes-chips">
-            {s.selfBuffs.map((fx) => (
-              <span key={fx.id} className="hes-chip">
-                {fx.label}{fx.value != null ? ` ${fmtFxValue(fx.value, fx.label, fx.dir)}` : ''}
-                {fx.timing === 'start' ? <em>시작 {fx.turns}턴</em> : null}
-              </span>
-            ))}
-          </div>
         </Section>
       ) : null}
 

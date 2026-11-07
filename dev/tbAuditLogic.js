@@ -3,6 +3,7 @@ import {
   collectHeroEntries,
   effectTiming,
   entryValue,
+  isSelfPassiveEntry,
   isSkillCastEntry,
   skillEffects,
   skillSlotLabel,
@@ -46,6 +47,7 @@ export function usageOf(e) {
     if (e.side === 'ally' && e.scope?.kind === 'self') return { tone: 'self', text: `자신 강화 · ${when}` };
     return { tone: 'team', text: `팀 분석 · ${when}` };
   }
+  if (isSelfPassiveEntry(e)) return { tone: 'self', text: `자신 강화 · ${t === 'perm' ? '상시' : `시작 ${e.duration.n}턴`}` };
   if (isSkillCastEntry(e)) return { tone: 'skill', text: '스킬 · 발동 탭' };
   if (e.special) return { tone: 'special', text: '특수 기믹' };
   if (e.category === 'cc' || e.category === 'dot') return { tone: 'role', text: '역할 체크용' };

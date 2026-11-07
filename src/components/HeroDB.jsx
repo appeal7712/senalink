@@ -14,6 +14,30 @@ const ROLE_ICON = {
   universal: '/images/common/만능형 아이콘.png',
 };
 
+const isBaseSkill = (s) => s?.type === 'basic_attack' || s?.direction === 'upper' || s?.direction === 'down';
+
+/**
+ * 스킬 칸 배치 — 원래 스킬은 윗줄, 변신 · 분신 · 자세 전환 스킬은 바로 앞 원래 스킬 아래 칸, 각성기는 마지막 칸(패시브) 아래.
+ * 전환 스킬이 없는 영웅의 각성기 위치는 CSS(모바일 = 맨 아래 넓은 줄)가 정함.
+ * 전환 스킬 = 방향(upper/down) 데이터가 있는 영웅에서, 원래 스킬 바로 뒤에 오는 방향 없는 active (델론즈 · 오공 · 쥬피).
+ */
+function layoutSkills(skills) {
+  const hasDirection = skills.some((s) => s.direction === 'upper');
+  let cols = 0;
+  let variants = false;
+  const cells = skills.map((skill, idx) => {
+    if (skill.type === 'awaken_skill') return { skill, idx, row: 2, awaken: true };
+    if (hasDirection && skill.type === 'active' && !skill.direction && isBaseSkill(skills[idx - 1])) {
+      variants = true;
+      return { skill, idx, col: cols, row: 2, variantOf: idx - 1 };
+    }
+    cols += 1;
+    return { skill, idx, col: cols, row: 1 };
+  });
+  for (const c of cells) if (c.awaken) c.col = Math.max(cols, 1);
+  return { cells, cols: Math.max(cols, 1), variants };
+}
+
 export default function HeroDB() {
   const [activeTab, setActiveTab]         = useState('special');
   const [activeFaction, setActiveFaction] = useState(HERO_FACTION_ORDER.special[0]);
@@ -63,6 +87,7 @@ export default function HeroDB() {
   };
 
   const selectedSkill = selectedHero?.skills?.[activeSkillIdx] || selectedHero?.skills?.[0] || null;
+  const skillGrid = layoutSkills(selectedHero?.skills || []);
 
   return (
     <div className="container fade-in dex-hero-page" style={{ padding: '16px 24px 60px' }}>
@@ -224,20 +249,27 @@ export default function HeroDB() {
               {/* 스킬 탭 */}
               <div style={{ marginBottom: '16px', width: '100%' }}>
                 <div style={{ fontSize: '13px', color: 'var(--gold-primary)', fontWeight: 800, marginBottom: '10px' }}>스킬</div>
-                <div className="hero-db-skills">
-                  {selectedHero.skills.map((skill, idx) => {
+                <div
+                  className={`hero-db-skills${skillGrid.variants ? ' has-variants' : ''}`}
+                  style={{ '--sk-cols': skillGrid.cols }}
+                >
+                  {skillGrid.cells.map(({ skill, idx, col, row, awaken, variantOf }) => {
                     const isActive = activeSkillIdx === idx;
+                    const typeLabel = variantOf != null
+                      ? `${getSkillCategoryName(selectedHero.skills[variantOf], variantOf)} 전환`
+                      : getSkillCategoryName(skill, idx);
                     return (
                       <div
                         key={idx}
                         onClick={() => setActiveSkillIdx(idx)}
-                        className={`hero-db-skill${isActive ? ' is-on' : ''}`}
+                        className={`hero-db-skill${isActive ? ' is-on' : ''}${awaken ? ' is-awaken' : ''}${variantOf != null ? ' is-variant' : ''}`}
+                        style={skillGrid.variants ? { '--c': col, '--r': row } : undefined}
                       >
                         <div className="hero-db-skill-face">
                           <SafeImg src={skill.iconUrl} alt={skill.name} fallbackIcon="swords" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
                         <span className="hero-db-skill-name">{skill.name}</span>
-                        <span className="hero-db-skill-type">{getSkillCategoryName(skill, idx)}</span>
+                        <span className="hero-db-skill-type">{typeLabel}</span>
                       </div>
                     );
                   })}

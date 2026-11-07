@@ -5317,6 +5317,16 @@ h1, h2, h3 {
   color: var(--gold-primary);
 }
 
+/* 변신 · 분신 · 자세 전환 영웅 — 원래 스킬 윗줄, 전환 스킬은 그 아래 칸, 각성기는 패시브 아래 칸 */
+.hero-db-skills.has-variants {
+  grid-template-columns: repeat(var(--sk-cols), minmax(0, 1fr));
+}
+
+.hero-db-skills.has-variants .hero-db-skill {
+  grid-column: var(--c);
+  grid-row: var(--r);
+}
+
 /* ── HeroDB skill inline (negi-style tooltip) ── */
 .hero-db-skill-inline {
   display: flex;
@@ -10372,8 +10382,20 @@ h1, h2, h3 {
   }
 
   .hero-db-skills {
-    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    grid-template-columns: repeat(var(--sk-cols, 4), minmax(0, 1fr));
     gap: 6px;
+  }
+
+  /* 변신 영웅이 아니면 각성기는 혼자 작은 칸으로 내려가지 않게 맨 아래 넓은 줄 (변신 영웅은 패시브 아래 칸) */
+  .hero-db-skills:not(.has-variants) .hero-db-skill.is-awaken {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .hero-db-skills:not(.has-variants) .hero-db-skill.is-awaken .hero-db-skill-name {
+    width: auto;
   }
 
   .dex-system-nav {

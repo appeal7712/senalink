@@ -851,6 +851,45 @@ function isTableEntry(e) {
   return !!effectTiming(e) && !e.special && e.category !== 'utility';
 }
 
+/** 수치 버프는 아니지만 아군 쪽에서 꼭 보여야 하는 전투 메커니즘 (반격 · 협공 · 도발 · 관통 · 쿨타임 초기화) */
+const MECHANIC_BUFFS = new Set(['반격', '협공', '도발', '관통', '스킬 쿨타임 초기화', '쿨타임 초기화', '모든 스킬 쿨타임 초기화']);
+function isMechanicBuff(e) {
+  return e.kind === 'effect' && e.side === 'ally' && MECHANIC_BUFFS.has(String(e.name).replace(/\(중첩\)$/, '').trim());
+}
+
+/**
+ * 「자기 자신만 받는 버프 · 패시브」 — 자신 대상 [상시] · 전투 시작 [N턴] 전부(수치 버프 + 반격 · 협공 같은 메커니즘 + 고유 기믹).
+ * 행동 제어 · 지속 피해 · 해제와 문장 조각(「…숫자만큼」)은 뺌.
+ */
+export function isSelfPassiveEntry(e) {
+  return e.kind === 'effect'
+    && e.side === 'ally'
+    && e.scope?.kind === 'self'
+    && !!effectTiming(e)
+    && !['cc', 'dot', 'dispel', 'cleanse'].includes(e.category)
+    && !isTextFragment(e);
+}
+
+/** 문장을 잘못 자른 조각(「…숫자만큼 추가 중첩」 · 「아래 효과 부여」) — 화면에 안 냄 */
+function isTextFragment(e) {
+  return /숫자만큼|아래 효과/.test(String(e.name));
+}
+
+/** 적에게 거는 상태 이상 — 행동 제어(기절 · 감전 · 공포 …) · 지속 피해(극독 · 중독 · 화상 …) */
+const STATUS_CATEGORIES = new Set(['cc', 'dot']);
+
+/** 패시브 고유 기믹 중 팀 · 적에게 거는 [상시] · 전투 시작 (칠흑의 낙인 · 전뢰의 표식 …) — 패시브 탭에 이름으로 표시, 겹침 판정 없음 */
+function isPassiveSpecialEntry(e) {
+  return e.kind === 'effect' && e.special && !!effectTiming(e) && e.scope?.kind !== 'self' && !isTextFragment(e);
+}
+
+/** 뱃지 수치 — 메커니즘(반격 [38% 확률] 등)은 수치 대신 발동 확률 */
+function fxValue(e, includeEnhance = true) {
+  const v = entryValue(e, includeEnhance);
+  if (v != null) return v;
+  return (e.special || e.category === 'utility') && e.chance != null ? e.chance : null;
+}
+
 /** 비슷한 효과끼리 붙여 놓기 위한 정렬 순서 (물리 공격력·피해량 → 마법 공격력·피해량 → 공통 → 치명/약점 → 효과 → 방어 → 회복 → 면역) */
 const EFFECT_FAMILIES = [
   [/^물리\s*(공격력|피해량|취약)/, ['공격력', '피해량', '취약']],
@@ -987,7 +1026,7 @@ export function fmtValue(v, dir) {
  * sources: 주는 영웅별 한 줄 (applied=false 면 같은 종류끼리 겹쳐 적용 안 됨)
  */
 export function effectCards(analysis, team, includeEnhance = true, { selfOnly = false } = {}) {
-  const pool = analysis.entries.filter(isTableEntry);
+  const pool = analysis.entries.filter((e) => isTableEntry(e) || isPassiveSpecialEntry(e) || (selfOnly && isSelfPassiveEntry(e)));
   const teamPool = pool.filter((e) => e.side === 'ally' && e.scope.kind !== 'self');
   const selfClashFor = (e) => {
     const best = new Map();
@@ -1043,7 +1082,7 @@ export function effectCards(analysis, team, includeEnhance = true, { selfOnly = 
         return {
           id: e.id,
           heroName: e.heroName,
-          value: entryValue(e, includeEnhance),
+          value: fxValue(e, includeEnhance),
           scope: scopeText(e),
           scopeKind: e.scope.kind,
           recipients,
@@ -1241,13 +1280,13 @@ export function roleCoverage(analysis) {
 export function heroSummary(hero, { rareSet } = {}) {
   if (!hero) return null;
   const entries = collectHeroEntries(hero, { rareSet });
-  const pick = (test) => {
+  const pick = (test, base = isTableEntry) => {
     const map = new Map();
     for (const e of entries) {
-      if (!isTableEntry(e) || !test(e)) continue;
+      if (!base(e) || !test(e)) continue;
       const timing = effectTiming(e);
       const id = `${e.side}|${e.key}|${timing}`;
-      const value = entryValue(e);
+      const value = fxValue(e);
       const prev = map.get(id);
       if (prev && (prev.value ?? -1) >= (value ?? -1)) continue;
       map.set(id, {
@@ -1324,9 +1363,9 @@ export function heroSummary(hero, { rareSet } = {}) {
   return {
     tower: [...tower.values()].sort((a, b) => SKILL_ORDER.indexOf(a.skillLabel) - SKILL_ORDER.indexOf(b.skillLabel)
       || (a.side === b.side ? 0 : a.side === 'ally' ? -1 : 1)),
-    buffs: pick((e) => e.side === 'ally' && e.scope.kind !== 'self'),
-    selfBuffs: pick((e) => e.side === 'ally' && e.scope.kind === 'self'),
-    debuffs: pick((e) => e.side === 'enemy'),
+    buffs: pick((e) => e.side === 'ally' && e.scope.kind !== 'self', (e) => isTableEntry(e) || isPassiveSpecialEntry(e)),
+    selfBuffs: pick((e) => e.side === 'ally' && e.scope.kind === 'self', isSelfPassiveEntry),
+    debuffs: pick((e) => e.side === 'enemy', (e) => isTableEntry(e) || isPassiveSpecialEntry(e)),
     skillFx,
     roles: ROLE_TILES
       .map((t) => ({ id: t.id, label: t.label, hint: t.hint, side: t.side, skills: [...new Set(entries.filter((e) => entryMatchesTile(e, t)).map((e) => e.skillLabel))] }))
@@ -1348,14 +1387,17 @@ export function heroSummary(hero, { rareSet } = {}) {
  * chip id: `ally|키` · `enemy|키` · `role|id`
  */
 /**
- * 스킬 · 발동 효과 — 기본 공격 · 스킬 · 각성기 + 패시브 조건 발동(부활 시 등)으로 거는 능력치 · 생존 · 회복 방해.
- * skillCards와 같은 규칙(패시브 [상시] · 전투 시작 [N턴]은 빼고, 행동 제어 · 지속 피해는 「역할」에서 다룸).
+ * 스킬 · 발동 효과 — 기본 공격 · 스킬 · 각성기 + 패시브 조건 발동(부활 시 등)으로 거는 능력치 · 생존 · 회복 방해,
+ * 아군 쪽 전투 메커니즘(도발 · 반격 · 협공 · 관통 · 쿨타임 초기화 — MECHANIC_BUFFS), 적에게 거는 상태 이상(행동 제어 · 지속 피해)과
+ * 버프 해제 · 버프 차단 · 턴제 버프 감소, 아군 디버프 해제, 고유 기믹(조건부).
+ * skillCards와 같은 규칙(패시브 [상시] · 전투 시작 [N턴]은 빼고, 행동 제어 · 지속 피해 · 적에게 거는 공격 성질은 「역할」에서 다룸).
  */
 export function isSkillCastEntry(e) {
-  return e.kind === 'effect'
-    && !e.special
-    && SKILL_CARD_CATEGORIES.has(e.category)
-    && !effectTiming(e);
+  if (e.kind !== 'effect' || effectTiming(e) || isTextFragment(e)) return false;
+  if (isMechanicBuff(e) || e.special) return true;
+  if (e.side === 'enemy' && (STATUS_CATEGORIES.has(e.category) || e.category === 'dispel')) return true;
+  if (e.side === 'ally' && e.category === 'cleanse') return true;
+  return SKILL_CARD_CATEGORIES.has(e.category);
 }
 
 function indexLayer() {
@@ -1417,7 +1459,7 @@ export function buildHeroEffectIndex(allHeroes, { includeEnhance = true, rareSet
         const text = `${v != null ? `${when} ${v}%` : when}${stack}`;
         base.bump(chip, label, name, text);
         wide.bump(chip, label, name, text);
-      } else if (isSkillCastEntry(e) && teamOnly) {
+      } else if (isSkillCastEntry(e) && teamOnly && !e.special) {
         const turns = e.duration?.type === 'turns' ? ` ${e.duration.n}턴` : '';
         const tag = e.skillLabel === '스킬' ? e.skillName : e.skillLabel;
         wide.bump(chip, label, name, `${tag}${turns}${v != null ? ` ${v}%` : ''}${stack}`);
