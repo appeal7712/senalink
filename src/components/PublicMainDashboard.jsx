@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { heroes } from '../data/heroes';
 import { ROLE_ICONS } from '../data/roleIcons';
 import Icon from './icons/Icon';
@@ -7,6 +7,8 @@ import { recordSiteVisitOnce, subscribeSiteVisitStats } from '../lib/siteVisitSt
 import GuildRankBoard from './GuildRankBoard';
 import MetaDeckCarousel, { MetaDeckCard } from './MetaDeckCarousel';
 import ContentSeasonBadges from './ContentSeasonBadges';
+
+const MetaDeckShare = lazy(() => import('./MetaDeckShare'));
 
 const ROLE_LABEL_KR = { offensive: '공격형', magic: '마법형', defensive: '방어형', support: '지원형', universal: '만능형' };
 
@@ -44,6 +46,7 @@ const resolveHeroByName = (name) => {
 export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCommunity }) {
   const { content, loaded } = useSiteMain();
   const [visits, setVisits] = useState({ total: 0, dayCount: 0, day: '' });
+  const [shareOpen, setShareOpen] = useState(false);
   const metaDecks = (content.metaDecks || []).filter(
     (d) => String(d.title || '').trim() || (d.heroNames || []).some((n) => String(n || '').trim())
   );
@@ -98,10 +101,10 @@ export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCo
 
           <div className="hero-cta-row">
             <button type="button" className="btn-ops" onClick={onNavigateToLounge}>
-              <Icon name="hub" size={16} color="#161616" /> 길드 허브 입장하기 <Icon name="arrowRight" size={15} color="#161616" />
+              <Icon name="hub" size={16} color="#161616" /> 길드 허브
             </button>
             <button type="button" className="btn-ops" onClick={onNavigateToCommunity}>
-              <Icon name="hubMembers" size={16} color="#161616" /> 공용 허브 입장하기 <Icon name="arrowRight" size={15} color="#161616" />
+              <Icon name="hubMembers" size={16} color="#161616" /> 공용 허브
             </button>
           </div>
         </div>
@@ -110,9 +113,14 @@ export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCo
       <ContentSeasonBadges />
 
       <div className="luxury-panel meta-deck-board">
-        <h3 className="meta-deck-board-title">
-          <Icon name="metaDeck" size={19} /> 결투장 & 이벤트 결투장 메타 덱
-        </h3>
+        <div className="meta-deck-board-head">
+          <h3 className="meta-deck-board-title">
+            <Icon name="metaDeck" size={19} /> 결투장 메타 덱
+          </h3>
+          <button type="button" className="meta-deck-share-btn" onClick={() => setShareOpen(true)}>
+            <Icon name="share" size={14} /> 메타 덱 공유하기
+          </button>
+        </div>
 
         <div className="meta-deck-row meta-deck-row--desktop">
           {metaDecks.map((deck) => (
@@ -122,6 +130,11 @@ export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCo
 
         <MetaDeckCarousel decks={metaDecks} />
       </div>
+      {shareOpen ? (
+        <Suspense fallback={null}>
+          <MetaDeckShare onClose={() => setShareOpen(false)} />
+        </Suspense>
+      ) : null}
 
       <GuildRankBoard />
 

@@ -46,7 +46,7 @@ export function usageOf(e) {
     if (e.side === 'ally' && e.scope?.kind === 'self') return { tone: 'self', text: `자신 강화 · ${when}` };
     return { tone: 'team', text: `팀 분석 · ${when}` };
   }
-  if (isSkillCastEntry(e)) return { tone: 'skill', text: '스킬 효과 (토글 켜면)' };
+  if (isSkillCastEntry(e)) return { tone: 'skill', text: '스킬 · 발동 탭' };
   if (e.special) return { tone: 'special', text: '특수 기믹' };
   if (e.category === 'cc' || e.category === 'dot') return { tone: 'role', text: '역할 체크용' };
   if (e.category === 'utility') return { tone: 'mute', text: '분류 안 됨 — 화면 미표시' };

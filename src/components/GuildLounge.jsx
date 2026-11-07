@@ -30,6 +30,7 @@ import ArenaDeckKindToggle, { ArenaDeckKindBadge, arenaKindTheme, normalizeArena
 import { LoungeLanding, InviteReadyModal, LoungeJoinModal } from './lounge/LoungeGate';
 import LoungeHome from './lounge/LoungeHome';
 import LoungeHubHeader from './lounge/LoungeHubHeader';
+import HubRenewPrompt from './lounge/HubRenewPrompt';
 import StrategyActionBar from './StrategyActionBar';
 import DeckLikeButton, { likedByList, toggleLikedBy } from './DeckLikeButton';
 import SkillReservationBoard from './SkillReservationBoard';
@@ -1870,6 +1871,7 @@ export default function GuildLounge() {
       )}
       
       <LoungeHubHeader />
+      <HubRenewPrompt />
 
       {isAllianceGuestView ? (
         <div

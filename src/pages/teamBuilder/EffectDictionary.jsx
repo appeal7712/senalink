@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '../../components/icons/Icon';
 import HeroEffectSummary from '../../components/HeroEffectSummary';
-import { heroSummary, fmtValue } from '../../lib/teamBuilderAnalysis';
+import { heroSummary, fmtFxValue } from '../../lib/teamBuilderAnalysis';
 import { FinderTile, MiniHero } from './TeamBuilderParts';
 
 const GROUPS = [
@@ -66,14 +66,14 @@ function CompareTable({ names, resolveHero, rareSet, withSkill, onRemove }) {
               const list = skillCellsOf(s, r.side, r.key);
               return (
                 <span key={name} className={`tb-cmp-cell${list.length ? ' is-on' : ''}`}>
-                  {list.length ? list.map((f) => `${f.skillLabel}${f.turns ? ` ${f.turns}턴` : ''}${f.value != null ? ` ${fmtValue(f.value, f.dir)}` : ''}`).join(' · ') : '·'}
+                  {list.length ? [...new Set(list.map((f) => `${f.skillTag || f.skillLabel}${f.turns ? ` ${f.turns}턴` : ''}${f.value != null ? ` ${fmtFxValue(f.value, f.label, f.dir)}` : ''}`))].join(' · ') : '·'}
                 </span>
               );
             }
             const fx = [...s.buffs, ...s.debuffs].find((x) => x.id === r.id);
             return (
               <span key={name} className={`tb-cmp-cell${fx ? ' is-on' : ''}`}>
-                {fx ? (fx.value != null ? fmtValue(fx.value, fx.dir) : '✓') : '·'}
+                {fx ? (fx.value != null ? fmtFxValue(fx.value, fx.label, fx.dir) : '✓') : '·'}
                 {fx?.timing === 'start' ? <small>{fx.turns}턴</small> : null}
               </span>
             );
@@ -177,7 +177,7 @@ export default function EffectDictionary({ heroes, index, rareSet, resolveHero, 
               </button>
             ))}
           </div>
-          <button type="button" className={`tb-skill-toggle${withSkill ? ' is-on' : ''}`} aria-pressed={withSkill} onClick={toggleSkill} title="액티브 · 각성기 · 기본 공격으로 거는 버프 · 디버프도 찾기에 넣어요">
+          <button type="button" className={`tb-skill-toggle${withSkill ? ' is-on' : ''}`} aria-pressed={withSkill} onClick={toggleSkill} title="기본 공격 · 스킬 · 각성기 · 조건 발동(부활 시 등)으로 거는 버프 · 디버프도 찾기에 넣어요">
             <i aria-hidden="true" /> 스킬 효과 포함
           </button>
           <label className="tb-dict-search">

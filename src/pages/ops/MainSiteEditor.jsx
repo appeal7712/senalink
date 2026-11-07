@@ -10,6 +10,7 @@ import HeroGridPicker from '../../components/HeroGridPicker';
 import { metaDeckKindTheme, MetaDeckKindToggle } from '../../components/ArenaDeckKind';
 import { ROLE_ICONS } from '../../data/roleIcons';
 import OpsMetaDeckModal from './OpsMetaDeckModal';
+import OpsMetaDeckSubmissions from './OpsMetaDeckSubmissions';
 import HeroPortraitCard from '../../components/HeroPortraitCard';
 
 const ghostBtn = {
@@ -84,6 +85,7 @@ export default function MainSiteEditor() {
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
   const [editingDeck, setEditingDeck] = useState(null);
+  const [subsOpen, setSubsOpen] = useState(false);
   /** null | { index: number|null, item } — 게시판형 글쓰기/수정 (카드 무한 증식 방지) */
   const [newsComposer, setNewsComposer] = useState(null);
   const [visits, setVisits] = useState({ total: 0, dayCount: 0 });
@@ -120,6 +122,18 @@ export default function MainSiteEditor() {
     const metaDecks = clone(form.metaDecks || []);
     metaDecks[index] = { ...metaDecks[index], ...patch };
     setForm({ ...form, metaDecks });
+  };
+
+  /** 유저 제출 덱 승인 — 지금 폼과 같은 저장 경로(saveSiteMain)로 그 칸만 바꿔 바로 저장 */
+  const approveSubmission = async (deck, slot) => {
+    if (draft && !window.confirm('메인 편집 화면에 아직 저장 안 한 변경이 있어요. 승인하면 그 변경도 함께 저장돼요. 계속할까요?')) {
+      throw new Error('승인을 취소했어요.');
+    }
+    const metaDecks = clone(form.metaDecks || []);
+    metaDecks[slot] = { id: metaDecks[slot]?.id || `m${slot + 1}`, ...deck };
+    await saveSiteMain({ ...form, metaDecks }, authUser.uid);
+    setDraft(null);
+    setStatus(`${slot + 1}번 칸에 승인한 덱을 저장했어요. 메인에 바로 반영돼요.`);
   };
 
   const updatePick = (index, patch) => {
@@ -269,9 +283,14 @@ export default function MainSiteEditor() {
       </section>
 
       <section className="luxury-panel" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14, overflow: 'visible' }}>
-        <div>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#fff' }}>결투장 & 이벤트 결투장 메타 덱</h3>
-          <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>결투장 덱 수정이랑 같은 화면입니다. 유형(공덱/마덱/방덱/하이브리드/즉사덱)은 덱마다 직접 고르세요.</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#fff' }}>결투장 메타 덱</h3>
+            <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>결투장 덱 수정이랑 같은 화면입니다. 유형(공덱/마덱/방덱/하이브리드/즉사덱)은 덱마다 직접 고르세요.</div>
+          </div>
+          <button type="button" className="btn-ops" onClick={() => setSubsOpen(true)}>
+            <Icon name="metaDeck" size={15} /> 유저가 제출한 덱 보기
+          </button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
           {(form.metaDecks || []).map((deck, di) => {
@@ -456,6 +475,15 @@ export default function MainSiteEditor() {
           ))}
         </div>
       </section>
+
+      {subsOpen && (
+        <OpsMetaDeckSubmissions
+          slots={(form.metaDecks || []).map((d) => d.title || '')}
+          reviewerUid={authUser?.uid}
+          onApprove={approveSubmission}
+          onClose={() => setSubsOpen(false)}
+        />
+      )}
 
       {editingDeck && (
         <OpsMetaDeckModal

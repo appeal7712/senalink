@@ -62,6 +62,7 @@ React + Vite + Firebase (Auth / Firestore / Storage / Functions asia-northeast3)
 | 초대 | `inviteIndex/{code}` |
 | 공개 길드 | `publicGuilds/{hubId}` |
 | 공용 공략·티어 | `communityGuides` / `communityTierLists` |
+| 메타 덱 공유 제출 | `metaDeckSubmissions/{uid}` (제출자 본인 · 슈퍼만) |
 | 아바타·엠블럼 | Storage `userAvatars` / `hubEmblems` |
 | (덜 민감) CMS·방문 | `site/main`, `site/stats`(+ `visitShards/*` 분산 카운터) |
 
@@ -191,6 +192,7 @@ Provider 순서 (`main.jsx`): **SuperAdmin → UserProfile → Lounge → App**.
   - **admin** — 공지·강퇴(다른 admin 제외)·점수·빌드 삭제 등. **`masterId` / `inviteCode` 변경 불가**
   - **member** — 가입은 Callable `joinHub`만. 빌드 편집·본인 글 가능
 - 상한: `MAX_HUB_MEMBERS=30`, `MAX_ADMINS=3` (`loungeMeta.js`).
+- **허브 갱신 알림:** 활동 없이 `HUB_RENEW_WARN_DAYS`(70)일이 지난 허브에 길드원(마스터 · 관리자 · 멤버, 연합 게스트 · 슈퍼 관전 제외)이 들어오면 `HubRenewPrompt` 「100일간 … 삭제됩니다. 갱신하시겠습니까?」. 「갱신」 = `renewHub()` → history 한 줄(`action: 'renew_hub'`) → Functions `onHubHistoryCreated`가 `lastActivityAt` 갱신(**rules · Functions 변경 없음**, 기존 경로). 「나중에」 = 이 탭 `sessionStorage`만. 알림을 못 볼 만큼 안 쓰는 허브는 100일에 기존대로 삭제.
 - **`users.hubId` 보호:** 멤버 스냅샷 오류·빈 목록만으로 hubId를 지우지 말 것. 클리어 전 `getDoc(members/{uid})`로 소속 확인. 로그인 후 세션 없으면 Callable **`resolveMyHub`**로 복구(허브 `members` 스캔 → `users.hubId` 복원).
 
 #### 6.3.1 연합 (1군 호스트 ↔ 2군 게스트, 읽기 전용)
@@ -223,6 +225,7 @@ Provider 순서 (`main.jsx`): **SuperAdmin → UserProfile → Lounge → App**.
 COL = {
   ADMINS, SITE, HUBS, INVITE_INDEX, PUBLIC_GUILDS, USERS,
   PROFILE_DAILY_RECOMMENDS, COMMUNITY_GUIDES, COMMUNITY_TIER_LISTS,
+  EXCLUSIVE_GEAR_GUIDES, META_DECK_SUBMISSIONS,
 }
 SITE_MAIN_DOC = ['site', 'main']   // CMS
 // site/stats 는 방문 집계 (헬퍼에만, COL 상수 없음)
@@ -240,6 +243,7 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | `profileDailyRecommends/…` | 본인 claim | 본인 create만 (`from_to_date`, 대상당 하루 1) |
 | `communityGuides/{id}` | 공개 | Super 전부; signed-in은 PvP(arena/totalwar) 본인 글 |
 | `communityTierLists/{pve\|pvp}` | 공개 | Super만 |
+| `metaDeckSubmissions/{uid}` | 본인 get · **list=Super** | 본인만 create/update(문서 id = 내 uid, 필드 8개 화이트리스트, `status=='pending'`, `deckJson` ≤20,000자, 인게임 닉 1–20자) · 본인 삭제 · Super 승인/반려(`status` pending/approved/rejected) |
 | `inviteIndex/{code}` | signed-in get | 허브 admin 생성; master/super 삭제 |
 | `allianceIndex/{code}` | **불가** (Callable만) | **불가** (Callable만) |
 | `publicGuilds/{hubId}` | 공개 | 허브 admin/master |
@@ -282,7 +286,7 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | `revokeAllianceGuest` | Callable | 호스트가 특정 게스트 끊기 |
 | `regenAllianceCode` | Callable | 호스트 마스터 연합 코드 재발급 |
 | `dissolveAlliance` | Callable | 호스트 마스터 연합 종료(코드·게스트 연결 정리) |
-| `purgeIdleHubs` | Schedule 매일 04:00 KST | 100일 유휴 허브 삭제 (`HUB_IDLE_DAYS` — `functions/index.js`·`src/data/loungeMeta.js` 같이 맞춤) |
+| `purgeIdleHubs` | Schedule 매일 04:00 KST | 100일 유휴 허브 삭제 (`HUB_IDLE_DAYS` — `functions/index.js`·`src/data/loungeMeta.js` 같이 맞춤). 70일부터 허브 화면에 갱신 알림(§6.3) |
 | `syncCoupons` | Schedule 매일 00:00 KST | 7katlas 쿠폰 목록(+한글 번역) → `site/coupons` (파싱 실패 시 기존 유지) |
 | `snapshotVisitDaily` | Schedule 10분마다 (KST) | 오늘 방문자 합계(`site/stats`+`visitShards` 읽기만) → `site/visitDaily.days[YYYY-MM-DD]` (커질 때만) · Ops 대시보드 그래프용 |
 | `redeemCoupon` | Callable (로그인 불필요) | 넷마블 쿠폰 API 중계 (`{uid, code}` → `{status}`) · Firestore 무접근 · IP당 10분 60회 |
@@ -311,7 +315,9 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | 바꾸고 싶은 것 | 위치 |
 |------|------|
 | 스킬 문장 읽기(대상·턴·확률·수치·조건) · 강화/초월 반영 | `src/lib/teamBuilderAnalysis.js` — `collectHeroEntries` · `makeEntries` · `upgradeSegments` · `applyUpgradeRules` · `embeddedEffects` · `skillEffects` |
-| 효과 이름 표시 · 버프/디버프 분류 · 이름 붙은 버프(여포 용이무모 = 물리 공격력) | 같은 파일 `effectLabel`(▲▼ 방향) · `listLabel`(목록 이름 — 증가 · 감소 붙임) · `classify` · `NAMED_STAT_BUFFS` |
+| 효과 이름 표시 · 버프/디버프 분류 · 이름 붙은 버프(여포 용이무모 = 물리 공격력) | 같은 파일 `effectLabel`(▲▼ 방향만) · **`listLabel`(화면 이름 — 모든 화면 공용)** · **`fmtFxValue`(수치 뱃지 — 모든 화면 공용)** · `classify` · `NAMED_STAT_BUFFS` |
+| 효과로 찾기 칩 묶기(「방어력 감소(중첩)」 · 「…감소 효과」 → 한 칩) | `finderKey` — 색인 `buildHeroEffectIndex` 와 목록 이름 클릭 `findCard` 둘 다 이것으로 칩 id |
+| 공격 스킬의 「치명타 · 약점 공격 확률 증가 100%」(지속 턴 없음) | `makeEntries` `ownHit` → 적 디버프 아님, **자신 버프 · 「이 스킬 공격 때」**(원래 대상 글은 남겨 노림 문장 `targetingInsights`에 계속 씀) |
 | 패시브 탭 목록 · 겹침(높은 수치 하나만) · 자기 버프 | `effectCards`(`selfOnly`) · `findOverlaps`(팀 버프끼리만, `teamGroups`) · `scopeCovers` · `sharedRecipients`(일부 겹침 → `overlapNote`) · `selfClash` |
 | 스킬 · 발동 탭 목록 | `skillCards`(카드) · `skillCardText`(표시 이름 다듬기) · 화면 `SkillEffectList` |
 | 목록 상자 묶기 · 칸 숫자 | `src/pages/teamBuilder/fxGroups.js` — `groupEffectCards` · `groupSkillCards` · `fxBoxCount` |
@@ -330,13 +336,14 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 - 찾기 그룹 탭 색: 팀 버프 파랑 · 적 디버프 빨강 · 역할 노랑.
 - 버프/디버프 목록: 효과 이름은 **증가 · 감소까지 붙인 원래 이름**(「방어력 감소」 — 「방어력」만 쓰지 말 것, 밍봉 지시) · **칸 안 가운데 정렬**(칸 너비 = 목록에서 가장 긴 이름, `--fxl-name`) + 오른쪽 수치 뱃지(버프 **초록** · 디버프 **보라**, 높이 26px, 이름에 증가 · 감소가 있으면 부호 없이 「29%」).
 - 같은 효과 겹침: 높은 쪽 대상이 낮은 쪽 대상을 **전부 덮을 때만** 「○○는 반영 안 돼요」. 일부만 겹치면 「헤브니아 대상(…)과 겹치는 영웅은 헤브니아 +31%, 나머지는 선란 +25%가 적용돼요」(목록 · 덱 세팅 체크 같은 문장).
+- **화면 간 일관성(밍봉 지시):** 팀 빌더 목록 · 효과로 찾기 칩 · 효과 사전 · 도감 「효과 요약」은 이름(`listLabel`) · 수치 뱃지(`fmtFxValue`, 버프 초록 · 디버프 보라) · 스킬 효과 규칙(`isSkillCastEntry` = `skillCards`)을 **같은 함수로만** 만든다. 도감 「스킬 · 발동으로 거는 버프 / 디버프」 = `heroSummary().skillFx` = `skillCards` 결과, 스킬 하나에 상자 하나. 새 화면을 만들어도 이 셋을 다시 구현하지 말 것.
 - 칸 · 탭 숫자 = **팀 목록에 보이는 상자 수**(자기 버프는 안 셈). 스킬 · 발동은 **영웅 · 스킬 단위 상자 하나**(대상이 줄마다 다르면 줄에 「→ 대상」).
 - 「자기 자신만 받는 버프」 알약은 **한 줄 고정** — 좁으면 이름 숨기고 얼굴 + 숫자.
 - 수치는 항상 **스킬 강화 + 초월 기준**.
 - 모드 4개: 결투장 · 길드전 · **PvE**(5인 · 아군만 · 탑 전용 · 보스 대상 효과 포함, 상대 덱 없음 — 상단 설명은 「PvE는 아군만 봐요.」만, 탑 전용 문구 넣지 말 것) · 효과 사전.
 - 버프 · 디버프 칸 안 [패시브 | 스킬 · 발동] 탭(`FxTabs`, 기본 패시브). 스킬 · 발동 = `skillCards`(기본 공격 · 스킬 · 각성기 · 조건 발동, 겹침 판정 없음, 지속 · 중첩 · 조건 표시).
 - 「자신」 대상 효과는 **팀 목록 · 팀 겹침 판정에 절대 안 넣음**. 버프 칸 안 아래 「자기 자신만 받는 버프」(`SelfBuffSection`) 영웅 알약 → 눌러야 펼침. 따로 칸 만들지 말 것(밍봉 지시).
-- `/team` 모드 카드: 평소 아이콘 + 이름만, 마우스 올리면 아이콘이 커지며 흐려지고 이름 · 「5 vs 5」 · 설명 표시(CTA 버튼 없음). 폰·터치는 처음부터 글자 표시. 공용 허브 · 도구 · 도감 상단 메뉴는 같은 디자인의 작은 판 `HoverGateCard`(`styles/hoverGate.css`, 상세 features.md §10.5) — 아이콘 원본 해상도가 낮아 카드를 낮게 · 아이콘을 작게 둔 것은 밍봉 지시(크게 키우지 말 것).
+- `/team` 모드 카드: 평소 아이콘 + 이름만, 마우스 올리면 아이콘이 커지며 흐려지고 이름 · 「5 vs 5」 · 설명 표시(CTA 버튼 없음). 폰·터치는 처음부터 글자 표시. 폰(≤760)은 **2×2 작은 카드**(아이콘 48px · 설명 두 줄)로 한 화면에 — 세로로 길게 쌓지 말 것(밍봉 지시). 공용 허브 · 도구 · 도감 상단 메뉴는 같은 디자인의 작은 판 `HoverGateCard`(`styles/hoverGate.css`, 상세 features.md §10.5) — 아이콘 원본 해상도가 낮아 카드를 낮게 · 아이콘을 작게 둔 것은 밍봉 지시(크게 키우지 말 것).
 
 **새 영웅 추가 시 팀 빌더 체크** (엔진은 스킬 문장을 규칙으로 읽어서 영웅별 코드는 원래 필요 없음 — 아래만 확인):
 1. 도감 데이터(§13)만 넣으면 팀 빌더 · 효과 사전 · 도감 효과 요약에 자동 반영. 수치는 스킬 `tooltips`(강화 · 초월 포함)에서 읽으므로 tooltips가 비면 수치 없이 이름만 나옴.
@@ -438,7 +445,7 @@ API:
 - 목록 정렬 수동 금지 — §12.1 `sortHeroesForList`.
 - 장신구 세공: `accessory2`는 optional. **기본값에 `accessory2`를 넣지 말 것**(구 문서 해석이 깨짐). 해석·표시는 `lib/accessoryCraft.js`.
 - **스킬 텍스트 정본 = [7katlas](https://7katlas.com/codex.html)** (2026-11 전 영웅 동기화, §13.1.2). 각성 영웅은 강화 수치가 기본 수치에 합쳐져 있어 「스킬 강화」 줄이 비는 게 정상. 스킬 문장을 바꾸면 팀 빌더 분석도 같이 바뀌므로 점검표(`/dev/tb-audit.html`)로 확인.
-- 스킬 · UI 아이콘 교체: 이미지 먼저 넣고 코드 참조. UI 아이콘은 `src/data/uiIcons.js` 키(예: 도감 `dexSkill` · `dexEffectSummary` · 장신구 도감 탭 `dexAccessory` · 장비 부위 필터 `statPhysical` / `statMagic` / `statArmor` — `gearDex.js` `SLOT_META.icon`, 원본 `asset/장비, 장신구/능력치 아이콘/`). 흰 아이콘은 선택된 탭에서 `index.css` 규칙으로 자동 검정(`brightness(0)`)이라 따로 만들 필요 없음. 색 있는 원본을 흰색으로 바꿀 때는 **음영을 살려** 밝기 비율만 유지(밍봉 선호 — 고해상도 음영 아이콘이 크게 보일 때 품질이 좋음). 팀 빌더 모드 아이콘 `tbArena` · `tbGuildwar` · `tbEffects`, 도구 준비 중 카드 `toolGacha` · `toolRuby`가 그 예. **UI 아이콘 그림을 바꿀 땐 새 파일 이름으로** (같은 이름 덮어쓰기 → 브라우저 캐시로 밍봉·방문자 화면에 예전 그림이 남음).
+- 스킬 · UI 아이콘 교체: 이미지 먼저 넣고 코드 참조. UI 아이콘은 `src/data/uiIcons.js` 키(예: 도감 `dexSkill` · `dexEffectSummary` · 장신구 도감 탭 `dexAccessory` · 장비 부위 필터 `statPhysical` / `statMagic` / `statArmor` — `gearDex.js` `SLOT_META.icon`, 원본 `asset/장비, 장신구/능력치 아이콘/`). 흰 아이콘은 선택된 탭에서 `index.css` 규칙으로 자동 검정(`brightness(0)`)이라 따로 만들 필요 없음. 색 있는 원본을 흰색으로 바꿀 때는 **음영을 살려** 밝기 비율만 유지(밍봉 선호 — 고해상도 음영 아이콘이 크게 보일 때 품질이 좋음). 팀 빌더 모드 아이콘 `tbArena` · `tbGuildwar` · `tbPve`(가면, `tb-pve-mask.png` — 공용 `pve` 아이콘과 별개) · `tbEffects`(책, `tb-effects-book.png`), 도구 준비 중 카드 `toolGacha` · `toolRuby`가 그 예. **UI 아이콘 그림을 바꿀 땐 새 파일 이름으로** (같은 이름 덮어쓰기 → 브라우저 캐시로 밍봉·방문자 화면에 예전 그림이 남음).
 
 ---
 
@@ -475,7 +482,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.11.07.203** (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.11.07.204** (푸터 `APP_VERSION` 확인)
 - 저장소 2개: 사이트 `appeal7712/senalink`(이 폴더) · 원본 에셋 `appeal7712/senalink-assets`(비공개, `asset/` 폴더 = 그 저장소, 브랜치 `main`). 새 컴퓨터 복구 = 사이트 clone → 그 안에 `git clone …/senalink-assets.git asset` → `.env.local`(Firebase 웹 설정 6줄, 콘솔 → 프로젝트 설정에서 복사) → `npm install` → `npx firebase login`.
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 

@@ -57,7 +57,13 @@ const fieldStyle = {
 };
 const labelStyle = { display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, fontWeight: 800, color: '#94a3b8' };
 
-export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
+/**
+ * 메타 덱 세팅 — /ops 메인 편집(variant 'ops') · 메인 「메타 덱 공유하기」 유저 제출(variant 'submit') 공용.
+ * submit: 티어 · 픽률 · 모드 칸 없음(관리자가 승인 때 정함), 인게임 닉네임 칸, 버튼 「관리자에게 제출」 → onSave({ deck, ingameName }).
+ */
+export default function OpsMetaDeckModal({ deck, onSave, onClose, variant = 'ops', initialIngameName = '', busy = false }) {
+  const isSubmit = variant === 'submit';
+  const [authorName, setAuthorName] = useState(isSubmit ? initialIngameName : (deck.author?.ingameName || ''));
   const [title, setTitle] = useState(deck.title || '');
   const [tier, setTier] = useState(deck.tier || '');
   const [usageRate, setUsageRate] = useState(deck.usageRate || '');
@@ -127,12 +133,31 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
   };
 
   const guardClose = useUnsavedGuard(true, {
-    title, tier, usageRate, desc, kind, type, mode, formationId, heroNames, gear, skills, petId,
+    title, tier, usageRate, desc, kind, type, mode, formationId, heroNames, gear, skills, petId, authorName,
   });
 
   const commit = () => {
+    if (isSubmit) {
+      onSave({
+        ingameName: authorName.trim(),
+        deck: {
+          title: title.trim(),
+          desc: desc.trim(),
+          kind,
+          mode,
+          formationId,
+          heroNames: padNames5(heroNames),
+          heroGearConfigs: padGear5(gear),
+          reservedSkills: skills,
+          petId,
+        },
+      });
+      return;
+    }
+    const name = authorName.trim();
     onSave({
       ...deck,
+      author: name ? { ...(deck.author || {}), ingameName: name } : null,
       title: title.trim(),
       tier: tier.trim(),
       usageRate: usageRate.trim(),
@@ -148,6 +173,14 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
     });
   };
 
+  const heroCount = heroNames.filter(Boolean).length;
+  const submitChecks = [
+    { id: 'title', label: '제목', ok: !!title.trim() },
+    { id: 'name', label: '인게임 닉네임', ok: !!authorName.trim() },
+    { id: 'heroes', label: `영웅 ${heroCount}/5`, ok: heroCount === 5 },
+  ];
+  const submitReady = submitChecks.every((c) => c.ok);
+
   const sel = {
     width: '100%', flex: 1, minHeight: 36, padding: '0 8px', background: '#07090e',
     border: '1px solid var(--border-gold)', color: '#fff', borderRadius: 5, fontSize: 12.5, fontWeight: 800, boxSizing: 'border-box', colorScheme: 'dark',
@@ -155,56 +188,62 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
 
   return (
     <ModalScrim style={{ zIndex: 5200, padding: 16 }} {...backdropDismissProps(guardClose(onClose))}>
-      <div className="luxury-panel glass-modal" onClick={(e) => e.stopPropagation()} style={{
+      <div className="luxury-panel glass-modal meta-deck-editor" onClick={(e) => e.stopPropagation()} style={{
         width: '94vw', maxWidth: 1520, maxHeight: '90vh', padding: 0, display: 'flex', flexDirection: 'column',
         borderRadius: 28, minHeight: 0,
       }}>
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap',
-          padding: '12px 20px', background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.10)', flexShrink: 0,
-        }}>
-          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#fff' }}>메타 덱 세팅</h3>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="meta-deck-editor-head">
+          <h3 className="meta-deck-editor-title">{isSubmit ? '메타 덱 공유하기 · 결투장 덱 짜기' : '메타 덱 세팅'}</h3>
+          <div className="meta-deck-editor-tools">
             <div>
-              <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', marginBottom: 4 }}>덱 유형 · 내가 정함</div>
+              <div className="meta-deck-editor-tool-label">덱 유형 · 내가 정함</div>
               <MetaDeckKindToggle kind={kind} onChange={setKind} />
             </div>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', marginBottom: 4 }}>세팅</div>
+              <div className="meta-deck-editor-tool-label">세팅</div>
               <PvpModeToggle mode={mode} onChange={setMode} />
             </div>
-            <button type="button" onClick={guardClose(onClose)} style={{
-              background: 'none', border: 'none', color: '#fff',
-              width: 30, height: 30, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Icon name="closeBtn" size={26} />
-            </button>
           </div>
+          <button type="button" className="meta-deck-editor-close" onClick={guardClose(onClose)} aria-label="닫기">
+            <Icon name="closeBtn" size={26} />
+          </button>
         </div>
 
         <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className="grid-2-responsive" style={{ gap: 10 }}>
             <label style={labelStyle}>제목
-              <input style={fieldStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="예: 여포 후열 파멸" />
+              <input style={fieldStyle} value={title} maxLength={40} onChange={(e) => setTitle(e.target.value)} placeholder="예: 여포 후열 파멸" />
             </label>
-            <label style={labelStyle}>모드
-              <select style={fieldStyle} value={type} onChange={(e) => setType(e.target.value)}>
-                {DECK_TYPES.map((t) => <option key={t} value={t}>{DECK_TYPE_LABEL[t] || t}</option>)}
-              </select>
-            </label>
-            <label style={labelStyle}>티어
-              <input style={fieldStyle} value={tier} onChange={(e) => setTier(e.target.value)} placeholder="예: 0티어" />
-            </label>
-            <label style={labelStyle}>픽률
-              <input style={fieldStyle} value={usageRate} onChange={(e) => setUsageRate(e.target.value)} placeholder="예: 42.5%" />
-            </label>
+            {isSubmit ? (
+              <label style={labelStyle}>인게임 닉네임 · 메인에 작성자로 표시돼요
+                <input style={fieldStyle} value={authorName} maxLength={20} onChange={(e) => setAuthorName(e.target.value)} placeholder="게임 속 닉네임" />
+              </label>
+            ) : (
+              <>
+                <label style={labelStyle}>모드
+                  <select style={fieldStyle} value={type} onChange={(e) => setType(e.target.value)}>
+                    {DECK_TYPES.map((t) => <option key={t} value={t}>{DECK_TYPE_LABEL[t] || t}</option>)}
+                  </select>
+                </label>
+                <label style={labelStyle}>티어
+                  <input style={fieldStyle} value={tier} onChange={(e) => setTier(e.target.value)} placeholder="예: 0티어" />
+                </label>
+                <label style={labelStyle}>픽률
+                  <input style={fieldStyle} value={usageRate} onChange={(e) => setUsageRate(e.target.value)} placeholder="예: 42.5%" />
+                </label>
+                <label style={labelStyle}>작성자 · 인게임 닉네임 (비우면 표시 안 함)
+                  <input style={fieldStyle} value={authorName} maxLength={20} onChange={(e) => setAuthorName(e.target.value)} placeholder="공유받은 덱이면 작성자 닉네임" />
+                </label>
+              </>
+            )}
           </div>
-          <label style={labelStyle}>한 줄 설명
-            <input style={fieldStyle} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="메인 카드 아래에 안 나와도 됨. 메모용." />
+          <label style={labelStyle}>{isSubmit ? '한 줄 설명 · 덱 포인트 (선택)' : '한 줄 설명'}
+            <input style={fieldStyle} value={desc} maxLength={isSubmit ? 120 : undefined} onChange={(e) => setDesc(e.target.value)} placeholder={isSubmit ? '예: 상대 후열 마법형을 먼저 지워요' : '메인 카드 아래에 안 나와도 됨. 메모용.'} />
           </label>
 
-          <div style={{ display: 'flex', gap: 14, alignItems: 'stretch', flexWrap: 'wrap' }}>
-            <div style={{ width: 300, flexShrink: 0 }}>
+          <div className="meta-deck-editor-row">
+            <div className="meta-deck-editor-left">
+              <div className="meta-deck-editor-deck">
               <InGameDeckCard
                 teamName=""
                 overviewTitle={title || ''}
@@ -226,9 +265,21 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
                 onHeroDrop={onDrop}
                 pvpMode={mode}
               />
+              </div>
+              <div className="glass-inset meta-deck-editor-detail">
+                <div className="meta-deck-editor-detail-label">
+                  세팅 디테일{heroNames[slot] ? ` · ${heroNames[slot]}` : ''}
+                </div>
+                <textarea
+                  rows={3}
+                  value={g.detailNote || ''}
+                  onChange={(e) => patchGear('detailNote', e.target.value)}
+                  placeholder="예: 치확 67% · 약공 46%에 가깝게"
+                />
+              </div>
             </div>
 
-            <div className="glass-inset" style={{ flex: 1, minWidth: 360, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="glass-inset meta-deck-editor-gear">
               <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: 5 }}>
                 <Icon name="gearSetting" size={13} /> 장비 세팅 · {heroNames[slot] || '슬롯을 고르세요'}
                 <ExclusiveGearButton
@@ -303,16 +354,10 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
                   return next;
                 })}
               />
-              <textarea
-                value={g.detailNote || ''}
-                onChange={(e) => patchGear('detailNote', e.target.value)}
-                placeholder={'세팅 메모\n예: 치확 67%에 가깝게'}
-                style={{ ...fieldStyle, minHeight: 72, resize: 'vertical', fontFamily: 'inherit' }}
-              />
             </div>
           </div>
 
-          <div className="glass-inset" style={{ padding: 14 }}>
+          <div className="glass-inset meta-deck-editor-picker" style={{ padding: 14 }}>
             <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 8 }}>
               영웅 목록 · 슬롯 {slot + 1} {heroNames[slot] ? `(${heroNames[slot]})` : ''}
             </div>
@@ -329,11 +374,32 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose }) {
           </div>
         </div>
 
-        <div style={{ padding: '12px 24px', background: 'rgba(255,255,255,0.04)', borderTop: '1px solid rgba(255,255,255,0.10)', flexShrink: 0 }}>
-          <button type="button" className="btn-ops" onClick={commit} style={{ width: '100%', padding: 11, justifyContent: 'center' }}>
-            <Icon name="save" size={15} /> 이 덱 적용
-          </button>
-        </div>
+        {isSubmit ? (
+          <div className="meta-submit-foot">
+            <div className="meta-submit-checks" aria-label="제출 준비">
+              {submitChecks.map((c) => (
+                <span key={c.id} className={`meta-submit-check${c.ok ? ' is-ok' : ''}`}>
+                  <i aria-hidden="true">{c.ok ? '✓' : '·'}</i>{c.label}
+                </span>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="btn-ops meta-submit-btn"
+              onClick={commit}
+              disabled={busy || !submitReady}
+              title={submitReady ? '관리자에게 제출해요' : '제목 · 인게임 닉네임 · 영웅 5명을 채워 주세요'}
+            >
+              <Icon name="save" size={15} /> {busy ? '제출 중…' : '관리자에게 제출'}
+            </button>
+          </div>
+        ) : (
+          <div style={{ padding: '12px 24px', background: 'rgba(255,255,255,0.04)', borderTop: '1px solid rgba(255,255,255,0.10)', flexShrink: 0 }}>
+            <button type="button" className="btn-ops" onClick={commit} disabled={busy} style={{ width: '100%', padding: 11, justifyContent: 'center' }}>
+              <Icon name="save" size={15} /> 이 덱 적용
+            </button>
+          </div>
+        )}
       </div>
     </ModalScrim>
   );

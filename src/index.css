@@ -3591,9 +3591,10 @@ h1, h2, h3 {
   }
 }
 
+/* 길드 허브 · 공용 허브 — 폰에서도 한 줄 */
 .hero-cta-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
   gap: 10px;
 }
@@ -3601,6 +3602,12 @@ h1, h2, h3 {
 .hero-cta-row .btn-ops {
   font-size: 14px;
   padding: 10px 18px;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .hero-cta-row { gap: 6px; }
+  .hero-cta-row .btn-ops { flex: 1 1 0; min-width: 0; padding: 9px 8px; font-size: 13px; gap: 5px; justify-content: center; }
 }
 
 .hero-highlight {
@@ -4247,6 +4254,142 @@ h1, h2, h3 {
   align-items: center;
   gap: 8px;
   letter-spacing: -0.03em;
+}
+
+/* 제목 + 오른쪽 「메타 덱 공유하기」 */
+.meta-deck-board-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 14px; margin-bottom: 16px; }
+.meta-deck-board-head .meta-deck-board-title { margin: 0; }
+.meta-deck-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(236, 232, 224, 0.55);
+  background: rgba(236, 232, 224, 0.12);
+  color: #f6f3ee;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.meta-deck-share-btn:hover { background: rgba(236, 232, 224, 0.24); transform: translateY(-1px); }
+.meta-deck-author { font-size: 11.5px; font-weight: 800; color: rgba(246, 243, 238, 0.72); }
+.meta-deck-author b { color: var(--gold-light); font-weight: 900; }
+
+/* 메타 덱 공유 안내 */
+.meta-share-guide { width: min(480px, 96vw); max-height: 90vh; overflow-y: auto; padding: 22px; border-radius: 28px; display: flex; flex-direction: column; gap: 14px; color: #fff; }
+.meta-share-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.meta-share-head h3 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 800; }
+.meta-share-head button { background: none; border: none; color: #fff; cursor: pointer; display: flex; }
+.meta-share-thanks { margin: 0; font-size: 14.5px; font-weight: 700; line-height: 1.6; }
+.meta-share-points { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; font-size: 13px; font-weight: 600; line-height: 1.55; color: rgba(255, 255, 255, 0.88); }
+.meta-share-points b { color: var(--gold-light); }
+.meta-share-status { margin: 0; padding: 9px 12px; border-radius: 12px; background: rgba(0, 0, 0, 0.28); font-size: 12.5px; font-weight: 800; }
+.meta-share-actions { display: flex; gap: 8px; }
+.meta-share-actions button { flex: 1; padding: 12px; justify-content: center; }
+
+/* 메타 덱 세팅 · 공유 제출 모달 (OpsMetaDeckModal) — PC: 제목 | 유형·세팅 | X, 왼쪽 덱 + 세팅 디테일 · 오른쪽 장비 */
+.meta-deck-editor-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+.meta-deck-editor-title { margin: 0 auto 0 0; font-size: 17px; font-weight: 800; color: #fff; }
+.meta-deck-editor-tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.meta-deck-editor-tool-label { font-size: 10px; font-weight: 800; color: #94a3b8; margin-bottom: 4px; }
+.meta-deck-editor-close {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+}
+.meta-deck-editor-row { display: flex; gap: 14px; align-items: stretch; flex-wrap: wrap; }
+.meta-deck-editor-left { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+.meta-deck-editor-deck { display: flex; justify-content: center; }
+.meta-deck-editor-detail { padding: 8px 12px; display: flex; flex-direction: column; gap: 4px; box-sizing: border-box; }
+.meta-deck-editor-detail-label { font-size: 11px; font-weight: 800; color: var(--accent-cyan); }
+.meta-deck-editor-detail textarea {
+  width: 100%;
+  padding: 8px 12px;
+  background: #07090e;
+  border: 1px solid var(--border-gold);
+  border-radius: 7px;
+  color: #e2e8f0;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+  box-sizing: border-box;
+  resize: none;
+}
+/* 공유 제출 하단 — 왼쪽 준비 체크 · 오른쪽 제출 버튼 */
+.meta-submit-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px 16px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+.meta-submit-checks { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto; min-width: 0; }
+.meta-submit-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px 4px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  font-weight: 800;
+}
+.meta-submit-check i { width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.12); font-style: normal; font-size: 11px; font-weight: 900; }
+.meta-submit-check.is-ok { border-color: rgba(74, 222, 128, 0.55); background: rgba(74, 222, 128, 0.12); color: #dcfce7; }
+.meta-submit-check.is-ok i { background: #4ade80; color: #052e16; }
+/* 버튼 모양은 사이트 기본 btn-ops 그대로 — 크기 · 꺼짐 상태만 */
+.meta-submit-btn { min-width: 220px; padding: 11px 22px; justify-content: center; }
+.meta-submit-btn:disabled { cursor: not-allowed; opacity: 0.45; }
+.meta-deck-editor-gear { flex: 1; min-width: 360px; padding: 14px; display: flex; flex-direction: column; gap: 10px; box-sizing: border-box; }
+
+@media (max-width: 980px) {
+  /* 첫 줄 제목 + X, 둘째 줄 덱 유형 · 세팅 */
+  .meta-deck-editor-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "title close" "tools tools";
+    gap: 8px 10px;
+    padding: 12px 14px;
+  }
+  .meta-deck-editor-title { grid-area: title; margin: 0; font-size: 15.5px; line-height: 1.35; }
+  .meta-deck-editor-close { grid-area: close; align-self: start; }
+  .meta-deck-editor-tools { grid-area: tools; }
+
+  /* 원래 덱 수정 모달처럼: 덱 + 세팅 디테일 → 영웅 목록 → 장비 (전부 한 줄 폭) */
+  .meta-deck-editor-row { display: contents; }
+  .meta-deck-editor-left { order: 1; width: 100%; }
+  .meta-deck-editor-picker { order: 2; }
+  .meta-deck-editor-gear { order: 3; min-width: 0; width: 100%; padding: 12px; }
+  .meta-deck-editor-deck .ingame-deck-card { width: 100% !important; max-width: 276px !important; margin: 0 auto !important; }
+
+  .meta-submit-foot { padding: 10px 14px; gap: 8px; }
+  .meta-submit-checks { flex: 1 1 100%; justify-content: center; }
+  .meta-submit-btn { width: 100%; min-width: 0; }
 }
 
 .meta-deck-row {
@@ -9329,6 +9472,8 @@ h1, h2, h3 {
     font-size: 17px;
     margin-bottom: 12px;
   }
+
+  .meta-deck-board-head { margin-bottom: 12px; }
 
   .meta-deck-board {
     overflow: hidden;

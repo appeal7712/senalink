@@ -33,6 +33,9 @@ export function MetaDeckCard({ deck }) {
           </span>
         </div>
         <h4 className="meta-deck-title">{deck.title}</h4>
+        {deck.author?.ingameName ? (
+          <span className="meta-deck-author">작성 · <b>{deck.author.ingameName}</b></span>
+        ) : null}
       </div>
       <div className="meta-deck-visual">
         <InGameDeckCard

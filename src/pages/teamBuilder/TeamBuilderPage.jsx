@@ -11,6 +11,7 @@ import {
   effectCards,
   fmtValue,
   formationRequirements,
+  finderKey,
   ownRevivals,
   skillCards,
   targetingInsights,
@@ -38,7 +39,7 @@ const STORE_KEY = 'senalink_team_builder_v1';
 const MODE_META = {
   arena: { size: 5, title: '결투장', vs: '5 vs 5', icon: 'tbArena', iconSize: 18 },
   guildwar: { size: 3, title: '길드전', vs: '3 vs 3', icon: 'tbGuildwar', iconSize: 18 },
-  pve: { size: 5, title: 'PvE', vs: '5인', icon: 'pve', iconSize: 17, pve: true },
+  pve: { size: 5, title: 'PvE', vs: '5인', icon: 'tbPve', iconSize: 18, pve: true },
 };
 
 const cleanName = (n) => String(n || '').replace('(각성)', '').trim();
@@ -506,7 +507,7 @@ export default function TeamBuilderPage() {
 
   const hasMine = myHeroes.length > 0;
   const hasTheirs = enemyHeroes.length > 0;
-  const findCard = (c) => openFinder(c.side, `${c.side}|${c.key}`);
+  const findCard = (c) => openFinder(c.side, `${c.side}|${finderKey(c.key)}`);
   const warnCount = checks.filter((c) => c.tone === 'warn').length;
 
   return (
@@ -525,7 +526,7 @@ export default function TeamBuilderPage() {
               </button>
             ))}
             <button type="button" role="tab" aria-selected={isDict} className={`tb-mode-pill${isDict ? ' is-on' : ''}`} onClick={() => navigateToTeam('effects')}>
-              <Icon name="tbEffects" size={17} /> 효과 사전
+              <Icon name="tbEffects" size={18} /> 효과 사전
             </button>
           </div>
         ) : null}

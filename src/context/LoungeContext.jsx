@@ -1054,6 +1054,22 @@ export function LoungeProvider({ children }) {
     return inviteCode;
   }, [activeLounge, isMaster, isSuperAdmin, loungeId, me, pushHistory]);
 
+  /**
+   * 자동 삭제(HUB_IDLE_DAYS) 카운트 초기화 — 길드원 누구나. history 한 줄 → Functions onHubHistoryCreated가 lastActivityAt 갱신.
+   * pushHistory와 달리 실패를 던져 화면에서 알림.
+   */
+  const renewHub = useCallback(async () => {
+    assertWritableHub();
+    if (!loungeId || !me) throw new Error('허브 정보를 불러오지 못했어요.');
+    await setDoc(doc(db, 'hubs', loungeId, 'history', uid('hist')), {
+      actor: String(me.nickname || '').slice(0, 30),
+      action: 'renew_hub',
+      target: String(activeLounge?.name || '').slice(0, 120),
+      detail: '허브 갱신 — 자동 삭제 카운트 초기화',
+      createdAt: nowIso(),
+    });
+  }, [activeLounge, assertWritableHub, loungeId, me]);
+
   const kickMember = useCallback(async (memberId) => {
     assertWritableHub();
     if (!activeLounge || !me || !loungeId) return;
@@ -1300,6 +1316,7 @@ export function LoungeProvider({ children }) {
     dissolveAlliance,
     updateHubSettings,
     regenerateInviteCode,
+    renewHub,
     kickMember,
     appointAdmin,
     revokeAdmin,

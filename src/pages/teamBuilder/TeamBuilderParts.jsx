@@ -3,7 +3,7 @@ import HeroPortraitCard from '../../components/HeroPortraitCard';
 import HeroGridPicker from '../../components/HeroGridPicker';
 import Icon from '../../components/icons/Icon';
 import { accessories } from '../../data/equipments';
-import { LEGEND_RINGS, ROLE_TILES, effectLabel, entryValue, fmtValue, targetLabel } from '../../lib/teamBuilderAnalysis';
+import { LEGEND_RINGS, ROLE_TILES, effectLabel, entryValue, fmtFxValue, fmtValue, listLabel, targetLabel } from '../../lib/teamBuilderAnalysis';
 import { fxBoxCount, groupEffectCards, groupSkillCards } from './fxGroups';
 
 const plainName = (n) => String(n || '').replace('(각성)', '').trim();
@@ -25,8 +25,8 @@ export function ModePicker({ onPick }) {
   const modes = [
     { id: 'arena', icon: 'tbArena', iconSize: 70, title: '결투장', vs: '5 vs 5', desc: '5인 덱 버프 · 디버프 · 세팅 체크' },
     { id: 'guildwar', icon: 'tbGuildwar', iconSize: 76, title: '길드전', vs: '3 vs 3', desc: '3인 덱 · 상대가 노리는 대상까지' },
-    { id: 'pve', icon: 'pve', iconSize: 60, title: 'PvE', vs: '5인 · 아군만', desc: '보스 · 탑 덱 · 아군 버프 · 보스 디버프' },
-    { id: 'effects', icon: 'tbEffects', iconSize: 66, title: '효과 사전', vs: '영웅 찾기', desc: '효과로 영웅 찾기 · 비교 · 덱에 넣기' },
+    { id: 'pve', icon: 'tbPve', iconSize: 76, title: 'PvE', vs: '5인 · 아군만', desc: '보스 · 탑 덱 · 아군 버프 · 보스 디버프' },
+    { id: 'effects', icon: 'tbEffects', iconSize: 76, title: '효과 사전', vs: '영웅 찾기', desc: '효과로 영웅 찾기 · 비교 · 덱에 넣기' },
   ];
   return (
     <div className="tb-mode-grid">
@@ -256,7 +256,7 @@ export function HeroFxPanel({ deck, size = 5, enemyOn, resolveHero, heroEntriesF
 }
 
 export function FinderTile({ chip, group, on, have, dim = false, onClick }) {
-  const { label, dir } = group === 'role' ? { label: chip.label, dir: null } : effectLabel(chip.label);
+  const { label, dir } = group === 'role' ? { label: chip.label, dir: null } : { label: listLabel(chip.label), dir: effectLabel(chip.label).dir };
   const hint = group === 'role' ? ` · ${ROLE_HINT.get(chip.id)}` : '';
   return (
     <button
@@ -361,7 +361,7 @@ export function PickerDropdown({
                   </button>
                 ))}
               </div>
-              <button type="button" className={`tb-skill-toggle${withSkill ? ' is-on' : ''}`} aria-pressed={withSkill} onClick={toggleSkill} title="액티브 · 각성기 · 기본 공격으로 거는 버프 · 디버프도 찾기에 넣어요">
+              <button type="button" className={`tb-skill-toggle${withSkill ? ' is-on' : ''}`} aria-pressed={withSkill} onClick={toggleSkill} title="기본 공격 · 스킬 · 각성기 · 조건 발동(부활 시 등)으로 거는 버프 · 디버프도 찾기에 넣어요">
                 <i aria-hidden="true" /> 스킬 효과 포함
               </button>
               <span className="tb-finder-legend"><i>✓</i> 이미 덱에 있음</span>
@@ -507,8 +507,7 @@ export function RingCheck({ rows, resolveHero }) {
 
 const DIR_MARK = { up: '▲', down: '▼' };
 
-/** 이름에 증가 · 감소가 붙어 있으면 뱃지는 부호 없이 (「방어력 감소 29%」) */
-const badgeValue = (c) => fmtValue(c.value, /(증가|감소)$/.test(c.label) ? null : c.dir);
+const badgeValue = (c) => fmtFxValue(c.value, c.label, c.dir);
 
 /** 버프 · 디버프 칸 안 [패시브 | 스킬 · 발동] 전환 */
 export function FxTabs({ side, value, onChange, passiveCount, skillCount }) {

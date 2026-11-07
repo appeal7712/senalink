@@ -26,6 +26,7 @@ const ACTION_LABEL = {
   delete_post: '게시글 삭제',
   update_hub: '허브 설정',
   regen_invite: '초대코드 재발급',
+  renew_hub: '허브 갱신',
   create_build: '공략 생성',
   update_build: '공략 수정',
   delete_build: '공략 삭제',

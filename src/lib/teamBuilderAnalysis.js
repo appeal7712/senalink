@@ -335,6 +335,8 @@ function makeEntries({ hero, skill, target: rawTarget, raw, source, tips, rareSe
     const direct = amount && /^[\d.]+%$/.test(amount) ? Number(amount.replace('%', '')) : pctInName;
     const enhanced = enhanceValues?.get(normKey(baseName)) ?? null;
     const rare = rareSet?.has(stacking ? key : normKey(baseName));
+    /** 공격 대상(적) 칸의 「치명타 확률 증가 100%」 · 「약점 공격 확률 증가」(지속 턴 없음) = 그 스킬 공격의 자기 적중 보너스, 적 디버프 아님 */
+    const ownHit = side === 'enemy' && !meta.duration && /^(치명타 확률|약점 공격 확률)\s*증가$/.test(baseName);
     return {
       id: `e${(entrySeq += 1)}`,
       kind: 'effect',
@@ -346,14 +348,15 @@ function makeEntries({ hero, skill, target: rawTarget, raw, source, tips, rareSe
       skillType: skill.type,
       source,
       target,
-      side,
-      scope,
+      side: ownHit ? 'ally' : side,
+      scope: ownHit ? targetScope('자신') : scope,
+      ownHit,
       raw: line,
       name,
       key,
       category,
       special: (!!rare && category === 'utility') || !!signatureKeys?.has(normKey(baseName)),
-      condition,
+      condition: ownHit ? [condition, '이 스킬 공격 때'].filter(Boolean).join(' · ') : condition,
       duration: meta.duration,
       chance: meta.chance,
       maxStack: meta.maxStack,
@@ -934,11 +937,19 @@ export function effectLabel(name) {
   return { label: n, dir: null };
 }
 
-/** 버프 · 디버프 목록 표시 이름 — 「방어력 감소」처럼 증가 · 감소를 붙인 원래 이름 (▲▼ 방향은 effectLabel의 dir로 따로) */
-function listLabel(name) {
+/**
+ * 화면에 보이는 효과 이름 — 「방어력 감소」처럼 증가 · 감소를 붙인 원래 이름 (▲▼ 방향은 effectLabel의 dir로 따로).
+ * 팀 빌더 목록 · 효과로 찾기 · 효과 사전 · 도감 효과 요약 모두 이것만 쓴다.
+ */
+export function listLabel(name) {
   const n = String(name || '').trim();
   if (NAMED_STAT_BUFFS.has(n)) return effectLabel(n).label;
   return n.replace(/(증가|감소)\s*효과$/, '$1');
+}
+
+/** 수치 뱃지 — 이름에 증가 · 감소가 붙어 있으면 부호 없이(「방어력 감소 29%」), 아니면 ▲▼ 방향대로 +/− */
+export function fmtFxValue(value, label, dir) {
+  return fmtValue(value, /(증가|감소)$/.test(String(label || '')) ? null : dir);
 }
 
 /* ───────────── 전설 장신구 (불사 · 권능 · 부활) ───────────── */
@@ -1087,13 +1098,13 @@ export function effectCards(analysis, team, includeEnhance = true, { selfOnly = 
 
 const SKILL_CARD_CATEGORIES = new Set(['stat', 'survival', 'antiheal']);
 
-/** 스킬 · 발동 카드 이름 · 수치 문구 — 「불굴 효과의 피격 횟수 1회 증가」 → 불굴 피격 횟수 +1회 등 (표시 전용) */
+/** 스킬 · 발동 카드 이름 · 수치 문구 — 「불굴 효과의 피격 횟수 1회 증가」 → 불굴 피격 횟수 증가 · 1회 등 (표시 전용) */
 function skillCardText(e, value) {
   const base = { ...effectLabel(e.name), label: listLabel(e.name) };
   let m = e.name.match(/^(.+?) 효과의 피격 횟수 (\d+)회 증가$/);
-  if (m) return { ...base, label: `${m[1]} 피격 횟수`, dir: 'up', amountText: `+${m[2]}회` };
+  if (m) return { ...base, label: `${m[1]} 피격 횟수 증가`, dir: 'up', amountText: `${m[2]}회` };
   m = e.name.match(/^(\d+)레벨 증가 최대 (\d+)레벨/);
-  if (m) return { ...base, label: '레벨', dir: 'up', amountText: `+${m[1]}레벨 · 최대 ${m[2]}` };
+  if (m) return { ...base, label: '레벨 증가', dir: 'up', amountText: `${m[1]}레벨 · 최대 ${m[2]}레벨` };
   const stackAmount = e.amount && /중첩$/.test(e.amount);
   let amountText = value == null && e.amount && !stackAmount ? String(e.amount) : null;
   if (amountText) {
@@ -1119,7 +1130,7 @@ export function skillCards(analysis, team, includeEnhance = true) {
   const triggerFor = (e) => triggers.filter((t) => t.group === groupOf(e) && t.seq < seq(e)).pop()?.text || null;
   const rows = new Map();
   for (const e of analysis.entries) {
-    if (e.kind !== 'effect' || e.special || !SKILL_CARD_CATEGORIES.has(e.category) || effectTiming(e)) continue;
+    if (!isSkillCastEntry(e)) continue;
     const id = `${e.heroName}|${e.skillName}|${e.side}|${e.key}|${e.target}|${e.condition || ''}`;
     const prev = rows.get(id);
     if (!prev || (entryValue(e, includeEnhance) ?? -1) > (entryValue(prev, includeEnhance) ?? -1)) rows.set(id, e);
@@ -1244,6 +1255,7 @@ export function heroSummary(hero, { rareSet } = {}) {
         key: e.key,
         name: e.name,
         ...effectLabel(e.name),
+        label: listLabel(e.name),
         timing,
         turns: timing === 'start' ? e.duration.n : null,
         value,
@@ -1268,27 +1280,30 @@ export function heroSummary(hero, { rareSet } = {}) {
       bySkill.get(skill).add(e.name);
     }
   }
-  const skillFx = new Map();
-  for (const e of entries) {
-    if (!isSkillCastEntry(e)) continue;
-    const id = `${e.skillLabel}|${e.side}|${e.key}`;
-    const value = entryValue(e);
-    const prev = skillFx.get(id);
-    if (prev && (prev.value ?? -1) >= (value ?? -1)) continue;
-    skillFx.set(id, {
-      id,
-      key: e.key,
-      name: e.name,
-      ...effectLabel(e.name),
-      side: e.side,
-      skillLabel: e.skillLabel,
-      turns: e.duration?.type === 'turns' ? e.duration.n : null,
-      value,
-      scope: scopeText(e),
-      condition: e.condition,
-      source: e.source,
-    });
-  }
+  /** 스킬 · 발동 효과 — 팀 빌더 「스킬 · 발동」 탭과 같은 카드(skillCards), 화면은 영웅 · 스킬 단위로 묶음 */
+  const skillFx = skillCards({ entries }, [hero]).map((c) => {
+    const s = c.sources[0];
+    return {
+      id: c.id,
+      key: c.key,
+      name: c.name,
+      label: c.label,
+      dir: c.dir,
+      side: c.side,
+      skillLabel: s.skillLabel,
+      skillName: s.skillName,
+      skillTag: s.skillTag,
+      turns: c.turns,
+      duration: c.duration,
+      stack: c.stack,
+      amountText: c.amountText,
+      chance: c.chance,
+      value: c.value,
+      scope: s.scope,
+      scopeKind: s.scopeKind,
+      condition: c.condition,
+    };
+  });
   const SKILL_ORDER = ['기본 공격', '스킬1', '스킬2', '패시브', '각성기'];
   const tower = new Map();
   for (const e of collectHeroEntries(hero, { rareSet, allowTower: true })) {
@@ -1297,7 +1312,7 @@ export function heroSummary(hero, { rareSet } = {}) {
     if (tower.has(id)) continue;
     tower.set(id, {
       id,
-      ...(e.kind === 'damage' ? { label: '추가 피해', dir: null } : effectLabel(e.name)),
+      ...(e.kind === 'damage' ? { label: '추가 피해', dir: null } : { ...effectLabel(e.name), label: listLabel(e.name) }),
       side: e.side,
       skillLabel: e.skillLabel,
       timing: e.kind === 'effect' ? effectTiming(e) : null,
@@ -1312,9 +1327,7 @@ export function heroSummary(hero, { rareSet } = {}) {
     buffs: pick((e) => e.side === 'ally' && e.scope.kind !== 'self'),
     selfBuffs: pick((e) => e.side === 'ally' && e.scope.kind === 'self'),
     debuffs: pick((e) => e.side === 'enemy'),
-    skillFx: [...skillFx.values()].sort((a, b) => SKILL_ORDER.indexOf(a.skillLabel) - SKILL_ORDER.indexOf(b.skillLabel)
-      || (a.side === b.side ? 0 : a.side === 'ally' ? -1 : 1)
-      || effectRank(a.name) - effectRank(b.name)),
+    skillFx,
     roles: ROLE_TILES
       .map((t) => ({ id: t.id, label: t.label, hint: t.hint, side: t.side, skills: [...new Set(entries.filter((e) => entryMatchesTile(e, t)).map((e) => e.skillLabel))] }))
       .filter((r) => r.skills.length),
@@ -1334,13 +1347,15 @@ export function heroSummary(hero, { rareSet } = {}) {
  * @returns {{ groups: { ally, enemy, role }, byHero: Map<heroName, Map<chipId, text>> }}
  * chip id: `ally|키` · `enemy|키` · `role|id`
  */
-/** 액티브 · 각성기 · 기본 공격으로 거는 능력치 · 생존 · 회복 방해 (행동 제어 · 지속 피해는 「역할」에서 다룸) */
+/**
+ * 스킬 · 발동 효과 — 기본 공격 · 스킬 · 각성기 + 패시브 조건 발동(부활 시 등)으로 거는 능력치 · 생존 · 회복 방해.
+ * skillCards와 같은 규칙(패시브 [상시] · 전투 시작 [N턴]은 빼고, 행동 제어 · 지속 피해는 「역할」에서 다룸).
+ */
 export function isSkillCastEntry(e) {
   return e.kind === 'effect'
-    && e.skillType !== 'passive'
-    && effectTiming(e) !== 'perm'
     && !e.special
-    && ['stat', 'survival', 'antiheal'].includes(e.category);
+    && SKILL_CARD_CATEGORIES.has(e.category)
+    && !effectTiming(e);
 }
 
 function indexLayer() {
@@ -1374,6 +1389,14 @@ function indexLayer() {
 }
 
 /**
+ * 효과로 찾기 칩 키 — 「방어력 감소(중첩)」 · 「스킬 쿨타임 감소 효과」처럼 표기만 다른 효과는 한 칩으로 묶는다.
+ * 찾기 전용(겹침 · 중첩 분석은 원래 `e.key` 그대로). 칩 id = `${side}|${finderKey(key)}`.
+ */
+export function finderKey(key) {
+  return String(key || '').replace(/\(중첩\)$/, '').replace(/(증가|감소)\s*효과$/, '$1').trim();
+}
+
+/**
  * 기본 색인 = 패시브 [상시] · 전투 시작 [N턴] + 역할. `.withSkill` = 스킬로 거는 효과까지 포함 (「스킬 효과 포함」 토글).
  * @returns {{ groups, byHero, withSkill: { groups, byHero } }}
  */
@@ -1386,14 +1409,18 @@ export function buildHeroEffectIndex(allHeroes, { includeEnhance = true, rareSet
     for (const e of entries) {
       const teamOnly = !(e.side === 'ally' && e.scope?.kind === 'self');
       const v = entryValue(e, includeEnhance);
+      const chip = e.kind === 'effect' ? `${e.side}|${finderKey(e.key)}` : '';
+      const label = e.kind === 'effect' ? listLabel(e.name.replace(/\(중첩\)$/, '')) : '';
+      const stack = e.stacking ? ' · 중첩' : '';
       if (isTableEntry(e) && teamOnly) {
         const when = effectTiming(e) === 'perm' ? '상시' : `${e.duration.n}턴`;
-        const text = v != null ? `${when} ${v}%` : when;
-        base.bump(`${e.side}|${e.key}`, e.name, name, text);
-        wide.bump(`${e.side}|${e.key}`, e.name, name, text);
+        const text = `${v != null ? `${when} ${v}%` : when}${stack}`;
+        base.bump(chip, label, name, text);
+        wide.bump(chip, label, name, text);
       } else if (isSkillCastEntry(e) && teamOnly) {
         const turns = e.duration?.type === 'turns' ? ` ${e.duration.n}턴` : '';
-        wide.bump(`${e.side}|${e.key}`, e.name, name, `${e.skillLabel}${turns}${v != null ? ` ${v}%` : ''}`);
+        const tag = e.skillLabel === '스킬' ? e.skillName : e.skillLabel;
+        wide.bump(chip, label, name, `${tag}${turns}${v != null ? ` ${v}%` : ''}${stack}`);
       }
       for (const tile of ROLE_TILES) {
         if (entryMatchesTile(e, tile)) {
@@ -1516,7 +1543,7 @@ function selectorOf(target) {
 export function targetingInsights(enemyAnalysis) {
   const map = new Map();
   for (const e of enemyAnalysis.entries) {
-    if (e.side !== 'enemy') continue;
+    if (e.side !== 'enemy' && !e.ownHit) continue;
     const sel = selectorOf(e.target);
     if (!sel) continue;
     const k = `${e.heroName}|${sel.id}|${sel.label}`;

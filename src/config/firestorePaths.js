@@ -12,6 +12,8 @@ export const COL = {
   COMMUNITY_GUIDES: 'communityGuides',
   COMMUNITY_TIER_LISTS: 'communityTierLists',
   EXCLUSIVE_GEAR_GUIDES: 'exclusiveGearGuides',
+  /** 메인 「결투장 메타 덱」 공유 제출 — 문서 id = 제출자 uid */
+  META_DECK_SUBMISSIONS: 'metaDeckSubmissions',
 };
 
 /** 호스트 허브당 연결 가능한 게스트(2군) 허브 상한 */
