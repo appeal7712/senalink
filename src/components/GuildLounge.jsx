@@ -2454,7 +2454,7 @@ export default function GuildLounge() {
                   rows={3}
                   value={heroGearConfigs[selectedHeroGearIdx]?.detailNote || ''}
                   onChange={e => handleUpdateSelectedHeroGear('detailNote', e.target.value)}
-                  placeholder={(CONTENT_META[editingCategory] || CONTENT_META.siege).mode === 'pvp' ? '예: 속공 1순위 · 효적 50 이상 · 효저 100 최대한' : '예: 치확 67% · 약공 46%에 가깝게'}
+                  placeholder={(CONTENT_META[editingCategory] || CONTENT_META.siege).mode === 'pvp' ? '예: 속공1순위, 효적50이상, 효저100최대한' : '예: 치확 67% · 약공 46%에 가깝게'}
                   style={{
                     width: '100%', padding: '8px 12px', background: '#07090e', border: '1px solid var(--border-gold)',
                     color: '#e2e8f0', borderRadius: '7px', fontSize: '14px', fontWeight: 700, lineHeight: 1.5,

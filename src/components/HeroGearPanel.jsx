@@ -179,7 +179,7 @@ export default function HeroGearPanel({
             value={cfg.detailNote || ''}
             onChange={e => update('detailNote', e.target.value)}
             rows={5}
-            placeholder={'예:\n속공 1순위\n효적 50 이상\n효저 100 최대한'}
+            placeholder={'예:\n속공1순위\n효적50이상\n효저100최대한'}
             style={{
               width: '100%', padding: '10px 12px', background: '#07090e', border: '1px solid var(--border-gold)',
               color: '#e2e8f0', borderRadius: '7px', fontSize: '14px', fontWeight: 700, lineHeight: 1.5,

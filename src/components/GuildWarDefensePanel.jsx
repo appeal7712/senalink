@@ -990,7 +990,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                     rows={3}
                     value={(form.heroGearConfigs || emptyGear5())[slotIdx]?.detailNote || ''}
                     onChange={e => patchGearDetail(e.target.value)}
-                    placeholder="예: 속공 1순위 · 효적 50 이상 · 효저 100 최대한"
+                    placeholder="예: 속공1순위, 효적50이상, 효저100최대한"
                     style={{
                       width: '100%', padding: '8px 12px', background: '#07090e', border: '1px solid var(--border-gold)',
                       color: '#e2e8f0', borderRadius: 7, fontSize: 14, fontWeight: 700, lineHeight: 1.5,
