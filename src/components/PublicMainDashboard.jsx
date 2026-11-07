@@ -118,7 +118,7 @@ export default function PublicMainDashboard({ onNavigateToLounge, onNavigateToCo
             <Icon name="metaDeck" size={19} /> 결투장 메타 덱
           </h3>
           <button type="button" className="meta-deck-share-btn" onClick={() => setShareOpen(true)}>
-            <Icon name="share" size={14} /> 메타 덱 공유하기
+            <Icon name="share" size={14} /> 결투장 덱 공유하기
           </button>
         </div>
 

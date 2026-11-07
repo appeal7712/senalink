@@ -81,11 +81,20 @@ export default function MetaDeckShare({ onClose }) {
           <h3 id="meta-share-title"><Icon name="metaDeck" size={20} /> 메타 덱 공유하기</h3>
           <button type="button" onClick={onClose} aria-label="닫기"><Icon name="closeBtn" size={20} /></button>
         </div>
-        <p className="meta-share-thanks">공략 작성에 감사드려요! 공유해 주신 덱은 많은 분들께 큰 도움이 될 거예요.</p>
+        <p className="meta-share-thanks">먼저 공략 작성에 감사드리며,<br />공유해 주신 덱은 많은 분들께 큰 도움이 될 겁니다!</p>
         <ul className="meta-share-points">
-          <li>공략은 되도록 <b>결투장 랭킹 300위 안</b>에 드는 분들이 작성해 주시면 좋겠어요.</li>
-          <li>관리자가 확인하고 승인하면 <b>메인 페이지 「결투장 메타 덱」 배너</b>에 공략이 걸리고, <b>인게임 닉네임</b>도 함께 표시돼요.</li>
-          <li>계정당 하나만 제출할 수 있어요. 다시 제출하면 이전에 낸 덱을 대신해요.</li>
+          <li>
+            <span className="meta-share-key">추천</span>
+            <span>공략은 되도록 <b>결투장 랭킹 500위 안</b>에 드는 분들이 작성해 주시면 좋겠어요.</span>
+          </li>
+          <li>
+            <span className="meta-share-key">승인되면</span>
+            <span>관리자가 확인하고 승인하면 <b>메인 페이지 「결투장 메타 덱」 배너</b>에 공략이 걸리고, <b>인게임 닉네임</b>도 함께 표시돼요.</span>
+          </li>
+          <li>
+            <span className="meta-share-key">제출</span>
+            <span><b>계정당 하나</b>만 제출할 수 있어요. 다시 제출하면 이전에 낸 덱을 대신해요.</span>
+          </li>
         </ul>
         {status ? (
           <p className="meta-share-status">

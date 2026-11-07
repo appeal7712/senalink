@@ -4283,8 +4283,11 @@ h1, h2, h3 {
 .meta-share-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .meta-share-head h3 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 800; }
 .meta-share-head button { background: none; border: none; color: #fff; cursor: pointer; display: flex; }
-.meta-share-thanks { margin: 0; font-size: 14.5px; font-weight: 700; line-height: 1.6; }
-.meta-share-points { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; font-size: 13px; font-weight: 600; line-height: 1.55; color: rgba(255, 255, 255, 0.88); }
+.meta-share-thanks { margin: 0; padding: 12px 14px; border-radius: 14px; background: rgba(250, 204, 21, 0.1); border: 1px solid rgba(250, 204, 21, 0.35); font-size: 14.5px; font-weight: 800; line-height: 1.6; text-align: center; word-break: keep-all; }
+/* 안내 3줄 — 왼쪽 꼬리표(추천 · 승인되면 · 제출) + 문장, 줄마다 옅은 칸 */
+.meta-share-points { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; line-height: 1.6; color: rgba(255, 255, 255, 0.9); }
+.meta-share-points li { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.09); word-break: keep-all; }
+.meta-share-key { flex-shrink: 0; width: 62px; box-sizing: border-box; margin-top: 1px; padding: 0 7px; border-radius: 6px; background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.25); color: #fff; font-size: 11px; font-weight: 900; line-height: 20px; text-align: center; }
 .meta-share-points b { color: var(--gold-light); }
 .meta-share-status { margin: 0; padding: 9px 12px; border-radius: 12px; background: rgba(0, 0, 0, 0.28); font-size: 12.5px; font-weight: 800; }
 .meta-share-actions { display: flex; gap: 8px; }
