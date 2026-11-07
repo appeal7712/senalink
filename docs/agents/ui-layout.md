@@ -54,6 +54,25 @@
 
 카드 크기·줄간격이 바뀌면 위 숫자를 **같이** 다시 계산할 것 (2 × 카드 높이 + 줄간격 + 위아래 여백, 3번째 줄 시작보다 작게).
 
+#### 덱 편성 창 상단 = 공통 기준 하나 (`src/components/DeckEditHeader.jsx` + index.css 「덱 편성 창 상단 (DeckEditHeader)」, 밍봉 확정)
+
+**모든 편성 창 상단은 이 컴포넌트만 쓴다** — 길드 결투장 · 공성 · 강림 · 총력전(`GuildLounge`), 공용 결투장 · PvE(`CommunityGuideEditor`), 길드전 방어(`GuildWarDefensePanel`), 결투장 덱 공유 · /ops 메타 덱(`OpsMetaDeckModal`). 창마다 인라인 스타일 · 칸막이 div로 다시 만들지 말 것(예전엔 창마다 30줄씩 복사돼 있었음). 모양을 바꿀 땐 CSS 한 곳만.
+
+| 컴포넌트 | 용도 |
+|----|----|
+| `DeckEditTitleField` | 「제목」 한 줄 입력 |
+| `DeckEditFields` | 칸 묶음(`editing-build-arena-toggles is-plain`) — 상자 · 칸막이 없음 |
+| `DeckEditField label=…` | 칸 하나 = 회색 이름(10px #94a3b8) 위 + 컨트롤 아래. **버튼 칸은 이름 가운데**(덱 티어 · 세팅 · 덱 유형 · 추천도 · 속공 수치) |
+| `DeckEditDetailField` | 「기타 디테일」 **두 줄**(rows 2) 입력, 이름 왼쪽 |
+
+클래스 이름(`editing-build-arena-toggles` · `-toggle-col` · `-other-detail-col`)은 모바일 ≤980 · 길드전 방어 981–1179 / 1180+ CSS가 쓰므로 유지. 강림원정대 편성 창 「2라운드 세팅」 버튼은 빨강(1라운드 = 보스 색).
+
+결투장 덱 공유 창(`OpsMetaDeckModal` 헤더)처럼 테두리 상자 · 칸막이 없이 회색 이름 + 둥근 버튼. 「기타 디테일」 글 입력칸만 자기 테두리 유지(`editing-build-other-detail-col`은 min-width 유지). 길드전 방어 981–1179 가로 스크롤 규칙은 그대로. **추천도 별은 닫기 X 바로 옆에 두지 말 것** — PvE(공성 · 강림 · 공용 PvE)는 「추천도 → 기타 디테일」 순서(X 옆 = 입력칸), PC는 토글과 X 사이 18px(`.editing-build-author-row` padding-left, `:has(.is-plain)`). 밍봉이 별 고르다 창을 닫은 적 있음. **PC 상단 한 줄(밍봉 확정):** 「제목」도 다른 칸처럼 이름을 위에(「제목:」 옆 표기 아님), 제목 칸이 남는 폭을 채움(가운데 빈 공간 없음). PvE는 제목 칸 · 기타 디테일 칸 **정확히 1:1**(토글 상자를 `display: contents`로 풀어 같은 줄 칸으로). **세로 기준 2줄(밍봉 확정):** 이름 줄은 모두 같은 높이, 칸 줄은 `--deck-head-row: 48px`(기타 디테일 두 줄 높이) — 입력 · 별 · 버튼 · 창 제목(신규 공략 생성) · 라운드/팀 버튼 · 닫기 X가 전부 이 48px 줄 **가운데 한 선**(칸 = `grid-template-rows: auto 48px`). 한 줄 고정(nowrap)은 제목 칸 있는 창만 — 길드전 방어 981–1179는 토글이 아랫줄 가로 스크롤 + X 세로 가운데(예전 그대로). 기타 디테일은 두 줄 유지(한 줄로 줄이지 말 것 — 밍봉 지적). 칸막이 선은 다시 넣지 않음(무거워짐).
+
+#### 결투장 덱 공유 · /ops 메타 덱 창 (`OpsMetaDeckModal`)
+
+본문(덱 · 세팅 디테일 · 장비 · 영웅 목록)은 **공용 결투장 공략 창과 같은 덱 수정 구조**(`editing-build-modal` + `deckEditScrollModal` kind `arena` + `HeroGearPanel` + `HeroListFilterBar` + 2줄 영웅 그리드). 위 「제목 · 인게임 닉네임 · 한 줄 설명」만 `meta-deck-editor-fields`로 추가. 장비 칸 · 영웅 목록을 다시 따로 만들지 말 것(예전에 따로 만들어 장비 칸이 비고 목록이 길었음).
+
 #### 영웅 목록 필터 바 = 항상 한 줄 (`HeroListFilterBar`)
 
 역할 칩(전체·공격형…만능형) + 초성 검색은 **`src/components/HeroListFilterBar.jsx` 하나만** 쓴다. `HeroGridPicker`와 자체 그리드(길드 결투장·공성·강림·총력전, 길드전 방어, 공용 결투장) 모두 이 컴포넌트. 필터 버튼을 화면마다 다시 복사하지 말 것.

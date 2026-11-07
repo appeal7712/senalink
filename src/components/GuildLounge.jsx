@@ -53,6 +53,7 @@ import {
 import PublicProfileModal, { AuthorMeta } from './PublicProfileModal';
 import OverflowTitle from './OverflowTitle';
 import DeckTierStars, { DeckTierBlock, normalizeDeckTier } from './DeckTierStars';
+import { DeckEditDetailField, DeckEditField, DeckEditFields, DeckEditTitleField } from './DeckEditHeader';
 import { useUserProfile } from '../context/UserProfileContext';
 import { LOUNGE_STORAGE_KEYS } from '../data/loungeMeta';
 
@@ -2279,59 +2280,30 @@ export default function GuildLounge() {
                     <Icon name="closeBtn" size={26} />
                   </button>
                 </div>
-                <div className="editing-build-title-input-row" style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, maxWidth: '540px' }}>
-                  <span style={{ fontSize: '12px', color: '#fff', fontWeight: 800, whiteSpace: 'nowrap' }}>제목:</span>
-                  <input type="text" value={buildTitle} onChange={e => setBuildTitle(e.target.value)} placeholder="예: 월요일 마법 공성 (루디) - 600만 극딜 전술" style={{ width: '100%', padding: '6px 12px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: '6px', fontSize: '12px', fontWeight: 800, boxSizing: 'border-box' }} />
-                </div>
+                <DeckEditTitleField value={buildTitle} onChange={e => setBuildTitle(e.target.value)} placeholder="예: 월요일 마법 공성 (루디) - 600만 극딜 전술" />
                 {(editingCategory === 'siege' || editingCategory === 'expedition') && (
-                  <div className="editing-build-arena-toggles" style={{
-                    display: 'flex', alignItems: 'stretch', flexShrink: 0,
-                    border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, overflow: 'hidden',
-                    background: 'rgba(255,255,255,0.05)', flexWrap: 'wrap',
-                  }}>
-                    <div className="editing-build-arena-toggle-col editing-build-other-detail-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 280, flex: 1, maxWidth: 360 }}>
-                      <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>기타 디테일</div>
-                      <textarea
-                        className="editing-build-detail-textarea"
-                        rows={2}
-                        value={editingOtherDetail}
-                        onChange={e => setEditingOtherDetail(e.target.value)}
-                        placeholder="예: 보스 패턴·주의할 점"
-                        style={{
-                          width: '100%', padding: '6px 10px', background: '#07090e', border: '1px solid var(--border-gold)',
-                          color: '#e2e8f0', borderRadius: 7, fontSize: 12, fontWeight: 700, lineHeight: 1.45,
-                          boxSizing: 'border-box', resize: 'none', fontFamily: 'inherit', minHeight: 0,
-                        }}
-                      />
-                    </div>
-                    <div style={{ width: 1, background: 'rgba(255,255,255,0.14)', flexShrink: 0 }} />
-                    <div className="editing-build-arena-toggle-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 120 }}>
-                      <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>추천도</div>
+                  <DeckEditFields>
+                    <DeckEditField label="추천도">
                       <DeckTierStars tier={editingDeckTier} onChange={setEditingDeckTier} />
-                    </div>
-                  </div>
+                    </DeckEditField>
+                    <DeckEditDetailField value={editingOtherDetail} onChange={e => setEditingOtherDetail(e.target.value)} placeholder="예: 보스 패턴·주의할 점" />
+                  </DeckEditFields>
                 )}
                 {editingCategory === 'arena' ? (
-                  <div className="editing-build-arena-toggles" style={{
-                    display: 'flex', alignItems: 'stretch', flexShrink: 0,
-                    border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', overflow: 'hidden',
-                    background: 'rgba(255,255,255,0.05)'
-                  }}>
-                    <div className="editing-build-arena-toggle-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '210px' }}>
-                      <div style={{ fontSize: '10px', fontWeight: 800, color: '#fff', letterSpacing: '0.4px' }}>세팅</div>
+                  <DeckEditFields>
+                    <DeckEditField label="세팅">
                       <PvpModeToggle mode={editingPvpMode} onChange={setEditingPvpMode} />
-                    </div>
-                    <div style={{ width: '1px', background: 'rgba(255,255,255,0.14)', flexShrink: 0 }} />
-                    <div className="editing-build-arena-toggle-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '210px' }}>
-                      <div style={{ fontSize: '10px', fontWeight: 800, color: '#fff', letterSpacing: '0.4px' }}>덱 유형</div>
+                    </DeckEditField>
+                    <DeckEditField label="덱 유형">
                       <ArenaDeckKindToggle kind={editingArenaKind} onChange={setEditingArenaKind} />
-                    </div>
-                  </div>
+                    </DeckEditField>
+                  </DeckEditFields>
                 ) : (CONTENT_META[editingCategory] || CONTENT_META.siege).mode === 'pvp' ? (
-                  <div className="editing-build-arena-toggle-col" style={{ width: '220px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <div style={{ fontSize: '10px', fontWeight: 800, color: '#fff', letterSpacing: '0.4px' }}>세팅</div>
-                    <PvpModeToggle mode={editingPvpMode} onChange={setEditingPvpMode} />
-                  </div>
+                  <DeckEditFields>
+                    <DeckEditField label="세팅">
+                      <PvpModeToggle mode={editingPvpMode} onChange={setEditingPvpMode} />
+                    </DeckEditField>
+                  </DeckEditFields>
                 ) : null}
                 {editingCategory === 'totalwar' && (
                   <div className="editing-build-round-toggles" style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
@@ -2366,22 +2338,27 @@ export default function GuildLounge() {
                 )}
                 {editingCategory === 'expedition' && (
                   <div className="editing-build-round-toggles" style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                    {[1, 2].map(r => (
+                    {[1, 2].map(r => {
+                      const on = editingExpeditionRound === r;
+                      /** 2라운드 세팅 버튼은 빨강 (1라운드는 보스 색) */
+                      const tone = r === 2 ? { text: '#fca5a5', soft: 'rgba(239,68,68,0.22)', idle: 'rgba(248,113,113,0.45)' } : { text: expTheme.text, soft: expTheme.soft, idle: 'var(--border-subtle)' };
+                      return (
                       <button
                         key={r}
                         type="button"
                         onClick={() => switchExpeditionRound(r)}
                         style={{
                           padding: '8px 14px', fontSize: '13px', fontWeight: 900, borderRadius: '8px', cursor: 'pointer',
-                          border: editingExpeditionRound === r ? `1.5px solid ${expTheme.text}` : '1px solid var(--border-subtle)',
-                          background: editingExpeditionRound === r ? expTheme.soft : 'rgba(0,0,0,0.35)',
-                          color: editingExpeditionRound === r ? expTheme.text : '#94a3b8',
+                          border: on ? `1.5px solid ${tone.text}` : `1px solid ${tone.idle}`,
+                          background: on ? tone.soft : 'rgba(0,0,0,0.35)',
+                          color: on ? tone.text : (r === 2 ? '#fca5a5' : '#94a3b8'),
                           whiteSpace: 'nowrap'
                         }}
                       >
                         {r}라운드 세팅
                       </button>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

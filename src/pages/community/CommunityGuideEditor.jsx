@@ -17,6 +17,7 @@ import PvpModeToggle, { normalizePvpMode } from '../../components/PvpModeToggle'
 import { MetaDeckKindToggle, normalizeMetaDeckKind } from '../../components/ArenaDeckKind';
 import { ARENA_TIERS, normalizeArenaTier } from '../../data/arenaTiers';
 import DeckTierStars, { normalizeDeckTier } from '../../components/DeckTierStars';
+import { DeckEditDetailField, DeckEditField, DeckEditFields, DeckEditTitleField } from '../../components/DeckEditHeader';
 import { communitySkillMode } from '../../data/communityCatalog';
 import { emptyCommunityGuide } from '../../lib/communityGuides';
 import { backdropDismissProps } from '../../utils/backdropDismiss';
@@ -255,75 +256,37 @@ export default function CommunityGuideEditor({
                 <Icon name="closeBtn" size={26} />
               </button>
             </div>
-            <div className="editing-build-title-input-row" style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, maxWidth: 540 }}>
-              <span style={{ fontSize: 12, color: '#fff', fontWeight: 800, whiteSpace: 'nowrap' }}>제목:</span>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="공략 제목"
-                style={{ width: '100%', padding: '6px 12px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: 6, fontSize: 12, fontWeight: 800, boxSizing: 'border-box' }}
-              />
-            </div>
+            <DeckEditTitleField value={title} onChange={(e) => setTitle(e.target.value)} placeholder="공략 제목" />
 
             {contentMode === 'pve' && (
-              <div className="editing-build-arena-toggles" style={{
-                display: 'flex', alignItems: 'stretch', flexShrink: 0,
-                border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, overflow: 'hidden',
-                background: 'rgba(255,255,255,0.05)', flexWrap: 'wrap',
-              }}>
-                <div className="editing-build-arena-toggle-col editing-build-other-detail-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 280, flex: 1, maxWidth: 360 }}>
-                  <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>기타 디테일</div>
-                  <textarea
-                    className="editing-build-detail-textarea"
-                    rows={2}
-                    value={otherDetail}
-                    onChange={(e) => setOtherDetail(e.target.value)}
-                    placeholder="예: 보스 패턴·주의할 점"
-                    style={{
-                      width: '100%', padding: '6px 10px', background: '#07090e', border: '1px solid var(--border-gold)',
-                      color: '#e2e8f0', borderRadius: 7, fontSize: 12, fontWeight: 700, lineHeight: 1.45,
-                      boxSizing: 'border-box', resize: 'none', fontFamily: 'inherit', minHeight: 0,
-                    }}
-                  />
-                </div>
-                <div style={{ width: 1, background: 'rgba(255,255,255,0.14)', flexShrink: 0 }} />
-                <div className="editing-build-arena-toggle-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 120 }}>
-                  <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>추천도</div>
+              <DeckEditFields>
+                <DeckEditField label="추천도">
                   <DeckTierStars tier={deckTier} onChange={setDeckTier} />
-                </div>
-              </div>
+                </DeckEditField>
+                <DeckEditDetailField value={otherDetail} onChange={(e) => setOtherDetail(e.target.value)} placeholder="예: 보스 패턴·주의할 점" />
+              </DeckEditFields>
             )}
 
             {isArena && (
-              <div className="editing-build-arena-toggles" style={{
-                display: 'flex', alignItems: 'stretch', flexShrink: 0,
-                border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, overflow: 'hidden',
-                background: 'rgba(255,255,255,0.05)', flexWrap: 'wrap',
-              }}>
-                <div className="editing-build-arena-toggle-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 140 }}>
-                  <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>덱 티어</div>
+              <DeckEditFields>
+                <DeckEditField label="덱 티어">
                   <select
                     value={arenaTier}
                     onChange={(e) => setArenaTier(e.target.value)}
-                    style={{ ...fieldStyle, padding: '6px 8px', fontSize: 12 }}
+                    style={{ ...fieldStyle, padding: '6px 8px', fontSize: 12, minWidth: 120 }}
                   >
                     {ARENA_TIERS.map((t) => (
                       <option key={t.id} value={t.id}>{t.label}</option>
                     ))}
                   </select>
-                </div>
-                <div style={{ width: 1, background: 'rgba(255,255,255,0.14)', flexShrink: 0 }} />
-                <div className="editing-build-arena-toggle-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 210 }}>
-                  <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>세팅</div>
+                </DeckEditField>
+                <DeckEditField label="세팅">
                   <PvpModeToggle mode={mode} onChange={setMode} />
-                </div>
-                <div style={{ width: 1, background: 'rgba(255,255,255,0.14)', flexShrink: 0 }} />
-                <div className="editing-build-arena-toggle-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 210 }}>
-                  <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>덱 유형</div>
+                </DeckEditField>
+                <DeckEditField label="덱 유형">
                   <MetaDeckKindToggle kind={deckKind} onChange={setDeckKind} />
-                </div>
-              </div>
+                </DeckEditField>
+              </DeckEditFields>
             )}
           </div>
 

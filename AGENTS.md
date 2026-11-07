@@ -435,6 +435,7 @@ API:
 - 「모바일만」 요청 → 그 화면의 브레이크포인트 블록 안에서만 수정. PC `min-width` 블록·`deckEditScrollModal.css`에 모바일 규칙 금지.
 - 덱 수정 모달: PC(≥981) = `deckEditScrollModal.css`/`.js`만, 모바일(≤980) = `index.css` 블록만. 본문 `.deck-edit-scroll-body`만 스크롤, 내부 스크롤은 영웅 목록·PvE `.skill-timeline-scroller`(높이 px 고정)만.
 - 세팅 공유 PNG 워밍은 공유 클릭 시에만. 한 번에 하나씩 고치고 검증 후 다음.
+- **덱 편성 창 상단(제목 · 덱 티어 · 세팅 · 덱 유형 · 추천도 · 기타 디테일 · 속공 수치)은 `src/components/DeckEditHeader.jsx` 하나만** — 모든 편성 창 공통 기준, 모양은 index.css 「덱 편성 창 상단 (DeckEditHeader)」 한 곳. 창마다 인라인으로 다시 만들지 말 것(ui-layout.md).
 
 ---
 
@@ -484,7 +485,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.11.07.210** (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.11.07.211** (푸터 `APP_VERSION` 확인)
 - 저장소 2개: 사이트 `appeal7712/senalink`(이 폴더) · 원본 에셋 `appeal7712/senalink-assets`(비공개, `asset/` 폴더 = 그 저장소, 브랜치 `main`). 새 컴퓨터 복구 = 사이트 clone → 그 안에 `git clone …/senalink-assets.git asset` → `.env.local`(Firebase 웹 설정 6줄, 콘솔 → 프로젝트 설정에서 복사) → `npm install` → `npx firebase login`.
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 

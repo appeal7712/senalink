@@ -1,40 +1,36 @@
-import { useMemo, useState } from 'react';
-import { heroes } from '../../data/heroes';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { heroes, sortHeroesForList } from '../../data/heroes';
 import { pets } from '../../data/pets';
-import { EQUIPMENT_SET_ICONS, weaponOptions, armorOptions } from '../../data/equipments';
-import AccessorySlots from '../../components/AccessorySlots';
-import ExclusiveGearButton from '../../components/ExclusiveGearPicker';
 import InGameDeckCard from '../../components/InGameDeckCard';
-import HeroGridPicker from '../../components/HeroGridPicker';
+import HeroGearPanel, { emptyGearConfig } from '../../components/HeroGearPanel';
+import HeroListFilterBar from '../../components/HeroListFilterBar';
+import HeroPortraitCard from '../../components/HeroPortraitCard';
 import Icon from '../../components/icons/Icon';
 import PvpModeToggle, { normalizePvpMode } from '../../components/PvpModeToggle';
 import { MetaDeckKindToggle } from '../../components/ArenaDeckKind';
+import { DeckEditField, DeckEditFields } from '../../components/DeckEditHeader';
+import { heroMatchesQuery } from '../../lib/heroSearch';
+import { nextEmptySlotAfter } from '../../lib/deckSlots';
+import {
+  deckEditScrollBodyWrapperProps,
+  deckEditScrollGridBodyStyle,
+  deckEditScrollHeroGridClass,
+  deckEditScrollHeroGridStyle,
+  deckEditScrollModalClassSuffix,
+  useDeckEditScrollWheelForward,
+} from '../../lib/deckEditScrollModal';
 import { backdropDismissProps } from '../../utils/backdropDismiss';
+import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, markDeckHtml5DragStarted, shouldSuppressDeckClick, resetDeckDragState } from '../../utils/deckDrag';
 import { useUnsavedGuard } from '../../utils/unsavedGuard';
 import ModalScrim from '../../components/ModalScrim';
 
-const SETS = ['선봉장', '추적자', '성기사', '수문장', '수호자', '암살자', '복수자', '주술사', '조율자'];
-const WEAPON_OPTS = weaponOptions;
-const ARMOR_OPTS = armorOptions;
 const DECK_TYPES = ['결투장', '상급결투장'];
 /** 저장값은 기존 그대로(상급결투장), 화면 표시만 이벤트 결투장 */
 const DECK_TYPE_LABEL = { 결투장: '결투장', 상급결투장: '이벤트 결투장' };
+/** 본문(덱 · 장비 · 영웅 목록)은 공용 허브 결투장 공략 창과 같은 덱 수정 구조(arena) */
+const SCROLL_KIND = 'arena';
 
-const emptyGear = () => ({
-  setName: '복수자',
-  weapon1: '치명타 확률',
-  weapon2: '치명타 확률',
-  armor1: '모든 공격력(%)',
-  armor2: '모든 공격력(%)',
-  accessory: '불사의 반지',
-  optionCode: '',
-  detailNote: '',
-});
-
-const padGear5 = (list = []) => {
-  const next = Array.from({ length: 5 }, (_, i) => ({ ...emptyGear(), ...(list[i] || {}) }));
-  return next;
-};
+const padGear5 = (list = []) => Array.from({ length: 5 }, (_, i) => ({ ...emptyGearConfig(), ...(list?.[i] || {}) }));
 
 const padNames5 = (names = []) => {
   const next = (names || []).map((n) => n || '');
@@ -77,15 +73,30 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose, variant = 'ops
   const [skills, setSkills] = useState(() => Array.isArray(deck.reservedSkills) ? deck.reservedSkills : (deck.skillSequence || []));
   const [petId, setPetId] = useState(deck.petId || pets[0]?.id || '');
   const [slot, setSlot] = useState(0);
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [heroQuery, setHeroQuery] = useState('');
+  const scrollBodyRef = useRef(null);
+  useDeckEditScrollWheelForward(scrollBodyRef, true);
+  useEffect(() => () => resetDeckDragState(), []);
 
   const petObj = useMemo(() => pets.find((p) => p.id === petId) || pets[0], [petId]);
-  const g = gear[slot] || emptyGear();
+  const filledNames = heroNames.filter(Boolean);
 
-  const setHeroAt = (idx, name) => {
+  const filteredHeroes = useMemo(() => sortHeroesForList(heroes.filter((h) => {
+    if (roleFilter !== 'all' && h.role !== roleFilter) return false;
+    const cleanName = h.name.replace('(각성)', '');
+    if (filledNames.includes(cleanName) && cleanName !== (heroNames[slot] || '')) return false;
+    if (heroQuery.trim() && !heroMatchesQuery(h, heroQuery.trim())) return false;
+    return true;
+  })), [roleFilter, heroQuery, filledNames, heroNames, slot]);
+
+  const pickHero = (name) => {
     const next = padNames5(heroNames);
-    if (name && next.some((n, i) => i !== idx && n === name)) return;
-    next[idx] = name;
+    if (name && next.some((n, i) => i !== slot && n === name)) return;
+    next[slot] = name;
     setHeroNames(next);
+    const nextEmpty = nextEmptySlotAfter(next, slot);
+    if (nextEmpty !== -1) setSlot(nextEmpty);
   };
 
   const swapGear = (a, b) => {
@@ -131,6 +142,7 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose, variant = 'ops
       return next;
     });
   };
+  const detailNote = gear[slot]?.detailNote || '';
 
   const guardClose = useUnsavedGuard(true, {
     title, tier, usageRate, desc, kind, type, mode, formationId, heroNames, gear, skills, petId, authorName,
@@ -181,35 +193,36 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose, variant = 'ops
   ];
   const submitReady = submitChecks.every((c) => c.ok);
 
-  const sel = {
-    width: '100%', flex: 1, minHeight: 36, padding: '0 8px', background: '#07090e',
-    border: '1px solid var(--border-gold)', color: '#fff', borderRadius: 5, fontSize: 12.5, fontWeight: 800, boxSizing: 'border-box', colorScheme: 'dark',
-  };
-
   return (
     <ModalScrim style={{ zIndex: 5200, padding: 16 }} {...backdropDismissProps(guardClose(onClose))}>
-      <div className="luxury-panel glass-modal meta-deck-editor" onClick={(e) => e.stopPropagation()} style={{
-        width: '94vw', maxWidth: 1520, maxHeight: '90vh', padding: 0, display: 'flex', flexDirection: 'column',
-        borderRadius: 28, minHeight: 0,
-      }}>
+      <div
+        className={`luxury-panel glass-modal editing-build-modal meta-deck-editor${deckEditScrollModalClassSuffix(SCROLL_KIND)}`}
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        style={{
+          width: '94vw', maxWidth: 1520, maxHeight: '90vh', padding: 0, display: 'flex', flexDirection: 'column',
+          borderRadius: 28, minHeight: 0, overflow: 'hidden',
+        }}
+      >
         <div className="meta-deck-editor-head">
           <h3 className="meta-deck-editor-title">{isSubmit ? '메타 덱 공유하기 · 결투장 덱 짜기' : '메타 덱 세팅'}</h3>
           <div className="meta-deck-editor-tools">
-            <div>
-              <div className="meta-deck-editor-tool-label">덱 유형 · 내가 정함</div>
-              <MetaDeckKindToggle kind={kind} onChange={setKind} />
-            </div>
-            <div>
-              <div className="meta-deck-editor-tool-label">세팅</div>
-              <PvpModeToggle mode={mode} onChange={setMode} />
-            </div>
+            <DeckEditFields>
+              <DeckEditField label="덱 유형 · 내가 정함">
+                <MetaDeckKindToggle kind={kind} onChange={setKind} />
+              </DeckEditField>
+              <DeckEditField label="세팅">
+                <PvpModeToggle mode={mode} onChange={setMode} />
+              </DeckEditField>
+            </DeckEditFields>
           </div>
           <button type="button" className="meta-deck-editor-close" onClick={guardClose(onClose)} aria-label="닫기">
             <Icon name="closeBtn" size={26} />
           </button>
         </div>
 
-        <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div ref={scrollBodyRef} {...deckEditScrollBodyWrapperProps(SCROLL_KIND)}>
+          <div className="meta-deck-editor-fields">
           <div className="grid-2-responsive" style={{ gap: 10 }}>
             <label style={labelStyle}>제목
               <input style={fieldStyle} value={title} maxLength={40} onChange={(e) => setTitle(e.target.value)} placeholder="예: 여포 후열 파멸" />
@@ -240,10 +253,11 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose, variant = 'ops
           <label style={labelStyle}>{isSubmit ? '한 줄 설명 · 덱 포인트 (선택)' : '한 줄 설명'}
             <input style={fieldStyle} value={desc} maxLength={isSubmit ? 120 : undefined} onChange={(e) => setDesc(e.target.value)} placeholder={isSubmit ? '예: 상대 후열 마법형을 먼저 지워요' : '메인 카드 아래에 안 나와도 됨. 메모용.'} />
           </label>
+          </div>
 
-          <div className="meta-deck-editor-row">
-            <div className="meta-deck-editor-left">
-              <div className="meta-deck-editor-deck">
+          <div className="editing-build-grid editing-build-modal-body is-pvp" style={deckEditScrollGridBodyStyle(SCROLL_KIND)}>
+            <div className="editing-build-left-stack">
+              <div className="editing-build-deck-slot" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <InGameDeckCard
                 teamName=""
                 overviewTitle={title || ''}
@@ -266,111 +280,93 @@ export default function OpsMetaDeckModal({ deck, onSave, onClose, variant = 'ops
                 pvpMode={mode}
               />
               </div>
-              <div className="glass-inset meta-deck-editor-detail">
-                <div className="meta-deck-editor-detail-label">
+              <div className="glass-inset editing-build-detail-panel" style={{ padding: '8px 12px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ fontSize: 11, color: 'var(--accent-cyan)', fontWeight: 800 }}>
                   세팅 디테일{heroNames[slot] ? ` · ${heroNames[slot]}` : ''}
                 </div>
                 <textarea
+                  className="editing-build-detail-textarea"
                   rows={3}
-                  value={g.detailNote || ''}
+                  value={detailNote}
                   onChange={(e) => patchGear('detailNote', e.target.value)}
                   placeholder="예: 속공1순위, 효적50이상, 효저100최대한"
+                  style={{
+                    width: '100%', padding: '8px 12px', background: '#07090e', border: '1px solid var(--border-gold)',
+                    color: '#e2e8f0', borderRadius: 7, fontSize: 14, fontWeight: 700, lineHeight: 1.5,
+                    boxSizing: 'border-box', resize: 'none', fontFamily: 'inherit',
+                  }}
                 />
               </div>
             </div>
 
-            <div className="glass-inset meta-deck-editor-gear">
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Icon name="gearSetting" size={13} /> 장비 세팅 · {heroNames[slot] || '슬롯을 고르세요'}
-                <ExclusiveGearButton
-                  heroName={heroNames[slot]}
-                  gear={g}
-                  onChange={(patch) => setGear((prev) => {
-                    const next = padGear5(prev);
-                    next[slot] = { ...next[slot], ...patch };
-                    return next;
-                  })}
-                />
+            <div
+              className="glass-inset editing-build-gear-panel editing-build-right-panel"
+              style={{
+                flex: 1, minWidth: 0, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10,
+                alignSelf: 'stretch', minHeight: 0, boxSizing: 'border-box',
+              }}
+            >
+              <HeroGearPanel
+                embedded
+                showDetail={false}
+                heroNames={heroNames}
+                configs={gear}
+                selectedIdx={slot}
+                onSelectIdx={setSlot}
+                onChange={(next) => setGear(padGear5(next))}
+              />
+            </div>
+
+            <div className="glass-inset editing-build-hero-picker" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10, width: '100%', boxSizing: 'border-box', flexShrink: 0, minHeight: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', flexShrink: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Icon name="hero" size={14} /> 영웅 목록
+                </div>
+                <div style={{ flex: '1 1 380px', minWidth: 0 }}>
+                  <HeroListFilterBar role={roleFilter} onRoleChange={setRoleFilter} query={heroQuery} onQueryChange={setHeroQuery} />
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: 5 }}>
-                {heroNames.map((hName, idx) => (
-                  hName ? (
-                    <button key={idx} type="button" onClick={() => setSlot(idx)}
-                      style={{
-                        flex: 1, minWidth: 0, padding: '8px 4px', fontSize: 12, fontWeight: 900, borderRadius: 6, border: 'none', cursor: 'pointer',
-                        background: slot === idx ? 'var(--gold-primary)' : 'rgba(255,255,255,0.08)',
-                        color: slot === idx ? '#000' : '#cbd5e1',
-                      }}
-                    >
-                      {hName}
-                    </button>
-                  ) : null
-                ))}
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
-                {SETS.map((setName) => {
-                  const on = (g.setName || '복수자') === setName;
+              <div className={deckEditScrollHeroGridClass(SCROLL_KIND)} style={deckEditScrollHeroGridStyle(SCROLL_KIND)}>
+                {filteredHeroes.map((h) => {
+                  const cleanName = h.name.replace('(각성)', '');
+                  const isCurrent = (heroNames[slot] || '') === cleanName;
                   return (
-                    <button key={setName} type="button" onClick={() => patchGear('setName', setName)} style={{
-                      padding: '6px 8px', fontSize: 12, fontWeight: 800, borderRadius: 8, cursor: 'pointer',
-                      border: on ? '1.5px solid var(--gold-primary)' : '1px solid rgba(255,255,255,0.1)',
-                      background: on ? 'rgba(236,232,224,0.22)' : 'rgba(255,255,255,0.04)',
-                      color: on ? 'var(--gold-light)' : '#cbd5e1',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    }}>
-                      {setName}
-                      <img src={EQUIPMENT_SET_ICONS[setName]} alt="" style={{ width: 18, height: 18 }} />
-                    </button>
+                    <div
+                      key={h.id}
+                      draggable
+                      onPointerDown={(e) => {
+                        markDeckPointerDown(e);
+                        startDeckPointerDrag(e, { source: 'picker', name: cleanName }, { label: cleanName });
+                      }}
+                      onDragStart={(e) => {
+                        if (!allowHtml5DeckDrag(e)) {
+                          e.preventDefault();
+                          return;
+                        }
+                        markDeckHtml5DragStarted();
+                        setDeckDragData(e, { source: 'picker', name: cleanName });
+                      }}
+                      onClick={() => {
+                        if (shouldSuppressDeckClick()) return;
+                        pickHero(cleanName);
+                      }}
+                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', touchAction: 'manipulation' }}
+                    >
+                      <div style={{ width: 58, outline: isCurrent ? '2px solid var(--accent-cyan)' : 'none', outlineOffset: 1, borderRadius: 8 }}>
+                        <HeroPortraitCard hero={h} showStars showRole showName={false} />
+                      </div>
+                      <div style={{
+                        width: 58, marginTop: 2, background: '#000', borderRadius: 3, padding: '1px 0',
+                        textAlign: 'center', fontSize: 8, color: '#fff', fontWeight: 800,
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>
+                        {cleanName}
+                      </div>
+                    </div>
                   );
                 })}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                <label style={labelStyle}>무기 1
-                  <select style={sel} value={g.weapon1 || '치명타 확률'} onChange={(e) => patchGear('weapon1', e.target.value)}>
-                    {WEAPON_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </label>
-                <label style={labelStyle}>방어구 1
-                  <select style={sel} value={g.armor1 || '모든 공격력(%)'} onChange={(e) => patchGear('armor1', e.target.value)}>
-                    {ARMOR_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </label>
-                <label style={labelStyle}>무기 2
-                  <select style={sel} value={g.weapon2 || '치명타 확률'} onChange={(e) => patchGear('weapon2', e.target.value)}>
-                    {WEAPON_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </label>
-                <label style={labelStyle}>방어구 2
-                  <select style={sel} value={g.armor2 || '모든 공격력(%)'} onChange={(e) => patchGear('armor2', e.target.value)}>
-                    {ARMOR_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </label>
-              </div>
-              <AccessorySlots
-                gear={g}
-                onChange={(patch) => setGear((prev) => {
-                  const next = padGear5(prev);
-                  next[slot] = { ...next[slot], ...patch };
-                  return next;
-                })}
-              />
             </div>
-          </div>
-
-          <div className="glass-inset meta-deck-editor-picker" style={{ padding: 14 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 8 }}>
-              영웅 목록 · 슬롯 {slot + 1} {heroNames[slot] ? `(${heroNames[slot]})` : ''}
-            </div>
-            <HeroGridPicker
-              heroes={heroes}
-              selectedNames={heroNames.filter(Boolean)}
-              currentSlotName={heroNames[slot] || ''}
-              height={220}
-              showSearch
-              onPick={(name) => {
-                setHeroAt(slot, name);
-              }}
-            />
           </div>
         </div>
 

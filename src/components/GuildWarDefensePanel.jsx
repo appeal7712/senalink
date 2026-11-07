@@ -20,6 +20,7 @@ import { closeOverlayFromUI, collapseOverlayHistory, pushOverlay } from '../util
 import { setDeckDragData, startDeckPointerDrag, markDeckPointerDown, allowHtml5DeckDrag, markDeckHtml5DragStarted, shouldSuppressDeckClick, resetDeckDragState } from '../utils/deckDrag';
 import ModalScrim from './ModalScrim';
 import DeckTierStars, { normalizeDeckTier } from './DeckTierStars';
+import { DeckEditDetailField, DeckEditField, DeckEditFields } from './DeckEditHeader';
 import {
   deckEditScrollBodyWrapperProps,
   deckEditScrollGridBodyStyle,
@@ -881,44 +882,18 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                     <Icon name="closeBtn" size={26} />
                   </button>
                 </div>
-                <div className="editing-build-arena-toggles" style={{
-                  display: 'flex', alignItems: 'stretch', flexShrink: 0,
-                  border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, overflow: 'hidden',
-                  background: 'rgba(255,255,255,0.05)', flexWrap: 'wrap',
-                }}>
-                  <div className="editing-build-arena-toggle-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 120 }}>
-                    <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>덱 티어</div>
+                <DeckEditFields>
+                  <DeckEditField label="덱 티어">
                     <TierStars tier={form.tier} onChange={t => patchForm({ tier: t })} />
-                  </div>
-                  <div style={{ width: 1, background: 'rgba(255,255,255,0.14)', flexShrink: 0 }} />
-                  <div className="editing-build-arena-toggle-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 210 }}>
-                    <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>세팅</div>
+                  </DeckEditField>
+                  <DeckEditField label="세팅">
                     <PvpModeToggle mode={form.mode} onChange={m => patchForm({ mode: m })} />
-                  </div>
-                  <div style={{ width: 1, background: 'rgba(255,255,255,0.14)', flexShrink: 0 }} />
-                  <div className="editing-build-arena-toggle-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 210 }}>
-                    <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>덱 유형</div>
+                  </DeckEditField>
+                  <DeckEditField label="덱 유형">
                     <MetaDeckKindToggle kind={form.deckKind} onChange={k => patchForm({ deckKind: k })} />
-                  </div>
-                  <div style={{ width: 1, background: 'rgba(255,255,255,0.14)', flexShrink: 0 }} />
-                  <div className="editing-build-arena-toggle-col editing-build-other-detail-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 180, flex: 1, maxWidth: 280 }}>
-                    <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>기타 디테일</div>
-                    <textarea
-                      className="editing-build-detail-textarea"
-                      rows={2}
-                      value={form.otherDetail || ''}
-                      onChange={e => patchForm({ otherDetail: e.target.value })}
-                      placeholder="예: 피뢰침 - 선란이 맞게 세팅"
-                      style={{
-                        width: '100%', padding: '6px 10px', background: '#07090e', border: '1px solid var(--border-gold)',
-                        color: '#e2e8f0', borderRadius: 7, fontSize: 12, fontWeight: 700, lineHeight: 1.45,
-                        boxSizing: 'border-box', resize: 'none', fontFamily: 'inherit', minHeight: 0,
-                      }}
-                    />
-                  </div>
-                  <div style={{ width: 1, background: 'rgba(255,255,255,0.14)', flexShrink: 0 }} />
-                  <div className="editing-build-arena-toggle-col" style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 180 }}>
-                    <div style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>속공 수치</div>
+                  </DeckEditField>
+                  <DeckEditDetailField value={form.otherDetail || ''} onChange={e => patchForm({ otherDetail: e.target.value })} placeholder="예: 피뢰침 - 선란이 맞게 세팅" />
+                  <DeckEditField label="속공 수치">
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                       <input
                         type="number"
@@ -936,8 +911,8 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
                         style={{ width: 64, padding: '5px 6px', background: '#07090e', border: '1px solid var(--border-gold)', color: '#fff', borderRadius: 6, fontSize: 12, fontWeight: 800, boxSizing: 'border-box' }}
                       />
                     </div>
-                  </div>
-                </div>
+                  </DeckEditField>
+                </DeckEditFields>
               </div>
               <div className="editing-build-author-row" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <button type="button" className="editing-build-modal-close editing-build-modal-close--desktop" onClick={guardDefenseClose(closeDefenseModal)} title="모달 닫기">
