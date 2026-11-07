@@ -104,7 +104,7 @@ sevennight_guild_web_formal/
 ├── firebase.json / .firebaserc / firestore.rules / storage.rules / firestore.indexes.json
 ├── functions/                ← Cloud Functions (Node 24, asia-northeast3)
 ├── public/                   ← Vite 정적 (images, robots, sitemap…)
-├── asset/                    ← 원본 게임 에셋 (영웅/펫/장비 JSON·PNG)
+├── asset/                    ← 원본 게임 에셋 (영웅/펫/장비 JSON·PNG) — **별도 비공개 저장소 `senalink-assets`** (안에 `.git` 따로, 사이트 저장소는 `.gitignore`로 무시). 폴더 안내 `asset/README.md`, 사이트 아이콘 ↔ 원본 대응표 `asset/UI_ICON_MAP.md`
 ├── scripts/                  ← import_gear_assets.py, fetch_hero_cards.py, seed-emulator-admin.mjs
 │   └── legacy/               ← 옛 루트 스크래퍼 보관 (README 참고, 앱 미사용)
 ├── src/
@@ -459,7 +459,7 @@ API:
 13. 커밋/푸시는 밍봉 요청 시. 시크릿(`.env*`)·`.firebase/hosting.*.cache` 커밋 금지.
 14. 배포 요청을 받으면 스킬 **`senalink-deploy`** 순서대로 (점검 → 버전·패치 내역 → Functions 먼저, Hosting 나중 → 라이브 확인 → 커밋·푸시).
 15. 팀 빌더 · 효과 엔진 · 스킬 데이터 패치 시 §10.10 요약의 검증 방법(엔진 전체 실행 · 점검표 · 밍봉 탭 클릭 금지)대로 확인.
-16. 커밋 시 경로를 하나씩 지정(`git add .` 금지). 커밋하지 않는 것: `asset/`(원본 에셋) · `scripts/tmp_*` · `tmp_missing_gear.json` · `scripts/sync_exclusive_gear_ui_assets.py` · 줄바꿈만 바뀐 파일(`ExclusiveGearPicker.jsx` · `exclusiveGearSlots.js` · `heroSearch.js` · `unsavedGuard.js` — `git diff -w`가 비면 제외) · 안 쓰는 `public/images/ui/tb-tab2-*.png` · `tb-guildwar.png`(성 아이콘 `tb-guildwar-castle.png`로 교체됨). `dev/`(로컬 점검표)는 커밋 O · 배포본 X.
+16. 커밋 시 경로를 하나씩 지정(`git add .` 금지). 커밋하지 않는 것: `asset/`(원본 에셋 — 사이트 저장소에선 무시됨. 에셋을 추가 · 수정했으면 **`asset/` 안에서** 따로 `git add -A` → `git commit` → `git push` = senalink-assets 백업) · `scripts/tmp_*` · `tmp_missing_gear.json` · `scripts/sync_exclusive_gear_ui_assets.py` · 줄바꿈만 바뀐 파일(`ExclusiveGearPicker.jsx` · `exclusiveGearSlots.js` · `heroSearch.js` · `unsavedGuard.js` — `git diff -w`가 비면 제외) · 안 쓰는 `public/images/ui/tb-tab2-*.png` · `tb-guildwar.png`(성 아이콘 `tb-guildwar-castle.png`로 교체됨). `dev/`(로컬 점검표)는 커밋 O · 배포본 X.
 
 ---
 
@@ -476,6 +476,7 @@ API:
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
 - 최근 호스팅 버전대: **v2026.11.07.203** (푸터 `APP_VERSION` 확인)
+- 저장소 2개: 사이트 `appeal7712/senalink`(이 폴더) · 원본 에셋 `appeal7712/senalink-assets`(비공개, `asset/` 폴더 = 그 저장소, 브랜치 `main`). 새 컴퓨터 복구 = 사이트 clone → 그 안에 `git clone …/senalink-assets.git asset` → `.env.local`(Firebase 웹 설정 6줄, 콘솔 → 프로젝트 설정에서 복사) → `npm install` → `npx firebase login`.
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 
 ---

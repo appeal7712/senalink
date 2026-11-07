@@ -18,6 +18,9 @@ dist-ssr
 .firebase/
 firestore-debug.log
 
+# 원본 에셋 — 별도 비공개 저장소 senalink-assets 로 관리 (asset/README.md)
+/asset/
+
 # Scraper / pipeline artifacts (not app runtime)
 /asset_list.csv
 /*_success.html
