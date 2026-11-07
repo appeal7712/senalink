@@ -516,7 +516,7 @@ export default function TeamBuilderPage() {
         <div className="tb-hero-copy">
           <span className="tb-hero-kicker"><Icon name="teamBuilder" size={15} /> TEAM BUILDER</span>
           <h1>팀 빌더</h1>
-          <p>칸을 눌러 영웅을 넣으면 <b>세팅 체크</b> · <b>받는 버프</b> · <b>거는 디버프</b>가 정리돼요. {isPve ? <>PvE는 <b>아군만</b> 봐요.</> : <>상대 덱을 켜면 <b>조심할 것</b>만 알려줘요.</>}<br />(스킬 강화 · 초월 기준)</p>
+          <p>칸을 눌러 영웅을 넣으면 <b>세팅 체크</b> · <b>받는 버프</b> · <b>거는 디버프</b>를 정리해 줘요.<br />{isPve ? <>PvE는 <b>아군만</b> 봐요.</> : <>상대 덱을 켜면 <b>조심할 것</b>도 짚어 줘요.</>} (스킬 강화 · 초월 기준)</p>
         </div>
         {mode ? (
           <div className="tb-mode-switch" role="tablist" aria-label="모드">
