@@ -52,10 +52,10 @@ const COMPRESS_STEPS = [
 
 export default function LoungeHome() {
   const {
-    activeLounge, me, canPostNotice, canManageMembers, canAppointAdmin,
+    activeLounge, me, canPostNotice,
     loungeNotices, loungePosts, loungeHistory,
     addNotice, addPost, deleteNotice, deletePost, canDeleteFeedItem,
-    kickMember, appointAdmin, revokeAdmin, transferMaster, maxAdmins, maxMembers,
+    maxAdmins, maxMembers,
     leaveLounge, isAllianceGuestView, exitAllianceHostView,
   } = useLounge();
 
@@ -82,41 +82,6 @@ export default function LoungeHome() {
       ? '연합 · 1군'
       : (activeLounge.allianceHostId ? '연합 · 2군' : '연합'));
 
-
-  const onKick = async (id) => {
-    try {
-      if (!confirm('이 길드원을 추방할까요?')) return;
-      await kickMember(id);
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
-  const onAppoint = async (id) => {
-    try {
-      await appointAdmin(id);
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
-  const onRevoke = async (id) => {
-    try {
-      await revokeAdmin(id);
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
-  const onTransfer = async (id, nick) => {
-    try {
-      if (!confirm(`${nick} 님에게 길드마스터를 위임할까요?\n위임 후 당신은 관리자(또는 길드원)로 변경됩니다.`)) return;
-      await transferMaster(id);
-      alert('길드마스터를 위임했습니다.');
-    } catch (e) {
-      alert(e.message);
-    }
-  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -611,20 +576,6 @@ function FeedList({ items, empty, onImageClick, canDeleteItem, onDelete }) {
         );
       })}
     </div>
-  );
-}
-
-function MiniBtn({ onClick, label, title, tone }) {
-  const styles = {
-    cyan: { background: 'rgba(56,189,248,0.15)', border: '1px solid var(--accent-cyan)', color: 'var(--accent-cyan)' },
-    red: { background: 'rgba(239,68,68,0.15)', border: '1px solid var(--accent-red)', color: '#fca5a5' },
-    muted: { background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-subtle)', color: '#fff' },
-  }[tone] || {};
-  return (
-    <button type="button" onClick={onClick} title={title || label}
-      style={{ width: '28px', height: '28px', fontSize: '11px', fontWeight: 900, borderRadius: '7px', cursor: 'pointer', ...styles }}>
-      {label}
-    </button>
   );
 }
 

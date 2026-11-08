@@ -1,7 +1,6 @@
 import { Fragment, useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from './icons/Icon';
-import SafeImg from './icons/SafeImg';
 import HeroPortraitCard from './HeroPortraitCard';
 import InGameDeckCard from './InGameDeckCard';
 import HeroGridPicker from './HeroGridPicker';
@@ -13,7 +12,8 @@ import { closeOverlayFromUI, collapseOverlayHistory, pushOverlay } from '../util
 import ModalScrim from './ModalScrim';
 import { showToast } from './Toast';
 import { formatUpdateAtDisplay } from './PublicProfileModal';
-import { gwDeckMatchesQuery } from '../lib/gwDeckSearch';
+import { gwDeckHitHeroes, gwDeckMatchesQuery } from '../lib/gwDeckSearch';
+import GwDeckSearch from './GwDeckSearch';
 
 const emptyNames5 = () => ['', '', '', '', ''];
 const emptyGear5 = () => [emptyGearConfig(), emptyGearConfig(), emptyGearConfig(), emptyGearConfig(), emptyGearConfig()];
@@ -31,15 +31,16 @@ const padNames5 = (names = []) => {
   return next.slice(0, 5).map(n => n || '');
 };
 
-function MiniHeroTrio({ heroNames = [], resolveHeroByName, size = 34 }) {
+function MiniHeroTrio({ heroNames = [], resolveHeroByName, size = 34, hitNames = null }) {
   const filled = heroNames.filter(Boolean).slice(0, 3);
   const width = size * 3 + 4;
+  const hasHits = Boolean(hitNames?.size);
   return (
-    <div className="gw-mini-trio" style={{ width: `${width}px`, flexShrink: 0 }}>
+    <div className={`gw-mini-trio${hasHits ? ' has-search-hits' : ''}`} style={{ width: `${width}px`, flexShrink: 0 }}>
       {[0, 1, 2].map(i => {
         const h = filled[i] ? resolveHeroByName(filled[i]) : null;
         return (
-          <div key={i} className="gw-mini-trio-slot" style={{
+          <div key={i} className={`gw-mini-trio-slot${hasHits && hitNames.has(filled[i]) ? ' is-search-hit' : ''}`} style={{
             width: `${size}px`, marginLeft: i === 0 ? 0 : '2px',
             flexShrink: 0, zIndex: 3 - i
           }}>
@@ -806,7 +807,12 @@ export default function GuildWarAttackPanel({
           <span className="gw-counter-rule" aria-hidden>|</span>
         </div>
         <div className="gw-attack-target-heroes-col">
-          <MiniHeroTrio heroNames={deck.heroNames} resolveHeroByName={resolveHeroByName} size={42} />
+          <MiniHeroTrio
+            heroNames={deck.heroNames}
+            resolveHeroByName={resolveHeroByName}
+            size={42}
+            hitNames={isSearching ? gwDeckHitHeroes(deck, deckQuery) : null}
+          />
           {isMain && onToggleAlts ? (
             <button
               type="button"
@@ -1014,22 +1020,13 @@ export default function GuildWarAttackPanel({
             </h3>
           </div>
           {gwAttacks.length > 0 && (
-            <label className={`gw-attack-search${isSearching ? ' is-active' : ''}`} title="덱 이름이나 영웅 이름 글자로 찾기 · 순서 무관 (예: 윤동목, 목동윤, ㅇㄷㅁ)">
-              <Icon name="search" size={13} />
-              <input
-                type="search"
-                value={deckQuery}
-                onChange={(e) => setDeckQuery(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Escape') setDeckQuery(''); }}
-                placeholder="덱 검색 (예: 윤동목)"
-                aria-label="상대 덱 검색"
-              />
-              {isSearching && (
-                <button type="button" className="gw-attack-search-clear" onClick={() => setDeckQuery('')} aria-label="검색 지우기">
-                  <Icon name="close" size={11} />
-                </button>
-              )}
-            </label>
+            <GwDeckSearch
+              value={deckQuery}
+              onChange={setDeckQuery}
+              placeholder="덱 검색 (예: 윤동목)"
+              ariaLabel="상대 덱 검색"
+              title="덱 이름이나 영웅 이름 글자로 찾기 · 순서 무관 (예: 윤동목, 목동윤, ㅇㄷㅁ)"
+            />
           )}
           <button onClick={openCreateTarget} className="btn-ops" type="button">
             <Icon name="plus" size={13} /> 상대 덱 추가

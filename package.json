@@ -7,6 +7,7 @@
     "dev": "vite",
     "emulators": "firebase emulators:start --only auth,firestore,storage,functions",
     "seed:admin": "node scripts/seed-emulator-admin.mjs",
+    "seed:preview": "node scripts/seed-preview-hub.mjs",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

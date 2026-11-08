@@ -26,6 +26,14 @@ firestore-debug.log
 /*_success.html
 tmp_negi_chars_ko.json
 
+# 로컬 작업용 임시 · 개인 도구 (커밋 금지 — AGENTS.md §14). 지우지 말고 무시만
+/tmp_*.json
+/scripts/tmp_*
+/scripts/sync_exclusive_gear_ui_assets.py
+# 교체돼서 안 쓰는 UI 이미지 (tb-guildwar-castle.png · 탭 아이콘으로 대체)
+/public/images/ui/tb-guildwar.png
+/public/images/ui/tb-tab2-*.png
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

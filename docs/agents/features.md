@@ -14,6 +14,7 @@
 | 구독/저장 | `src/lib/siteMain.js` → `useSiteMain()` |
 | Ops 편집 | `/ops` → **메인페이지** → `MainSiteEditor.jsx` (저장만, 「비우기」없음) |
 | 필드 | headline, subhead, highlight, metaDecks(4), pickRates(5), news[], entranceBanner, updatedAt/By |
+| 결투장 메타 덱 배치 | **항상 가로 한 줄**(밍봉 — 2×2로 두 줄 깔리면 안 됨). PC(>1100) 4열 그리드(`.meta-deck-row--desktop`) · ≤1100 캐러셀(`MetaDeckCarousel`, 한 장씩 넘김): 900~1100 세 장(`is-three`) · 700~899 두 장(`is-two`) · 700 미만 폰 한 장. 한 줄 4장은 ≤1100에서 카드가 덱 배치보다 좁아져서 안 씀. CSS는 index.css 「메인 결투장 메타 덱: ≤1100은 캐러셀」 블록(기본 `.meta-deck-carousel { display: none }`보다 뒤에 둘 것) |
 | 입장 배너 UI | `SiteEntranceBanner.jsx` (오늘 안 보기: localStorage) |
 | 방문 집계 | `siteVisitStats.js` — 쓰기: **32 샤드** `site/stats/visitShards/{id}` 랜덤 +1(충돌 시 다른 샤드). 읽기: 레거시 `site/stats` + 샤드 합산. 브라우저당 KST 하루 1회(`senalink_site_visit_day`). 히어로·ops 표시. 시크릿 창 어뷰징 완전차단 불가 |
 | 기용률·뉴스 2열 | PC: 기용률 패널이 행 높이 기준, 뉴스(`.main-news-scroller`)만 내부 스크롤. 모바일(≤900px): 1열, 뉴스 `max-height` 후 스크롤 |
@@ -36,6 +37,8 @@
 
 - **공격 상대 목록:** 최대 ~12행 높이에서 내부 스크롤(`.gw-attack-list-body`). 선택 카드는 더 진한 테두리·배경. 카운터는 별도 레이어(`.gw-counter-layer`).
 - **상대 덱 검색:** 「상대 덱 목록」과 「상대 덱 추가」 사이 `.gw-attack-search` (≤480은 제목 아래 한 줄). 판정은 `lib/gwDeckSearch.js` `gwDeckMatchesQuery` — ① 덱 제목 부분 일치 ② 아니면 검색어를 덱 영웅 이름(단어마다 — 카마도 탄지로 = 카마도 · 탄지로)의 **앞부분**들로 끝까지 나눌 수 있으면 일치(순서 무관 — 윤동목 · 목동윤, 「오」 = 오공 · 오목 · 오르카 전부, 「오공선」처럼 이름 통째로도 됨, 초성 ㅇㄷㅁ도 앞글자 기준). **이름 중간 글자는 안 봄**(밍봉: 오공은 「공」이 아니라 「오」로 부름). 앞글자가 아닌 말로 부르는 예외는 같은 파일 **`HERO_SEARCH_ALIASES`**에만 추가(지금 오목 → 「목」). 파생 덱만 걸리면 파생 목록을 자동으로 펼침. 화면 상태만, 저장 없음.
+- **방어 덱 검색:** 같은 판정 · 같은 검색칸(`components/GwDeckSearch.jsx` — 공격 · 방어 공용, 새로 만들지 말 것). 위치는 `StrategyActionBar`의 `extra` 칸(제목과 「방어덱 추가」 사이, ≤640은 아래 한 줄 전체 · 버튼은 오른쪽). 방어 덱은 제목이 비어 있어 `heroSlots[].primaryName`으로만 맞춤(`defenseSearchDeck`). 대체 덱만 맞으면 메인을 펼치지 않고 대체 덱 목록만 펼침 + 「대체 덱」 버튼 outline(3D 버튼 그림자는 건드리지 않음). 검색 중에도 「N번째」 · 드래그 순서는 **전체 목록 기준**(순서 변경은 id로 하므로 안전).
+- **맞은 영웅 강조:** `gwDeckHitHeroes(deck, query)` = 검색어를 나누는 데 쓰일 수 있는 영웅들(방법이 여러 개면 전부). 목록에서 맞은 초상만 또렷 · 나머지 흐리게(`.has-search-hits` + `.is-search-hit`, 공격 `MiniHeroTrio` · 방어 `renderHeroes`). 제목으로만 맞은 덱은 흐리게 안 함.
 - **카운터 우선순위:** `counters[]` **배열 순서 = 1위부터**. 왼쪽 그립 드래그로 재정렬(스키마 추가 없음). 리드 UI: **그립 `|` 우선순위 `|` 초상** (구분선은 lead 안에 두어 모바일에서도 유지).
 - **방어 리스트:** PC·모바일 모두 **1열** (공용 PvP 결투장과 동일). `.gw-defense-grid--stack`. 접힌 헤더 lead: **그립 `|` 덱 티어 `|`** 초상·메타 | 수정·삭제·대체 덱. 펼침: 덱(세팅 확인) → 스킬 예약 → **기타 디테일**. **방어 덱 수정 모달**은 결투장과 동일 PC 통스크롤(`arena-body-scroll-modal` · §12.4) — 헤더만 덱 티어·세팅·덱 유형·기타 디테일·속공 수치 유지. 모달 클래스 `gw-defense-edit-modal`.
 - **기타 디테일 박스:** PC에서 스킬 예약과 **같은 열 폭** (`max-width` 제한 없음). 모바일에서 `.build-panel-body { display: contents }` 사용 시 **반드시 `order: 4`** — 없으면 order 0으로 맨 위에 붙음.
@@ -102,7 +105,9 @@
 - **모바일 도감 영웅 상세(≤760/≤980 블록):** `.hero-db-detail`은 `max-height`/`overflow` 풀어 **스킬 설명 내부 스크롤 없이** 페이지로 펼침. 영웅 **목록** 칸 스크롤·PC(고정 높이 3열)는 유지.
 - **도감 스킬 칸 배치 (`HeroDB` `layoutSkills`, 밍봉 확정):** 일반 각성 영웅(전환 스킬 없음)의 각성기는 모바일에서 **맨 아래 넓은 줄**(작은 칸으로 혼자 내려가지 않게). 변신 · 분신 · 자세 전환 영웅(델론즈 · 오공 · 쥬피)은 PC · 모바일 모두 윗줄 원래 스킬, **바로 아래 칸에 전환 스킬**(꼬리표 「스킬1 전환」), 각성기는 **패시브 아래 칸**(델론즈 4×2 — 칸 수에 맞춤). 둘을 섞지 말 것(밍봉 확정). 전환 스킬 판정 = 방향(upper/down) 데이터가 있는 영웅에서 원래 스킬 바로 뒤의 방향 없는 active — 방향 데이터가 없는 콜라보(성진우 등)는 한 줄 그대로. PC 일반 각성 영웅은 한 줄 5칸 유지.
 
-### 10.6 세팅 확인 (`InGameDeckCard`)
+### 10.6 세팅 확인 (`InGameDeckCard` → `SettingOverviewModal`)
+
+- **파일 위치(2026-11-08 분리):** 창 내용 = `components/SettingOverviewModal.jsx`(배치 · 펫 칸 · 길드전 카드 · 메모 · 장비 칸 전부), 열기/닫기 · 공유 버튼 상태 = `InGameDeckCard.jsx`, 진형 그리기 = `components/deckFormation.jsx`(`renderFormationCircleIcon` · `renderDeckFormationLayout` — InGameDeckCard에서 다시 export). **CSS = `src/styles/settingOverview.css`**(index.css에서 옮김, `main.jsx`에서 index.css **바로 다음**에 import — 순서가 바뀌면 같은 우선순위 규칙이 뒤집힘). 아래 글의 「index.css 블록」은 이 파일.
 
 - 모달 클래스 `.setting-overview-modal` — 화면 폭 **고정** `min(760px, 96vw)` (덱마다 `fit-content`로 가로가 들쭉날쭉하지 않게).
 - 모바일(≤760px) 세팅 개요: 장비 1열, `.setting-overview-deck`는 `height:auto` — **배치·펫 잘림 방지**. PC·`.setting-capture-pc`(공유 PNG 980px)와 분리.

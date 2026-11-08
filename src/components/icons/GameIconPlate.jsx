@@ -7,7 +7,6 @@ const LAYER_KEY = 'skillFormationLayer';
 const PLATE_FORMATION_SCALE = 1.48;
 const PLATE_SKILL_SCALE = 1.62;
 const PLATE_GLYPH_INSET = 0.86;
-const FORMATION_GLYPH_ASPECT = 90 / 66;
 
 function plateDimensions(iconSize, plateScale, layer) {
   const plateH = Math.round(iconSize * plateScale);
@@ -18,7 +17,7 @@ function plateDimensions(iconSize, plateScale, layer) {
 function glyphSizeInPlate({ iconSize, layer, plateScale, image, perceivedBoost = 1 }) {
   const extra = image?.displayScale ?? 1;
   const aspect = image ? image.w / image.h : 1;
-  const { plateW, plateH } = plateDimensions(iconSize, plateScale, layer);
+  const { plateW } = plateDimensions(iconSize, plateScale, layer);
   const targetDisplayH = iconSize * UI_GAME_ICON_DISPLAY_SCALE * perceivedBoost;
   const byHeight = targetDisplayH / (UI_GAME_ICON_DISPLAY_SCALE * extra);
   const byWidth = (plateW * PLATE_GLYPH_INSET) / (aspect * UI_GAME_ICON_DISPLAY_SCALE * extra);

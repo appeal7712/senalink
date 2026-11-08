@@ -19,16 +19,6 @@ function anchorMs(anchorYmd) {
   return kstWallToUtcMs(a.year, a.month, a.day, 0, 0, 0);
 }
 
-/** 앵커일 00:00 KST 이후 periodDays 주기에서, now가 속한 사이클 시작(UTC ms) */
-function cycleStartMs(anchorYmd, periodDays, nowMs) {
-  const start = anchorMs(anchorYmd);
-  if (start == null) return null;
-  if (nowMs < start) return start;
-  const elapsed = nowMs - start;
-  const idx = Math.floor(elapsed / (periodDays * DAY_MS));
-  return start + idx * periodDays * DAY_MS;
-}
-
 function rankUpdatedSince(updatedAtIso, seasonEndMs) {
   if (!seasonEndMs) return true;
   if (!updatedAtIso) return false;

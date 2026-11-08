@@ -71,3 +71,39 @@ export function gwDeckMatchesQuery(deck, query) {
   };
   return coverFrom(0);
 }
+
+/**
+ * 검색어를 덮는 데 쓰일 수 있는 영웅 이름들 (덱 heroNames 원래 문자열 그대로) — 목록에서 맞은 초상 강조용.
+ * 나누는 방법이 여러 개면 어느 방법에든 쓰이는 영웅은 전부. 제목으로만 맞았으면 빈 Set.
+ */
+export function gwDeckHitHeroes(deck, query) {
+  const hits = new Set();
+  const q = [...normalize(query)];
+  if (!q.length) return hits;
+  const entries = (deck?.heroNames || [])
+    .filter(Boolean)
+    .flatMap((hero) => heroCallWords(hero).map((w) => ({ chars: [...w], hero })));
+  if (!entries.length) return hits;
+
+  const n = q.length;
+  const canEnd = new Array(n + 1).fill(false);
+  canEnd[n] = true;
+  for (let i = n - 1; i >= 0; i -= 1) {
+    canEnd[i] = entries.some((e) => prefixLengths(q, i, e.chars).some((len) => canEnd[i + len]));
+  }
+  if (!canEnd[0]) return hits;
+
+  const reach = new Array(n + 1).fill(false);
+  reach[0] = true;
+  for (let i = 0; i < n; i += 1) {
+    if (!reach[i]) continue;
+    for (const e of entries) {
+      for (const len of prefixLengths(q, i, e.chars)) {
+        if (!canEnd[i + len]) continue;
+        reach[i + len] = true;
+        hits.add(e.hero);
+      }
+    }
+  }
+  return hits;
+}

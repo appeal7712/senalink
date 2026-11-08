@@ -76,8 +76,6 @@ export default function HeroDB() {
     setActiveSkillIdx(0);
   };
 
-  const getRole = (h) => h.role || h.type || 'offensive';
-
   const getSkillCategoryName = (skill, idx) => {
     if (skill.type === 'basic_attack') return '기본 공격';
     if (skill.type === 'passive')      return '패시브';

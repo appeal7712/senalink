@@ -1,0 +1,1218 @@
+/* ── 세팅 확인 창 (InGameDeckCard 「세팅 확인」 · 세팅 공유 PNG) ─────────────────────
+   index.css 에서 그대로 옮긴 것 — 순서 유지가 중요(뒤에 적힌 규칙이 이김).
+   main.jsx 에서 index.css 바로 다음 · 테마(themeSolidDark.css)보다 앞에 import.
+   펫 배경(.pet-portrait-face)은 펫 도감 · 덱 카드도 써서 index.css 에 남김.
+   상세 규칙 · 브레이크포인트: docs/agents/features.md §10.6 */
+
+.speed-order-strip {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+.speed-order-arrow {
+  flex: 0 0 auto;
+  opacity: 0.95;
+}
+.speed-order-chip {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5px;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 6px 7px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+.speed-order-chip.is-off {
+  background: rgba(255, 255, 255, 0.04);
+  opacity: 0.55;
+}
+.speed-order-num {
+  font-size: 13px;
+  font-weight: 900;
+  min-width: 1.3em;
+  padding: 3px 6px;
+  border-radius: 7px;
+  background: var(--gold-primary);
+  color: #000;
+  flex: 0 0 auto;
+  line-height: 1.2;
+  text-align: center;
+  box-sizing: border-box;
+}
+.speed-order-chip.is-off .speed-order-num {
+  background: #475569;
+  color: #e2e8f0;
+}
+.speed-order-face {
+  width: 30px;
+  height: auto;
+  border-radius: 0;
+  overflow: hidden;
+  border: none;
+  flex: 0 0 auto;
+}
+.speed-order-face .hero-portrait-card {
+  width: 100%;
+}
+/* flex 안에서 ellipsis: basis 0으로 남은 칸을 다 쓰고, 넘칠 때만 … */
+.speed-order-chip strong {
+  display: block;
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.25;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gear-overview-grid {
+  display: grid;
+  gap: 8px;
+  align-items: stretch;
+  width: 100%;
+}
+
+.gear-overview-grid--1 { grid-template-columns: minmax(0, 1fr); }
+.gear-overview-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.gear-overview-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.gear-overview-grid--4,
+.gear-overview-grid--5,
+.gear-overview-grid--6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* 세팅 확인 창: 덱마다 폭이 달라지지 않게 고정 */
+.setting-overview-modal {
+  width: min(760px, 96vw);
+  max-width: 96vw;
+  min-width: 0;
+}
+
+/* 3열(영웅 3명+)일 땐 공유 PNG(.setting-capture-pc 980px)와 같은 폭 — 전용장비 옵션 줄이 안 잘리게. 2열(≤1100)·1열은 그대로 */
+@media (min-width: 1101px) {
+  .setting-overview-modal--wide {
+    width: min(980px, 96vw);
+  }
+}
+
+.setting-overview-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.setting-overview-head-lead {
+  min-width: 0;
+  flex-shrink: 0;
+}
+.setting-overview-head-kicker {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.setting-overview-head-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-top: 4px;
+}
+.setting-overview-head-title {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 0 1 auto;
+  max-width: min(360px, 100%);
+  min-width: 0;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.65);
+}
+.setting-overview-head-title-label {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 800;
+}
+.setting-overview-head-title-sep {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 800;
+}
+.setting-overview-head-title-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gold-light, #f0c14b);
+  font-weight: 900;
+}
+.setting-overview-head-close {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.setting-overview-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-share-setting {
+  flex: 0.62;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #161616;
+  background: #f0c14b;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  position: relative;
+  outline-offset: 4px;
+  user-select: none;
+  touch-action: manipulation;
+  transform: translateY(-4px);
+  box-shadow:
+    0 2px 0 0 rgba(0, 0, 0, 0.25),
+    0 4px 0 0 #a16207;
+  transition:
+    transform 600ms cubic-bezier(.3, .7, .4, 1),
+    filter 250ms,
+    box-shadow 600ms cubic-bezier(.3, .7, .4, 1);
+}
+.btn-share-setting img.icon-inline {
+  filter: brightness(0);
+}
+
+.btn-share-setting:hover {
+  filter: brightness(110%);
+  transform: translateY(-6px);
+  box-shadow:
+    0 4px 0 0 rgba(0, 0, 0, 0.25),
+    0 6px 0 0 #a16207;
+  transition:
+    transform 250ms cubic-bezier(.3, .7, .4, 1.5),
+    filter 250ms,
+    box-shadow 250ms cubic-bezier(.3, .7, .4, 1.5);
+}
+
+.btn-share-setting:active {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 0 #a16207;
+  transition: transform 34ms, box-shadow 34ms;
+}
+
+.btn-share-setting:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.btn-share-setting:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}
+
+/* 세팅 공유: 캡처 호스트 — 화면 안(투명)에 두어 모바일 WebKit 이미지 스킵 완화 */
+.setting-capture-host {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 980px;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.01;
+  transform: none;
+}
+.setting-capture-pc {
+  width: 980px !important;
+  min-width: 980px !important;
+  max-width: 980px !important;
+  max-height: none !important;
+  height: auto !important;
+  box-sizing: border-box !important;
+}
+/* 폰(≤980)의 `.glass-modal { max-height: 92vh; max-width: 100vw-20 } !important`보다 우선 — 없으면 폰에서 공유한 PNG가 창 높이에서 잘림 */
+.setting-capture-host .setting-capture-pc {
+  width: 980px !important;
+  min-width: 980px !important;
+  max-width: 980px !important;
+  max-height: none !important;
+  height: auto !important;
+}
+.setting-capture-pc .setting-overview-body {
+  max-height: none !important;
+  overflow: visible !important;
+  flex: none !important;
+}
+.setting-capture-pc .hero-portrait-card-mask {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+.setting-capture-pc .hero-portrait-card-icon,
+.setting-capture-pc img {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+.setting-capture-pc .gear-overview-grid--1 {
+  grid-template-columns: minmax(0, 280px) !important;
+}
+.setting-capture-pc .gear-overview-grid--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+.setting-capture-pc .gear-overview-grid--3,
+.setting-capture-pc .gear-overview-grid--4,
+.setting-capture-pc .gear-overview-grid--5,
+.setting-capture-pc .gear-overview-grid--6 {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+.setting-capture-pc .speed-order-arrow {
+  display: inline-flex !important;
+}
+.setting-capture-pc .speed-order-strip {
+  flex-wrap: nowrap !important;
+}
+
+.setting-overview-actions .btn-ops {
+  flex: 1;
+}
+
+.setting-overview-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 2px;
+}
+
+.setting-overview-section {
+  background: var(--glass-inset);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.setting-overview-section .skill-reserve,
+.setting-overview-section .skill-reserve-row {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.setting-overview-section .skill-reserve-row {
+  background: transparent;
+  border: none;
+  padding-left: 0;
+  padding-right: 0;
+  overflow-x: auto;
+}
+
+.setting-overview-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.setting-overview-notes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.gear-overview-grid > div {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.setting-overview-deck {
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  box-sizing: border-box;
+  pointer-events: none;
+  overflow: hidden;
+  container-type: size;
+}
+
+.setting-overview-deck-label {
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff;
+  text-align: center;
+  flex-shrink: 0;
+  letter-spacing: 0.2px;
+}
+
+.setting-overview-deck .deck-stage {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  max-height: none;
+  margin: 0;
+  padding: 4px 2px;
+  gap: 12px;
+  border-radius: 12px;
+  background: transparent;
+  border: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  overflow: hidden;
+}
+
+.setting-overview-deck .deck-stage-formation {
+  min-width: 0;
+}
+
+.setting-overview-deck .deck-hero-slot {
+  width: clamp(44px, min(18cqh, 26cqw), 60px);
+}
+
+.setting-overview-deck .deck-hero-slot-face {
+  width: clamp(44px, min(18cqh, 26cqw), 60px);
+  height: auto;
+  aspect-ratio: 162 / 154;
+  border-radius: 0;
+}
+
+.setting-overview-deck .deck-stage-col {
+  gap: 7px;
+}
+
+.setting-overview-deck .deck-stage-rows {
+  gap: 12px;
+}
+
+/* 펫은 영웅 초상의 92% (세팅 확인 배치 칸 공통 — 5인 · 길드전 · 폰) */
+.setting-overview-deck-pet {
+  width: calc(clamp(44px, min(18cqh, 26cqw), 60px) * 0.92);
+  height: auto;
+  aspect-ratio: 162 / 154;
+  border-radius: 9px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.setting-overview-deck-pet img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── 세팅 확인 · 배치 · 펫 칸 ─────────────────────────────────────────
+   5인: .setting-overview-deck (PC는 장비 그리드 마지막 칸 --grid, ≤1100은 본문 맨 위 --top)
+   길드전(3인): .setting-overview-trio-deck — 스킬 예약 옆 (공격 카운터는 상대 덱 카드도, 방어는 한 장 .is-solo)
+   옆 칸(.setting-overview-deck-side): 펫 = 영웅 초상과 같은 폭 · 비율, 진형은 아이콘만 (이름 글자 없음)
+   5인: 장비 1열(≤560 스마트폰)일 때만 배치 · 펫이 속공 순서 · 스킬 예약보다 위. 2열 이상이면 원래 자리.
+   길드전: ≤760 스킬 예약 위(공격 두 장은 ≤1100부터 — 옆에 안 들어감). 공유 PNG(.setting-capture-pc)는 PC 배치 */
+.setting-overview-deck-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+/* 길드전 상대 덱 진형 아이콘이 펫보다 넓으면 옆 칸이 밀리지 않게 */
+.setting-overview-trio-deck .setting-overview-deck-side {
+  min-width: var(--gw-slot);
+}
+.setting-overview-deck-side-formation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.setting-overview-deck--top {
+  display: none;
+}
+
+.setting-overview-trio-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: stretch;
+}
+.setting-overview-trio-top > .setting-overview-section {
+  min-width: 0;
+}
+.setting-overview-trio-decks {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  min-width: 0;
+}
+.setting-overview-trio-deck {
+  /* 초상 · 펫 폭과 간격 — 화면 폭별로 이 값만 바꿈 */
+  --gw-slot: 50px;
+  --gw-gap: 10px;
+  --gw-col-gap: 4px;
+  width: 190px;
+  min-width: 0;
+  box-sizing: border-box;
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+.setting-overview-trio-deck.is-solo {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+}
+
+/* 길드전 공격 — 내 덱(파랑) · 상대 덱(빨강) 카드와 메모 칸 공통 톤.
+   색 테두리 대신 유리 테두리 + 윗변 가운데만 빛나는 1px 선 + 모서리에서 번지는 옅은 빛 (상대는 반대 모서리 — 좌우 반전) */
+.setting-overview-trio-deck:not(.is-solo),
+.setting-overview-memo-box {
+  --gw-tone: 56, 189, 248;
+  --gw-tone-text: #9bd8f5;
+  --gw-glow-at: 0% 0%;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(130% 85% at var(--gw-glow-at), rgba(var(--gw-tone), 0.11), transparent 62%),
+    var(--glass-inset);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.setting-overview-trio-deck.is-enemy,
+.setting-overview-memo-box.is-enemy {
+  --gw-tone: 248, 113, 113;
+  --gw-tone-text: #f4b0b0;
+  --gw-glow-at: 100% 0%;
+}
+.setting-overview-trio-deck:not(.is-solo)::before,
+.setting-overview-memo-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 14%;
+  right: 14%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(var(--gw-tone), 0.7), transparent);
+  pointer-events: none;
+}
+/* 상대 덱은 인게임처럼 좌우 반전 — 펫 · 진형 | 앞줄 | 뒷줄 (앞줄이 왼쪽 내 덱 앞줄과 마주 봄). 초상 그림은 안 뒤집음 */
+.setting-overview-trio-deck.is-enemy .setting-overview-trio-deck-stage,
+.setting-overview-trio-deck.is-enemy .deck-stage-rows {
+  flex-direction: row-reverse;
+}
+.setting-overview-trio-deck-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+/* 제목: 꽉 찬 알약 대신 작은 빛 점 + 톤 글자 */
+.setting-overview-trio-deck-kicker {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  color: var(--gw-tone-text, #9bd8f5);
+}
+.setting-overview-trio-deck-kicker::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgb(var(--gw-tone, 56, 189, 248));
+  box-shadow: 0 0 6px rgba(var(--gw-tone, 56, 189, 248), 0.9);
+  flex-shrink: 0;
+}
+.setting-overview-trio-deck-title {
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 900;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.setting-overview-trio-deck-stage {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gw-gap);
+  min-height: 0;
+}
+/* 높이 auto — 짧은 줄(보호 진형 뒷줄 1명 등)이 긴 줄 가운데에 오게 */
+.setting-overview-trio-deck .deck-stage-formation {
+  min-width: 0;
+  height: auto;
+}
+.setting-overview-trio-deck .deck-stage-rows {
+  gap: var(--gw-gap);
+  height: auto;
+}
+.setting-overview-trio-deck .deck-stage-col {
+  gap: var(--gw-col-gap);
+  height: auto;
+}
+.setting-overview-trio-deck .deck-hero-slot,
+.setting-overview-trio-deck .deck-hero-slot-face {
+  width: var(--gw-slot);
+}
+.setting-overview-trio-deck-pet {
+  width: calc(var(--gw-slot) * 0.92);
+}
+.setting-overview-trio-deck .deck-hero-slot-face {
+  border-radius: 0;
+}
+/* 길드전은 5칸 중 2칸이 비어 있음 — 진형 모양만 보이게 옅게 */
+.setting-overview-trio-deck .deck-hero-slot-face:empty {
+  background: rgba(255, 255, 255, 0.025) !important;
+  border: 1px dashed rgba(255, 255, 255, 0.14) !important;
+  border-radius: 6px;
+}
+.setting-overview-trio-deck-pet {
+  height: auto;
+  aspect-ratio: 162 / 154;
+  border-radius: 9px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.setting-overview-trio-deck-pet img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 창이 760px로 줄면(≤1100) 길드전 공격 카드 두 장은 스킬 예약 옆에 안 들어감 → 스킬 예약 위 한 줄 */
+@media (max-width: 1100px) {
+  .setting-overview-trio-top.has-enemy {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .setting-overview-trio-top.has-enemy .setting-overview-trio-decks {
+    order: -1;
+  }
+  .setting-overview-trio-top.has-enemy .setting-overview-trio-deck {
+    --gw-slot: 60px;
+    --gw-gap: 12px;
+    --gw-col-gap: 6px;
+    flex: 1 1 0;
+    width: auto;
+  }
+}
+
+/* 5인: 장비가 1열인 스마트폰(≤560)만 배치 · 펫을 맨 위로. 2열 이상이면 원래 자리 — 빈칸 안 생기게 */
+@media (max-width: 560px) {
+  .setting-overview-deck--top {
+    display: flex;
+    flex-shrink: 0;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    container-type: normal;
+  }
+  .setting-overview-deck--grid {
+    display: none;
+  }
+  .setting-overview-deck--top .deck-stage {
+    flex: 0 0 auto;
+    min-height: 0;
+    overflow: visible;
+  }
+  .setting-overview-deck--top .deck-stage-formation,
+  .setting-overview-deck--top .deck-stage-rows,
+  .setting-overview-deck--top .deck-stage-col {
+    height: auto;
+  }
+  .setting-overview-deck--top .deck-hero-slot,
+  .setting-overview-deck--top .deck-hero-slot-face {
+    width: clamp(48px, 17vw, 62px);
+  }
+  .setting-overview-deck--top .setting-overview-deck-pet {
+    width: calc(clamp(48px, 17vw, 62px) * 0.92);
+  }
+}
+
+/* 길드전(≤760): 스킬 예약 옆에 카드가 안 들어감 → 카드(공격 두 장 · 방어 한 장)를 스킬 예약 위 한 줄로 */
+@media (max-width: 760px) {
+  .setting-overview-trio-top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .setting-overview-trio-decks {
+    order: -1;
+  }
+  .setting-overview-trio-top .setting-overview-trio-deck {
+    flex: 1 1 0;
+    width: auto;
+  }
+  /* 공격 두 장: 폭 따라 38px(390 폰)~60px — 두 장이 나란히 들어가게 */
+  .setting-overview-trio-top.has-enemy .setting-overview-trio-deck {
+    --gw-slot: clamp(38px, 10vw, 60px);
+    --gw-gap: clamp(6px, 1.6vw, 12px);
+    --gw-col-gap: 4px;
+    padding: 8px 6px;
+  }
+  /* 방어 한 장은 5인 배치 · 펫 칸(--top)과 같은 크기 */
+  .setting-overview-trio-top .setting-overview-trio-deck.is-solo {
+    --gw-slot: clamp(48px, 17vw, 62px);
+    --gw-gap: 12px;
+    --gw-col-gap: 7px;
+    padding: 8px;
+  }
+}
+
+/* 길드전 방어(한 장 · 영웅 3명): 장비 2열 화면(561~1100)에선 스킬 예약 옆 대신 장비 그리드 4번째 칸 — 2×2 빈칸 없이 */
+.setting-overview-trio-deck--grid {
+  display: none;
+}
+@media (min-width: 561px) and (max-width: 1100px) {
+  .setting-overview-trio-top.has-grid-deck {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .setting-overview-trio-top.has-grid-deck .setting-overview-trio-decks {
+    display: none;
+  }
+  .setting-overview-trio-deck--grid {
+    --gw-slot: 60px;
+    --gw-gap: 12px;
+    --gw-col-gap: 7px;
+    display: flex;
+    width: auto;
+    height: 100%;
+    padding: 8px;
+  }
+}
+
+/* 길드전 공격 메모: 「내 공격 덱 · 기타 디테일」(파랑) | 「상대 덱 · 특이사항」(빨강) — 배치 카드와 같은 색.
+   메모 줄(PC)은 좌우 두 칸, 장비 그리드 메모 칸 · 폰은 위아래 */
+.setting-overview-memo-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.setting-overview-memo-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+.setting-overview-memo-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+.setting-overview-memo-title {
+  font-size: 12.5px;
+  font-weight: 900;
+  color: #fff;
+  white-space: nowrap;
+}
+.setting-overview-memo-text {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #e2e8f0;
+  white-space: pre-line;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.setting-overview-memo-text .is-empty {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.setting-overview-notes-cell .setting-overview-memo-split {
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: minmax(0, 1fr);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+@media (max-width: 560px) {
+  .setting-overview-memo-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.setting-capture-pc .setting-overview-memo-split {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+/* 길드전 공격 · 영웅 3명: 장비 2열 화면(561~1100)에선 메모(기타 디테일 + 상대 덱 특이사항)를 장비 그리드 빈 4번째 칸에 */
+.setting-overview-notes-cell {
+  display: none;
+}
+@media (min-width: 561px) and (max-width: 1100px) {
+  .setting-overview-notes-section--has-cell {
+    display: none;
+  }
+  .setting-overview-notes-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid var(--border-subtle);
+  }
+  .setting-overview-notes-cell-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+.setting-capture-pc .setting-overview-notes-cell {
+  display: none !important;
+}
+.setting-capture-pc .setting-overview-notes-section--has-cell {
+  display: flex !important;
+}
+
+.setting-capture-pc .setting-overview-trio-deck--grid {
+  display: none !important;
+}
+.setting-capture-pc .setting-overview-trio-top.has-grid-deck .setting-overview-trio-decks {
+  display: flex !important;
+}
+.setting-capture-pc .setting-overview-trio-top {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+}
+.setting-capture-pc .setting-overview-trio-decks {
+  order: 0 !important;
+}
+.setting-capture-pc .setting-overview-trio-deck {
+  --gw-slot: 50px !important;
+  --gw-gap: 10px !important;
+  --gw-col-gap: 4px !important;
+  width: 190px !important;
+  flex: 0 0 auto !important;
+  padding: 8px 10px !important;
+}
+.setting-capture-pc .setting-overview-deck--top {
+  display: none !important;
+}
+.setting-capture-pc .setting-overview-deck--grid {
+  display: flex !important;
+}
+
+.gear-block-compact {
+  height: 100%;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-sizing: border-box;
+}
+
+.gear-detail-box {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.gear-detail-label {
+  font-size: 11.5px;
+  font-weight: 900;
+  color: var(--gold-light);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.gear-detail-body {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #f8fafc;
+  line-height: 1.5;
+  height: 4.5em;
+  min-height: 4.5em;
+  max-height: 4.5em;
+  overflow-y: hidden;
+  padding-right: 2px;
+  box-sizing: border-box;
+}
+
+.gear-detail-body:hover,
+.gear-detail-body:focus-within {
+  overflow-y: auto;
+}
+
+@media (hover: none) {
+  .gear-detail-body {
+    overflow-y: auto;
+  }
+}
+
+.gear-detail-body ul {
+  margin: 0;
+  padding: 0 0 0 16px;
+}
+
+.gear-detail-body li {
+  margin: 0;
+}
+
+.gear-detail-empty {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.gear-tips-fixed {
+  background: var(--glass-inset);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  padding: 10px 12px;
+  height: 88px;
+  min-height: 88px;
+  max-height: 88px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1100px) {
+  .gear-overview-grid--3,
+  .gear-overview-grid--4,
+  .gear-overview-grid--5,
+  .gear-overview-grid--6 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  /* 세팅 확인 모바일: 헤더 가운데 (덱이름은 세팅 확인 옆) */
+  .setting-overview-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "lead close";
+    align-items: center;
+    justify-items: center;
+    gap: 10px 8px;
+  }
+  .setting-overview-head-lead {
+    grid-area: lead;
+    width: 100%;
+    text-align: center;
+  }
+  .setting-overview-head-kicker {
+    justify-content: center;
+  }
+  .setting-overview-head-sub {
+    text-align: center;
+  }
+  .setting-overview-head-title {
+    max-width: min(280px, 100%);
+  }
+  .setting-overview-head-close {
+    grid-area: close;
+    margin-left: 0;
+    justify-self: end;
+  }
+
+  .gear-block-compact {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .gear-block-name {
+    min-width: 0;
+    flex: 1 1 auto;
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 15px !important;
+  }
+
+  .gear-block-set {
+    max-width: 42%;
+  }
+
+  .gear-block-set span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px !important;
+  }
+
+  .gear-block-optcode {
+    font-size: 12.5px !important;
+    letter-spacing: 0.2px !important;
+  }
+
+  .gear-block-slots {
+    gap: 8px !important;
+  }
+
+  .gear-block-slot {
+    padding: 8px 6px !important;
+  }
+
+  .gear-block-slot-label {
+    font-size: 11px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .gear-block-slot-value {
+    font-size: 13px !important;
+    line-height: 1.35 !important;
+    word-break: keep-all;
+  }
+
+  .gear-detail-body {
+    font-size: 13px;
+    height: auto;
+    min-height: 3.2em;
+    max-height: 5.2em;
+  }
+}
+
+/* 세팅 확인 장비 1열은 스마트폰(≤560)만. 2열은 카드 폭 230px+ 부터 글자 안 잘림(560에서 측정) — 그 위는 2열 */
+@media (max-width: 560px) {
+  .gear-overview-grid--1,
+  .gear-overview-grid--2,
+  .gear-overview-grid--3,
+  .gear-overview-grid--4,
+  .gear-overview-grid--5,
+  .gear-overview-grid--6 {
+    grid-template-columns: 1fr;
+  }
+
+  /* 1열에선 카드/배치칸이 행 높이에 묶이지 않게 — 배치·펫 잘림 방지 */
+  .gear-overview-grid > div {
+    height: auto;
+  }
+
+  .gear-block-compact {
+    height: auto;
+  }
+
+  .setting-overview-deck {
+    height: auto;
+    min-height: 220px;
+    overflow: visible;
+    container-type: normal;
+  }
+
+  .setting-overview-deck .deck-stage {
+    overflow: visible;
+    flex: 0 0 auto;
+    min-height: 180px;
+  }
+
+  .setting-overview-deck .deck-hero-slot {
+    width: clamp(48px, 17vw, 62px);
+  }
+
+  .setting-overview-deck .deck-hero-slot-face {
+    width: clamp(48px, 17vw, 62px);
+    height: auto;
+  }
+
+  .setting-overview-deck-pet {
+    width: calc(clamp(48px, 17vw, 62px) * 0.92);
+  }
+}
+
+/* (index.css ≤980 블록에서 옮김) */
+@media (max-width: 980px) {
+  .setting-overview-actions {
+    flex-direction: row;
+  }
+
+  .btn-share-setting,
+  .setting-overview-actions .btn-ops {
+    flex: 1;
+    width: auto;
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+
+  .setting-overview-body {
+    gap: 10px;
+  }
+
+  .setting-overview-section {
+    padding: 10px;
+    gap: 8px;
+    border-radius: 12px;
+  }
+
+  .speed-order-arrow {
+    display: none;
+  }
+
+  .speed-order-strip {
+    gap: 4px;
+  }
+
+  .speed-order-chip {
+    padding: 5px 6px;
+    gap: 5px;
+  }
+
+  .speed-order-num {
+    font-size: 12px;
+    min-width: 1.25em;
+    padding: 2px 5px;
+  }
+
+  .speed-order-face {
+    width: 26px;
+  }
+
+  .speed-order-chip strong {
+    display: block;
+    flex: 1 1 0;
+    width: 0;
+    min-width: 0;
+    font-size: 12px;
+  }
+
+  .gear-block-compact {
+    padding: 8px;
+    gap: 7px;
+    border-radius: 12px;
+  }
+
+  .gear-block-face {
+    width: 36px !important;
+    height: 40px !important;
+  }
+
+  .gear-tips-fixed {
+    height: 62px;
+    min-height: 62px;
+    max-height: 62px;
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+}
+
+/* (index.css 에서 옮김) */
+.setting-overview-head-title-value.has-overflow-tip {
+  cursor: help;
+}
+
+/* 세팅 확인 스킬 예약 — 폰: 초상화 숨김, 이름 위·스킬 아래로 한 화면에 모두 */
+@media (max-width: 760px) {
+  .setting-overview-section .skill-reserve-row {
+    grid-template-columns: none !important;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    column-gap: 4px !important;
+    overflow-x: hidden;
+    align-items: stretch;
+  }
+
+  .setting-overview-section .skill-reserve-hero {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 6px !important;
+  }
+
+  /* 각성기 없는 영웅: 아래 정렬 → 스킬2·스킬1 줄이 각성 영웅과 맞음 */
+  .setting-overview-section .skill-reserve-skills {
+    margin-top: auto;
+  }
+
+  .setting-overview-section .skill-reserve-portrait {
+    display: none;
+  }
+
+  .setting-overview-section .skill-reserve-face-col {
+    width: 100%;
+  }
+
+  .setting-overview-section .skill-reserve-name {
+    max-width: 100% !important;
+    font-size: 11px !important;
+    white-space: normal !important;
+    word-break: keep-all;
+    line-height: 1.15;
+    min-height: 2.3em;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+}

@@ -80,7 +80,7 @@ export default function EquipDB() {
               {SET_ORDER.map((name) => {
                 const eq = equipments.find((e) => e.name === name);
                 return (
-                  <Chip key={name} active={setFilter === name} onClick={() => setSetFilter(name)}>
+                  <Chip key={name} active={setFilter === name} onClick={() => setSetFilter(setFilter === name ? 'all' : name)}>
                     {eq && <SafeImg src={eq.iconUrl} alt="" loading="lazy" style={{ width: 18, height: 18, objectFit: 'contain' }} />}
                     {name}
                   </Chip>
@@ -90,7 +90,7 @@ export default function EquipDB() {
             <FilterRow label="부위">
               <Chip active={slotFilter === 'all'} onClick={() => setSlotFilter('all')}>전체</Chip>
               {Object.values(SLOT_META).map((s) => (
-                <Chip key={s.id} active={slotFilter === s.id} onClick={() => setSlotFilter(s.id)}>
+                <Chip key={s.id} active={slotFilter === s.id} onClick={() => setSlotFilter(slotFilter === s.id ? 'all' : s.id)}>
                   <Icon name={s.icon} size={13} /> {s.label}
                 </Chip>
               ))}
@@ -163,13 +163,13 @@ export default function EquipDB() {
 
       {pane === 'accessory' && (
         <>
-          <div className="luxury-panel" style={{ padding: '14px 16px', marginBottom: '14px', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+          <div className="luxury-panel dex-equip-filter-row" style={{ padding: '14px 16px', marginBottom: '14px', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
             <span style={{ fontSize: 12, fontWeight: 900, color: '#e2e8f0', marginRight: 4 }}>등급</span>
             <Chip active={rarityFilter === 'all'} onClick={() => setRarityFilter('all')}>전체 {accessoryCatalog.length}</Chip>
             {Object.values(RARITY_META).map((r) => {
               const count = accessoryCatalog.filter((a) => a.rarity === r.id).length;
               return (
-                <Chip key={r.id} active={rarityFilter === r.id} onClick={() => setRarityFilter(r.id)} color={r.color} border={r.border}>
+                <Chip key={r.id} active={rarityFilter === r.id} onClick={() => setRarityFilter(rarityFilter === r.id ? 'all' : r.id)} color={r.color} border={r.border}>
                   {r.label} {count}
                 </Chip>
               );
@@ -310,14 +310,14 @@ export default function EquipDB() {
 
 function FilterRow({ label, children }) {
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-      <span style={{ fontSize: 12, fontWeight: 900, color: '#e2e8f0', width: 36 }}>{label}</span>
+    <div className="dex-equip-filter-row" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+      <span style={{ fontSize: 12, fontWeight: 900, color: '#e2e8f0', width: 36, flexShrink: 0 }}>{label}</span>
       {children}
     </div>
   );
 }
 
-function Chip({ active, onClick, children, color, border }) {
+function Chip({ active, onClick, children }) {
   return (
     <button type="button" onClick={onClick} style={{
       display: 'inline-flex', alignItems: 'center', gap: 6,

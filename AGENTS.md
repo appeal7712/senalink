@@ -112,7 +112,7 @@ sevennight_guild_web_formal/
 │   ├── main.jsx              ← Provider 트리
 │   ├── App.jsx               ← 페이지 스위치 + GNB/푸터/배너
 │   ├── index.css             ← 거의 모든 스타일
-│   ├── styles/               ← deckEditScrollModal.css (PC 덱 수정 전용, `main.jsx` import)
+│   ├── styles/               ← settingOverview.css(세팅 확인 창) · deckEditScrollModal.css(PC 덱 수정) · teamBuilder · hoverGate · themeSolidDark … — `main.jsx` import 순서 = 우선순위 (§14.1)
 │   ├── config/               ← routes, firestorePaths, appVersion, deployMode, siteContact
 │   ├── context/              ← SuperAdmin / UserProfile / Lounge (3개뿐)
 │   ├── lib/                  ← Firebase·도메인 헬퍼
@@ -131,6 +131,7 @@ sevennight_guild_web_formal/
 npm run dev              # Vite http://127.0.0.1:5173
 npm run emulators        # Auth 9099 / FS 8080 / Functions 5001 / Storage 9199
 npm run seed:admin       # 에뮬레이터 슈퍼관리자 시드
+npm run seed:preview     # 에뮬레이터 허브에 테스트 공략 (길드전 공격·방어·대체 덱, 공성 4진형, 메타 덱). 빈 칸만 · `-- --force`는 에뮬레이터 안에서 덮어씀. 127.0.0.1:8080 고정 = 라이브 무관
 npm run build
 npx firebase deploy --only hosting --project senalink
 npx firebase deploy --only firestore:rules --project senalink   # 규칙 변경 시
@@ -401,7 +402,7 @@ App
 └── SiteFooter (버전)
 ```
 
-덱/장비 UI 공통: `InGameDeckCard`, `HeroGearPanel`, `HeroGridPicker`, `HeroPortraitCard`, `equipments.js` 옵션.
+덱/장비 UI 공통: `InGameDeckCard`(세팅 확인 창 내용은 `SettingOverviewModal` · 진형 그리기 `deckFormation.jsx`), `HeroGearPanel`, `HeroGridPicker`, `HeroPortraitCard`, `equipments.js` 옵션. 길드전 덱 검색칸 `GwDeckSearch` + 판정 `lib/gwDeckSearch.js`(공격 · 방어 공용, features.md §10.2).
 
 ### 12.1 영웅 목록 정렬 (전역 공통 규칙)
 
@@ -471,6 +472,28 @@ API:
 15. 팀 빌더 · 효과 엔진 · 스킬 데이터 패치 시 §10.10 요약의 검증 방법(엔진 전체 실행 · 점검표 · 밍봉 탭 클릭 금지)대로 확인.
 16. 커밋 시 경로를 하나씩 지정(`git add .` 금지). 커밋하지 않는 것: `asset/`(원본 에셋 — 사이트 저장소에선 무시됨. 에셋을 추가 · 수정했으면 **`asset/` 안에서** 따로 `git add -A` → `git commit` → `git push` = senalink-assets 백업) · `scripts/tmp_*` · `tmp_missing_gear.json` · `scripts/sync_exclusive_gear_ui_assets.py` · 줄바꿈만 바뀐 파일(`ExclusiveGearPicker.jsx` · `exclusiveGearSlots.js` · `heroSearch.js` · `unsavedGuard.js` — `git diff -w`가 비면 제외) · 안 쓰는 `public/images/ui/tb-tab2-*.png` · `tb-guildwar.png`(성 아이콘 `tb-guildwar-castle.png`로 교체됨). `dev/`(로컬 점검표)는 커밋 O · 배포본 X.
 
+### 14.1 안전하게 고치는 법 · 자주 빠지는 함정 (실제로 겪은 것)
+
+**CSS**
+- 같은 우선순위면 **뒤에 쓴 규칙이 이김**. 미디어 블록을 기본 규칙보다 앞에 두면 조용히 무시됨(예: 메타 덱 캐러셀이 기본 `display:none`에 덮여 안 보였음). CSS를 옮기거나 새 블록을 넣을 땐 기본 규칙 **뒤**인지 확인.
+- 파일 순서도 같음: `main.jsx`에서 `index.css` → `styles/settingOverview.css` → `deckEditScrollModal.css` → `hoverGate.css` → `themeSolidDark.css`. 이 순서를 바꾸지 말 것.
+- 폰(≤980) `.glass-modal`에 `max-height · max-width !important`가 있음 → 모달 안 특정 상태(공유 PNG 등)를 바꾸려면 선택자를 더 구체적으로.
+
+**큰 정리(파일 나누기 · CSS 옮기기)**
+- 옮기기 전 `%TEMP%`에 백업 → 여러 폭(390 · 600 · 900 · 1440)에서 화면 요소 계산 스타일을 저장 → 옮긴 뒤 같은 방법으로 다시 저장해 **완전히 같은지 비교**(2026-11-08 세팅 확인 분리는 12화면 동일 확인 후 진행). 눈으로만 보지 말 것.
+- 비교하려고 작업 파일을 임시로 바꿔치기하지 말 것(자동 검토가 막음 · 작업 내용이 꼬일 수 있음). 백업은 `%TEMP%`에만.
+- `InGameDeckCard.jsx` 등 일부 파일은 줄바꿈이 CRLF. 스크립트로 줄을 자를 땐 `/\r?\n/`로 나누고 원래 줄바꿈으로 다시 붙일 것.
+- 편집 도구가 쓰기 오류(예: `ftruncate`)를 내면 바로 파일 끝 · 바꾼 줄을 확인하고 다시 적용.
+- ESLint 기준선: 2026-11-08 오류 77개(대부분 React hooks 규칙 — 일부러 안 건드림). **늘리지 말 것.** 안 쓰는 변수는 지우거나 `_` 접두사.
+
+**브라우저로 확인할 때**
+- 뒤로 가기 · 모달 닫기 확인은 **새 탭**에서(`newTab: true`). 오래 쓴 탭은 방문 기록이 50개 한도에 차서 브라우저가 중간 기록을 버림 → 모달을 닫았는데 메인으로 튕기는 것처럼 보임(앱 버그 아님, 2026-11-08 새 탭에서 정상 확인).
+- 화면 크기 바꾸기(`Emulation.setDeviceMetricsOverride`)와 다른 CDP 호출을 **동시에** 보내지 말 것(순서가 꼬임). 끝나면 `Emulation.clearDeviceMetricsOverride`.
+- 크기를 바꾼 상태의 `browser_take_screenshot`은 잘려 보일 수 있음 → `Page.captureScreenshot`(clip) 결과를 node로 `%TEMP%`에 png 저장해서 보기.
+- 스크립트 `el.click()`은 사람 클릭이 아님(사용자 동작 없음). 기록 · 팝업 관련 확인은 `browser_click`(실제 입력). 좌표 클릭(`browser_mouse_click_xy`)은 스크린샷 좌표 기준, 가로 · 세로 배율이 다를 수 있음.
+- 모달 바깥(스크림) 닫기는 pointer 이벤트(pointerdown/up) 기준 — mouse 이벤트만 보내면 안 닫힘.
+- 콘솔에서 `import('/src/…')`는 예전 모듈을 돌려줄 수 있음 → 주소 뒤에 `?v=숫자`.
+
 ---
 
 ## 15. Ops에 아직 없는 유용한 후보 (구현 X, 참고)
@@ -485,7 +508,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.11.08.213** (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.11.08.214** (푸터 `APP_VERSION` 확인)
 - 저장소 2개: 사이트 `appeal7712/senalink`(이 폴더) · 원본 에셋 `appeal7712/senalink-assets`(비공개, `asset/` 폴더 = 그 저장소, 브랜치 `main`). 새 컴퓨터 복구 = 사이트 clone → 그 안에 `git clone …/senalink-assets.git asset` → `.env.local`(Firebase 웹 설정 6줄, 콘솔 → 프로젝트 설정에서 복사) → `npm install` → `npx firebase login`.
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 

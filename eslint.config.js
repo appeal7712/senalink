@@ -17,5 +17,9 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      // `const { id: _omit, ...data } = obj` 처럼 나머지를 쓰려고 빼는 값 · `_` 로 시작하는 이름은 미사용 경고 제외
+      'no-unused-vars': ['error', { ignoreRestSiblings: true, varsIgnorePattern: '^_', argsIgnorePattern: '^_' }],
+    },
   },
 ])

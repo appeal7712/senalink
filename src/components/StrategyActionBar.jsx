@@ -10,6 +10,7 @@ export default function StrategyActionBar({
   secondaryActionLabel,
   onSecondaryAction,
   accentColor,
+  extra,
 }) {
   const accent = accentColor || 'var(--gold-primary)';
   return (
@@ -32,7 +33,11 @@ export default function StrategyActionBar({
           <div style={{ fontSize: '12px', color: '#fff', fontWeight: 700, marginTop: '3px' }}>{hint}</div>
         ) : null}
       </div>
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginLeft: 'auto' }}>
+      {extra ? <div className="strategy-action-extra">{extra}</div> : null}
+      <div
+        className={extra ? 'strategy-action-buttons' : undefined}
+        style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginLeft: extra ? undefined : 'auto' }}
+      >
         {secondaryActionLabel && onSecondaryAction && (
           <button
             type="button"

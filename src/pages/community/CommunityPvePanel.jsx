@@ -35,7 +35,6 @@ export default function CommunityPvePanel() {
   const [editing, setEditing] = useState(null);
   const [profileUid, setProfileUid] = useState(null);
 
-  const contents = communityContentsFor(mode);
   const canCreate = canCreateCommunityGuide({ isSuperAdmin, section: 'pve' });
 
   useEffect(() => {

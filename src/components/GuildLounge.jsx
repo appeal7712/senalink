@@ -14,8 +14,6 @@ import { pets } from '../data/pets';
 import { SKILL_RESERVE_ICON_SIZE } from '../lib/skillReserveIcon';
 import { SkillReservePlateIcon } from './icons/GameIconPlate';
 import Icon from './icons/Icon';
-import SafeImg from './icons/SafeImg';
-import AwakenMark from './AwakenMark';
 import HeroPortraitCard from './HeroPortraitCard';
 import HeroListFilterBar from './HeroListFilterBar';
 import { heroMatchesQuery } from '../lib/heroSearch';
@@ -218,13 +216,6 @@ const normalizeTotalwarDecks = (build = {}, count = 2) => {
 
 const resolvePetById = (petId) => pets.find(p => p.id === petId) || pets[0];
 
-const CARD_BG = {
-  old_seven:    'linear-gradient(180deg, #fde047 0%, #ca8a04 100%)',
-  special:      'linear-gradient(180deg, #facc15 0%, #ca8a04 100%)',
-  semi_special: 'linear-gradient(180deg, #facc15 0%, #d97706 100%)',
-  normal:       'linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%)',
-};
-
 const CONTENT_META = {
   siege:      { mode: 'pve', slotCount: 5 },
   expedition: { mode: 'pve', slotCount: 5 },
@@ -272,8 +263,6 @@ const expeditionThemeVars = (theme) => ({
   '--exp-soft': theme.soft,
   '--exp-border': theme.border,
 });
-
-const ROLE_LABEL = { master: '길드마스터', admin: '관리자', member: '길드원' };
 
 const EMPTY_ASSIGNMENTS = { taeho: [], yeonhee: [], kyle: [], karma: [] };
 
