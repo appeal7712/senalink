@@ -14,8 +14,6 @@ import { pets } from '../data/pets';
 import { sortHeroesForList } from '../data/heroes';
 import HeroListFilterBar from './HeroListFilterBar';
 import { heroMatchesQuery } from '../lib/heroSearch';
-import { gwDeckHitHeroes, gwDeckMatchesQuery } from '../lib/gwDeckSearch';
-import GwDeckSearch from './GwDeckSearch';
 import { backdropDismissProps } from '../utils/backdropDismiss';
 import { useUnsavedGuard } from '../utils/unsavedGuard';
 import { closeOverlayFromUI, collapseOverlayHistory, pushOverlay } from '../utils/overlayHistory';
@@ -59,11 +57,6 @@ const padSlots5 = (slots = []) => {
 };
 
 const resolvePet = (petId) => pets.find(p => p.id === petId) || pets[0];
-
-const defenseSearchDeck = (d) => ({
-  title: d?.title,
-  heroNames: (d?.heroSlots || []).map((s) => s?.primaryName).filter(Boolean),
-});
 
 /** 구버전 variants[] → 덱당 세팅 1개로 평탄화. */
 const flattenDefense = (d = {}) => {
@@ -418,22 +411,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
     if (nextEmpty !== -1 && next.filter(s => s?.primaryName).length < 3) setSlotIdx(nextEmpty);
   };
 
-  const [deckQuery, setDeckQuery] = useState('');
-  const isSearching = deckQuery.trim().length > 0;
-  /** idx = 전체 목록 순번(검색 중에도 「N번째」가 실제 배치 순서). 대체 덱만 맞으면 대체 덱 목록을 펼쳐 보여 줌. */
-  const visibleDefenses = useMemo(() => {
-    const rows = gwDefenses.map((raw, idx) => ({ raw, idx, altHits: [], selfHit: true }));
-    if (!isSearching) return rows;
-    return rows
-      .map((row) => {
-        const altHits = (row.raw?.altDecks || [])
-          .filter((a) => gwDeckMatchesQuery(defenseSearchDeck(a), deckQuery))
-          .map((a) => a.id);
-        const selfHit = gwDeckMatchesQuery(defenseSearchDeck(row.raw), deckQuery);
-        return selfHit || altHits.length ? { ...row, altHits, selfHit } : null;
-      })
-      .filter(Boolean);
-  }, [gwDefenses, deckQuery, isSearching]);
+  const sortedDefenses = gwDefenses;
 
   const clearDefenseDropHighlight = () => {
     document.querySelectorAll('.gw-defense-card.is-drop-target').forEach((el) => {
@@ -553,13 +531,13 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
     </button>
   );
 
-  const renderHeroes = (slots, hitNames = null) => (
-    <div className={`community-pvp-card-heroes${hitNames?.size ? ' has-search-hits' : ''}`}>
+  const renderHeroes = (slots) => (
+    <div className="community-pvp-card-heroes">
       {slots.filter(s => s.primaryName).map((s, i) => {
         const h = resolveHeroByName(s.primaryName);
         const label = String(s.primaryName).replace('(각성)', '').trim();
         return (
-          <div key={`${s.primaryName}-${i}`} className={`community-pvp-card-hero${hitNames?.has(s.primaryName) ? ' is-search-hit' : ''}`}>
+          <div key={`${s.primaryName}-${i}`} className="community-pvp-card-hero">
             <div className="community-pvp-card-hero-face">
               {h ? <HeroPortraitCard hero={h} showStars showRole showName={false} /> : null}
             </div>
@@ -637,7 +615,6 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
     onToggle,
     actions,
     dragHandle = null,
-    hitNames = null,
   }) => (
     <div
       className={`community-pvp-card-head${isOn ? ' is-on' : ''}`}
@@ -677,7 +654,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
         )}
         <div className="community-pvp-card-stage">
           <div className="community-pvp-card-heroes-row">
-            {renderHeroes(slots, hitNames)}
+            {renderHeroes(slots)}
           </div>
           <div className="community-pvp-card-meta">
             <ArenaDeckKindBadge kind={deckKind} />
@@ -692,7 +669,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
     </div>
   );
 
-  const renderAltLayer = (parent, altHits = []) => {
+  const renderAltLayer = (parent) => {
     const alts = Array.isArray(parent.altDecks) ? parent.altDecks : [];
     return (
       <div className="gw-alt-layer" onClick={e => e.stopPropagation()}>
@@ -715,14 +692,13 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
           const mode = a.mode === '내실' ? '내실' : '속공';
           const speedText = formatSpeedBadge(a);
           return (
-            <div key={a.id} className={`luxury-panel community-pvp-card gw-alt-card${isAltOn ? ' is-expanded' : ''}${altHits.includes(a.id) ? ' is-search-hit' : ''}`}>
+            <div key={a.id} className={`luxury-panel community-pvp-card gw-alt-card${isAltOn ? ' is-expanded' : ''}`}>
               {renderPvpStyleHead({
                 slots,
                 mode,
                 deckKind: a.deckKind,
                 tier: a.tier,
                 speedText,
-                hitNames: isSearching ? gwDeckHitHeroes(defenseSearchDeck(a), deckQuery) : null,
                 isOn: isAltOn,
                 onToggle: () => setExpandedAltId(isAltOn ? null : a.id),
                 actions: (
@@ -748,11 +724,10 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
     );
   };
 
-  const renderDefenseCard = ({ raw, idx, altHits, selfHit }) => {
+  const renderDefenseCard = (raw, idx) => {
     const d = flattenDefense(raw);
     const isExpanded = expandedId === d.id;
     const altsOpen = altsOpenId === d.id;
-    const altsAutoOpen = !selfHit && altHits.length > 0;
     const slots = padSlots5(d.heroSlots);
     const mode = d.mode === '내실' ? '내실' : '속공';
     const speedText = formatSpeedBadge(d);
@@ -787,7 +762,6 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
           tier: d.tier,
           speedText,
           isOn: isExpanded,
-          hitNames: isSearching ? gwDeckHitHeroes(defenseSearchDeck(d), deckQuery) : null,
           dragHandle: renderDefenseDragHandle(raw, idx),
           onToggle: () => {
             if (isExpanded) {
@@ -802,8 +776,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
             <>
               <button
                 type="button"
-                className={`gw-defense-alt-btn${altsOpen ? ' is-on' : ''}${altHits.length > 0 ? ' is-search-hit' : ''}`}
-                title={altHits.length > 0 ? `대체 덱 ${altHits.length}개가 검색과 맞아요` : undefined}
+                className={`gw-defense-alt-btn${altsOpen ? ' is-on' : ''}`}
                 onClick={() => {
                   if (!isExpanded) setExpandedId(d.id);
                   const nextOpen = !(altsOpen && isExpanded);
@@ -828,7 +801,7 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
         })}
 
         {isExpanded && renderExpandedBody(d)}
-        {((isExpanded && altsOpen) || altsAutoOpen) && renderAltLayer(d, altHits)}
+        {isExpanded && altsOpen && renderAltLayer(d)}
       </div>
     );
   };
@@ -855,27 +828,14 @@ export default function GuildWarDefensePanel({ gwDefenses, setGwDefenses, guildR
         hint="왼쪽 그립으로 배치 순서 · 대체 덱 · 속공/내실"
         actionLabel="방어덱 추가"
         onAction={openCreate}
-        extra={gwDefenses.length > 0 ? (
-          <GwDeckSearch
-            value={deckQuery}
-            onChange={setDeckQuery}
-            placeholder="덱 검색 (예: 윤동목)"
-            ariaLabel="방어 덱 검색"
-            title="영웅 이름 글자로 찾기 · 순서 무관 (예: 윤동목, 목동윤, ㅇㄷㅁ)"
-            className="gw-deck-search--ally"
-          />
-        ) : null}
       />
 
       {gwDefenses.length === 0 && (
         <div className="luxury-panel" style={{ padding: '40px', textAlign: 'center', color: '#fff', fontWeight: 700 }}>등록된 방어 공략이 없습니다. 위 「방어덱 추가」로 등록해 보세요.</div>
       )}
-      {isSearching && visibleDefenses.length === 0 && (
-        <div className="luxury-panel gw-defense-search-empty">「{deckQuery.trim()}」과 맞는 방어 덱이 없습니다.</div>
-      )}
 
       <div className="gw-defense-grid gw-defense-grid--stack">
-        {visibleDefenses.map((row) => renderDefenseCard(row))}
+        {sortedDefenses.map((raw, idx) => renderDefenseCard(raw, idx))}
       </div>
 
       {dragGhost && createPortal(

@@ -1,6 +1,6 @@
 import Icon from './icons/Icon';
 
-/** 길드전 덱 목록 검색칸 (공격 · 방어 공용). 매칭은 lib/gwDeckSearch.js `gwDeckMatchesQuery`. */
+/** 길드전 공격 상대 덱 목록 검색칸. 매칭은 lib/gwDeckSearch.js `gwDeckMatchesQuery`. */
 export default function GwDeckSearch({ value, onChange, placeholder, ariaLabel, title, className = '' }) {
   const active = value.trim().length > 0;
   return (

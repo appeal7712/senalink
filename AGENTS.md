@@ -402,7 +402,7 @@ App
 └── SiteFooter (버전)
 ```
 
-덱/장비 UI 공통: `InGameDeckCard`(세팅 확인 창 내용은 `SettingOverviewModal` · 진형 그리기 `deckFormation.jsx`), `HeroGearPanel`, `HeroGridPicker`, `HeroPortraitCard`, `equipments.js` 옵션. 길드전 덱 검색칸 `GwDeckSearch` + 판정 `lib/gwDeckSearch.js`(공격 · 방어 공용, features.md §10.2).
+덱/장비 UI 공통: `InGameDeckCard`(세팅 확인 창 내용은 `SettingOverviewModal` · 진형 그리기 `deckFormation.jsx`), `HeroGearPanel`, `HeroGridPicker`, `HeroPortraitCard`, `equipments.js` 옵션. 길드전 공격 상대 덱 검색칸 `GwDeckSearch` + 판정 `lib/gwDeckSearch.js`(features.md §10.2).
 
 ### 12.1 영웅 목록 정렬 (전역 공통 규칙)
 
@@ -508,7 +508,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.11.08.214** (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.11.08.215** (푸터 `APP_VERSION` 확인)
 - 저장소 2개: 사이트 `appeal7712/senalink`(이 폴더) · 원본 에셋 `appeal7712/senalink-assets`(비공개, `asset/` 폴더 = 그 저장소, 브랜치 `main`). 새 컴퓨터 복구 = 사이트 clone → 그 안에 `git clone …/senalink-assets.git asset` → `.env.local`(Firebase 웹 설정 6줄, 콘솔 → 프로젝트 설정에서 복사) → `npm install` → `npx firebase login`.
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 

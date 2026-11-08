@@ -5938,53 +5938,6 @@ h1, h2, h3 {
   color: #fecaca;
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.35);
 }
-/* 길드전 방어 덱 검색 — StrategyActionBar 제목과 「방어덱 추가」 사이 (같은 검색칸, 아군 하늘색) */
-.strategy-action-extra {
-  flex: 1 1 160px;
-  min-width: 0;
-  max-width: 260px;
-  margin-left: auto;
-  display: flex;
-}
-.strategy-action-extra .gw-attack-search {
-  flex: 1 1 auto;
-  max-width: none;
-  margin-left: 0;
-}
-.strategy-action-extra + .strategy-action-buttons {
-  margin-left: 0;
-}
-.gw-attack-search.gw-deck-search--ally:focus-within,
-.gw-attack-search.gw-deck-search--ally.is-active {
-  border-color: rgba(56, 189, 248, 0.55);
-  color: #7dd3fc;
-}
-.gw-defense-search-empty {
-  padding: 28px 16px;
-  text-align: center;
-  font-size: 13px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.75);
-}
-.gw-alt-card.is-search-hit {
-  border-color: rgba(56, 189, 248, 0.55);
-}
-/* 3D 버튼 그림자를 건드리지 않게 테두리 대신 outline */
-.gw-defense-card .gw-defense-alt-btn.is-search-hit:not(.gw-attack-alt-btn) {
-  outline: 2px solid rgba(56, 189, 248, 0.85);
-  outline-offset: 2px;
-}
-@media (max-width: 640px) {
-  .strategy-action-extra {
-    flex: 1 0 100%;
-    max-width: none;
-    margin-left: 0;
-    order: 3;
-  }
-  .strategy-action-extra + .strategy-action-buttons {
-    margin-left: auto;
-  }
-}
 /* 상대 덱 목록 스크롤 영역 — 중간 박스 없이 바깥 패널 안에 카드만 */
 .gw-attack-list-body {
   display: flex;
@@ -6007,9 +5960,8 @@ h1, h2, h3 {
   flex-shrink: 0;
   overflow: hidden;
 }
-/* 덱 검색: 검색 글자에 맞은 영웅만 또렷하게, 나머지는 흐리게 (공격 목록 · 방어 카드 공통) */
-.gw-mini-trio.has-search-hits .gw-mini-trio-slot:not(.is-search-hit),
-.community-pvp-card-heroes.has-search-hits .community-pvp-card-hero:not(.is-search-hit) {
+/* 상대 덱 검색: 검색 글자에 맞은 영웅만 또렷하게, 나머지는 흐리게 */
+.gw-mini-trio.has-search-hits .gw-mini-trio-slot:not(.is-search-hit) {
   opacity: 0.38;
   filter: grayscale(0.7);
   transition: opacity 0.15s ease, filter 0.15s ease;
