@@ -140,12 +140,76 @@ function applyImageDataCache(cloneRoot) {
  * 화면에 이미 뜬 초상 카드를 캔버스로 합성 → 캡처 클론은 단일 img로 교체.
  * (모바일 WebKit이 absolute 마스크 레이어를 빈 칸으로 그리는 문제 해결)
  */
+/** 합성 캐시 키 — 같은 영웅이라도 이름칸 크롭 · 별 · 역할 유무가 다르면 다른 그림 */
+function portraitCompositeKey(card, fallback) {
+  const icon = card.querySelector('img.hero-portrait-card-icon, .hero-portrait-card-mask img');
+  const crop = card.classList.contains('hero-portrait-card--crop-name') ? 'c' : 'f';
+  const star = card.querySelector('img.hero-portrait-card-star') ? 's' : '';
+  const role = card.querySelector('img.hero-portrait-card-role') ? 'r' : '';
+  return `${imgSourceKey(icon) || fallback}|${crop}${star}${role}`;
+}
+
+/** 화면에 보이는 카드 상자 · 레이어 위치 그대로 합성 (이름칸 크롭 · 별 · 역할 위치가 화면과 같게) */
+function compositePortraitFromLayout(card, bg, icon) {
+  const box = card.getBoundingClientRect();
+  if (!box.width || !box.height) return null;
+  const maxSide = 160;
+  const scale = maxSide / Math.max(box.width, box.height);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(box.width * scale));
+  canvas.height = Math.max(1, Math.round(box.height * scale));
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  const rectOf = (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: (r.left - box.left) * scale, y: (r.top - box.top) * scale, w: r.width * scale, h: r.height * scale };
+  };
+
+  const b = rectOf(bg);
+  ctx.drawImage(bg, b.x, b.y, b.w, b.h);
+
+  const maskEl = card.querySelector('.hero-portrait-card-mask') || icon;
+  const m = rectOf(maskEl);
+  ctx.save();
+  ctx.beginPath();
+  const r = Math.min(m.w, m.h) * 0.12;
+  ctx.moveTo(m.x + r, m.y);
+  ctx.arcTo(m.x + m.w, m.y, m.x + m.w, m.y + m.h, r);
+  ctx.arcTo(m.x + m.w, m.y + m.h, m.x, m.y + m.h, r);
+  ctx.arcTo(m.x, m.y + m.h, m.x, m.y, r);
+  ctx.arcTo(m.x, m.y, m.x + m.w, m.y, r);
+  ctx.closePath();
+  ctx.clip();
+  // object-fit: cover · object-position: top
+  const fit = Math.max(m.w / icon.naturalWidth, m.h / icon.naturalHeight);
+  const iw = icon.naturalWidth * fit;
+  const ih = icon.naturalHeight * fit;
+  ctx.drawImage(icon, m.x + (m.w - iw) / 2, m.y, iw, ih);
+  ctx.restore();
+
+  ['img.hero-portrait-card-badge', 'img.hero-portrait-card-role', 'img.hero-portrait-card-star'].forEach((sel) => {
+    const el = card.querySelector(sel);
+    if (!(el instanceof HTMLImageElement) || !el.naturalWidth) return;
+    const p = rectOf(el);
+    if (p.w && p.h) ctx.drawImage(el, p.x, p.y, p.w, p.h);
+  });
+
+  return canvas.toDataURL('image/png');
+}
+
 function compositePortraitCard(card) {
   if (!(card instanceof HTMLElement)) return null;
   const bg = card.querySelector('img.hero-portrait-card-bg');
   const icon = card.querySelector('img.hero-portrait-card-icon, .hero-portrait-card-mask img');
   if (!(bg instanceof HTMLImageElement) || !(icon instanceof HTMLImageElement)) return null;
   if (!bg.naturalWidth || !icon.naturalWidth) return null;
+
+  try {
+    const fromLayout = compositePortraitFromLayout(card, bg, icon);
+    if (fromLayout) return fromLayout;
+  } catch {
+    /* 화면 배치를 못 읽으면 아래 고정 비율 합성 */
+  }
 
   try {
     const maxSide = 160;
@@ -196,6 +260,18 @@ function compositePortraitCard(card) {
       ctx.drawImage(star, (w - sw) / 2, h * 0.62, sw, sh);
     }
 
+    // 덱용 크롭 카드(162:154)는 아래 이름 검정칸을 잘라서 내보냄
+    if (card.classList.contains('hero-portrait-card--crop-name')) {
+      const cropped = document.createElement('canvas');
+      cropped.width = w;
+      cropped.height = Math.max(1, Math.round(w * (154 / 162)));
+      const cctx = cropped.getContext('2d');
+      if (cctx) {
+        cctx.drawImage(canvas, 0, 0);
+        return cropped.toDataURL('image/png');
+      }
+    }
+
     return canvas.toDataURL('image/png');
   } catch {
     return null;
@@ -208,7 +284,9 @@ async function warmPortraitComposites(sourceRoot) {
     const icon = card.querySelector('img.hero-portrait-card-icon, .hero-portrait-card-mask img');
     const bg = card.querySelector('img.hero-portrait-card-bg');
     await Promise.all([whenImageReady(icon), whenImageReady(bg)]);
-    const key = imgSourceKey(icon) || `card-${cards.indexOf(card)}`;
+    // 숨겨진 카드(폰 전용 --top 등)는 배치를 못 읽어 다른 모양으로 합성됨 → 캐시에 넣지 않음
+    if (!card.offsetWidth) return;
+    const key = portraitCompositeKey(card, `card-${cards.indexOf(card)}`);
     if (portraitCompositeCache.has(key)) return;
     const dataUrl = compositePortraitCard(card);
     if (dataUrl) portraitCompositeCache.set(key, dataUrl);
@@ -221,19 +299,23 @@ function replacePortraitsWithComposites(sourceRoot, cloneRoot) {
   dstCards.forEach((dst, i) => {
     const src = srcCards[i];
     if (!src || !(dst instanceof HTMLElement)) return;
-    const icon = src.querySelector('img.hero-portrait-card-icon, .hero-portrait-card-mask img');
-    const key = imgSourceKey(icon) || `card-${i}`;
+    const key = portraitCompositeKey(src, `card-${i}`);
     let dataUrl = portraitCompositeCache.get(key);
-    if (!dataUrl) {
+    // 화면에서 숨겨진 카드(폰 전용 / PC 전용 배치 칸)는 직접 합성하지 않고, 같은 영웅 · 같은 모양 카드의 합성본만 씀
+    if (!dataUrl && src.offsetWidth) {
       dataUrl = compositePortraitCard(src);
       if (dataUrl) portraitCompositeCache.set(key, dataUrl);
     }
     if (!dataUrl) return;
 
-    const widthPx = src.offsetWidth || dst.offsetWidth || 48;
     dst.replaceChildren();
     dst.className = 'hero-portrait-card hero-portrait-card--capture-flat';
-    dst.style.width = `${widthPx}px`;
+    // 화면 폭(폰)에서 잰 px를 박으면 PC 배치 캡처에서 초상이 작아짐 → 카드에 직접 준 폭(width prop)이 있을 때만 유지, 아니면 칸을 채움
+    dst.style.width = src.style.width || '100%';
+    // 크롭 클래스를 뗀 뒤 남는 `.hero-portrait-card:not(--crop-name) { aspect-ratio: 162/202 }` 때문에 틀만 길어지면
+    // 초상 아래 빈칸 → 배치 칸에서 영웅 간격이 벌어지고 4칸 줄은 잘림. 높이는 합성 그림 비율을 따름
+    dst.style.aspectRatio = 'auto';
+    dst.style.height = 'auto';
     dst.style.display = 'block';
     dst.style.flexShrink = '0';
     const img = document.createElement('img');

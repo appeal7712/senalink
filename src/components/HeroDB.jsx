@@ -58,7 +58,8 @@ export default function HeroDB() {
     const q = searchTerm.toLowerCase().trim();
     if (q) return h.name.toLowerCase().includes(q) || (h.title || '').toLowerCase().includes(q);
     const matchesCategory = h.category === activeTab;
-    const matchesFaction  = h.group === activeFaction;
+    // 소속을 다시 눌러 풀면(null) 대분류 안 전체
+    const matchesFaction  = !activeFaction || h.group === activeFaction;
     const role            = h.role || h.type || 'offensive';
     const matchesRole     = activeRoleFilter === 'all' ? true : role === activeRoleFilter;
     return matchesCategory && matchesFaction && matchesRole;
@@ -88,6 +89,34 @@ export default function HeroDB() {
 
   const selectedSkill = selectedHero?.skills?.[activeSkillIdx] || selectedHero?.skills?.[0] || null;
   const skillGrid = layoutSkills(selectedHero?.skills || []);
+
+  /** 역할군 필터 — PC는 도감 칸 위(top), 한 줄로 쌓이는 화면(≤980)은 소속(카테고리) 아래(stack) */
+  const renderRoleFilter = (placement) => (
+    <div
+      className={`luxury-panel dex-hero-roles dex-hero-roles--${placement}`}
+      style={{ padding: '12px 24px', marginBottom: placement === 'top' ? '20px' : 0, display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}
+    >
+      <span style={{ fontSize: '13px', fontWeight: 900, color: 'var(--gold-primary)', marginRight: '6px' }}>역할군 속성:</span>
+      {[
+        { id: 'all',       label: '전체' },
+        { id: 'offensive', label: '공격형' },
+        { id: 'magic',     label: '마법형' },
+        { id: 'defensive', label: '방어형' },
+        { id: 'support',   label: '지원형' },
+        { id: 'universal', label: '만능형' },
+      ].map(role => {
+        const isActive = activeRoleFilter === role.id;
+        return (
+          <button key={role.id} onClick={() => setActiveRoleFilter(isActive ? 'all' : role.id)}
+            className={`nav-tab-btn${isActive ? ' active' : ''}`}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {role.id !== 'all' && <img src={ROLE_ICON[role.id]} alt="" style={{ width: '16px', height: '16px' }} />}
+            {role.label}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   return (
     <div className="container fade-in dex-hero-page" style={{ padding: '16px 24px 60px' }}>
@@ -127,27 +156,7 @@ export default function HeroDB() {
       </div>
 
       {/* 2. 역할군 공용 아이콘 필터 */}
-      <div className="luxury-panel dex-hero-roles" style={{ padding: '12px 24px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '13px', fontWeight: 900, color: 'var(--gold-primary)', marginRight: '6px' }}>역할군 속성:</span>
-        {[
-          { id: 'all',       label: '전체' },
-          { id: 'offensive', label: '공격형' },
-          { id: 'magic',     label: '마법형' },
-          { id: 'defensive', label: '방어형' },
-          { id: 'support',   label: '지원형' },
-          { id: 'universal', label: '만능형' },
-        ].map(role => {
-          const isActive = activeRoleFilter === role.id;
-          return (
-            <button key={role.id} onClick={() => setActiveRoleFilter(role.id)}
-              className={`nav-tab-btn${isActive ? ' active' : ''}`}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              {role.id !== 'all' && <img src={ROLE_ICON[role.id]} alt="" style={{ width: '16px', height: '16px' }} />}
-              {role.label}
-            </button>
-          );
-        })}
-      </div>
+      {renderRoleFilter('top')}
 
       {/* 3. 파노라마 3열 도감 뷰포트 (영웅 수량 뱃지 100% 삭제!) */}
       <div className="hero-db-grid">
@@ -160,7 +169,7 @@ export default function HeroDB() {
           {tabFactions[activeTab]?.map(faction => {
             const isActive = activeFaction === faction;
             return (
-              <button key={faction} className="hero-db-faction-btn" onClick={() => { setActiveFaction(faction); setSearchTerm(''); }}
+              <button key={faction} className="hero-db-faction-btn" onClick={() => { setActiveFaction(isActive ? null : faction); setSearchTerm(''); }}
                 style={{
                   textAlign: 'left', padding: '12px 14px', fontSize: '14px', fontWeight: 800,
                   borderRadius: '8px', cursor: 'pointer', transition: 'all 0.18s ease',
@@ -174,6 +183,8 @@ export default function HeroDB() {
             );
           })}
         </div>
+
+        {renderRoleFilter('stack')}
 
         {/* Col 2: 영웅 목록 — 카드 비율 유지, 칸이 모자라면 내부 스크롤 */}
         <div className="luxury-panel hero-db-list" style={{ padding: '18px 16px' }}>

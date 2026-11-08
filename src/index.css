@@ -4795,6 +4795,14 @@ h1, h2, h3 {
   height: auto !important;
   box-sizing: border-box !important;
 }
+/* 폰(≤980)의 `.glass-modal { max-height: 92vh; max-width: 100vw-20 } !important`보다 우선 — 없으면 폰에서 공유한 PNG가 창 높이에서 잘림 */
+.setting-capture-host .setting-capture-pc {
+  width: 980px !important;
+  min-width: 980px !important;
+  max-width: 980px !important;
+  max-height: none !important;
+  height: auto !important;
+}
 .setting-capture-pc .setting-overview-body {
   max-height: none !important;
   overflow: visible !important;
@@ -4957,10 +4965,12 @@ h1, h2, h3 {
   gap: 12px;
 }
 
+/* 펫은 영웅 초상의 92% (세팅 확인 배치 칸 공통 — 5인 · 길드전 · 폰) */
 .setting-overview-deck-pet {
-  width: clamp(44px, min(18cqh, 26cqw), 60px);
-  height: clamp(44px, min(18cqh, 26cqw), 60px);
-  border-radius: 11px;
+  width: calc(clamp(44px, min(18cqh, 26cqw), 60px) * 0.92);
+  height: auto;
+  aspect-ratio: 162 / 154;
+  border-radius: 9px;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -4979,6 +4989,417 @@ h1, h2, h3 {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* ── 세팅 확인 · 배치 · 펫 칸 ─────────────────────────────────────────
+   5인: .setting-overview-deck (PC는 장비 그리드 마지막 칸 --grid, ≤1100은 본문 맨 위 --top)
+   길드전(3인): .setting-overview-trio-deck — 스킬 예약 옆 (공격 카운터는 상대 덱 카드도, 방어는 한 장 .is-solo)
+   옆 칸(.setting-overview-deck-side): 펫 = 영웅 초상과 같은 폭 · 비율, 진형은 아이콘만 (이름 글자 없음)
+   5인: 장비 1열(≤560 스마트폰)일 때만 배치 · 펫이 속공 순서 · 스킬 예약보다 위. 2열 이상이면 원래 자리.
+   길드전: ≤760 스킬 예약 위(공격 두 장은 ≤1100부터 — 옆에 안 들어감). 공유 PNG(.setting-capture-pc)는 PC 배치 */
+.setting-overview-deck-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+/* 길드전 상대 덱 진형 아이콘이 펫보다 넓으면 옆 칸이 밀리지 않게 */
+.setting-overview-trio-deck .setting-overview-deck-side {
+  min-width: var(--gw-slot);
+}
+.setting-overview-deck-side-formation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.setting-overview-deck--top {
+  display: none;
+}
+
+.setting-overview-trio-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: stretch;
+}
+.setting-overview-trio-top > .setting-overview-section {
+  min-width: 0;
+}
+.setting-overview-trio-decks {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  min-width: 0;
+}
+.setting-overview-trio-deck {
+  /* 초상 · 펫 폭과 간격 — 화면 폭별로 이 값만 바꿈 */
+  --gw-slot: 50px;
+  --gw-gap: 10px;
+  --gw-col-gap: 4px;
+  width: 190px;
+  min-width: 0;
+  box-sizing: border-box;
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+.setting-overview-trio-deck.is-solo {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+}
+
+/* 길드전 공격 — 내 덱(파랑) · 상대 덱(빨강) 카드와 메모 칸 공통 톤.
+   색 테두리 대신 유리 테두리 + 윗변 가운데만 빛나는 1px 선 + 모서리에서 번지는 옅은 빛 (상대는 반대 모서리 — 좌우 반전) */
+.setting-overview-trio-deck:not(.is-solo),
+.setting-overview-memo-box {
+  --gw-tone: 56, 189, 248;
+  --gw-tone-text: #9bd8f5;
+  --gw-glow-at: 0% 0%;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(130% 85% at var(--gw-glow-at), rgba(var(--gw-tone), 0.11), transparent 62%),
+    var(--glass-inset);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.setting-overview-trio-deck.is-enemy,
+.setting-overview-memo-box.is-enemy {
+  --gw-tone: 248, 113, 113;
+  --gw-tone-text: #f4b0b0;
+  --gw-glow-at: 100% 0%;
+}
+.setting-overview-trio-deck:not(.is-solo)::before,
+.setting-overview-memo-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 14%;
+  right: 14%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(var(--gw-tone), 0.7), transparent);
+  pointer-events: none;
+}
+/* 상대 덱은 인게임처럼 좌우 반전 — 펫 · 진형 | 앞줄 | 뒷줄 (앞줄이 왼쪽 내 덱 앞줄과 마주 봄). 초상 그림은 안 뒤집음 */
+.setting-overview-trio-deck.is-enemy .setting-overview-trio-deck-stage,
+.setting-overview-trio-deck.is-enemy .deck-stage-rows {
+  flex-direction: row-reverse;
+}
+.setting-overview-trio-deck-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+/* 제목: 꽉 찬 알약 대신 작은 빛 점 + 톤 글자 */
+.setting-overview-trio-deck-kicker {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  color: var(--gw-tone-text, #9bd8f5);
+}
+.setting-overview-trio-deck-kicker::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgb(var(--gw-tone, 56, 189, 248));
+  box-shadow: 0 0 6px rgba(var(--gw-tone, 56, 189, 248), 0.9);
+  flex-shrink: 0;
+}
+.setting-overview-trio-deck-title {
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 900;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.setting-overview-trio-deck-stage {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gw-gap);
+  min-height: 0;
+}
+/* 높이 auto — 짧은 줄(보호 진형 뒷줄 1명 등)이 긴 줄 가운데에 오게 */
+.setting-overview-trio-deck .deck-stage-formation {
+  min-width: 0;
+  height: auto;
+}
+.setting-overview-trio-deck .deck-stage-rows {
+  gap: var(--gw-gap);
+  height: auto;
+}
+.setting-overview-trio-deck .deck-stage-col {
+  gap: var(--gw-col-gap);
+  height: auto;
+}
+.setting-overview-trio-deck .deck-hero-slot,
+.setting-overview-trio-deck .deck-hero-slot-face {
+  width: var(--gw-slot);
+}
+.setting-overview-trio-deck-pet {
+  width: calc(var(--gw-slot) * 0.92);
+}
+.setting-overview-trio-deck .deck-hero-slot-face {
+  border-radius: 0;
+}
+/* 길드전은 5칸 중 2칸이 비어 있음 — 진형 모양만 보이게 옅게 */
+.setting-overview-trio-deck .deck-hero-slot-face:empty {
+  background: rgba(255, 255, 255, 0.025) !important;
+  border: 1px dashed rgba(255, 255, 255, 0.14) !important;
+  border-radius: 6px;
+}
+.setting-overview-trio-deck-pet {
+  height: auto;
+  aspect-ratio: 162 / 154;
+  border-radius: 9px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.setting-overview-trio-deck-pet img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 창이 760px로 줄면(≤1100) 길드전 공격 카드 두 장은 스킬 예약 옆에 안 들어감 → 스킬 예약 위 한 줄 */
+@media (max-width: 1100px) {
+  .setting-overview-trio-top.has-enemy {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .setting-overview-trio-top.has-enemy .setting-overview-trio-decks {
+    order: -1;
+  }
+  .setting-overview-trio-top.has-enemy .setting-overview-trio-deck {
+    --gw-slot: 60px;
+    --gw-gap: 12px;
+    --gw-col-gap: 6px;
+    flex: 1 1 0;
+    width: auto;
+  }
+}
+
+/* 5인: 장비가 1열인 스마트폰(≤560)만 배치 · 펫을 맨 위로. 2열 이상이면 원래 자리 — 빈칸 안 생기게 */
+@media (max-width: 560px) {
+  .setting-overview-deck--top {
+    display: flex;
+    flex-shrink: 0;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    container-type: normal;
+  }
+  .setting-overview-deck--grid {
+    display: none;
+  }
+  .setting-overview-deck--top .deck-stage {
+    flex: 0 0 auto;
+    min-height: 0;
+    overflow: visible;
+  }
+  .setting-overview-deck--top .deck-stage-formation,
+  .setting-overview-deck--top .deck-stage-rows,
+  .setting-overview-deck--top .deck-stage-col {
+    height: auto;
+  }
+  .setting-overview-deck--top .deck-hero-slot,
+  .setting-overview-deck--top .deck-hero-slot-face {
+    width: clamp(48px, 17vw, 62px);
+  }
+  .setting-overview-deck--top .setting-overview-deck-pet {
+    width: calc(clamp(48px, 17vw, 62px) * 0.92);
+  }
+}
+
+/* 길드전(≤760): 스킬 예약 옆에 카드가 안 들어감 → 카드(공격 두 장 · 방어 한 장)를 스킬 예약 위 한 줄로 */
+@media (max-width: 760px) {
+  .setting-overview-trio-top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .setting-overview-trio-decks {
+    order: -1;
+  }
+  .setting-overview-trio-top .setting-overview-trio-deck {
+    flex: 1 1 0;
+    width: auto;
+  }
+  /* 공격 두 장: 폭 따라 38px(390 폰)~60px — 두 장이 나란히 들어가게 */
+  .setting-overview-trio-top.has-enemy .setting-overview-trio-deck {
+    --gw-slot: clamp(38px, 10vw, 60px);
+    --gw-gap: clamp(6px, 1.6vw, 12px);
+    --gw-col-gap: 4px;
+    padding: 8px 6px;
+  }
+  /* 방어 한 장은 5인 배치 · 펫 칸(--top)과 같은 크기 */
+  .setting-overview-trio-top .setting-overview-trio-deck.is-solo {
+    --gw-slot: clamp(48px, 17vw, 62px);
+    --gw-gap: 12px;
+    --gw-col-gap: 7px;
+    padding: 8px;
+  }
+}
+
+/* 길드전 방어(한 장 · 영웅 3명): 장비 2열 화면(561~1100)에선 스킬 예약 옆 대신 장비 그리드 4번째 칸 — 2×2 빈칸 없이 */
+.setting-overview-trio-deck--grid {
+  display: none;
+}
+@media (min-width: 561px) and (max-width: 1100px) {
+  .setting-overview-trio-top.has-grid-deck {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .setting-overview-trio-top.has-grid-deck .setting-overview-trio-decks {
+    display: none;
+  }
+  .setting-overview-trio-deck--grid {
+    --gw-slot: 60px;
+    --gw-gap: 12px;
+    --gw-col-gap: 7px;
+    display: flex;
+    width: auto;
+    height: 100%;
+    padding: 8px;
+  }
+}
+
+/* 길드전 공격 메모: 「내 공격 덱 · 기타 디테일」(파랑) | 「상대 덱 · 특이사항」(빨강) — 배치 카드와 같은 색.
+   메모 줄(PC)은 좌우 두 칸, 장비 그리드 메모 칸 · 폰은 위아래 */
+.setting-overview-memo-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.setting-overview-memo-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+.setting-overview-memo-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+.setting-overview-memo-title {
+  font-size: 12.5px;
+  font-weight: 900;
+  color: #fff;
+  white-space: nowrap;
+}
+.setting-overview-memo-text {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #e2e8f0;
+  white-space: pre-line;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.setting-overview-memo-text .is-empty {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.setting-overview-notes-cell .setting-overview-memo-split {
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: minmax(0, 1fr);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+@media (max-width: 560px) {
+  .setting-overview-memo-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.setting-capture-pc .setting-overview-memo-split {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+/* 길드전 공격 · 영웅 3명: 장비 2열 화면(561~1100)에선 메모(기타 디테일 + 상대 덱 특이사항)를 장비 그리드 빈 4번째 칸에 */
+.setting-overview-notes-cell {
+  display: none;
+}
+@media (min-width: 561px) and (max-width: 1100px) {
+  .setting-overview-notes-section--has-cell {
+    display: none;
+  }
+  .setting-overview-notes-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid var(--border-subtle);
+  }
+  .setting-overview-notes-cell-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+.setting-capture-pc .setting-overview-notes-cell {
+  display: none !important;
+}
+.setting-capture-pc .setting-overview-notes-section--has-cell {
+  display: flex !important;
+}
+
+.setting-capture-pc .setting-overview-trio-deck--grid {
+  display: none !important;
+}
+.setting-capture-pc .setting-overview-trio-top.has-grid-deck .setting-overview-trio-decks {
+  display: flex !important;
+}
+.setting-capture-pc .setting-overview-trio-top {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+}
+.setting-capture-pc .setting-overview-trio-decks {
+  order: 0 !important;
+}
+.setting-capture-pc .setting-overview-trio-deck {
+  --gw-slot: 50px !important;
+  --gw-gap: 10px !important;
+  --gw-col-gap: 4px !important;
+  width: 190px !important;
+  flex: 0 0 auto !important;
+  padding: 8px 10px !important;
+}
+.setting-capture-pc .setting-overview-deck--top {
+  display: none !important;
+}
+.setting-capture-pc .setting-overview-deck--grid {
+  display: flex !important;
 }
 
 .gear-block-compact {
@@ -5074,15 +5495,6 @@ h1, h2, h3 {
 }
 
 @media (max-width: 760px) {
-  .gear-overview-grid--1,
-  .gear-overview-grid--2,
-  .gear-overview-grid--3,
-  .gear-overview-grid--4,
-  .gear-overview-grid--5,
-  .gear-overview-grid--6 {
-    grid-template-columns: 1fr;
-  }
-
   /* 세팅 확인 모바일: 헤더 가운데 (덱이름은 세팅 확인 옆) */
   .setting-overview-head {
     display: grid;
@@ -5167,6 +5579,18 @@ h1, h2, h3 {
     min-height: 3.2em;
     max-height: 5.2em;
   }
+}
+
+/* 세팅 확인 장비 1열은 스마트폰(≤560)만. 2열은 카드 폭 230px+ 부터 글자 안 잘림(560에서 측정) — 그 위는 2열 */
+@media (max-width: 560px) {
+  .gear-overview-grid--1,
+  .gear-overview-grid--2,
+  .gear-overview-grid--3,
+  .gear-overview-grid--4,
+  .gear-overview-grid--5,
+  .gear-overview-grid--6 {
+    grid-template-columns: 1fr;
+  }
 
   /* 1열에선 카드/배치칸이 행 높이에 묶이지 않게 — 배치·펫 잘림 방지 */
   .gear-overview-grid > div {
@@ -5200,8 +5624,7 @@ h1, h2, h3 {
   }
 
   .setting-overview-deck-pet {
-    width: clamp(48px, 17vw, 62px);
-    height: clamp(48px, 17vw, 62px);
+    width: calc(clamp(48px, 17vw, 62px) * 0.92);
   }
 }
 
@@ -6430,6 +6853,76 @@ h1, h2, h3 {
   width: auto;
   flex-shrink: 0;
   white-space: nowrap;
+}
+.gw-attack-list-head .gw-attack-list-head-copy {
+  flex: 0 1 auto;
+}
+/* 상대 덱 검색 — 제목과 「상대 덱 추가」 사이 */
+.gw-attack-search {
+  flex: 1 1 140px;
+  min-width: 0;
+  max-width: 240px;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 8px 0 11px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: text;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.gw-attack-search:focus-within,
+.gw-attack-search.is-active {
+  border-color: rgba(248, 113, 113, 0.55);
+  background: rgba(255, 255, 255, 0.10);
+  color: #fca5a5;
+}
+.gw-attack-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 800;
+  font-family: inherit;
+}
+.gw-attack-search input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 700;
+}
+.gw-attack-search input::-webkit-search-cancel-button {
+  display: none;
+}
+.gw-attack-search-clear {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.gw-attack-target-row.is-search-hit:not(.is-on) {
+  box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.45);
+}
+.gw-attack-alt-btn.is-search-hit:not(.is-on) {
+  border-color: rgba(248, 113, 113, 0.7);
+  color: #fecaca;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.35);
 }
 /* 상대 덱 목록 스크롤 영역 — 중간 박스 없이 바깥 패널 안에 카드만 */
 .gw-attack-list-body {
@@ -10544,6 +11037,13 @@ h1, h2, h3 {
     flex-shrink: 0;
   }
 
+  .gw-attack-search {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+  }
+
   .gw-counter-toolbar {
     flex-direction: column;
     align-items: stretch;
@@ -10719,6 +11219,73 @@ h1, h2, h3 {
 
   .gw-attack-inline-counters {
     margin: 2px 2px 8px 8px;
+  }
+}
+
+/* 영웅도감 역할군 필터: PC는 도감 칸 위(--top), 한 줄로 쌓이는 화면(≤980)은 소속(카테고리) 아래(--stack) */
+.dex-hero-roles--stack {
+  display: none !important;
+}
+@media (max-width: 980px) {
+  .dex-hero-roles--top {
+    display: none !important;
+  }
+  /* 소속(카테고리) 줄과 같이 한 줄 + 가로로 넘김 */
+  .dex-hero-roles--stack {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 10px 12px !important;
+    gap: 6px !important;
+  }
+  .dex-hero-roles--stack::-webkit-scrollbar {
+    display: none;
+    height: 0;
+  }
+  .dex-hero-roles--stack > span {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .dex-hero-roles--stack .nav-tab-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+}
+
+/* 501~980: 영웅도감 상단 — 제목 · 검색 한 줄, 「스페셜/일반/…」탭은 아래 한 줄(넘치면 가로 스크롤).
+   예전엔 탭이 제목과 검색 사이에 끼어 2~3줄로 세로로 쌓였음 */
+@media (min-width: 501px) and (max-width: 980px) {
+  .dex-hero-toolbar {
+    gap: 10px 12px !important;
+  }
+  .dex-hero-toolbar-title {
+    order: 0;
+  }
+  .dex-hero-toolbar-search {
+    order: 1;
+    margin-left: auto;
+  }
+  .dex-hero-tabs {
+    order: 2;
+    flex: 0 0 100% !important;
+    flex-wrap: nowrap !important;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .dex-hero-tabs::-webkit-scrollbar {
+    display: none;
+    height: 0;
+  }
+  .dex-hero-tabs .nav-tab-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 }
 

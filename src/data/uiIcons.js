@@ -29,6 +29,7 @@ export const UI_IMAGE_ICONS = {
   hubMembers: { src: '/images/ui/hub-members.png', w: 50, h: 50 },
   hubNotice: { src: '/images/ui/hub-notice.png', w: 47, h: 44, activeInvert: false },
   hubWrite: { src: '/images/ui/hub-write.png', w: 34, h: 34 },
+  gearShield: { src: '/images/ui/gear-shield.png', w: 52, h: 60 },
   hubMaster: { src: '/images/ui/hub-master.png', w: 30, h: 25, activeInvert: false },
   hubAdmin: { src: '/images/ui/hub-admin.png', w: 30, h: 25, activeInvert: false },
   encyclopedia: { src: '/images/ui/encyclopedia.png', w: 60, h: 60 },

@@ -13,6 +13,7 @@ import { closeOverlayFromUI, collapseOverlayHistory, pushOverlay } from '../util
 import ModalScrim from './ModalScrim';
 import { showToast } from './Toast';
 import { formatUpdateAtDisplay } from './PublicProfileModal';
+import { gwDeckMatchesQuery } from '../lib/gwDeckSearch';
 
 const emptyNames5 = () => ['', '', '', '', ''];
 const emptyGear5 = () => [emptyGearConfig(), emptyGearConfig(), emptyGearConfig(), emptyGearConfig(), emptyGearConfig()];
@@ -273,6 +274,20 @@ export default function GuildWarAttackPanel({
   });
   const [altsOpenId, setAltsOpenId] = useState(null);
   const [selectedAltId, setSelectedAltId] = useState(null);
+  const [deckQuery, setDeckQuery] = useState('');
+  const isSearching = deckQuery.trim().length > 0;
+
+  /** 검색 중: 상대 덱 자신 또는 파생 덱 중 하나라도 맞으면 보임 */
+  const visibleTargets = useMemo(() => {
+    if (!isSearching) return gwAttacks.map((t) => ({ t, altHits: [], selfHit: true }));
+    return gwAttacks
+      .map((t) => {
+        const altHits = (t.altDecks || []).filter((a) => gwDeckMatchesQuery(a, deckQuery)).map((a) => a.id);
+        const selfHit = gwDeckMatchesQuery(t, deckQuery);
+        return selfHit || altHits.length ? { t, altHits, selfHit } : null;
+      })
+      .filter(Boolean);
+  }, [gwAttacks, deckQuery, isSearching]);
 
   const selectedDeck = useMemo(() => {
     if (!selectedTarget) return null;
@@ -735,8 +750,10 @@ export default function GuildWarAttackPanel({
     deck,
     variant = 'main',
     altCount = 0,
+    altHitCount = 0,
     altsOpen = false,
     isActive = false,
+    isSearchHit = false,
     onSelect,
     onEdit,
     onDelete,
@@ -748,7 +765,7 @@ export default function GuildWarAttackPanel({
 
     return (
       <div
-        className={`gw-counter-row gw-attack-target-row${variant === 'alt' ? ' gw-attack-alt-row' : ''}${isActive ? ' is-on' : ''}${dragGhost?.kind === (isMain ? 'target' : 'alt') && dragGhost?.fromId === rowId ? ' is-dragging-source' : ''}`}
+        className={`gw-counter-row gw-attack-target-row${variant === 'alt' ? ' gw-attack-alt-row' : ''}${isActive ? ' is-on' : ''}${isSearchHit ? ' is-search-hit' : ''}${dragGhost?.kind === (isMain ? 'target' : 'alt') && dragGhost?.fromId === rowId ? ' is-dragging-source' : ''}`}
         {...{ [isMain ? 'data-target-id' : 'data-alt-id']: rowId }}
         onClick={onSelect}
         onDragOver={(e) => {
@@ -793,8 +810,9 @@ export default function GuildWarAttackPanel({
           {isMain && onToggleAlts ? (
             <button
               type="button"
-              className={`gw-attack-alt-btn${altsOpen ? ' is-on' : ''}`}
-              aria-label={`파생 덱${altCount > 0 ? ` ${altCount}개` : ''}`}
+              className={`gw-attack-alt-btn${altsOpen ? ' is-on' : ''}${altHitCount > 0 ? ' is-search-hit' : ''}`}
+              aria-label={`파생 덱${altCount > 0 ? ` ${altCount}개` : ''}${altHitCount > 0 ? ` · 검색 일치 ${altHitCount}개` : ''}`}
+              title={altHitCount > 0 ? `파생 덱 ${altHitCount}개가 검색과 맞아요` : undefined}
               onClick={(e) => { e.stopPropagation(); onToggleAlts(); }}
             >
               <Icon name="altDeck" size={11} /> 파생 덱{altCount > 0 ? ` ${altCount}` : ''}
@@ -827,7 +845,7 @@ export default function GuildWarAttackPanel({
     );
   };
 
-  const renderTargetAltLayer = (parent) => {
+  const renderTargetAltLayer = (parent, altHits = []) => {
     const alts = Array.isArray(parent.altDecks) ? parent.altDecks : [];
     return (
       <div className="gw-attack-target-alts" onClick={(e) => e.stopPropagation()}>
@@ -852,6 +870,7 @@ export default function GuildWarAttackPanel({
                   deck: a,
                   variant: 'alt',
                   isActive: isAltActive,
+                  isSearchHit: altHits.includes(a.id),
                   onSelect: () => {
                     if (dragGhost) return;
                     if (isAltActive) {
@@ -994,6 +1013,24 @@ export default function GuildWarAttackPanel({
               <span className="gw-attack-list-head-label">상대 덱 목록</span>
             </h3>
           </div>
+          {gwAttacks.length > 0 && (
+            <label className={`gw-attack-search${isSearching ? ' is-active' : ''}`} title="덱 이름이나 영웅 이름 글자로 찾기 · 순서 무관 (예: 윤동목, 목동윤, ㅇㄷㅁ)">
+              <Icon name="search" size={13} />
+              <input
+                type="search"
+                value={deckQuery}
+                onChange={(e) => setDeckQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Escape') setDeckQuery(''); }}
+                placeholder="덱 검색 (예: 윤동목)"
+                aria-label="상대 덱 검색"
+              />
+              {isSearching && (
+                <button type="button" className="gw-attack-search-clear" onClick={() => setDeckQuery('')} aria-label="검색 지우기">
+                  <Icon name="close" size={11} />
+                </button>
+              )}
+            </label>
+          )}
           <button onClick={openCreateTarget} className="btn-ops" type="button">
             <Icon name="plus" size={13} /> 상대 덱 추가
           </button>
@@ -1002,9 +1039,13 @@ export default function GuildWarAttackPanel({
           {gwAttacks.length === 0 && (
             <div className="gw-counter-empty">등록된 상대 덱이 없습니다.</div>
           )}
-          {gwAttacks.map(t => {
+          {isSearching && visibleTargets.length === 0 && (
+            <div className="gw-counter-empty">「{deckQuery.trim()}」과 맞는 상대 덱이 없습니다.</div>
+          )}
+          {visibleTargets.map(({ t, altHits, selfHit }) => {
             const isMainActive = selectedGwAttackId === t.id && !selectedAltId;
-            const altsOpen = altsOpenId === t.id;
+            // 파생 덱만 검색에 걸리면 파생 목록을 펼쳐서 바로 보이게
+            const altsOpen = altsOpenId === t.id || (!selfHit && altHits.length > 0);
             const altCount = (t.altDecks || []).length;
             return (
               <div
@@ -1016,6 +1057,7 @@ export default function GuildWarAttackPanel({
                     deck: t,
                     variant: 'main',
                     altCount,
+                    altHitCount: altHits.length,
                     altsOpen,
                     isActive: isMainActive,
                     onSelect: () => {
@@ -1039,7 +1081,7 @@ export default function GuildWarAttackPanel({
                       setAltsOpenId(altsOpen ? null : t.id);
                     },
                   })}
-                  {altsOpen && renderTargetAltLayer(t)}
+                  {altsOpen && renderTargetAltLayer(t, altHits)}
                 </div>
                 {isMainActive && (
                   <div className="gw-attack-inline-counters">
@@ -1258,6 +1300,13 @@ export default function GuildWarAttackPanel({
                     ? [{ label: '기타 디테일', text: inspectingCounter.otherDetail || inspectingCounter.gearNote }]
                     : []}
                   onUnderlyingCover={setSuppressInspectPaint}
+                  overviewEnemyDeck={selectedDeck ? {
+                    title: selectedDeck.title,
+                    formationId: normalizeFormationId(selectedDeck.formationId),
+                    heroNames: padNames5(selectedDeck.heroNames),
+                    petObj: resolvePet(selectedDeck.petId),
+                    note: selectedDeck.note || '',
+                  } : null}
                 />
               </div>
             </div>

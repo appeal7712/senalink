@@ -88,6 +88,8 @@ export default function InGameDeckCard({
   overviewTitle = '',
   /** 부모 모달(카운터 덱 조회 등)을 세팅 확인과 같은 틱에 숨길 때 */
   onUnderlyingCover = null,
+  /** 길드전 공격 카운터: 세팅 확인에 같이 보여 줄 상대 덱 { title, formationId, heroNames, petObj } */
+  overviewEnemyDeck = null,
 }) {
   // 길드전(maxHeroes=3)도 PvE와 동일한 5칸 공식 진형 레이아웃을 쓰고,
   // 빈 칸은 공란으로 남겨 진형 형태를 확실히 보이게 한다.
@@ -320,7 +322,9 @@ export default function InGameDeckCard({
   };
 
   const filledInspectHeroes = displayHeroes.filter(Boolean).slice(0, maxHeroes || 5);
-  const showOverviewDeck = !(maxHeroes && maxHeroes <= 3) && filledInspectHeroes.length > 0;
+  // 길드전(3인)은 배치 · 펫을 장비 칸 대신 스킬 예약 옆에 (renderTrioDeckBox)
+  const isTrioOverview = !!(maxHeroes && maxHeroes <= 3);
+  const showOverviewDeck = !isTrioOverview && filledInspectHeroes.length > 0;
   const overviewCellCount = filledInspectHeroes.length + (showOverviewDeck ? 1 : 0);
 
   const renderHeroGearBlock = (hero, compact = false) => {
@@ -464,13 +468,13 @@ export default function InGameDeckCard({
     );
   };
 
-  const renderFormationLayout = (slotFn) => {
+  const renderFormationLayout = (slotFn, fid = currentFormationId, list = displayHeroes) => {
     // 항상 5칸 공식 진형 레이아웃 (빈 슬롯은 공란으로 표시)
     // 스테이지 크기는 CSS 고정 — 진형별 높이 변화 없음, 짧은 열은 세로 중앙
     const slot = slotFn || renderSingleHeroSlot;
-    if (currentFormationId === 'protect') {
-      const backHero = displayHeroes[0];
-      const frontHeroes = displayHeroes.slice(1, 5);
+    if (fid === 'protect') {
+      const backHero = list[0];
+      const frontHeroes = list.slice(1, 5);
       return (
         <div className="deck-stage-rows">
           <div className="deck-stage-col">
@@ -482,9 +486,9 @@ export default function InGameDeckCard({
         </div>
       );
     }
-    if (currentFormationId === 'attack') {
-      const backHeroes = displayHeroes.slice(0, 4);
-      const frontHero = displayHeroes[4];
+    if (fid === 'attack') {
+      const backHeroes = list.slice(0, 4);
+      const frontHero = list[4];
       return (
         <div className="deck-stage-rows">
           <div className="deck-stage-col">
@@ -496,9 +500,9 @@ export default function InGameDeckCard({
         </div>
       );
     }
-    if (currentFormationId === 'basic') {
-      const backHeroes = displayHeroes.slice(0, 3);
-      const frontHeroes = displayHeroes.slice(3, 5);
+    if (fid === 'basic') {
+      const backHeroes = list.slice(0, 3);
+      const frontHeroes = list.slice(3, 5);
       return (
         <div className="deck-stage-rows">
           <div className="deck-stage-col">
@@ -510,8 +514,8 @@ export default function InGameDeckCard({
         </div>
       );
     }
-    const backHeroes = displayHeroes.slice(0, 2);
-    const frontHeroes = displayHeroes.slice(2, 5);
+    const backHeroes = list.slice(0, 2);
+    const frontHeroes = list.slice(2, 5);
     return (
       <div className="deck-stage-rows">
         <div className="deck-stage-col">
@@ -672,6 +676,134 @@ export default function InGameDeckCard({
       </div>
     );
   };
+
+  const toFormationId = (fid) => {
+    const mapped = fid === '2f1b' ? 'protect' : fid === '1f2b' ? 'basic' : fid;
+    return formationSet.find(f => f.id === mapped) ? mapped : formationSet[0].id;
+  };
+
+  /** 세팅 확인 배치 칸 옆: 펫(영웅 초상과 같은 크기) · 진형 아이콘 (5인 · 길드전 공통) */
+  const renderOverviewDeckSide = (fid, pet, petClass, iconSize = FORMATION_ICON_SIZE_COMPACT) => {
+    const formation = formationSet.find(f => f.id === fid) || formationSet[0];
+    return (
+      <div className="setting-overview-deck-side">
+        {!hidePet && (
+          <div className={`${petClass} pet-portrait-face`} title={pet?.name || '장착 펫'}>
+            {pet?.portraitUrl ? <img src={pet.portraitUrl} alt={pet.name} /> : <Icon name="pet" size={18} />}
+          </div>
+        )}
+        <div className="setting-overview-deck-side-formation" title={formation.name}>
+          {renderFormationCircleIcon(fid, iconSize)}
+        </div>
+      </div>
+    );
+  };
+
+  /** 5인 배치 · 펫 칸. 장비가 두 칸 이상 나란하면 그리드 마지막 칸(grid), 장비 1열 스마트폰(≤560)은 본문 맨 위(top) */
+  const renderOverviewDeckBox = (placement) => (
+    <div className={`setting-overview-deck setting-overview-deck--${placement}`}>
+      <div className="setting-overview-deck-label">배치 · 펫</div>
+      <div className="deck-stage">
+        <div className="deck-stage-formation">
+          {renderFormationLayout(renderOverviewHeroSlot)}
+        </div>
+        {renderOverviewDeckSide(currentFormationId, selectedPet, 'setting-overview-deck-pet', FORMATION_ICON_SIZE)}
+      </div>
+    </div>
+  );
+
+  const renderTrioDeckBox = ({ key, kicker, title, tone, solo = false, placement = 'side', formationId: fid, heroes: list, pet }) => (
+    <div key={key} className={`setting-overview-trio-deck is-${tone}${solo ? ' is-solo' : ''} setting-overview-trio-deck--${placement}`}>
+      {solo ? (
+        <div className="setting-overview-deck-label">{kicker}</div>
+      ) : (
+        <div className="setting-overview-trio-deck-head">
+          <span className="setting-overview-trio-deck-kicker">{kicker}</span>
+          {title ? <span className="setting-overview-trio-deck-title" title={title}>{title}</span> : null}
+        </div>
+      )}
+      <div className="setting-overview-trio-deck-stage">
+        <div className="deck-stage-formation">
+          {renderFormationLayout(renderOverviewHeroSlot, fid, list)}
+        </div>
+        {renderOverviewDeckSide(fid, pet, 'setting-overview-trio-deck-pet', solo ? FORMATION_ICON_SIZE : FORMATION_ICON_SIZE_COMPACT)}
+      </div>
+    </div>
+  );
+
+  const mineTrioDeck = {
+    kicker: overviewEnemyDeck ? '내 공격 덱' : '배치 · 펫',
+    tone: 'mine',
+    solo: !overviewEnemyDeck,
+    formationId: currentFormationId,
+    heroes: displayHeroes,
+    pet: selectedPet,
+  };
+  // 길드전 방어(한 장) · 영웅 3명: 장비 2열 화면에선 장비 그리드 첫 칸에 (2×2로 빈칸 없이)
+  const trioDeckInGrid = isTrioOverview && isGearOverviewOpen && !overviewEnemyDeck
+    && filledInspectHeroes.length === 3;
+
+  const overviewNoteList = [
+    ...(Array.isArray(overviewNotes) ? overviewNotes.filter(n => n?.text) : []),
+    ...(String(overviewEnemyDeck?.note || '').trim()
+      ? [{ label: '상대 덱 특이사항', text: String(overviewEnemyDeck.note).trim() }]
+      : []),
+  ];
+  // 메모가 하나면 그 이름(기타 디테일 등)을 칸 제목으로 — 「공략 메모」 아래 한 줄 더 내려가지 않게
+  const overviewNoteSingle = overviewNoteList.length === 1 && overviewNoteList[0].label && overviewNoteList[0].label !== '메모'
+    ? overviewNoteList[0].label : '';
+  // 길드전 공격: 메모를 「내 공격 덱 · 기타 디테일」 / 「상대 덱 · 특이사항」 두 칸으로 (배치 카드와 같은 파랑 · 빨강)
+  const gwAttackMemo = overviewEnemyDeck ? {
+    mine: (Array.isArray(overviewNotes) ? overviewNotes.filter(n => n?.text).map(n => n.text) : []).join('\n'),
+    enemy: String(overviewEnemyDeck.note || '').trim(),
+  } : null;
+  const overviewNoteTitle = gwAttackMemo ? '공략 메모' : (overviewNoteSingle || '공략 메모');
+  const renderGwAttackMemo = () => (
+    <div className="setting-overview-memo-split">
+      {[
+        { tone: 'mine', kicker: '내 공격 덱', title: '기타 디테일', text: gwAttackMemo.mine, empty: '등록된 기타 디테일이 없습니다.' },
+        { tone: 'enemy', kicker: '상대 덱', title: '특이사항', text: gwAttackMemo.enemy, empty: '등록된 특이사항이 없습니다.' },
+      ].map(box => (
+        <div key={box.tone} className={`setting-overview-memo-box is-${box.tone}`}>
+          <div className="setting-overview-memo-head">
+            <span className="setting-overview-trio-deck-kicker">{box.kicker}</span>
+            <span className="setting-overview-memo-title">{box.title}</span>
+          </div>
+          <div className="setting-overview-memo-text">
+            {box.text || <span className="is-empty">{box.empty}</span>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+  // 길드전 공격 · 영웅 3명: 장비 2열 화면에선 메모를 장비 그리드 빈 4번째 칸에
+  const notesInGrid = isTrioOverview && !!overviewEnemyDeck && filledInspectHeroes.length === 3
+    && overviewNoteList.length > 0;
+  const renderOverviewNoteItems = () => overviewNoteList.map((note, idx) => (
+    <div key={`${note.label || 'note'}_${idx}`}>
+      {!overviewNoteSingle && note.label && note.label !== '메모' && (
+        <div style={{ fontSize: '12px', fontWeight: 800, color: '#fff', marginBottom: '4px' }}>{note.label}</div>
+      )}
+      <div style={{ fontSize: '13.5px', color: '#e2e8f0', whiteSpace: 'pre-line', lineHeight: 1.55, wordBreak: 'keep-all', overflowWrap: 'anywhere' }}>{note.text}</div>
+    </div>
+  ));
+
+  const trioDeckBoxes = isTrioOverview && isGearOverviewOpen ? [
+    renderTrioDeckBox({ key: 'mine', ...mineTrioDeck }),
+    overviewEnemyDeck ? renderTrioDeckBox({
+      key: 'enemy',
+      kicker: '상대 덱',
+      title: String(overviewEnemyDeck.title || '').trim(),
+      tone: 'enemy',
+      formationId: toFormationId(overviewEnemyDeck.formationId),
+      heroes: (() => {
+        const list = (overviewEnemyDeck.heroNames || []).map(n => resolveHeroByName(n));
+        while (list.length < 5) list.push(null);
+        return list.slice(0, 5);
+      })(),
+      pet: overviewEnemyDeck.petObj,
+    }) : null,
+  ].filter(Boolean) : [];
 
   const handleSelectFormation = (fId) => {
     setCurrentFormationId(fId);
@@ -1148,7 +1280,9 @@ export default function InGameDeckCard({
                   ) : null}
                 </div>
                 <div className="setting-overview-head-sub">
-                  {isPvp ? '스킬 예약 · 장비 · 장신구 · 디테일' : '속공 순서 · 장비 · 장신구 · 디테일'}
+                  {isPvp
+                    ? (isTrioOverview ? '스킬 예약 · 배치 · 펫 · 장비 · 장신구 · 디테일' : '스킬 예약 · 장비 · 장신구 · 디테일')
+                    : '속공 순서 · 장비 · 장신구 · 디테일'}
                 </div>
               </div>
               <button type="button" className="no-capture setting-overview-head-close" onClick={() => dismissSubModal(closeGearOverview)}
@@ -1158,21 +1292,31 @@ export default function InGameDeckCard({
             </div>
 
             <div className="setting-overview-body">
-              {isPvp ? (
-                <div className="setting-overview-section">
-                  <div className="setting-overview-label">
-                    <SkillReservePlateIcon reservedSkills={reservedSkills} size={SKILL_RESERVE_ICON_SIZE_SM} /> 스킬 예약
+              {showOverviewDeck && renderOverviewDeckBox('top')}
+              {isPvp ? (() => {
+                const reserveSection = (
+                  <div className="setting-overview-section">
+                    <div className="setting-overview-label">
+                      <SkillReservePlateIcon reservedSkills={reservedSkills} size={SKILL_RESERVE_ICON_SIZE_SM} /> 스킬 예약
+                    </div>
+                    <SkillReservationBoard
+                      heroNames={displayHeroes.filter(Boolean).map(h => (h.name || '').replace('(각성)', ''))}
+                      resolveHeroByName={resolveHeroByName}
+                      value={reservedSkills}
+                      readOnly
+                      compact
+                      maxHeroes={maxHeroes}
+                    />
                   </div>
-                  <SkillReservationBoard
-                    heroNames={displayHeroes.filter(Boolean).map(h => (h.name || '').replace('(각성)', ''))}
-                    resolveHeroByName={resolveHeroByName}
-                    value={reservedSkills}
-                    readOnly
-                    compact
-                    maxHeroes={maxHeroes}
-                  />
-                </div>
-              ) : (
+                );
+                if (!trioDeckBoxes.length) return reserveSection;
+                return (
+                  <div className={`setting-overview-trio-top${trioDeckBoxes.length > 1 ? ' has-enemy' : ''}${trioDeckInGrid ? ' has-grid-deck' : ''}`}>
+                    {reserveSection}
+                    <div className="setting-overview-trio-decks">{trioDeckBoxes}</div>
+                  </div>
+                );
+              })() : (
                 <div className="setting-overview-section">
                   <div className="setting-overview-label">
                     <Icon name="speed" size={14} /> 속공 순서
@@ -1214,27 +1358,20 @@ export default function InGameDeckCard({
                 </div>
               )}
 
-              {Array.isArray(overviewNotes) && overviewNotes.some(n => n?.text) && (
-                <div className="setting-overview-section">
+              {overviewNoteList.length > 0 && (
+                <div className={`setting-overview-section${notesInGrid ? ' setting-overview-notes-section--has-cell' : ''}`}>
                   <div className="setting-overview-label">
-                    <Icon name="bolt" size={14} /> 공략 메모
+                    <Icon name="hubWrite" size={14} /> {overviewNoteTitle}
                   </div>
-                  <div className="setting-overview-notes">
-                    {overviewNotes.filter(n => n?.text).map((note, idx) => (
-                      <div key={`${note.label || 'note'}_${idx}`}>
-                        {note.label && note.label !== '메모' && (
-                          <div style={{ fontSize: '12px', fontWeight: 800, color: '#fff', marginBottom: '4px' }}>{note.label}</div>
-                        )}
-                        <div style={{ fontSize: '13.5px', color: '#e2e8f0', whiteSpace: 'pre-line', lineHeight: 1.55 }}>{note.text}</div>
-                      </div>
-                    ))}
-                  </div>
+                  {gwAttackMemo ? renderGwAttackMemo() : (
+                    <div className="setting-overview-notes">{renderOverviewNoteItems()}</div>
+                  )}
                 </div>
               )}
 
               <div className="setting-overview-section">
                 <div className="setting-overview-label">
-                  <Icon name="swords" size={14} /> 전원 장비 · 세팅 디테일
+                  <Icon name="gearShield" size={14} /> 전원 장비 · 세팅 디테일
                 </div>
                 {filledInspectHeroes.length === 0 ? (
                   <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)', fontWeight: 800, fontSize: '14px' }}>
@@ -1242,27 +1379,21 @@ export default function InGameDeckCard({
                   </div>
                 ) : (
                   <div className={`gear-overview-grid gear-overview-grid--${Math.min(overviewCellCount, 6)}`}>
+                    {/* 장비 2열 이상일 때 배치 · 펫은 첫 칸 (1열 폰은 CSS로 숨기고 본문 맨 위 --top) */}
+                    {showOverviewDeck && renderOverviewDeckBox('grid')}
+                    {trioDeckInGrid && renderTrioDeckBox({ key: 'mine-grid', ...mineTrioDeck, placement: 'grid' })}
                     {filledInspectHeroes.slice(0, 5).map((hero, idx) => (
                       <div key={`${hero.id || hero.name}-${idx}`}>
                         {renderHeroGearBlock(hero, true)}
                       </div>
                     ))}
-                    {showOverviewDeck && (
-                      <div className="setting-overview-deck">
-                        <div className="setting-overview-deck-label">배치 · 펫</div>
-                        <div className="deck-stage">
-                          <div className="deck-stage-formation">
-                            {renderFormationLayout(renderOverviewHeroSlot)}
-                          </div>
-                          {!hidePet && (
-                            <div className="setting-overview-deck-pet pet-portrait-face" title={selectedPet?.name || '장착 펫'}>
-                              {selectedPet?.portraitUrl ? (
-                                <img src={selectedPet.portraitUrl} alt={selectedPet.name} />
-                              ) : (
-                                <Icon name="pet" size={20} />
-                              )}
-                            </div>
-                          )}
+                    {notesInGrid && (
+                      <div className="setting-overview-notes-cell">
+                        <div className="setting-overview-label">
+                          <Icon name="hubWrite" size={14} /> {overviewNoteTitle}
+                        </div>
+                        <div className="setting-overview-notes-cell-body">
+                          {gwAttackMemo ? renderGwAttackMemo() : renderOverviewNoteItems()}
                         </div>
                       </div>
                     )}
