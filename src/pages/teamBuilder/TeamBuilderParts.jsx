@@ -765,7 +765,9 @@ function partWhen(p, kind) {
 function LedgerSource({ p, s, kind, fmt, scopeText, resolveHero }) {
   const hero = resolveHero(s.heroName);
   const slot = kind === 'skill' ? (s.skillTag || s.skillLabel) : s.skillLabel;
-  const tag = slot === '패시브' ? null : slot;
+  const triggered = kind === 'skill' && s.skillLabel === '패시브';
+  const tag = triggered ? '조건 발동' : slot === '패시브' ? null : slot;
+  const kindId = kind === 'skill' && !triggered ? 'skill' : 'passive';
   const when = partWhen(p, kind);
   return (
     <li className="tb-tot-src">
@@ -776,7 +778,7 @@ function LedgerSource({ p, s, kind, fmt, scopeText, resolveHero }) {
         <div className="tb-tot-src-top">
           <MiniHero hero={hero} size={22} />
           <span className="tb-tot-part-who">{s.heroName}</span>
-          <span className={`tb-tot-kind is-${kind}`}>{kind === 'skill' ? '액티브' : '패시브'}</span>
+          <span className={`tb-tot-kind is-${kindId}`}>{kindId === 'skill' ? '액티브' : '패시브'}</span>
           {tag ? <span className="tb-tot-part-when">{tag === '각성기' && kind !== 'skill' ? '각성 중' : tag}</span> : null}
           {when ? <span className="tb-tot-part-when">{when}</span> : null}
           {(s.value ?? p.value) != null ? <b>{fmt(s.value ?? p.value)}</b> : null}
