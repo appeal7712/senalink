@@ -1460,8 +1460,13 @@
 .tb-block.is-rival .tb-block-icon img { filter: hue-rotate(170deg) saturate(1.1); }
 /* 버프 · 디버프 · 특수 효과 아이콘 (lib/effectIcons) */
 .tb-fx-icon { display: block; flex-shrink: 0; border-radius: 5px; object-fit: contain; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
-/* 목록 이름 칸 — 아이콘(20) + 간격만큼 칸을 넓혀 뱃지가 계속 한 줄로 서게 */
-.tb-fxl-key:has(.tb-fx-icon) { gap: 6px; min-width: min(calc(var(--fxl-name, 0px) + 48px), 68%); }
+/* 목록 이름 칸 — 아이콘은 칸 왼쪽 끝에 고정(글자 길이와 상관없이 세로 한 줄), 이름은 칸 가운데 그대로.
+   양쪽에 아이콘 자리만큼 띄워 이름이 가운데에 오고, 칸 너비는 가장 긴 이름 + 양쪽 자리 → 뱃지도 한 줄 */
+.tb-fxl-key:has(.tb-fx-icon) { position: relative; padding-left: 32px; padding-right: 32px; min-width: min(calc(var(--fxl-name, 0px) + 68px), 80%); }
+/* 이름 너비를 다 잰 뒤(목록에 --fxl-name이 붙은 뒤)에만 칸 너비 고정 — 잴 때 고정하면 이름이 좁게 꺾인 채로 재짐.
+   68 = 양쪽 아이콘 자리 32 × 2 + 테두리 1 × 2 + 여유 2 (테두리 몫이 빠지면 가장 긴 이름이 두 줄로 꺾임) */
+.tb-fxl[style*="--fxl-name"] .tb-fxl-key:has(.tb-fx-icon) { width: min(calc(var(--fxl-name) + 68px), 80%); }
+.tb-fxl-key > .tb-fx-icon { position: absolute; left: 4px; top: 50%; transform: translateY(-50%); }
 
 /* 상대 덱 목록은 찾기 버튼이 아니라 글자 */
 span.tb-fxl-name { cursor: default; }
@@ -1518,6 +1523,31 @@ span.tb-fxl-name:hover { text-decoration: none; }
 .tb-fx-block .tb-fxl-to { background: color-mix(in srgb, var(--f) 22%, rgba(0, 0, 0, 0.25)); border-color: color-mix(in srgb, var(--f) 45%, transparent); }
 .tb-fx-block .tb-fxl-skicon { border-radius: 10px; }
 .tb-fx-block .tb-selfbuff > .tb-fxl { margin-top: 8px; }
+/* 「자세히 보기」 효과 줄 — 요약 표와 같은 배치(밍봉): [효과 아이콘 + 이름(왼쪽 · 한 줄)] … [시작 N턴 · 중복 · 대상] [수치 뱃지(오른쪽 끝)],
+   조건은 그 아래 줄. 이름 상자 · 가운데 정렬 없음(이 칸 안에서만 — 다른 화면 이름 칸 규칙은 그대로) */
+.tb-fx-block .tb-fxl-row { padding: 8px 8px 8px 8px; }
+.tb-fx-block .tb-fxl-main { gap: 0; }
+.tb-fx-block .tb-fxl-fx { flex-wrap: wrap; gap: 3px 8px; min-height: 32px; padding: 4px 6px; border-radius: 8px; }
+.tb-fx-block .tb-fxl-fx + .tb-fxl-fx { border-top: 1px solid rgba(255, 255, 255, 0.05); }
+.tb-fx-block .tb-fxl-fx:hover { background: rgba(255, 255, 255, 0.03); }
+.tb-fx-block .tb-fxl .tb-fxl-key,
+.tb-fx-block .tb-fxl[style*="--fxl-name"] .tb-fxl-key:has(.tb-fx-icon) {
+  flex: 1 1 auto;
+  position: static;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  justify-content: flex-start;
+  gap: 8px;
+  background: none;
+  border: none;
+}
+.tb-fx-block .tb-fxl-key > .tb-fx-icon { position: static; transform: none; }
+.tb-fx-block .tb-fxl-key .tb-fxl-name { min-width: 0; font-size: 13px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tb-fx-block .tb-fxl-val { order: 9; }
+.tb-fx-block .tb-fxl-cond { order: 10; flex: 1 0 100%; padding-left: 28px; }
+.tb-fx-block .tb-fxl-flows { padding: 0 4px 6px; }
 
 /* 칸 맨 아래 「요약 보기」 — 효과별 패시브 · 액티브 · 합계 표 */
 .tb-fx-detail { --d: var(--tb-ally); margin-top: 10px; }
@@ -1662,7 +1692,7 @@ span.tb-fxl-name:hover { text-decoration: none; }
 
 /* 특수 효과(수치 없음) — 알약(패 · 액 · 이름 · 쓰는 영웅 얼굴), 누르면 아래에 누가 어떻게 쓰는지 */
 /* 같은 너비 칸으로 줄 맞춤 — [패 · 액] [이름(넘치면 …)] [얼굴] */
-.tb-tot-flags { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.tb-tot-flags { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
 .tb-tot-flag {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -1791,15 +1821,22 @@ span.tb-fxl-name:hover { text-decoration: none; }
   .tb-fxl-name { font-size: 13.5px; }
   .tb-fxl-to { white-space: normal; }
 
-  .tb-tot-col { --tot-cols: minmax(0, 1fr) 52px 52px 62px; }
+  .tb-tot-col { --tot-cols: minmax(0, 1fr) 46px 46px 56px; }
   .tb-tot-sheet { padding: 8px 4px 6px; }
   .tb-tot-uniq { padding: 8px 6px; }
   .tb-tot-flags { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+  /* 폰 2열 — 얼굴은 빼고 이름이 한 줄에 다 들어가게 (눌러서 펼치면 누가 쓰는지 나옴) */
+  .tb-tot-flag { grid-template-columns: auto minmax(0, 1fr); gap: 5px; font-size: 11.5px; }
+  .tb-tot-flag-faces { display: none; }
   .tb-tot-thead, .tb-tot-line { padding-left: 5px; padding-right: 5px; gap: 2px; }
   .tb-tot-th { padding: 2px 6px; }
   .tb-tot-th small { display: none; }
   .tb-tot-faces .tb-mini-hero:nth-child(n + 3) { display: none; }
-  .tb-tot-label { font-size: 12px; white-space: normal; word-break: keep-all; line-height: 1.25; }
+  /* 폰 — 효과 이름은 한 줄 그대로, 얼굴은 이름 아래 작은 줄로 */
+  .tb-tot-name { flex-wrap: wrap; row-gap: 2px; }
+  .tb-tot-label { flex: 0 1 auto; font-size: 12px; letter-spacing: -0.2px; }
+  .tb-tot-faces { flex: 1 0 100%; margin-left: 0; padding-left: 26px; }
+  .tb-tot-faces .tb-mini-hero { width: 20px !important; }
   .tb-tot-cell { font-size: 12px; }
   .tb-tot-cell.is-passive, .tb-tot-cell.is-skill { min-width: 46px; padding: 0 4px; }
   .tb-tot-cell.is-sum b { min-width: 52px; font-size: 12px; }
