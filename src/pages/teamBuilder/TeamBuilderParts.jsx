@@ -1,16 +1,24 @@
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import HeroPortraitCard from '../../components/HeroPortraitCard';
 import HeroGridPicker from '../../components/HeroGridPicker';
 import Icon from '../../components/icons/Icon';
 import SafeImg from '../../components/icons/SafeImg';
 import { accessories } from '../../data/equipments';
 import { skillIconUrl } from '../../lib/skillIcon';
+import { effectIconUrl } from '../../lib/effectIcons';
 import { LEGEND_RINGS, ROLE_TILES, effectLabel, entryValue, fmtFxValue, fmtValue, listLabel, targetLabel } from '../../lib/teamBuilderAnalysis';
 import { fxBoxCount, groupEffectCards, groupSkillCards } from './fxGroups';
 
 const plainName = (n) => String(n || '').replace('(각성)', '').trim();
 
 /* ───────────── 공통 ───────────── */
+
+/** 버프 · 디버프 · 특수 효과 아이콘 (lib/effectIcons — 없으면 안 그림) */
+export function FxIcon({ name, size = 20, className = '' }) {
+  const src = effectIconUrl(name);
+  if (!src) return null;
+  return <img className={`tb-fx-icon${className ? ` ${className}` : ''}`} src={src} alt="" width={size} height={size} loading="lazy" decoding="async" />;
+}
 
 export function MiniHero({ hero, size = 30 }) {
   if (!hero) return null;
@@ -511,14 +519,27 @@ const DIR_MARK = { up: '▲', down: '▼' };
 
 const badgeValue = (c) => fmtFxValue(c.value, c.label, c.dir);
 
+/**
+ * 상대 덱 기준 목록 — 엔진의 대상 글은 그 덱 입장(「아군 전체」 · 「적 1명」)이라 우리 입장으로 바꿈:
+ * 아군 → 상대 · 적 → 우리 (「자신만」은 그대로).
+ */
+function flipScope(text) {
+  return String(text || '')
+    .replace(/(^|[\s·(+])아군/g, '$1상대')
+    .replace(/(^|[\s·(+])적(?=[\s·)]|$)/g, '$1우리');
+}
+const scopeFor = (perspective) => (perspective === 'enemy' ? flipScope : (t) => t);
+/** 색 — side(버프/디버프 뱃지)와 별개로 칸 강조색만: 받는 버프 파랑 · 거는 디버프 보라 · 받는 디버프 빨강 · 상대 버프 주황 */
+const toneClass = (tone) => (tone ? ` tone-${tone}` : '');
+
 /** 버프 · 디버프 칸 안 [패시브 | 스킬 · 발동] 전환 */
-export function FxTabs({ side, value, onChange, passiveCount, skillCount }) {
+export function FxTabs({ side, tone, value, onChange, passiveCount, skillCount }) {
   const tabs = [
     { id: 'passive', label: '패시브', n: passiveCount },
     { id: 'skill', label: '액티브 · 발동', n: skillCount },
   ];
   return (
-    <div className={`tb-fx-tabs is-${side}`} role="tablist">
+    <div className={`tb-fx-tabs is-${side}${toneClass(tone)}`} role="tablist">
       {tabs.map((t) => (
         <button key={t.id} type="button" role="tab" aria-selected={value === t.id} className={value === t.id ? 'is-on' : ''} onClick={() => onChange(t.id)}>
           {t.label} <b>{t.n}</b>
@@ -547,22 +568,32 @@ function useAlignedNames(ref) {
   });
 }
 
-export function EffectList({ cards, side, teamSize, resolveHero, onFind, emptyText }) {
+export function EffectList({ cards, side, tone, perspective, teamSize, resolveHero, onFind, emptyText }) {
   const listRef = useRef(null);
   useAlignedNames(listRef);
   if (!cards.length) return <div className="tb-empty">{emptyText}</div>;
   const rows = groupEffectCards(cards);
+  const scopeText = scopeFor(perspective);
+  const findable = perspective !== 'enemy';
   return (
-    <ul ref={listRef} className={`tb-fxl is-${side}`}>
+    <ul ref={listRef} className={`tb-fxl is-${side}${toneClass(tone)}`}>
       {rows.map((row, i) => {
         const { applied } = row;
         const head = row.cards[0];
         const lost = row.cards.length === 1 ? head.sources.filter((s) => !s.applied) : [];
         const sameDir = row.cards.every((c) => c.dir === head.dir);
         const dir = sameDir ? head.dir : side === 'enemy' ? 'down' : 'up';
+        const src = applied[0];
+        const iconUrl = src?.skillName ? skillIconUrl(resolveHero(src.heroName), src.skillName, src.skillLabel) : null;
         return (
           <li key={row.id} className={`tb-fxl-row${head.overlap || head.wasted || head.note?.warn ? ' is-warn' : ''}`} style={{ '--i': Math.min(i, 14) }}>
-            <span className={`tb-fxl-dir is-${dir || 'none'}`} aria-hidden="true">{DIR_MARK[dir] || '◆'}</span>
+            {iconUrl ? (
+              <span className="tb-fxl-skicon" title={src.skillName}>
+                <SafeImg src={iconUrl} alt={src.skillName} fallbackIcon="swords" loading="lazy" />
+              </span>
+            ) : (
+              <span className={`tb-fxl-dir is-${dir || 'none'}`} aria-hidden="true">{DIR_MARK[dir] || '◆'}</span>
+            )}
             <div className="tb-fxl-body">
               <div className="tb-fxl-flows">
                 {applied.map((s) => {
@@ -577,7 +608,7 @@ export function EffectList({ cards, side, teamSize, resolveHero, onFind, emptyTe
                       </span>
                       <span className="tb-fxl-arrow" aria-label="에게">→</span>
                       <span className={`tb-fxl-to${none ? ' is-none' : ''}`}>
-                        {s.scope}
+                        {scopeText(s.scope)}
                         {partial && !none ? s.recipients.map((n) => <MiniHero key={n} hero={resolveHero(n)} size={18} />) : null}
                         {none ? <em>받는 영웅 없음</em> : null}
                       </span>
@@ -589,7 +620,10 @@ export function EffectList({ cards, side, teamSize, resolveHero, onFind, emptyTe
                 {row.cards.map((c) => (
                   <span key={c.id} className="tb-fxl-fx">
                     <span className="tb-fxl-key">
-                      <button type="button" data-finder className="tb-fxl-name" onClick={() => onFind?.(c)} title="이 효과를 가진 영웅 찾기">{c.label}</button>
+                      <FxIcon name={c.label} size={20} />
+                      {findable ? (
+                        <button type="button" data-finder className="tb-fxl-name" onClick={() => onFind?.(c)} title="이 효과를 가진 영웅 찾기">{c.label}</button>
+                      ) : <span className="tb-fxl-name">{c.label}</span>}
                     </span>
                     {c.value != null ? <span className="tb-fxl-val">{badgeValue(c)}</span> : null}
                     {c.timing === 'start' ? <span className="tb-fxl-when" title="전투 시작 시 적용 — [상시] 효과와는 중첩돼요">시작 {c.turns}턴</span> : null}
@@ -615,15 +649,16 @@ export function EffectList({ cards, side, teamSize, resolveHero, onFind, emptyTe
 }
 
 /** 스킬 · 발동 탭 목록 — 영웅 · 스킬 하나에 상자 하나, 대상이 줄마다 다르면 줄에 대상 표시 */
-export function SkillEffectList({ cards, side, resolveHero, emptyText }) {
+export function SkillEffectList({ cards, side, tone, perspective, resolveHero, emptyText }) {
   const listRef = useRef(null);
   useAlignedNames(listRef);
   if (!cards.length) return <div className="tb-empty">{emptyText}</div>;
   const rows = groupSkillCards(cards);
+  const scopeText = scopeFor(perspective);
   return (
-    <ul ref={listRef} className={`tb-fxl is-${side} is-skill`}>
+    <ul ref={listRef} className={`tb-fxl is-${side} is-skill${toneClass(tone)}`}>
       {rows.map((row, i) => {
-        const scopes = [...new Set(row.cards.map((c) => c.sources[0].scope))];
+        const scopes = [...new Set(row.cards.map((c) => scopeText(c.sources[0].scope)))];
         const oneScope = scopes.length === 1 ? scopes[0] : null;
         const icon = skillIconUrl(resolveHero(row.heroName), row.skillName, row.skillLabel);
         return (
@@ -650,14 +685,14 @@ export function SkillEffectList({ cards, side, resolveHero, emptyText }) {
               <div className="tb-fxl-main">
                 {row.cards.map((c) => (
                   <span key={c.id} className="tb-fxl-fx">
-                    <span className="tb-fxl-key"><span className="tb-fxl-name">{c.label}</span></span>
+                    <span className="tb-fxl-key"><FxIcon name={c.label} size={20} /><span className="tb-fxl-name">{c.label}</span></span>
                     {c.value != null ? <span className="tb-fxl-val">{badgeValue(c)}</span> : null}
                     {c.amountText ? <span className="tb-fxl-amt">{c.amountText}</span> : null}
                     {c.chance ? <span className="tb-fxl-amt">{c.chance}% 확률</span> : null}
                     {c.duration ? <span className="tb-fxl-when">{c.duration}</span> : null}
                     {c.stack ? <span className="tb-fxl-stack">{c.stack}</span> : null}
                     {c.tower ? <span className="tb-fxl-tower" title="무한의 탑 · 시련의 탑에서만 적용">탑 전용</span> : null}
-                    {oneScope ? null : <span className="tb-fxl-scope">→ {c.sources[0].scope}</span>}
+                    {oneScope ? null : <span className="tb-fxl-scope">→ {scopeText(c.sources[0].scope)}</span>}
                     {c.condition ? <span className="tb-fxl-cond" title={c.condition}>{c.condition}</span> : null}
                   </span>
                 ))}
@@ -680,14 +715,14 @@ function selfClashText(c) {
 }
 
 /** 버프 칸 안 아래쪽 — 자기 자신만 받는 버프. 영웅 알약을 누르면 그 영웅 것만 펼침 */
-export function SelfBuffSection({ cards, kind = 'passive', teamSize, resolveHero, open, onToggle }) {
+export function SelfBuffSection({ cards, kind = 'passive', tone, perspective, teamSize, resolveHero, open, onToggle }) {
   const heroOf = (c) => c.sources[0]?.heroName;
   const heroes = [...new Set(cards.map(heroOf).filter(Boolean))];
   if (!heroes.length) return null;
   const cur = heroes.includes(open) ? open : null;
   const shown = cur ? cards.filter((c) => heroOf(c) === cur) : [];
   return (
-    <div className="tb-selfbuff">
+    <div className={`tb-selfbuff${toneClass(tone)}`}>
       <div className="tb-selfbuff-head">
         <span className="tb-selfbuff-title">
           <Icon name="hero" size={14} /> 자기 자신만 받는 버프
@@ -713,8 +748,192 @@ export function SelfBuffSection({ cards, kind = 'passive', teamSize, resolveHero
           })}
         </div>
       </div>
-      {shown.length && kind === 'skill' ? <SkillEffectList key={cur} cards={shown} side="ally" resolveHero={resolveHero} emptyText="" /> : null}
-      {shown.length && kind !== 'skill' ? <EffectList key={cur} cards={shown} side="ally" teamSize={teamSize} resolveHero={resolveHero} emptyText="" /> : null}
+      {shown.length && kind === 'skill' ? <SkillEffectList key={cur} cards={shown} side="ally" tone={tone} perspective={perspective} resolveHero={resolveHero} emptyText="" /> : null}
+      {shown.length && kind !== 'skill' ? <EffectList key={cur} cards={shown} side="ally" tone={tone} perspective={perspective} teamSize={teamSize} resolveHero={resolveHero} emptyText="" /> : null}
+    </div>
+  );
+}
+
+/* ───────────── 버프 · 디버프 칸 표 (효과별 패시브 · 액티브 · 합계) ───────────── */
+
+function partWhen(p, kind) {
+  if (kind === 'skill') return null;
+  return p.timing === 'start' ? `시작 ${p.turns}턴` : '상시';
+}
+
+/** 펼친 줄 한 칸 — 주는 영웅 · 스킬마다 (스킬 아이콘 · 슬롯 · 수치 · 대상 · 지속 · 확률 · 중첩 · 조건) */
+function LedgerSource({ p, s, kind, fmt, scopeText, resolveHero }) {
+  const hero = resolveHero(s.heroName);
+  const slot = kind === 'skill' ? (s.skillTag || s.skillLabel) : s.skillLabel;
+  const tag = slot === '패시브' ? null : slot;
+  const when = partWhen(p, kind);
+  return (
+    <li className="tb-tot-src">
+      <span className="tb-tot-src-icon" title={s.skillName || tag}>
+        <SafeImg src={skillIconUrl(hero, s.skillName, s.skillLabel)} alt={s.skillName || tag || ''} fallbackIcon="swords" loading="lazy" />
+      </span>
+      <div className="tb-tot-src-body">
+        <div className="tb-tot-src-top">
+          <MiniHero hero={hero} size={22} />
+          <span className="tb-tot-part-who">{s.heroName}</span>
+          <span className={`tb-tot-kind is-${kind}`}>{kind === 'skill' ? '액티브' : '패시브'}</span>
+          {tag ? <span className="tb-tot-part-when">{tag === '각성기' && kind !== 'skill' ? '각성 중' : tag}</span> : null}
+          {when ? <span className="tb-tot-part-when">{when}</span> : null}
+          {(s.value ?? p.value) != null ? <b>{fmt(s.value ?? p.value)}</b> : null}
+        </div>
+        <div className="tb-tot-src-meta">
+          {s.scope ? <span>→ {scopeText(s.scope)}</span> : null}
+          {p.duration ? <span className="is-turn">{p.duration}</span> : null}
+          {p.chance ? <span>{p.chance}% 확률</span> : null}
+          {p.amountText ? <span className="is-amt">{p.amountText}</span> : null}
+          {p.stack ? <span className="is-stack">{p.stack}</span> : null}
+          {s.condition ? <span className="is-cond" title={s.condition}>{s.condition}</span> : null}
+        </div>
+      </div>
+    </li>
+  );
+}
+
+function LedgerRow({ r, teamSize, scopeText, resolveHero, index }) {
+  const [open, setOpen] = useState(false);
+  const fmt = (v) => fmtFxValue(v, r.label, r.dir);
+  const partial = (t) => t?.recipients && teamSize && t.recipients.length < teamSize;
+  const reach = [r.passive, r.skill].find(partial);
+  const passiveTurn = r.passive?.segs.some((s) => s.timing === 'start');
+  const parts = [
+    ...(r.passive?.parts || []).map((p) => ({ ...p, kind: 'passive' })),
+    ...(r.skill?.parts || []).map((p) => ({ ...p, kind: 'skill' })),
+  ];
+  const notes = parts.flatMap((p) => [
+    p.lost.length ? `같은 효과는 가장 높은 수치 하나만 적용돼요. ${p.lost.map((x) => `${x.heroName} ${fmtValue(x.value, r.dir)}`).join(' · ')}는 반영 안 돼요.` : null,
+    p.overlapNote ? `같은 효과는 겹치는 대상만 높은 수치 하나를 받아요. ${p.overlapNote}` : null,
+    p.wasted ? `${p.srcs[0]?.heroName || ''}의 효과 대상(${scopeText(p.scope)})이 덱에 없어요.` : null,
+    p.note?.text || null,
+  ]).filter(Boolean);
+  return (
+    <li className={`tb-tot-row${open ? ' is-open' : ''}${r.overlap || r.warn ? ' is-warn' : ''}`} style={{ '--i': Math.min(index, 20) }}>
+      <button type="button" className="tb-tot-line" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        <span className="tb-tot-name">
+          <FxIcon name={r.label} size={22} />
+          <span className="tb-tot-label">{r.label}</span>
+          {r.overlap ? <em className="tb-tot-flagtag">중복</em> : r.warn ? <em className="tb-tot-flagtag">확인</em> : null}
+          {reach ? <em className="tb-tot-reach">{reach.recipients.length}/{teamSize}명</em> : null}
+          <span className="tb-tot-faces">{r.heroes.slice(0, 3).map((n) => <MiniHero key={n} hero={resolveHero(n)} size={24} />)}</span>
+        </span>
+        <span className={`tb-tot-cell is-passive${r.passive ? '' : ' is-none'}`}>
+          {r.passive ? fmt(r.passive.total) : '—'}
+          {passiveTurn ? <i title="전투 시작 턴 효과 포함">턴</i> : null}
+        </span>
+        <span className={`tb-tot-cell is-skill${r.skill ? '' : ' is-none'}`}>
+          {r.skill ? fmt(r.skill.total) : '—'}
+        </span>
+        <span className="tb-tot-cell is-sum"><b>{fmt(r.total)}</b></span>
+      </button>
+      {open ? (
+        <div className="tb-tot-detail">
+          <ul className="tb-tot-srcs">
+            {parts.flatMap((p) => p.srcs.map((s) => (
+              <LedgerSource key={`${p.kind}-${p.id}-${s.id}`} p={p} s={s} kind={p.kind} fmt={fmt} scopeText={scopeText} resolveHero={resolveHero} />
+            )))}
+          </ul>
+          {notes.map((n) => <p key={n} className="tb-tot-warn">{n}</p>)}
+          {r.skill && r.skill.parts.length > 1 ? <p className="tb-tot-note">액티브는 같은 효과 중 가장 높은 수치 하나만 합계에 더했어요.</p> : null}
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
+/** 버프 · 디버프 칸 본문 — `data` = fxGroups `fxLedger(패시브 카드, 액티브 카드)` */
+export function FxLedger({ data, side, tone, perspective, teamSize, resolveHero, emptyText }) {
+  const scopeText = scopeFor(perspective);
+  const { groups, rows, flags, nPassive, nSkill } = data;
+  if (!rows.length && !flags.length) return <div className="tb-empty">{emptyText}</div>;
+  return (
+    <div className={`tb-tot-col is-${side}${toneClass(tone)}`}>
+      {rows.length ? (
+        <div className="tb-tot-sheet">
+          <div className="tb-tot-thead" aria-hidden="true">
+            <span>효과</span>
+            <span className="tb-tot-th is-passive">패시브 <small>{nPassive}</small></span>
+            <span className="tb-tot-th is-skill">액티브 <small>{nSkill}</small></span>
+            <span className="tb-tot-th is-sum"><Icon name="tbTotals" size={13} /> 합계</span>
+          </div>
+          {groups.map((g) => (
+            <div key={g.id} className="tb-tot-group">
+              <div className="tb-tot-group-label">{g.label}</div>
+              <ul className="tb-tot-rows">
+                {g.rows.map((r, i) => (
+                  <LedgerRow key={r.id} r={r} teamSize={teamSize} scopeText={scopeText} resolveHero={resolveHero} index={i} />
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {flags.length ? <LedgerFlags flags={flags} scopeText={scopeText} resolveHero={resolveHero} /> : null}
+    </div>
+  );
+}
+
+/** 특수 효과(수치 없음 — 관통 · 기절 · 면역 …) — 알약을 누르면 그 아래 누가 · 어떤 스킬로 · 누구에게 · 몇 턴 거는지 */
+function LedgerFlags({ flags, scopeText, resolveHero }) {
+  const [openId, setOpenId] = useState(null);
+  const cur = flags.find((f) => f.id === openId) || null;
+  return (
+    <div className="tb-tot-uniq">
+      <div className="tb-tot-uniq-head">
+        <span className="tb-tot-uniq-title">특수 효과</span>
+        <span className="tb-tot-uniq-num">{flags.length}</span>
+        <em>수치 없는 효과 · 누르면 누가 어떻게 쓰는지</em>
+      </div>
+      <div className="tb-tot-flags">
+        {flags.map((f) => {
+          const on = cur?.id === f.id;
+          return (
+            <button
+              key={f.id}
+              type="button"
+              className={`tb-tot-flag${on ? ' is-on' : ''}`}
+              aria-expanded={on}
+              onClick={() => setOpenId(on ? null : f.id)}
+              title={f.label}
+            >
+              <FxIcon name={f.label} size={24} className="tb-tot-flag-icon" />
+              <span className="tb-tot-flag-name">{f.label}</span>
+              <span className="tb-tot-flag-faces">
+                {f.heroes.slice(0, 2).map((n) => <MiniHero key={n} hero={resolveHero(n)} size={20} />)}
+                {f.heroes.length > 2 ? <em>+{f.heroes.length - 2}</em> : null}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {cur ? (
+        <div className="tb-tot-detail is-flag">
+          <div className="tb-tot-flag-title"><FxIcon name={cur.label} size={20} /> {cur.label}</div>
+          <ul className="tb-tot-srcs">
+            {cur.parts.flatMap((p) => p.srcs.map((s) => (
+              <LedgerSource key={`${p.kind}-${p.id}-${s.id}`} p={p} s={s} kind={p.kind} fmt={(v) => fmtValue(v, null)} scopeText={scopeText} resolveHero={resolveHero} />
+            )))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** 버프 · 디버프 칸 맨 아래 「자세히 보기」 — 누르면 영웅 · 스킬 상자 목록(패시브 | 액티브 · 발동 탭)이 펼쳐짐 */
+export function FxFold({ open, onToggle, tone, hint, children }) {
+  return (
+    <div className={`tb-fx-detail${open ? ' is-open' : ''}${toneClass(tone)}`}>
+      <button type="button" className="tb-fx-detail-btn" aria-expanded={open} onClick={onToggle}>
+        <Icon name="hero" size={15} />
+        <span>{open ? '자세히 접기' : '자세히 보기'}</span>
+        {hint ? <small>{hint}</small> : null}
+        <i aria-hidden="true">▾</i>
+      </button>
+      {open ? <div className="tb-fx-detail-body">{children}</div> : null}
     </div>
   );
 }

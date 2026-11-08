@@ -90,6 +90,7 @@ export const UI_IMAGE_ICONS = {
   tbBuff: { src: '/images/ui/tb-buff-shield.png', w: 23, h: 28, activeInvert: false },
   tbDebuff: { src: '/images/ui/tb-debuff-shield.png', w: 23, h: 28, activeInvert: false },
   tbThreat: { src: '/images/ui/tb-threat-warn.png', w: 128, h: 128, activeInvert: false },
+  tbTotals: { src: '/images/ui/tb-totals-sum.png', w: 49, h: 49 },
   tbAim: { src: '/images/ui/tb-aim.png', w: 64, h: 64, activeInvert: false },
   tbVs: { src: '/images/ui/vs.png', w: 120, h: 112, activeInvert: false },
   tbGuildwar: { src: '/images/ui/tb-guildwar-castle.png', w: 114, h: 114 },

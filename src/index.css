@@ -10134,6 +10134,17 @@ h1, h2, h3 {
   }
 }
 
+/* 도감 시스템 「상태이상 & 특수 효과」 카드 — 게임 효과 아이콘 (lib/effectIcons) */
+.dex-effect-icon {
+  flex-shrink: 0;
+  border-radius: 10px;
+  object-fit: contain;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+@media (max-width: 760px) {
+  .dex-effect-icon { width: 40px; height: 40px; }
+}
+
 /* 진형 선택 창(InGameDeckCard — 모든 덱 편성 공용): 폰은 2열이면 카드가 150px라 이름 · 버프가 한 글자씩 꺾이고
    오른쪽 열이 잘림 → 1열 가로 카드(아이콘 | 이름 · 선택됨 / 후방 · 전방). PC 680px 2열은 그대로 */
 @media (max-width: 640px) {

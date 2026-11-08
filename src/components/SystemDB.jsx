@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { systemRulesData } from '../data/systemRules';
 import exclusiveGearUi from '../data/exclusiveGearUiAssets.generated.json';
 import Icon from './icons/Icon';
+import { effectIconUrl } from '../lib/effectIcons';
 
 /** 조율 아이콘은 흰색 단색이라 밝은(선택) 탭 배경에서만 검정으로 반전 */
 const SYSTEM_TABS = [
@@ -9,6 +10,40 @@ const SYSTEM_TABS = [
   { id: 'potential', iconUrl: '/images/ui/system/tab-potential.png', invertOnActive: true, label: '잠재능력 & 전용 장비' },
   { id: 'effects', iconUrl: '/images/ui/system/tab-effects.png', label: '상태이상 & 특수 효과 도감' },
 ];
+
+const EFFECT_LISTS = {
+  cc: (r) => r.cc_effects,
+  dot: (r) => r.dot_effects,
+  survival: (r) => r.survival_effects,
+  utility: (r) => r.special_utility,
+};
+const EFFECT_TONE = {
+  cc: { line: '#f87171', tag: 'rgba(248,113,113,0.2)' },
+  dot: { line: '#fb7185', tag: 'rgba(251,113,133,0.2)' },
+  survival: { line: '#38bdf8', tag: 'rgba(56,189,248,0.2)' },
+  utility: { line: 'var(--gold-primary)', tag: null },
+};
+
+/** 상태이상 · 특수 효과 카드 — 왼쪽에 게임 효과 아이콘(lib/effectIcons) */
+function EffectEntry({ item, cat }) {
+  const tone = EFFECT_TONE[cat];
+  const icon = effectIconUrl(item.name);
+  const isUtility = cat === 'utility';
+  return (
+    <div className="luxury-panel dex-effect-card" style={{ padding: '16px 18px', borderLeft: `4px solid ${tone.line}`, display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+      {icon ? <img className="dex-effect-icon" src={icon} alt="" width={46} height={46} loading="lazy" decoding="async" /> : null}
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ fontSize: '16px', fontWeight: 900, color: isUtility ? 'var(--gold-primary)' : '#fff', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
+          <span>{item.name}</span>
+          {!isUtility && item.category ? (
+            <span style={{ fontSize: '11px', background: tone.tag, color: tone.line, padding: '2px 8px', borderRadius: '4px', whiteSpace: 'nowrap', alignSelf: 'flex-start' }}>{item.category}</span>
+          ) : null}
+        </div>
+        <div style={{ fontSize: '14px', color: '#f8fafc', lineHeight: '1.65', fontWeight: 700 }}>{item.description}</div>
+      </div>
+    </div>
+  );
+}
 
 export default function SystemDB() {
   const [activeSubTab, setActiveSubTab] = useState('mechanics'); // mechanics, potential, effects
@@ -210,43 +245,8 @@ export default function SystemDB() {
 
           {/* 카테고리별 그리드 카드 목록 */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
-            {effectCategory === 'cc' && effects_registry.cc_effects.map((item, idx) => (
-              <div key={idx} className="luxury-panel" style={{ padding: '18px', borderLeft: '4px solid #f87171' }}>
-                <div style={{ fontSize: '16px', fontWeight: 900, color: '#fff', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
-                  <span>{item.name}</span>
-                  <span style={{ fontSize: '11px', background: 'rgba(248,113,113,0.2)', color: '#f87171', padding: '2px 8px', borderRadius: '4px' }}>{item.category}</span>
-                </div>
-                <div style={{ fontSize: '14px', color: '#f8fafc', lineHeight: '1.65', fontWeight: 700 }}>{item.description}</div>
-              </div>
-            ))}
-
-            {effectCategory === 'dot' && effects_registry.dot_effects.map((item, idx) => (
-              <div key={idx} className="luxury-panel" style={{ padding: '18px', borderLeft: '4px solid #fb7185' }}>
-                <div style={{ fontSize: '16px', fontWeight: 900, color: '#fff', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
-                  <span>{item.name}</span>
-                  <span style={{ fontSize: '11px', background: 'rgba(251,113,133,0.2)', color: '#fb7185', padding: '2px 8px', borderRadius: '4px' }}>{item.category}</span>
-                </div>
-                <div style={{ fontSize: '14px', color: '#f8fafc', lineHeight: '1.65', fontWeight: 700 }}>{item.description}</div>
-              </div>
-            ))}
-
-            {effectCategory === 'survival' && effects_registry.survival_effects.map((item, idx) => (
-              <div key={idx} className="luxury-panel" style={{ padding: '18px', borderLeft: '4px solid #38bdf8' }}>
-                <div style={{ fontSize: '16px', fontWeight: 900, color: '#fff', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
-                  <span>{item.name}</span>
-                  <span style={{ fontSize: '11px', background: 'rgba(56,189,248,0.2)', color: '#38bdf8', padding: '2px 8px', borderRadius: '4px' }}>{item.category}</span>
-                </div>
-                <div style={{ fontSize: '14px', color: '#f8fafc', lineHeight: '1.65', fontWeight: 700 }}>{item.description}</div>
-              </div>
-            ))}
-
-            {effectCategory === 'utility' && effects_registry.special_utility.map((item, idx) => (
-              <div key={idx} className="luxury-panel" style={{ padding: '18px', borderLeft: '4px solid var(--gold-primary)' }}>
-                <div style={{ fontSize: '16px', fontWeight: 900, color: 'var(--gold-primary)', marginBottom: '6px' }}>
-                  {item.name}
-                </div>
-                <div style={{ fontSize: '14px', color: '#f8fafc', lineHeight: '1.65', fontWeight: 700 }}>{item.description}</div>
-              </div>
+            {(EFFECT_LISTS[effectCategory]?.(effects_registry) || []).map((item, idx) => (
+              <EffectEntry key={`${effectCategory}-${item.name}-${idx}`} item={item} cat={effectCategory} />
             ))}
           </div>
 

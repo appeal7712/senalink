@@ -1088,6 +1088,7 @@ export function effectCards(analysis, team, includeEnhance = true, { selfOnly = 
           recipients,
           applied: !lostIds.has(e.id),
           skillLabel: e.skillLabel,
+          skillName: e.skillName,
           condition: e.condition,
           turns: e.duration?.type === 'turns' ? e.duration.n : null,
           tower: !!e.tower,

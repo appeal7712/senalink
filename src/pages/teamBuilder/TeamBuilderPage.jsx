@@ -21,6 +21,8 @@ import {
   CheckList,
   DeckBar,
   EffectList,
+  FxFold,
+  FxLedger,
   FxTabs,
   HeroFxPanel,
   SelfBuffSection,
@@ -31,7 +33,7 @@ import {
   TargetStrip,
   ThreatCards,
 } from './TeamBuilderParts';
-import { fxBoxCount } from './fxGroups';
+import { fxBoxCount, fxLedger } from './fxGroups';
 import EffectDictionary from './EffectDictionary';
 import '../../styles/teamBuilder.css';
 
@@ -50,7 +52,7 @@ const bareName = (name) => String(name || '').replace(/\(중첩\)$/, '').trim();
 const ALLY_SIG = new Set(Object.entries(SIGNATURE_TIPS).filter(([, v]) => v.ally).map(([k]) => k));
 const ENEMY_SIG = new Set(Object.entries(SIGNATURE_TIPS).filter(([, v]) => v.enemy).map(([k]) => k));
 const LEVEL_ORDER = { danger: 0, warn: 1, info: 2 };
-const SKILL_TAB_SUB = '기본 공격 · 스킬 · 각성기 · 조건 발동 — 쓸 때 걸려서 겹침 판정은 안 해요';
+const LEDGER_SUB = '효과마다 패시브 + 액티브를 더한 값 · 줄을 누르면 스킬 · 겹침까지';
 const MISSING_GROUPS = [
   { id: 'role', label: '역할' },
   { id: 'ally', label: '팀 버프' },
@@ -329,8 +331,11 @@ export default function TeamBuilderPage() {
   const [view, setView] = useState('mine');
   const [fxFocus, setFxFocus] = useState(null);
   const [fxOpen, setFxOpen] = useState(false);
-  const [fxTab, setFxTab] = useState({ ally: 'passive', enemy: 'passive' });
+  const [fxTab, setFxTab] = useState({ ally: 'passive', enemy: 'passive', theirDebuff: 'passive', theirBuff: 'passive' });
   const [selfOpen, setSelfOpen] = useState(null);
+  const [theirSelfOpen, setTheirSelfOpen] = useState(null);
+  const [foldOpen, setFoldOpen] = useState({});
+  const toggleFold = (k) => setFoldOpen((d) => ({ ...d, [k]: !d[k] }));
   const openFxFor = (next) => {
     setFxFocus(next);
     setFxOpen(true);
@@ -404,6 +409,28 @@ export default function TeamBuilderPage() {
     });
   }, [deck, effectIndex]);
   const checks = useMemo(() => buildChecks({ cards: myCards, reqs, missing }), [myCards, reqs, missing]);
+
+  /** 상대 덱 입장 — 상대가 받는 버프 · 우리가 받는 디버프 (내 덱 목록과 같은 함수, 대상 글만 우리 입장으로 뒤집어 표시) */
+  const theirFx = useMemo(() => {
+    if (!theirs) return null;
+    const cards = effectCards(theirs, enemyHeroes);
+    const cast = skillCards(theirs, enemyHeroes);
+    return {
+      buffs: cards.filter((c) => c.side === 'ally'),
+      debuffs: cards.filter((c) => c.side === 'enemy'),
+      self: effectCards(theirs, enemyHeroes, true, { selfOnly: true }),
+      buffSkill: cast.filter((c) => c.side === 'ally' && c.sources[0]?.scopeKind !== 'self'),
+      selfSkill: cast.filter((c) => c.side === 'ally' && c.sources[0]?.scopeKind === 'self'),
+      debuffSkill: cast.filter((c) => c.side === 'enemy'),
+    };
+  }, [theirs, enemyHeroes]);
+
+  const ledgers = useMemo(() => ({
+    buff: fxLedger(buffCards, buffSkillCards),
+    debuff: fxLedger(debuffCards, debuffSkillCards),
+    theirDebuff: theirFx ? fxLedger(theirFx.debuffs, theirFx.debuffSkill) : null,
+    theirBuff: theirFx ? fxLedger(theirFx.buffs, theirFx.buffSkill) : null,
+  }), [buffCards, buffSkillCards, debuffCards, debuffSkillCards, theirFx]);
 
   const threats = useMemo(() => {
     if (!theirs || !meta) return { cards: [], groups: [] };
@@ -629,10 +656,13 @@ export default function TeamBuilderPage() {
                       icon="tbBuff"
                       iconPlain={26}
                       title="우리 팀이 받는 버프"
-                      sub={fxTab.ally === 'skill' ? SKILL_TAB_SUB : '패시브 [상시] · 전투 시작 [N턴] — [상시]와 턴 효과는 서로 중첩돼요'}
-                      aside={<span className="tb-block-num is-ally">{fxTab.ally === 'skill' ? fxBoxCount(buffSkillCards, 'skill') : fxBoxCount(buffCards)}</span>}
+                      sub={LEDGER_SUB}
+                      aside={<span className="tb-block-num is-ally">{ledgers.buff.count}</span>}
                       index={1}
+                      className="tb-fx-block"
                     >
+                      <FxLedger data={ledgers.buff} side="ally" tone="ally" teamSize={myHeroes.length} resolveHero={resolveHero} emptyText="팀에 거는 버프가 없어요." />
+                      <FxFold open={!!foldOpen.buff} onToggle={() => toggleFold('buff')} tone="ally" hint={selfCards.length || selfSkillCards.length ? '누가 누구에게 · 자기 자신만 받는 버프' : '누가 누구에게 거는지'}>
                       <FxTabs
                         side="ally"
                         value={fxTab.ally}
@@ -651,22 +681,27 @@ export default function TeamBuilderPage() {
                           <SelfBuffSection cards={selfCards} teamSize={myHeroes.length} resolveHero={resolveHero} open={selfOpen} onToggle={setSelfOpen} />
                         </>
                       )}
+                      </FxFold>
                     </Block>
                     <Block
-                      tone="enemy"
+                      tone="gain"
                       icon="tbDebuff"
                       iconPlain={26}
-                      title={isPve ? '보스에게 거는 디버프' : '상대에게 거는 디버프'}
-                      sub={fxTab.enemy === 'skill' ? SKILL_TAB_SUB : '패시브 [상시] · 전투 시작 [N턴]'}
-                      aside={<span className="tb-block-num is-enemy">{fxTab.enemy === 'skill' ? fxBoxCount(debuffSkillCards, 'skill') : fxBoxCount(debuffCards)}</span>}
+                      title={isPve ? '보스가 받는 디버프' : '상대가 받는 디버프'}
+                      sub={LEDGER_SUB}
+                      aside={<span className="tb-block-num is-gain">{ledgers.debuff.count}</span>}
                       index={2}
+                      className="tb-fx-block"
                     >
-                      <FxTabs side="enemy" value={fxTab.enemy} onChange={(v) => setFxTab((t) => ({ ...t, enemy: v }))} passiveCount={fxBoxCount(debuffCards)} skillCount={fxBoxCount(debuffSkillCards, 'skill')} />
+                      <FxLedger data={ledgers.debuff} side="enemy" tone="gain" teamSize={myHeroes.length} resolveHero={resolveHero} emptyText={isPve ? '보스에게 거는 디버프가 없어요.' : '상대에게 거는 디버프가 없어요.'} />
+                      <FxFold open={!!foldOpen.debuff} onToggle={() => toggleFold('debuff')} tone="gain" hint="누가 누구에게 거는지">
+                      <FxTabs side="enemy" tone="gain" value={fxTab.enemy} onChange={(v) => setFxTab((t) => ({ ...t, enemy: v }))} passiveCount={fxBoxCount(debuffCards)} skillCount={fxBoxCount(debuffSkillCards, 'skill')} />
                       {fxTab.enemy === 'skill' ? (
-                        <SkillEffectList key="enemy-skill" cards={debuffSkillCards} side="enemy" resolveHero={resolveHero} emptyText="액티브 · 발동으로 거는 디버프가 없어요." />
+                        <SkillEffectList key="enemy-skill" cards={debuffSkillCards} side="enemy" tone="gain" resolveHero={resolveHero} emptyText="액티브 · 발동으로 거는 디버프가 없어요." />
                       ) : (
-                        <EffectList key="enemy-passive" cards={debuffCards} side="enemy" teamSize={myHeroes.length} resolveHero={resolveHero} onFind={findCard} emptyText={isPve ? '보스에게 거는 패시브 디버프가 없어요.' : '상대에게 거는 패시브 디버프가 없어요.'} />
+                        <EffectList key="enemy-passive" cards={debuffCards} side="enemy" tone="gain" teamSize={myHeroes.length} resolveHero={resolveHero} onFind={findCard} emptyText={isPve ? '보스에게 거는 패시브 디버프가 없어요.' : '상대에게 거는 패시브 디버프가 없어요.'} />
                       )}
+                      </FxFold>
                     </Block>
                   </div>
                 </div>
@@ -686,6 +721,56 @@ export default function TeamBuilderPage() {
                     <TargetStrip groups={threats.groups} resolveHero={resolveHero} />
                     <ThreatCards cards={threats.cards} resolveHero={resolveHero} emptyText="이 상대 덱에는 특정 영웅을 노리는 기믹이 없어요." />
                   </Block>
+                  {theirFx ? (
+                    <div className="tb-fx-pair">
+                      <Block
+                        tone="enemy"
+                        icon="tbDebuff"
+                        iconPlain={26}
+                        title="우리 팀이 받는 디버프"
+                        sub={LEDGER_SUB}
+                        aside={<span className="tb-block-num is-enemy">{ledgers.theirDebuff.count}</span>}
+                        index={1}
+                        className="tb-fx-block"
+                      >
+                        <FxLedger data={ledgers.theirDebuff} side="enemy" tone="enemy" perspective="enemy" teamSize={enemyHeroes.length} resolveHero={resolveHero} emptyText="상대가 거는 디버프가 없어요." />
+                        <FxFold open={!!foldOpen.theirDebuff} onToggle={() => toggleFold('theirDebuff')} tone="enemy" hint="누가 누구에게 거는지">
+                        <FxTabs side="enemy" tone="enemy" value={fxTab.theirDebuff} onChange={(v) => setFxTab((t) => ({ ...t, theirDebuff: v }))} passiveCount={fxBoxCount(theirFx.debuffs)} skillCount={fxBoxCount(theirFx.debuffSkill, 'skill')} />
+                        {fxTab.theirDebuff === 'skill' ? (
+                          <SkillEffectList key="their-debuff-skill" cards={theirFx.debuffSkill} side="enemy" tone="enemy" perspective="enemy" resolveHero={resolveHero} emptyText="상대가 액티브 · 발동으로 거는 디버프가 없어요." />
+                        ) : (
+                          <EffectList key="their-debuff-passive" cards={theirFx.debuffs} side="enemy" tone="enemy" perspective="enemy" teamSize={enemyHeroes.length} resolveHero={resolveHero} emptyText="상대가 패시브로 거는 디버프가 없어요." />
+                        )}
+                        </FxFold>
+                      </Block>
+                      <Block
+                        tone="rival"
+                        icon="tbBuff"
+                        iconPlain={26}
+                        title="상대가 받는 버프"
+                        sub={LEDGER_SUB}
+                        aside={<span className="tb-block-num is-rival">{ledgers.theirBuff.count}</span>}
+                        index={2}
+                        className="tb-fx-block"
+                      >
+                        <FxLedger data={ledgers.theirBuff} side="ally" tone="rival" perspective="enemy" teamSize={enemyHeroes.length} resolveHero={resolveHero} emptyText="상대가 받는 팀 버프가 없어요." />
+                        <FxFold open={!!foldOpen.theirBuff} onToggle={() => toggleFold('theirBuff')} tone="rival" hint={theirFx.self.length || theirFx.selfSkill.length ? '누가 누구에게 · 자기 자신만 받는 버프' : '누가 누구에게 거는지'}>
+                        <FxTabs side="ally" tone="rival" value={fxTab.theirBuff} onChange={(v) => setFxTab((t) => ({ ...t, theirBuff: v }))} passiveCount={fxBoxCount(theirFx.buffs)} skillCount={fxBoxCount(theirFx.buffSkill, 'skill')} />
+                        {fxTab.theirBuff === 'skill' ? (
+                          <>
+                            <SkillEffectList key="their-buff-skill" cards={theirFx.buffSkill} side="ally" tone="rival" perspective="enemy" resolveHero={resolveHero} emptyText="상대가 액티브 · 발동으로 받는 버프가 없어요." />
+                            <SelfBuffSection kind="skill" cards={theirFx.selfSkill} tone="rival" perspective="enemy" teamSize={enemyHeroes.length} resolveHero={resolveHero} open={theirSelfOpen} onToggle={setTheirSelfOpen} />
+                          </>
+                        ) : (
+                          <>
+                            <EffectList key="their-buff-passive" cards={theirFx.buffs} side="ally" tone="rival" perspective="enemy" teamSize={enemyHeroes.length} resolveHero={resolveHero} emptyText="상대가 패시브로 받는 팀 버프가 없어요." />
+                            <SelfBuffSection cards={theirFx.self} tone="rival" perspective="enemy" teamSize={enemyHeroes.length} resolveHero={resolveHero} open={theirSelfOpen} onToggle={setTheirSelfOpen} />
+                          </>
+                        )}
+                        </FxFold>
+                      </Block>
+                    </div>
+                  ) : null}
                 </div>
               )
             ) : null}

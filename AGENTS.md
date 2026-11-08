@@ -321,7 +321,8 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | 공격 스킬의 「치명타 · 약점 공격 확률 증가 100%」(지속 턴 없음) | `makeEntries` `ownHit` → 적 디버프 아님, **자신 버프 · 「이 스킬 공격 때」**(원래 대상 글은 남겨 노림 문장 `targetingInsights`에 계속 씀) |
 | 패시브 탭 목록 · 겹침(높은 수치 하나만) · 자기 버프 | `effectCards`(`selfOnly`) · `findOverlaps`(팀 버프끼리만, `teamGroups`) · `scopeCovers` · `sharedRecipients`(일부 겹침 → `overlapNote`) · `selfClash` |
 | 스킬 · 발동 탭 목록 | `skillCards`(카드) · `skillCardText`(표시 이름 다듬기) · 화면 `SkillEffectList` |
-| 목록 상자 묶기 · 칸 숫자 | `src/pages/teamBuilder/fxGroups.js` — `groupEffectCards` · `groupSkillCards` · `fxBoxCount` |
+| 목록 상자 묶기 · 칸 숫자 · 버프/디버프 칸 표(패시브 · 액티브 · 합계) | `src/pages/teamBuilder/fxGroups.js` — `groupEffectCards` · `groupSkillCards` · `fxBoxCount` · `fxTotals` · `fxLedger`(칸 메인 표 `FxLedger` · 맨 아래 「자세히 보기」 `FxFold` 안에 목록) |
+| 칸 강조색(받는 버프 파랑 · 거는 디버프 보라 · 받는 디버프 빨강 · 상대 버프 주황) · 상대 덱 목록 대상 글 뒤집기 | `TeamBuilderParts.jsx` `tone` prop · `flipScope`(`perspective="enemy"`) — 뱃지 색은 `side` 그대로 |
 | PvE 전용 줄(탑 전용 · 보스 대상) | `makeEntries` `allowTower` — 탑 줄은 `tower: true`(「탑 전용」 표시), 「보스」 줄은 `SKIP_RE`(결투장 · 길드전은 건너뜀) / `SKIP_PVE_RE`(PvE는 읽음) |
 | 편성 조건 문구(「스킬2 생명력 전환 발동 안 함」) | `formationRequirements().effectText` · `heroSummary().conditions[].effectText` — 둘 다 `skillEffectText` 공용 |
 | 덱 세팅 체크 항목 | `src/pages/teamBuilder/TeamBuilderPage.jsx` `buildChecks` |
@@ -448,6 +449,7 @@ API:
 - 신규 영웅이면 **전용장비 아이콘도 같이** (`exclusiveGearMeta.generated.json`).
 - 목록 정렬 수동 금지 — §12.1 `sortHeroesForList`.
 - 장신구 세공: `accessory2`는 optional. **기본값에 `accessory2`를 넣지 말 것**(구 문서 해석이 깨짐). 해석·표시는 `lib/accessoryCraft.js`.
+- **버프 · 디버프 · 특수 효과 아이콘:** 원본 `asset/특수효과, 버프, 디버프 아이콘/`(버프 · 디버프 · 특수효과 한글 이름 + 원본 ID + `목록.md`), 사이트용 `public/images/effects/{ID}.webp`, 이름 표 `src/data/effectIcons.json`, 찾기 `lib/effectIcons.js` `effectIconUrl(name)`(띄어쓰기 무시 · 「(중첩)」 · 별명 `ALIASES`). 쓰는 곳: 팀 빌더 표 · 특수 효과 알약 · 목록(`FxIcon`), 도감 시스템 「상태이상 & 특수 효과」 카드. 새 영웅 · 새 효과가 나오면 `node scripts/sync-effect-icons.cjs`(7katlas 도감에서 다시 받음, 라이브 무관) → 아이콘 못 찾는 이름은 `ALIASES`에 추가.
 - **스킬 텍스트 정본 = [7katlas](https://7katlas.com/codex.html)** (2026-11 전 영웅 동기화, §13.1.2). 각성 영웅은 강화 수치가 기본 수치에 합쳐져 있어 「스킬 강화」 줄이 비는 게 정상. 스킬 문장을 바꾸면 팀 빌더 분석도 같이 바뀌므로 점검표(`/dev/tb-audit.html`)로 확인.
 - 스킬 · UI 아이콘 교체: 이미지 먼저 넣고 코드 참조. UI 아이콘은 `src/data/uiIcons.js` 키(예: 도감 `dexSkill` · `dexEffectSummary` · 장신구 도감 탭 `dexAccessory` · 장비 부위 필터 `statPhysical` / `statMagic` / `statArmor` — `gearDex.js` `SLOT_META.icon`, 원본 `asset/장비, 장신구/능력치 아이콘/`). 흰 아이콘은 선택된 탭에서 `index.css` 규칙으로 자동 검정(`brightness(0)`)이라 따로 만들 필요 없음. 색 있는 원본을 흰색으로 바꿀 때는 **음영을 살려** 밝기 비율만 유지(밍봉 선호 — 고해상도 음영 아이콘이 크게 보일 때 품질이 좋음). 팀 빌더 모드 아이콘 `tbArena` · `tbGuildwar` · `tbPve`(가면, `tb-pve-mask.png` — 공용 `pve` 아이콘과 별개) · `tbEffects`(책, `tb-effects-book.png`), 도구 준비 중 카드 `toolGacha` · `toolRuby`가 그 예. **UI 아이콘 그림을 바꿀 땐 새 파일 이름으로** (같은 이름 덮어쓰기 → 브라우저 캐시로 밍봉·방문자 화면에 예전 그림이 남음).
 
@@ -508,7 +510,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.11.08.215** (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.11.09.216** (푸터 `APP_VERSION` 확인)
 - 저장소 2개: 사이트 `appeal7712/senalink`(이 폴더) · 원본 에셋 `appeal7712/senalink-assets`(비공개, `asset/` 폴더 = 그 저장소, 브랜치 `main`). 새 컴퓨터 복구 = 사이트 clone → 그 안에 `git clone …/senalink-assets.git asset` → `.env.local`(Firebase 웹 설정 6줄, 콘솔 → 프로젝트 설정에서 복사) → `npm install` → `npx firebase login`.
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 
