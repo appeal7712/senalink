@@ -1,16 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Icon from '../../components/icons/Icon';
 import { heroes } from '../../data/heroes';
+import { UI_IMAGE_ICONS } from '../../data/uiIcons';
+import { formationsData } from '../../data/formations';
+import { pets } from '../../data/pets';
 import { BUFF_NOTES, HERO_TIPS, SIGNATURE_TIPS } from '../../data/teamBuilderTips';
 import { navigateToTeam, teamModeFromPath } from '../../config/routes';
+import { shouldSuppressDeckClick } from '../../utils/deckDrag';
 import {
   analyzeTeam,
   buildHeroEffectIndex,
   buildRareEffectSet,
   collectHeroEntries,
+  duelSummary,
   effectCards,
   fmtValue,
   formationRequirements,
+  formationRows,
+  petCards,
   finderKey,
   ownRevivals,
   skillCards,
@@ -19,7 +26,9 @@ import {
 import {
   Block,
   CheckList,
+  ClashFaces,
   DeckBar,
+  DuelBoard,
   EffectList,
   FxFold,
   FxLedger,
@@ -38,11 +47,14 @@ import EffectDictionary from './EffectDictionary';
 import '../../styles/teamBuilder.css';
 
 const STORE_KEY = 'senalink_team_builder_v1';
+/** `size` = 넣을 수 있는 영웅 수. 덱 칸은 모드와 상관없이 5칸 진형 배치(길드전은 5칸 중 3명 — 길드전 공략과 같은 방식) */
 const MODE_META = {
-  arena: { size: 5, title: '결투장', vs: '5 vs 5', icon: 'tbArena', iconSize: 18 },
-  guildwar: { size: 3, title: '길드전', vs: '3 vs 3', icon: 'tbGuildwar', iconSize: 18 },
-  pve: { size: 5, title: 'PvE', vs: '5인', icon: 'tbPve', iconSize: 18, pve: true },
+  arena: { size: 5, title: '결투장', vs: '5 vs 5', icon: 'tbArena', iconSize: 18, formation: 'basic' },
+  guildwar: { size: 3, title: '길드전', vs: '3 vs 3', icon: 'tbGuildwar', iconSize: 18, formation: 'protect' },
+  pve: { size: 5, title: 'PvE', vs: '5인', icon: 'tbPve', iconSize: 18, pve: true, formation: 'basic' },
 };
+const DECK_SLOTS = 5;
+const FORMATION_IDS = new Set(formationsData.map((f) => f.id));
 
 const cleanName = (n) => String(n || '').replace('(각성)', '').trim();
 const HERO_BY_NAME = new Map(heroes.map((h) => [cleanName(h.name), h]));
@@ -59,28 +71,36 @@ const MISSING_GROUPS = [
   { id: 'enemy', label: '적 디버프' },
 ];
 
-function emptyDeck(size) {
-  return Array.from({ length: size }, () => '');
+function emptyDeck() {
+  return Array.from({ length: DECK_SLOTS }, () => '');
 }
-const EMPTY_DECKS = Object.fromEntries(Object.entries(MODE_META).map(([id, m]) => [id, { mine: emptyDeck(m.size), enemy: emptyDeck(m.size) }]));
+const freshDeck = (m) => ({ mine: emptyDeck(), enemy: emptyDeck(), formation: { mine: MODE_META[m].formation, enemy: MODE_META[m].formation }, pet: { mine: null, enemy: null } });
+const PET_BY_ID = new Map(pets.map((p) => [p.id, p]));
+const EMPTY_DECKS = Object.fromEntries(Object.keys(MODE_META).map((id) => [id, freshDeck(id)]));
 
+/** 예전 저장본(길드전 3칸 · 진형 없음)도 그대로 읽힘 — 앞 칸부터 채우고 남는 칸은 비움, 진형은 모드 기본값 */
 function loadStore() {
   const base = {
-    decks: {
-      arena: { mine: emptyDeck(5), enemy: emptyDeck(5) },
-      guildwar: { mine: emptyDeck(3), enemy: emptyDeck(3) },
-      pve: { mine: emptyDeck(5), enemy: emptyDeck(5) },
-    },
+    decks: Object.fromEntries(Object.keys(MODE_META).map((m) => [m, freshDeck(m)])),
     enemyOn: { arena: false, guildwar: false, pve: false },
   };
   try {
     const raw = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
     if (!raw || typeof raw !== 'object') return base;
     for (const m of Object.keys(MODE_META)) {
-      const size = MODE_META[m].size;
+      const { size } = MODE_META[m];
       for (const side of ['mine', 'enemy']) {
         const list = Array.isArray(raw.decks?.[m]?.[side]) ? raw.decks[m][side] : [];
-        base.decks[m][side] = emptyDeck(size).map((_, i) => (resolveHero(list[i]) ? cleanName(list[i]) : ''));
+        let left = size;
+        base.decks[m][side] = emptyDeck().map((_, i) => {
+          if (!left || !resolveHero(list[i])) return '';
+          left -= 1;
+          return cleanName(list[i]);
+        });
+        const fid = raw.decks?.[m]?.formation?.[side];
+        if (FORMATION_IDS.has(fid)) base.decks[m].formation[side] = fid;
+        const petId = raw.decks?.[m]?.pet?.[side];
+        if (PET_BY_ID.has(petId)) base.decks[m].pet[side] = petId;
       }
     }
   } catch {
@@ -150,7 +170,7 @@ function buildChecks({ cards, reqs, missing }) {
     id: 'missing',
     tone: 'info',
     title: missingTotal ? `덱에 없는 효과 ${missingTotal}개` : '모든 효과를 갖췄어요',
-    detail: missingTotal ? '＋를 누르면 영웅 선택 창의 「필요한 효과로 찾기」로 이동해요.' : '',
+    detail: '',
     finders: missing,
   });
   return items;
@@ -425,12 +445,30 @@ export default function TeamBuilderPage() {
     };
   }, [theirs, enemyHeroes]);
 
+  const myFormation = deck?.formation?.mine || meta?.formation;
+  const theirFormation = deck?.formation?.enemy || meta?.formation;
+  const myPet = PET_BY_ID.get(deck?.pet?.mine) || null;
+  const theirPet = enemyOn ? PET_BY_ID.get(deck?.pet?.enemy) || null : null;
+  const petFx = useMemo(() => ({
+    myBuff: myPet ? petCards(myPet, myHeroes, true, 'ally') : [],
+    myDebuff: myPet ? petCards(myPet, enemyHeroes, true, 'enemy') : [],
+    theirBuff: theirPet ? petCards(theirPet, enemyHeroes, true, 'ally') : [],
+    theirDebuff: theirPet ? petCards(theirPet, myHeroes, true, 'enemy') : [],
+  }), [myPet, theirPet, myHeroes, enemyHeroes]);
+
   const ledgers = useMemo(() => ({
-    buff: fxLedger(buffCards, buffSkillCards),
-    debuff: fxLedger(debuffCards, debuffSkillCards),
-    theirDebuff: theirFx ? fxLedger(theirFx.debuffs, theirFx.debuffSkill) : null,
-    theirBuff: theirFx ? fxLedger(theirFx.buffs, theirFx.buffSkill) : null,
-  }), [buffCards, buffSkillCards, debuffCards, debuffSkillCards, theirFx]);
+    buff: fxLedger(buffCards, buffSkillCards, petFx.myBuff),
+    debuff: fxLedger(debuffCards, debuffSkillCards, petFx.myDebuff),
+    theirDebuff: theirFx ? fxLedger(theirFx.debuffs, theirFx.debuffSkill, petFx.theirDebuff) : null,
+    theirBuff: theirFx ? fxLedger(theirFx.buffs, theirFx.buffSkill, petFx.theirBuff) : null,
+  }), [buffCards, buffSkillCards, debuffCards, debuffSkillCards, theirFx, petFx]);
+
+  const duel = useMemo(() => (theirs ? duelSummary(mine, myHeroes, theirs, enemyHeroes, true, {
+    ours: formationRows(myFormation, deck.mine),
+    theirs: formationRows(theirFormation, deck.enemy),
+    oursPet: myPet,
+    theirsPet: theirPet,
+  }) : null), [mine, myHeroes, theirs, enemyHeroes, myFormation, theirFormation, deck, myPet, theirPet]);
 
   const threats = useMemo(() => {
     if (!theirs || !meta) return { cards: [], groups: [] };
@@ -452,13 +490,34 @@ export default function TeamBuilderPage() {
     });
   }, [mode]);
 
+  const setFormation = (side, fid) => {
+    setStore((prev) => {
+      const copy = structuredClone(prev);
+      copy.decks[mode] ??= structuredClone(EMPTY_DECKS[mode]);
+      copy.decks[mode].formation = { ...EMPTY_DECKS[mode].formation, ...copy.decks[mode].formation, [side]: fid };
+      return copy;
+    });
+  };
+
+  const setPet = (side, pet) => {
+    setStore((prev) => {
+      const copy = structuredClone(prev);
+      copy.decks[mode] ??= structuredClone(EMPTY_DECKS[mode]);
+      copy.decks[mode].pet = { mine: null, enemy: null, ...copy.decks[mode].pet, [side]: pet?.id || null };
+      return copy;
+    });
+  };
+
   const closePicker = useCallback(() => setPickerOpen(false), [setPickerOpen]);
+  const isFull = (side) => deck[side].filter(Boolean).length >= meta.size;
 
   const onSelectSlot = (side, idx) => {
+    if (shouldSuppressDeckClick()) return;
     if (pickerOpen && active.side === side && active.idx === idx) {
       setPickerOpen(false);
       return;
     }
+    if (!deck[side][idx] && isFull(side)) return;
     setActive({ side, idx });
     setPickerOpen(true);
     if (deck[side][idx]) setFxFocus({ side, name: deck[side][idx] });
@@ -466,7 +525,7 @@ export default function TeamBuilderPage() {
 
   const openFinder = (group, chipId) => {
     setFinder((f) => ({ ...f, group, chipId, open: true }));
-    const empty = deck.mine.findIndex((n) => !n);
+    const empty = isFull('mine') ? -1 : deck.mine.findIndex((n) => !n);
     setActive({ side: 'mine', idx: empty === -1 ? (active.side === 'mine' ? active.idx : 0) : empty });
     setPickerOpen(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -480,11 +539,36 @@ export default function TeamBuilderPage() {
     copy[idx] = name;
     updateDeck(side, copy);
     setFxFocus({ side, name });
+    if (copy.filter(Boolean).length >= meta.size) {
+      setPickerOpen(false);
+      return;
+    }
     const nextIdx = copy.findIndex((n, i) => i > idx && !n);
     const anyEmpty = copy.findIndex((n) => !n);
     if (nextIdx !== -1) setActive({ side, idx: nextIdx });
     else if (anyEmpty !== -1) setActive({ side, idx: anyEmpty });
     else setPickerOpen(false);
+  };
+
+  /** 덱 칸 끌어 옮기기 — 같은 덱 안에서만(공용 카드 `dragScope`), 자리 맞바꿈이라 영웅이 늘거나 줄지 않음 */
+  const onHeroDrop = (side, payload, toIdx) => {
+    const copy = [...deck[side]];
+    if (payload?.source === 'slot' && Number.isInteger(payload.fromIdx) && payload.fromIdx !== toIdx) {
+      [copy[toIdx], copy[payload.fromIdx]] = [copy[payload.fromIdx], copy[toIdx]];
+      updateDeck(side, copy);
+      if (pickerOpen && active.side === side) {
+        if (active.idx === payload.fromIdx) setActive({ side, idx: toIdx });
+        else if (active.idx === toIdx) setActive({ side, idx: payload.fromIdx });
+      }
+      return;
+    }
+    if (payload?.source === 'picker' && payload.name) {
+      const dup = copy.indexOf(payload.name);
+      if (dup !== -1 && dup !== toIdx) copy[dup] = copy[toIdx] || '';
+      else if (!copy[toIdx] && isFull(side)) return;
+      copy[toIdx] = payload.name;
+      updateDeck(side, copy);
+    }
   };
 
   const onRemove = (side, idx) => {
@@ -521,7 +605,7 @@ export default function TeamBuilderPage() {
     const title = MODE_META[target].title;
     const list = (store.decks[target] ?? EMPTY_DECKS[target]).mine;
     if (list.includes(name)) return `${name}은(는) 이미 ${title} 덱에 있어요.`;
-    const idx = list.findIndex((n) => !n);
+    const idx = list.filter(Boolean).length >= MODE_META[target].size ? -1 : list.findIndex((n) => !n);
     if (idx === -1) return `${title} 덱이 가득 찼어요. 덱에서 한 명을 빼고 넣어 주세요.`;
     setStore((prev) => {
       const copy = structuredClone(prev);
@@ -570,7 +654,7 @@ export default function TeamBuilderPage() {
         />
       ) : (
         <>
-          <section className="luxury-panel tb-deck-panel">
+          <section className="tb-deck-panel">
             <DeckBar
               size={meta.size}
               deck={deck}
@@ -579,9 +663,14 @@ export default function TeamBuilderPage() {
               resolveHero={resolveHero}
               active={pickerOpen ? active : null}
               onSelect={onSelectSlot}
+              onDrop={onHeroDrop}
               onRemove={onRemove}
               onClear={onClear}
               onToggleEnemy={() => setEnemy(true)}
+              formation={{ mine: myFormation, enemy: theirFormation }}
+              onFormation={setFormation}
+              pet={{ mine: myPet, enemy: PET_BY_ID.get(deck?.pet?.enemy) || null }}
+              onPet={setPet}
             />
             {enemyOn ? <button type="button" className="tb-enemy-off" onClick={() => setEnemy(false)}>상대 덱 끄기</button> : null}
             {pickerOpen ? (
@@ -616,16 +705,56 @@ export default function TeamBuilderPage() {
           <section className="luxury-panel tb-analysis">
             {enemyOn ? (
               <div className="tb-analysis-head">
-                <div className="tb-view-switch" role="tablist" aria-label="분석 기준">
-                  <button key="mine" type="button" role="tab" aria-selected={curView === 'mine'} className={`tb-view is-mine${curView === 'mine' ? ' is-on' : ''}`} onClick={() => setView('mine')}>
-                    <span className="tb-view-shine" aria-hidden="true" />
-                    <span className="tb-view-name">내 덱</span>
-                  </button>
-                  <span className="tb-view-dots" aria-hidden="true"><i /></span>
-                  <button key="enemy" type="button" role="tab" aria-selected={curView === 'enemy'} className={`tb-view is-enemy${curView === 'enemy' ? ' is-on' : ''}`} onClick={() => setView('enemy')}>
-                    <span className="tb-view-shine" aria-hidden="true" />
-                    <span className="tb-view-name">상대 덱</span>
-                  </button>
+                <div className="tb-clash" role="tablist" aria-label="분석 기준">
+                  <div className="tb-clash-bar">
+                    <button key="mine" type="button" role="tab" aria-selected={curView === 'mine'} className={`tb-clash-half is-mine${curView === 'mine' ? ' is-on' : ''}`} onClick={() => setView('mine')}>
+                      <span className="tb-clash-body">
+                        <span className="tb-clash-liquid" aria-hidden="true" />
+                        <ClashFaces heroes={myHeroes} />
+                        <span className="tb-clash-tag">
+                          <img className="tb-clash-icon" src={UI_IMAGE_ICONS.tbMyDeck.src} alt="" draggable={false} />
+                          <span className="tb-clash-name">내 덱</span>
+                        </span>
+                      </span>
+                    </button>
+                    <button key="duel" type="button" role="tab" aria-selected={curView === 'duel'} className={`tb-clash-medal${curView === 'duel' ? ' is-on' : ''}`} onClick={() => setView('duel')} title="두 덱이 패시브로 받는 버프 · 디버프를 능력치마다 비교">
+                      <span className="tb-orb" aria-hidden="true">
+                        <svg className="tb-orb-svg" viewBox="0 0 100 100" width="100" height="100" focusable="false">
+                          <defs>
+                            <mask id="tb-orb-mask">
+                              <polygon points="0,0 100,0 100,100 0,100" fill="black" />
+                              <polygon points="25,25 75,25 50,75" fill="white" />
+                              <polygon points="50,25 75,75 25,75" fill="white" />
+                              <polygon points="35,35 65,35 50,65" fill="white" />
+                              <polygon points="35,35 65,35 50,65" fill="white" />
+                              <polygon points="35,35 65,35 50,65" fill="white" />
+                              <polygon points="35,35 65,35 50,65" fill="white" />
+                            </mask>
+                          </defs>
+                        </svg>
+                        <span className="tb-orb-core"><span className="tb-orb-box" /></span>
+                        <img className="tb-orb-icon" src={UI_IMAGE_ICONS.tbDuelCrest.src} alt="" draggable={false} />
+                      </span>
+                      <span className="tb-clash-label">
+                        <span className="tb-clash-title">전력 비교</span>
+                        {duel?.stats.length ? (
+                          <b className="tb-clash-score" aria-label={`우리 우위 ${duel.counts.ours} · 상대 우위 ${duel.counts.theirs}`}>
+                            <i className="is-ours">{duel.counts.ours}</i>:<i className="is-theirs">{duel.counts.theirs}</i>
+                          </b>
+                        ) : <b className="tb-clash-score is-none">눌러서 보기</b>}
+                      </span>
+                    </button>
+                    <button key="enemy" type="button" role="tab" aria-selected={curView === 'enemy'} className={`tb-clash-half is-enemy${curView === 'enemy' ? ' is-on' : ''}`} onClick={() => setView('enemy')}>
+                      <span className="tb-clash-body">
+                        <span className="tb-clash-liquid" aria-hidden="true" />
+                        <span className="tb-clash-tag">
+                          <span className="tb-clash-name">상대 덱</span>
+                          <img className="tb-clash-icon" src={UI_IMAGE_ICONS.tbEnemyDeck.src} alt="" draggable={false} />
+                        </span>
+                        <ClashFaces heroes={enemyHeroes} />
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : null}
@@ -646,6 +775,7 @@ export default function TeamBuilderPage() {
                     sub="세팅하기 전에 확인할 것"
                     aside={warnCount ? <span className="tb-block-count is-warn">확인 {warnCount}</span> : <span className="tb-block-count">OK</span>}
                     index={0}
+                    className={warnCount ? '' : 'is-ok'}
                   >
                     <RingCheck rows={ringRows} resolveHero={resolveHero} />
                     <CheckList items={checks} resolveHero={resolveHero} onFinder={(group) => openFinder(group, '')} />
@@ -653,8 +783,8 @@ export default function TeamBuilderPage() {
                   <div className="tb-fx-pair">
                     <Block
                       tone="ally"
-                      icon="tbBuff"
-                      iconPlain={26}
+                      icon="tbFxAlly"
+                      iconPlain={32}
                       title="우리 팀이 받는 버프"
                       sub={LEDGER_SUB}
                       aside={<span className="tb-block-num is-ally">{ledgers.buff.count}</span>}
@@ -685,8 +815,8 @@ export default function TeamBuilderPage() {
                     </Block>
                     <Block
                       tone="gain"
-                      icon="tbDebuff"
-                      iconPlain={26}
+                      icon="tbFxGain"
+                      iconPlain={32}
                       title={isPve ? '보스가 받는 디버프' : '상대가 받는 디버프'}
                       sub={LEDGER_SUB}
                       aside={<span className="tb-block-num is-gain">{ledgers.debuff.count}</span>}
@@ -717,7 +847,7 @@ export default function TeamBuilderPage() {
                 </div>
               ) : (
                 <div key="enemy" className="tb-view-body">
-                  <Block tone="enemy" icon="tbThreat" iconPlain={44} title="상대 덱에서 조심할 것" sub="상대가 노리는 우리 영웅과 대비" index={0}>
+                  <Block tone="caution" icon="tbThreat" iconPlain={44} title="상대 덱에서 조심할 것" sub="상대가 노리는 우리 영웅과 대비" index={0}>
                     <TargetStrip groups={threats.groups} resolveHero={resolveHero} />
                     <ThreatCards cards={threats.cards} resolveHero={resolveHero} emptyText="이 상대 덱에는 특정 영웅을 노리는 기믹이 없어요." />
                   </Block>
@@ -725,8 +855,8 @@ export default function TeamBuilderPage() {
                     <div className="tb-fx-pair">
                       <Block
                         tone="enemy"
-                        icon="tbDebuff"
-                        iconPlain={26}
+                        icon="tbFxGain"
+                        iconPlain={32}
                         title="우리 팀이 받는 디버프"
                         sub={LEDGER_SUB}
                         aside={<span className="tb-block-num is-enemy">{ledgers.theirDebuff.count}</span>}
@@ -745,8 +875,8 @@ export default function TeamBuilderPage() {
                       </Block>
                       <Block
                         tone="rival"
-                        icon="tbBuff"
-                        iconPlain={26}
+                        icon="tbFxRival"
+                        iconPlain={32}
                         title="상대가 받는 버프"
                         sub={LEDGER_SUB}
                         aside={<span className="tb-block-num is-rival">{ledgers.theirBuff.count}</span>}
@@ -771,6 +901,30 @@ export default function TeamBuilderPage() {
                       </Block>
                     </div>
                   ) : null}
+                </div>
+              )
+            ) : null}
+
+            {curView === 'duel' ? (
+              !hasMine || !hasTheirs ? (
+                <div className="tb-empty tb-empty--big">
+                  <Icon name="tbDuelCrest" size={28} />
+                  <strong>{hasMine ? '상대 덱' : '내 덱'} 칸을 눌러 영웅을 넣어 주세요</strong>
+                  <span>두 덱이 다 있어야 능력치마다 누가 버프를 더 받는지 비교해요.</span>
+                </div>
+              ) : (
+                <div key="duel" className="tb-view-body">
+                  <Block
+                    tone="duel"
+                    icon="tbDuelCrest"
+                    iconPlain={30}
+                    title={<>전력 비교 <small className="tb-block-title-note">(패시브 효과만)</small></>}
+                    sub="능력치마다 두 팀이 받는 버프 · 디버프를 합쳐 누가 앞서는지"
+                    aside={<span className="tb-block-num is-duel">{duel.stats.length}</span>}
+                    index={0}
+                  >
+                    <DuelBoard data={duel} teams={{ ours: myHeroes.length, theirs: enemyHeroes.length }} resolveHero={resolveHero} />
+                  </Block>
                 </div>
               )
             ) : null}

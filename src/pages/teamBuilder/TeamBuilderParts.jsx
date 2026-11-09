@@ -4,6 +4,10 @@ import HeroGridPicker from '../../components/HeroGridPicker';
 import Icon from '../../components/icons/Icon';
 import SafeImg from '../../components/icons/SafeImg';
 import { accessories } from '../../data/equipments';
+import { formationsData } from '../../data/formations';
+import InGameDeckCard from '../../components/InGameDeckCard';
+import { UI_IMAGE_ICONS, formationIconName } from '../../data/uiIcons';
+import { pets } from '../../data/pets';
 import { skillIconUrl } from '../../lib/skillIcon';
 import { effectIconUrl } from '../../lib/effectIcons';
 import { LEGEND_RINGS, ROLE_TILES, effectLabel, entryValue, fmtFxValue, fmtValue, listLabel, targetLabel } from '../../lib/teamBuilderAnalysis';
@@ -18,6 +22,24 @@ export function FxIcon({ name, size = 20, className = '' }) {
   const src = effectIconUrl(name);
   if (!src) return null;
   return <img className={`tb-fx-icon${className ? ` ${className}` : ''}`} src={src} alt="" width={size} height={size} loading="lazy" decoding="async" />;
+}
+
+const PET_BY_NAME = new Map(pets.map((p) => [p.name, p]));
+const FORMATION_BY_NAME = new Map(formationsData.map((f) => [f.name, f]));
+/** 효과를 주는 쪽이 영웅이 아니면 — 「크리(펫)」 = 펫 · 「공격 진형」 = 진형 */
+const petOfGiver = (name) => PET_BY_NAME.get(String(name || '').replace(/\(펫\)$/, '')) || null;
+const formationOfGiver = (name) => FORMATION_BY_NAME.get(name) || null;
+const formationIconSrc = (f) => UI_IMAGE_ICONS[formationIconName(f.id)]?.src || '';
+
+/** 영웅 얼굴 · 펫 초상화 · 진형 아이콘 중 하나 (효과 주는 쪽) */
+export function GiverFace({ name, resolveHero, size = 22 }) {
+  const hero = resolveHero(name);
+  if (hero) return <MiniHero hero={hero} size={size} />;
+  const pet = petOfGiver(name);
+  if (pet?.portraitUrl) return <img className="tb-giver-face is-pet" src={pet.portraitUrl} alt="" width={size} height={size} loading="lazy" />;
+  const f = formationOfGiver(name);
+  if (f) return <img className="tb-giver-face is-formation" src={formationIconSrc(f)} alt="" width={size} height={size} loading="lazy" />;
+  return null;
 }
 
 export function MiniHero({ hero, size = 30 }) {
@@ -59,72 +81,136 @@ export function ModePicker({ onPick }) {
 
 /* ───────────── 상단 덱 바 ───────────── */
 
-function DeckSide({ side, size, names, resolveHero, active, onSelect, onRemove, onClear }) {
+/**
+ * 덱 한쪽 = 사이트 공용 덱 배치 카드(`InGameDeckCard` — 길드 허브 공략과 같은 [후방 | 전방 | 펫 · 진형], 결투장 준비 화면과 같은 배치).
+ * 칸을 누르면 아래 영웅 선택 창(빼기도 거기서), 펫 · 진형 아이콘을 누르면 공용 고르기 창. 5칸 진형, 길드전은 5칸 중 `size`(3)명.
+ * 카드 아래 한 줄 = 진형 버프(B · 빨강 별 × 후방 인원 · 모공 / F · 파랑 별 × 전방 인원 · 방어) + 펫.
+ */
+function DeckSide({ side, size, names, formationId, onFormation, pet, onPet, active, onSelect, onClear, onDrop }) {
   const filled = names.filter(Boolean).length;
   const isMine = side === 'mine';
+  const f = formationsData.find((x) => x.id === formationId) || formationsData[0];
+  const stars = (n, src) => Array.from({ length: n }, (_, i) => <img key={i} src={src} alt="" />);
   return (
     <div className={`tb-deck-side is-${side}`}>
-      <div className="tb-deck-side-head">
-        <span className="tb-side-title">
-          <Icon name={isMine ? 'deckAlly' : 'deckEnemy'} size={15} />
-          {isMine ? '내 덱' : '상대 덱'}
-        </span>
-        <span className="tb-deck-count">{filled}/{size}</span>
-        {filled ? (
-          <button type="button" className="tb-deck-clear" onClick={onClear} aria-label={`${isMine ? '내 덱' : '상대 덱'} 비우기`}>
-            <Icon name="close" size={10} /> 비우기
-          </button>
-        ) : null}
-      </div>
-      <div className="tb-slots" style={{ '--slots': size }}>
-        {Array.from({ length: size }, (_, i) => {
-          const name = names[i] || '';
-          const hero = name ? resolveHero(name) : null;
-          const isActive = active?.side === side && active.idx === i;
-          return (
-            <div key={i} className="tb-slot-wrap">
-              <button
-                type="button"
-                className={`tb-slot${isActive ? ' is-active' : ''}${hero ? ' is-filled' : ''}`}
-                onClick={() => onSelect(side, i)}
-                aria-label={hero ? `${i + 1}번 칸 ${name}` : `${i + 1}번 칸에 영웅 넣기`}
-                aria-expanded={isActive}
-              >
-                {hero ? (
-                  <span key={name} className="tb-slot-hero">
-                    <HeroPortraitCard hero={hero} showStars showRole />
-                  </span>
-                ) : (
-                  <span className="tb-slot-empty"><Icon name="plus" size={16} /></span>
-                )}
-              </button>
-              <span className="tb-slot-name">{hero ? name : `${i + 1}번`}</span>
-              {hero ? (
-                <button type="button" className="tb-slot-remove" onClick={() => onRemove(side, i)} aria-label={`${name} 빼기`}>✕</button>
+      <div className="tb-deck-card-wrap">
+        <span className="tb-deck-aura" aria-hidden="true" />
+        <InGameDeckCard
+          teamName={isMine ? '내 덱' : '상대 덱'}
+          headerSlot={(
+            <span className="tb-deck-meta">
+              <span className="tb-deck-count">{filled}/{size}</span>
+              {filled ? (
+                <button type="button" className="tb-deck-clear" onClick={onClear} aria-label={`${isMine ? '내 덱' : '상대 덱'} 비우기`}>
+                  <Icon name="close" size={10} /> 비우기
+                </button>
               ) : null}
-            </div>
-          );
-        })}
+            </span>
+          )}
+          formationId={f.id}
+          heroList={names}
+          petObj={pet}
+          allowNoPet
+          onFormationChange={(fid) => onFormation(side, fid)}
+          onPetChange={(p) => onPet(side, p)}
+          onSlotClick={(idx) => onSelect(side, idx)}
+          onHeroDrop={onDrop ? (payload, toIdx) => onDrop(side, payload, toIdx) : null}
+          dragScope={`tb-${side}`}
+          selectedSlotIdx={active?.side === side ? active.idx : -1}
+          contentMode="pvp"
+          hideReservationBtn
+          maxHeroes={size}
+          isSelected
+          accentColor={isMine ? 'rgba(147, 197, 253, 0.6)' : 'rgba(252, 165, 165, 0.6)'}
+        />
+      </div>
+      <div className="tb-deck-buffs" title={f.description}>
+        <span className="tb-deck-buff is-back">
+          <img className="tb-deck-buff-row" src={UI_IMAGE_ICONS.tbRowBack.src} alt="후방" />
+          <span className="tb-deck-buff-stars" aria-hidden="true">{stars(f.backCount, UI_IMAGE_ICONS.tbStarBack.src)}</span>
+          모공 {f.backBuff.replace('모든 공격력 ', '')}
+        </span>
+        <span className="tb-deck-buff is-front">
+          <img className="tb-deck-buff-row" src={UI_IMAGE_ICONS.tbRowFront.src} alt="전방" />
+          <span className="tb-deck-buff-stars" aria-hidden="true">{stars(5 - f.backCount, UI_IMAGE_ICONS.tbStarFront.src)}</span>
+          방어 {f.frontBuff.replace('방어력 ', '')}
+        </span>
       </div>
     </div>
   );
 }
 
-export function DeckBar({ size, deck, enemyOn, allowEnemy = true, resolveHero, active, onSelect, onRemove, onClear, onToggleEnemy }) {
+/** 두 덱 사이 VS — 금색 VS(크게) + 긴 「/」 · 짧은 「\」 빛줄기(흰 심 + 금빛 번짐) · 가운데 섬광 · 반짝이(결투장 준비 화면처럼) */
+function DeckVs() {
+  return (
+    <div className="tb-vs-stage" aria-hidden="true">
+      <span className="tb-vs-ray is-long"><i /></span>
+      <span className="tb-vs-ray is-short"><i /></span>
+      <img className="tb-vs-img" src={UI_IMAGE_ICONS.tbVsGold.src} alt="" />
+      <span className="tb-vs-shine" />
+      <span className="tb-vs-flare" />
+      <span className="tb-vs-spark is-a" />
+      <span className="tb-vs-spark is-b" />
+      <span className="tb-vs-spark is-c" />
+    </div>
+  );
+}
+
+export function DeckBar({ size, deck, enemyOn, allowEnemy = true, active, onSelect, onClear, onDrop, onToggleEnemy, formation, onFormation, pet, onPet }) {
+  const side = (s) => (
+    <DeckSide side={s} size={size} names={deck[s]} formationId={formation?.[s]} onFormation={onFormation} pet={pet?.[s] || null} onPet={onPet} active={active} onSelect={onSelect} onClear={() => onClear(s)} onDrop={onDrop} />
+  );
+  const barRef = useRef(null);
+  /* 두 덱은 어떤 폭에서도 나란히(인게임 결투 화면처럼) — 자리가 모자라면 카드 전체를 같은 비율로 줄임(--tb-pair-zoom) */
+  useLayoutEffect(() => {
+    const bar = barRef.current;
+    if (!bar || !enemyOn) return undefined;
+    const fit = () => {
+      const first = bar.querySelector(':scope > .tb-deck-side');
+      const card = first?.querySelector('.tb-deck-card-wrap');
+      if (!card) return;
+      /* 줄인 상태의 크기 값은 브라우저마다 달라서 — 원래 크기(1)로 잰 뒤 비율을 넣음 */
+      bar.style.setProperty('--tb-pair-zoom', '1');
+      const W = bar.clientWidth;
+      /* 두 덱 사이 최소 간격 — 폰은 0 → 64px, 그보다 넓으면 150 → 350px로 폭 따라 서서히. 폰에서 30px보다 좁으면 VS는 카드 위로 */
+      const phone = window.matchMedia('(max-width: 760px)').matches;
+      const midMin = Math.round(phone
+        ? Math.max(0, Math.min(64, (W - 290) * 0.6))
+        : Math.max(150, Math.min(350, (W - 500) * 0.6)));
+      const top = phone && midMin < 30;
+      bar.style.setProperty('--tb-vs-gap', `${midMin}px`);
+      bar.dataset.vs = top ? 'top' : 'mid';
+      const cs = getComputedStyle(first);
+      const natural = card.getBoundingClientRect().width + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+      if (!(natural > 0)) return;
+      const zoom = Math.max(0.4, Math.min(1, (W - midMin) / 2 / natural));
+      bar.style.setProperty('--tb-pair-zoom', zoom.toFixed(3));
+      /* VS 크기 = 두 덱 사이 실제 빈 폭에 맞춤(그림 원래 폭 148px 기준 배율, 36 – 150px) */
+      const mid = W - natural * zoom * 2;
+      const vsW = top ? 46 : Math.max(36, Math.min(150, mid * 0.55 + 22));
+      bar.style.setProperty('--tb-vs-k', (vsW / 148).toFixed(3));
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(bar);
+    return () => {
+      ro.disconnect();
+      bar.style.removeProperty('--tb-pair-zoom');
+      bar.style.removeProperty('--tb-vs-gap');
+      bar.style.removeProperty('--tb-vs-k');
+      delete bar.dataset.vs;
+    };
+  }, [enemyOn, size]);
   if (!allowEnemy) {
-    return (
-      <div className="tb-deck-bar is-solo">
-        <DeckSide side="mine" size={size} names={deck.mine} resolveHero={resolveHero} active={active} onSelect={onSelect} onRemove={onRemove} onClear={() => onClear('mine')} />
-      </div>
-    );
+    return <div className="tb-deck-bar is-solo">{side('mine')}</div>;
   }
   return (
-    <div className={`tb-deck-bar${enemyOn ? ' has-enemy' : ''}`}>
-      <DeckSide side="mine" size={size} names={deck.mine} resolveHero={resolveHero} active={active} onSelect={onSelect} onRemove={onRemove} onClear={() => onClear('mine')} />
+    <div ref={barRef} className={`tb-deck-bar${enemyOn ? ' has-enemy' : ''}`}>
+      {side('mine')}
       {enemyOn ? (
         <>
-          <div className="tb-vs" aria-hidden="true"><Icon name="tbVs" size={44} /></div>
-          <DeckSide side="enemy" size={size} names={deck.enemy} resolveHero={resolveHero} active={active} onSelect={onSelect} onRemove={onRemove} onClear={() => onClear('enemy')} />
+          <DeckVs />
+          {side('enemy')}
         </>
       ) : (
         <button type="button" className="tb-enemy-add" onClick={onToggleEnemy}>
@@ -299,7 +385,7 @@ export function PickerDropdown({
       const t = e.target;
       if (!(t instanceof Element)) return;
       if (ref.current?.contains(t)) return;
-      if (t.closest('.tb-slot') || t.closest('.tb-slot-remove') || t.closest('[data-finder]')) return;
+      if (t.closest('.deck-hero-slot-face') || t.closest('[data-finder]')) return;
       onClose();
     };
     document.addEventListener('keydown', onKey);
@@ -309,6 +395,21 @@ export function PickerDropdown({
       document.removeEventListener('pointerdown', onDown);
     };
   }, [onClose]);
+
+  useEffect(() => {
+    if (!narrow) return undefined;
+    const raf = requestAnimationFrame(() => {
+      /* 덱 칸 전체(안 줄어든 바깥 틀)로 잼 — 줄인(zoom) 카드 안쪽 좌표는 브라우저마다 달라서. 아래 진형 버프 줄(16px)과 위 덱 이름 줄(32px)은 가려져도 됨 */
+      const bar = document.querySelector('.tb-deck-bar')?.getBoundingClientRect();
+      if (!ref.current || !bar || getComputedStyle(ref.current).position !== 'fixed') return;
+      const sheetTop = window.innerHeight - ref.current.offsetHeight;
+      const head = document.querySelector('.gnb-header')?.getBoundingClientRect().bottom || 0;
+      const room = sheetTop - head - 8;
+      const shift = bar.height - 16 <= room + 32 ? bar.bottom - 16 - (sheetTop - 4) : bar.top - (head + 8);
+      if (Math.abs(shift) > 4) window.scrollBy({ top: shift, behavior: 'smooth' });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [narrow, active.side]);
 
   const withSkill = !!finder?.skill;
   const ix = withSkill ? index.withSkill : index;
@@ -485,7 +586,7 @@ export function RingCheck({ rows, resolveHero }) {
   return (
     <div className="tb-rings">
       <div className="tb-rings-head">
-        <strong>전설 장신구 체크</strong>
+        <strong>전설 장신구 체크 <small className="tb-rings-note">(해당 효과는 중복 적용 안 돼요)</small></strong>
         <span>{blocked.length ? '이 반지는 패시브와 겹쳐서 껴도 효과가 없어요' : '패시브와 겹치는 반지가 없어요 — 불사 · 권능 · 부활 모두 효과 있어요'}</span>
       </div>
       {blocked.length ? (
@@ -769,14 +870,17 @@ function LedgerSource({ p, s, kind, fmt, scopeText, resolveHero }) {
   const tag = triggered ? '조건 발동' : slot === '패시브' ? null : slot;
   const kindId = kind === 'skill' && !triggered ? 'skill' : 'passive';
   const when = partWhen(p, kind);
+  const pet = s.skillLabel === '펫' ? petOfGiver(s.heroName) : null;
+  const formation = s.skillLabel === '진형' ? formationOfGiver(s.heroName) : null;
+  const sourceIcon = pet?.skillIconUrl || (formation ? formationIconSrc(formation) : skillIconUrl(hero, s.skillName, s.skillLabel));
   return (
     <li className="tb-tot-src">
-      <span className="tb-tot-src-icon" title={s.skillName || tag}>
-        <SafeImg src={skillIconUrl(hero, s.skillName, s.skillLabel)} alt={s.skillName || tag || ''} fallbackIcon="swords" loading="lazy" />
+      <span className={`tb-tot-src-icon${formation ? ' is-formation' : ''}`} title={s.skillName || tag}>
+        <SafeImg src={sourceIcon} alt={s.skillName || tag || ''} fallbackIcon="swords" loading="lazy" />
       </span>
       <div className="tb-tot-src-body">
         <div className="tb-tot-src-top">
-          <MiniHero hero={hero} size={22} />
+          <GiverFace name={s.heroName} resolveHero={resolveHero} size={22} />
           <span className="tb-tot-part-who">{s.heroName}</span>
           <span className={`tb-tot-kind is-${kindId}`}>{kindId === 'skill' ? '액티브' : '패시브'}</span>
           {tag ? <span className="tb-tot-part-when">{tag === '각성기' && kind !== 'skill' ? '각성 중' : tag}</span> : null}
@@ -802,9 +906,11 @@ function LedgerRow({ r, teamSize, scopeText, resolveHero, index }) {
   const partial = (t) => t?.recipients && teamSize && t.recipients.length < teamSize;
   const reach = [r.passive, r.skill].find(partial);
   const passiveTurn = r.passive?.segs.some((s) => s.timing === 'start');
+  const petInfo = r.pet ? petOfGiver(r.pet.heroes[0]) : null;
   const parts = [
     ...(r.passive?.parts || []).map((p) => ({ ...p, kind: 'passive' })),
     ...(r.skill?.parts || []).map((p) => ({ ...p, kind: 'skill' })),
+    ...(r.pet?.parts || []).map((p) => ({ ...p, kind: 'passive' })),
   ];
   const notes = parts.flatMap((p) => [
     p.lost.length ? `같은 효과는 가장 높은 수치 하나만 적용돼요. ${p.lost.map((x) => `${x.heroName} ${fmtValue(x.value, r.dir)}`).join(' · ')}는 반영 안 돼요.` : null,
@@ -820,11 +926,19 @@ function LedgerRow({ r, teamSize, scopeText, resolveHero, index }) {
           <span className="tb-tot-label">{r.label}</span>
           {r.overlap ? <em className="tb-tot-flagtag">중복</em> : r.warn ? <em className="tb-tot-flagtag">확인</em> : null}
           {reach ? <em className="tb-tot-reach">{reach.recipients.length}/{teamSize}명</em> : null}
-          <span className="tb-tot-faces">{r.heroes.slice(0, 3).map((n) => <MiniHero key={n} hero={resolveHero(n)} size={24} />)}</span>
+          <span className="tb-tot-faces">{r.heroes.slice(0, 3).map((n) => <GiverFace key={n} name={n} resolveHero={resolveHero} size={24} />)}</span>
         </span>
-        <span className={`tb-tot-cell is-passive${r.passive ? '' : ' is-none'}`}>
-          {r.passive ? fmt(r.passive.total) : '—'}
-          {passiveTurn ? <i title="전투 시작 턴 효과 포함">턴</i> : null}
+        <span className="tb-tot-pcell">
+          <span className={`tb-tot-cell is-passive${r.passive ? '' : ' is-none'}`}>
+            {r.passive ? fmt(r.passive.total) : '—'}
+            {passiveTurn ? <i title="전투 시작 턴 효과 포함">턴</i> : null}
+          </span>
+          {r.pet ? (
+            <span className="tb-tot-pet" title={`펫 ${petInfo?.name || ''} ${fmt(r.pet.total)} — 펫 효과는 영웅 효과와 따로 더해져요`}>
+              {petInfo?.skillIconUrl ? <img src={petInfo.skillIconUrl} alt="" draggable={false} /> : null}
+              {r.passive || r.skill ? '+' : ''}{fmt(r.pet.total)}
+            </span>
+          ) : null}
         </span>
         <span className={`tb-tot-cell is-skill${r.skill ? '' : ' is-none'}`}>
           {r.skill ? fmt(r.skill.total) : '—'}
@@ -839,6 +953,7 @@ function LedgerRow({ r, teamSize, scopeText, resolveHero, index }) {
             )))}
           </ul>
           {notes.map((n) => <p key={n} className="tb-tot-warn">{n}</p>)}
+          {r.pet && (r.passive || r.skill) ? <p className="tb-tot-note">펫 효과는 영웅 효과와 따로 중첩돼서 합계에 더했어요.</p> : null}
           {r.skill && r.skill.parts.length > 1 ? <p className="tb-tot-note">액티브는 같은 효과 중 가장 높은 수치 하나만 합계에 더했어요.</p> : null}
         </div>
       ) : null}
@@ -846,7 +961,7 @@ function LedgerRow({ r, teamSize, scopeText, resolveHero, index }) {
   );
 }
 
-/** 버프 · 디버프 칸 본문 — `data` = fxGroups `fxLedger(패시브 카드, 액티브 카드)` */
+/** 버프 · 디버프 칸 본문 — `data` = fxGroups `fxLedger(패시브 카드, 액티브 카드, 펫 카드)` */
 export function FxLedger({ data, side, tone, perspective, teamSize, resolveHero, emptyText }) {
   const scopeText = scopeFor(perspective);
   const { groups, rows, flags, nPassive, nSkill } = data;
@@ -936,6 +1051,156 @@ export function FxFold({ open, onToggle, tone, hint, children }) {
         <i aria-hidden="true">▾</i>
       </button>
       {open ? <div className="tb-fx-detail-body">{children}</div> : null}
+    </div>
+  );
+}
+
+/** 분석 탭 내 덱 · 상대 덱 버튼 안 영웅 얼굴 줄 */
+export function ClashFaces({ heroes }) {
+  return (
+    <span className="tb-clash-faces" aria-hidden="true">
+      {heroes.length
+        ? heroes.map((h) => <MiniHero key={h.id || h.name} hero={h} size={22} />)
+        : <span className="tb-clash-faces-empty">영웅을 넣어 주세요</span>}
+    </span>
+  );
+}
+
+/* ───────────── 맞대결 요약 (duelSummary) ───────────── */
+
+const fmtNet = (v) => {
+  const n = Math.round(v);
+  if (!n) return '0%';
+  return n > 0 ? `+${n}%` : `−${-n}%`;
+};
+
+/** 한 팀 쪽 원인 한 줄 — [얼굴 · 이름 | 효과 · 수치] / 아래 작게 「→ 받는 영웅」. 상대가 건 디버프는 빨강 */
+function DuelPart({ p, size, resolveHero }) {
+  const all = p.to.length >= size;
+  return (
+    <li className={`tb-duel-part${p.sign < 0 ? ' is-minus' : ''}`}>
+      <GiverFace name={p.giver} resolveHero={resolveHero} size={22} />
+      <span className="tb-duel-part-body">
+        <span className="tb-duel-part-top">
+          <span className="tb-duel-part-who">{p.giver}</span>
+          <span className="tb-duel-part-fx">{p.label}</span>
+          <b>{fmtFxValue(p.value, p.label, p.dir)}</b>
+        </span>
+        <span className="tb-duel-part-to">→ {all ? '팀 전체' : p.to.join(' · ')}</span>
+      </span>
+    </li>
+  );
+}
+
+/** 능력치 한 줄 — [우리 수치 | 막대(앞선 쪽으로 차이만큼) · 능력치 | 상대 수치], 누르면 양쪽 원인 */
+function DuelRow({ s, teams, resolveHero, index }) {
+  const [open, setOpen] = useState(false);
+  const gap = Math.round(Math.abs(s.diff));
+  /* 막대 길이 = 차이 % 그대로(34% 차이 → 34%, 100% 넘으면 꽉) — 가장 큰 차이 기준으로 늘리면 작은 차이도 꽉 차 보임(밍봉 2026-11-10) */
+  const width = Math.max(3, Math.min(100, Math.abs(s.diff)));
+  const side = (k) => (
+    <div className={`tb-duel-side is-${k}`}>
+      <span className="tb-duel-side-title">{k === 'ours' ? '우리' : '상대'} {fmtNet(s[k])}</span>
+      {s.parts[k].length ? (
+        <ul className="tb-duel-parts">
+          {s.parts[k].map((p) => <DuelPart key={`${p.sign}|${p.giver}|${p.label}`} p={p} size={teams[k]} resolveHero={resolveHero} />)}
+        </ul>
+      ) : <p className="tb-duel-none">받는 효과 없음</p>}
+    </div>
+  );
+  return (
+    <li className={`tb-duel-row is-${s.lead}${open ? ' is-open' : ''}`} style={{ '--i': Math.min(index, 16) }}>
+      <button type="button" className="tb-duel-line" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        <b className="tb-duel-val is-ours">{fmtNet(s.ours)}</b>
+        <span className="tb-duel-track is-ours">{s.lead === 'ours' ? <i style={{ width: `${width}%` }} /> : null}</span>
+        <span className="tb-duel-stat">
+          <FxIcon name={s.icon} size={20} />
+          <span className="tb-duel-stat-name">{s.label}</span>
+          <small>{s.lead === 'even' ? '비슷' : `${gap}% 차이`}</small>
+        </span>
+        <span className="tb-duel-track is-theirs">{s.lead === 'theirs' ? <i style={{ width: `${width}%` }} /> : null}</span>
+        <b className="tb-duel-val is-theirs">{fmtNet(s.theirs)}</b>
+      </button>
+      {open ? (
+        <div className="tb-duel-detail">
+          {s.mirror ? (
+            <p className="tb-duel-mirror">
+              <MiniHero hero={resolveHero(s.mirror.name)} size={18} />
+              {s.mirror.name}끼리 — 우리 <b className="is-ours">{fmtNet(s.mirror.ours)}</b> · 상대 <b className="is-theirs">{fmtNet(s.mirror.theirs)}</b>
+            </p>
+          ) : null}
+          <div className="tb-duel-sides">
+            {side('ours')}
+            {side('theirs')}
+          </div>
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
+/** 맞대결 — 능력치마다 두 팀 평균 비교. 위 = 우위 개수 막대, 아래 = 능력치 줄(차이 큰 순, 비슷은 맨 아래) */
+/** 전력 비교에서 뺀 「자기 자신만 받는 버프」 — 우리 | 상대 두 칸, 영웅마다 얼굴 + 효과 칩 */
+function DuelSelfBuffs({ data, resolveHero }) {
+  if (!data?.ours.length && !data?.theirs.length) return null;
+  const side = (k) => (
+    <div className={`tb-duel-self-side is-${k}`}>
+      <span className="tb-duel-self-side-title">{k === 'ours' ? '우리' : '상대'}</span>
+      {data[k].length ? data[k].map((r) => (
+        <div key={r.hero} className="tb-duel-self-hero">
+          <MiniHero hero={resolveHero(r.hero)} size={24} />
+          <span className="tb-duel-self-name">{r.hero}</span>
+          <span className="tb-duel-self-chips">
+            {r.items.map((it) => (
+              <span key={it.label} className="tb-duel-self-chip">
+                <FxIcon name={it.label} size={14} />
+                {it.label} <b>{fmtFxValue(it.value, it.label, it.dir)}</b>
+              </span>
+            ))}
+          </span>
+        </div>
+      )) : <p className="tb-duel-none">없음</p>}
+    </div>
+  );
+  return (
+    <section className="tb-duel-self">
+      <h4 className="tb-duel-self-title">자기 자신만 받는 버프 <small>그 영웅 혼자 받아서 위 팀 비교에는 안 넣었어요</small></h4>
+      <div className="tb-duel-sides">
+        {side('ours')}
+        {side('theirs')}
+      </div>
+    </section>
+  );
+}
+
+export function DuelBoard({ data, teams, resolveHero }) {
+  const { stats, counts, selfBuffs } = data;
+  if (!stats.length) {
+    return (
+      <>
+        <div className="tb-empty">두 덱 모두 비교할 능력치 버프 · 디버프가 없어요.</div>
+        <DuelSelfBuffs data={selfBuffs} resolveHero={resolveHero} />
+      </>
+    );
+  }
+  const rows = [...stats.filter((s) => s.lead !== 'even'), ...stats.filter((s) => s.lead === 'even')];
+  const total = counts.ours + counts.theirs + counts.even || 1;
+  return (
+    <div className="tb-duel">
+      <div className="tb-duel-score" aria-label={`우리 우위 ${counts.ours} · 비슷 ${counts.even} · 상대 우위 ${counts.theirs}`}>
+        <span className="tb-duel-score-num is-ours"><b>{counts.ours}</b>우리 우위</span>
+        <span className="tb-duel-score-bar" aria-hidden="true">
+          <i className="is-ours" style={{ flexGrow: counts.ours / total }} />
+          {counts.even ? <i className="is-even" style={{ flexGrow: counts.even / total }} /> : null}
+          <i className="is-theirs" style={{ flexGrow: counts.theirs / total }} />
+        </span>
+        <span className="tb-duel-score-num is-theirs">상대 우위<b>{counts.theirs}</b></span>
+      </div>
+      <ul className="tb-duel-rows">
+        {rows.map((s, i) => <DuelRow key={s.id} s={s} teams={teams} resolveHero={resolveHero} index={i} />)}
+      </ul>
+      <DuelSelfBuffs data={selfBuffs} resolveHero={resolveHero} />
+      <p className="tb-duel-foot">줄을 누르면 양쪽에 무엇이 들어갔는지 보여요 · 영웅마다 받는 버프 − 상대가 거는 디버프의 팀 평균 · 같은 효과는 높은 수치 하나만 · 대상이 1명 · 무작위 · 자기 자신만인 효과는 빼고 셈</p>
     </div>
   );
 }

@@ -102,9 +102,11 @@
 
 | 단계 | 할 일 |
 |------|--------|
-| 1 | **`src/data/pets.js`에 엔트리 추가** (앱은 여기만 봄). 새 펫은 맨 끝에 다음 `pet_N` id로 — 덱은 id로 저장, `pets[0]`이 기본 펫이라 앞에 끼우지 말 것. `title`(펫 도감 상세 칭호, 없으면 「세븐나이츠 공식 펫」)은 밍봉이 정해 줌 |
-| 2 | `/images/pets/{이름}.png` (또는 `portraitUrl`에 맞춤) |
-| 3 | (선택) `asset/펫 목록/모든 펫.json` 동기화 — 자동 import 아님 |
+| 1 | **`node scripts/import_7katlas_pets.mjs`** — 7katlas 펫 도감(`COMBINE/pets-L.js` · `pets-R.js` + 한글 `lang/kr/pets.js`)에서 다시 받아 `src/data/pets.js`(앱은 여기만 봄) · `asset/펫 목록/모든 펫.json`을 씀. 라이브 Firebase 무관. 캐시는 `%TEMP%/katlas-pets`(새 데이터를 받으려면 지우고 실행) |
+| 2 | 펫 id(`pet_N`)는 허브 · 공략 문서에 저장되므로 스크립트가 기존 펫은 이름으로 찾아 그대로 두고 새 펫만 뒤에 다음 번호로 붙임. `pets[0]`(이린)이 기본 펫이라 순서를 바꾸지 말 것. 이름이 다른 펫은 `NAME_ALIAS`(7katlas 「멜패로」 = 우리 「멜페로」), 효과 이름이 영웅 데이터와 다르면 `EFFECT_ALIAS`(「치명타 피해량 증가」 → 「치명타 피해 증가」) |
+| 3 | 그림: 초상화 = 7katlas 펫 상세 창의 **작은 아이콘**(`Tex_PetIcon_*Card.webp` → `public/images/pets/icon/{katlasId}.webp`, 전신 일러스트는 안 씀) · 펫 스킬 아이콘 `public/images/pets/skill/{katlasId}.webp` · 효과 아이콘은 `public/images/effects/`(없는 것만 받음, 펫 `effectIcons`에 이름 → 아이콘 id). 이미지 없는 미출시 펫은 뺌(Mr.아머는 예전 저장 데이터 때문에 `unreleased: true`로 유지) |
+| 4 | `asset/펫 목록/`에 없는 펫 초상화 · `스킬 아이콘/` PNG는 따로 넣어 둠(asset 저장소). `title`(칭호)은 예전 값 유지, 새 펫은 빈칸 |
+| 5 | 펫 도감 화면 = `src/components/PetDB.jsx` + `src/styles/petDex.css`(전체 · 전설 · 희귀 필터, 카드 = 초상화 · 등급 · 세력 · 스킬 아이콘 · 효과 아이콘 + 기본→강화 3 수치, 상세 = 능력치 · 효과 문장 · 강화 단계 표) |
 
 ### 13.3 장비 · 장신구
 

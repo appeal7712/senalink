@@ -4642,6 +4642,29 @@ h1, h2, h3 {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
 
+/* 펫 없음 — 영웅 빈칸과 같은 회색 점선 칸 + 펫 아이콘 */
+.pet-portrait-face.is-empty {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px dashed var(--border-subtle);
+  box-shadow: none;
+  color: #94a3b8;
+}
+
+.pet-empty-mark,
+.hero-empty-mark {
+  position: relative;
+  display: inline-flex;
+  opacity: 0.85;
+}
+
+.hero-empty-mark { opacity: 0.6; pointer-events: none; }
+.deck-hero-slot-face:hover .hero-empty-mark { opacity: 0.9; }
+
+.pet-portrait-face.is-empty:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #e2e8f0;
+}
+
 /* Hero DB 3-column */
 .hero-db-grid {
   display: grid;

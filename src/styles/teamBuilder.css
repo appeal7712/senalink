@@ -34,6 +34,10 @@
   100% { transform: scale(1); }
 }
 
+@keyframes tbSheetUp {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
 @keyframes tbDrop {
   from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: none; }
@@ -52,11 +56,6 @@
 @keyframes tbRingEnemy {
   0%, 100% { box-shadow: 0 0 0 2px #fff, 0 0 10px 2px rgba(239, 68, 68, 0.6); }
   50% { box-shadow: 0 0 0 2px #fff, 0 0 20px 4px rgba(239, 68, 68, 0.95); }
-}
-
-@keyframes tbVsPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
 }
 
 /* ───────── 헤더 ───────── */
@@ -216,25 +215,60 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  animation: tbFadeUp 0.45s ease both;
+  /* backwards — 끝난 뒤 transform이 남으면 폰 영웅 고르기 시트(position: fixed)가 화면이 아니라 이 판에 붙음 */
+  animation: tbFadeUp 0.45s ease backwards;
 }
 
 .tb-deck-bar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 0.42fr); gap: 12px; align-items: stretch; }
-.tb-deck-bar.has-enemy { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+/* 두 덱 + 가운데 칸(--tb-vs-gap = DeckBar가 폭마다 재서 넣는 최소 간격). VS는 칸에 넣지 않고 덱 칸 한가운데에 띄운 뒤
+   두 덱 사이 실제 빈 폭에 맞춰 --tb-vs-k 배율로 키우고 줄임 — 어느 폭이든 빈 자리만큼 VS 크기가 맞음(밍봉 2026-11-10) */
+.tb-deck-bar.has-enemy { grid-template-columns: minmax(0, 1fr) var(--tb-vs-gap, 350px) minmax(0, 1fr); gap: 0; }
+.tb-deck-bar.has-enemy > .tb-deck-side { grid-row: 1; }
+.tb-deck-bar.has-enemy > .tb-deck-side.is-mine { grid-column: 1; }
+.tb-deck-bar.has-enemy > .tb-deck-side.is-enemy { grid-column: 3; }
+.tb-deck-bar.has-enemy > .tb-vs-stage { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(var(--tb-vs-k, 1)); }
 .tb-deck-bar.is-solo { grid-template-columns: minmax(0, 1fr); }
 
-.tb-deck-side {
-  padding: 12px 14px 10px;
-  border-radius: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 0;
-  border: 1.5px solid transparent;
+/* 덱 한쪽 = 공용 덱 배치 카드(InGameDeckCard) — 밝은 유리 + 은은한 파랑(내 덱) · 빨강(상대 덱) 글로우.
+   카드 인라인 스타일(배경 투명 · 그림자 없음)을 팀 빌더 안에서만 덮어씀. 두 카드는 바깥쪽 끝, 남는 폭은 가운데 VS 쪽 */
+.tb-deck-side { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+/* 두 덱은 각자 바깥쪽 끝에 붙음 — 화면이 넓어 남는 자리는 전부 가운데(VS 쪽)로 가서 두 덱이 그만큼 멀어짐(밍봉 2026-11-10) */
+.tb-deck-bar.has-enemy .tb-deck-side.is-mine { align-items: flex-start; }
+.tb-deck-bar.has-enemy .tb-deck-side.is-enemy { align-items: flex-end; animation: tbFadeUp 0.35s ease both; }
+.tb-deck-side .ingame-deck-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.07)), rgba(12, 18, 34, 0.38) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.2) !important;
+  backdrop-filter: blur(14px) saturate(1.2) !important;
 }
-
-.tb-deck-side.is-mine { background: linear-gradient(160deg, rgba(37, 99, 235, 0.22), rgba(37, 99, 235, 0.06)); border-color: rgba(96, 165, 250, 0.55); }
-.tb-deck-side.is-enemy { background: linear-gradient(160deg, rgba(220, 38, 38, 0.22), rgba(220, 38, 38, 0.06)); border-color: rgba(248, 113, 113, 0.55); animation: tbFadeUp 0.35s ease both; }
+.tb-deck-side.is-mine .ingame-deck-card { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 0 24px rgba(59, 130, 246, 0.36), 0 0 64px rgba(37, 99, 235, 0.16) !important; }
+.tb-deck-side.is-enemy .ingame-deck-card { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 24px rgba(239, 68, 68, 0.32), 0 0 64px rgba(220, 38, 38, 0.14) !important; }
+/* 상대 덱은 좌우 반전 — [펫 · 진형 | 전방 | 후방], 펫이 내 덱 쪽(가운데)으로 */
+.tb-deck-side.is-enemy .deck-stage,
+.tb-deck-side.is-enemy .deck-stage-rows { flex-direction: row-reverse; }
+.tb-deck-meta { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.tb-deck-meta .tb-deck-clear { position: static; transform: none; }
+/* 카드 아래 진형 버프 — B · 빨강 별 × 후방 인원 · 모공 / F · 파랑 별 × 전방 인원 · 방어 */
+.tb-deck-buffs { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; width: 276px; max-width: 100%; }
+.tb-deck-buff { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px 2px 3px; border-radius: 999px; background: rgba(0, 0, 0, 0.26); border: 1px solid rgba(255, 255, 255, 0.1); font-size: 11.5px; font-weight: 900; white-space: nowrap; }
+.tb-deck-buff-row { width: 17px; height: 17px; }
+.tb-deck-buff-stars { display: inline-flex; gap: 1px; }
+.tb-deck-buff-stars img { width: 11px; height: 11px; }
+.tb-deck-buff.is-back { color: #fecaca; }
+.tb-deck-buff.is-front { color: #bfdbfe; }
+.tb-deck-side.is-enemy .tb-deck-buffs { flex-direction: row-reverse; }
+/* 두 덱 뒤 — 진한 판 없이 은은한 파랑 · 빨강 빛만 */
+.tb-deck-bar.has-enemy { position: relative; }
+.tb-deck-bar.has-enemy::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  z-index: -1;
+  border-radius: 24px;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 28% 80% at 32% 50%, rgba(59, 130, 246, 0.2), transparent 72%),
+    radial-gradient(ellipse 28% 80% at 68% 50%, rgba(239, 68, 68, 0.18), transparent 72%);
+}
 
 .tb-deck-side-head { position: relative; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 26px; }
 .tb-side-title { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 900; letter-spacing: -0.02em; }
@@ -280,59 +314,120 @@
 
 .tb-link-btn:hover { color: #fff; }
 
-.tb-slots { display: grid; grid-template-columns: repeat(var(--slots, 5), minmax(0, 1fr)); gap: 8px; justify-items: center; }
-.tb-slot-wrap { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100%; max-width: 76px; min-width: 0; }
 
-.tb-slot {
-  width: 100%;
-  aspect-ratio: 1 / 1.08;
-  padding: 0;
-  border-radius: 12px;
-  border: 1.5px dashed rgba(255, 255, 255, 0.45);
-  background: rgba(0, 0, 0, 0.22);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+/* 두 덱 사이 VS(결투장 준비 화면처럼) — 진한 금색 VS + 긴 「/」 · 짧은 「\」 빛줄기.
+   빛줄기 = 가운데가 가장 밝고 끝으로 갈수록 사라지는 흰 심 + 넓게 번지는 금빛 + 줄을 따라 흐르는 반짝임.
+   가운데 섬광(흰 점 + 가로 번짐)과 큰 금빛 번짐. 카드(.tb-deck-side z-index 1)가 빛 위에 오도록 무대는 z-index 0 */
+@keyframes tbVsRay {
+  0%, 100% { opacity: 0.82; }
+  50% { opacity: 1; }
 }
-
-.tb-slot:hover { border-color: #fff; background: rgba(0, 0, 0, 0.12); }
-.tb-slot:active { transform: scale(0.96); }
-.tb-slot.is-filled { border-style: solid; border-color: transparent; background: transparent; }
-.is-mine .tb-slot.is-active { border-color: transparent; animation: tbRingAlly 1.6s ease-in-out infinite; }
-.is-enemy .tb-slot.is-active { border-color: transparent; animation: tbRingEnemy 1.6s ease-in-out infinite; }
-.tb-slot-hero { width: 100%; display: block; animation: tbPop 0.35s ease both; }
-.tb-slot-empty { color: rgba(255, 255, 255, 0.85); display: flex; }
-.tb-slot-name { font-size: 11.5px; font-weight: 800; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: rgba(255, 255, 255, 0.9); }
-
-.tb-slot-remove {
+@keyframes tbVsGlint {
+  0%, 30% { transform: translateX(-120%); opacity: 0; }
+  40% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateX(420%); opacity: 0; }
+}
+@keyframes tbVsFlare {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.85; }
+  50% { transform: translate(-50%, -50%) scale(1.12); opacity: 1; }
+}
+@keyframes tbVsGleam {
+  0%, 55% { background-position: 160% 0; }
+  100% { background-position: -60% 0; }
+}
+@keyframes tbVsTwinkle {
+  0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(45deg); }
+}
+.tb-vs-stage { position: relative; z-index: 2; align-self: center; display: flex; align-items: center; justify-content: center; width: 250px; height: 210px; pointer-events: none; }
+/* 빛줄기 = 타원 빛(가운데 두껍고 끝으로 갈수록 가늘어지며 사라짐) — 넓은 금빛 번짐 + 흰 심 + 줄을 따라 흐르는 반짝임 */
+.tb-vs-ray {
+  --len: 470px;
+  --ang: -58deg;
+  --thick: 44px;
   position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.7);
-  background: #0f1320;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 900;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  z-index: 3;
-  transition: transform 0.15s ease, background 0.15s ease;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  width: var(--len);
+  height: var(--thick);
+  transform: translate(-50%, -50%) rotate(var(--ang));
+  mix-blend-mode: screen;
+  pointer-events: none;
+  will-change: opacity;
+  animation: tbVsRay 2.8s ease-in-out infinite;
 }
+.tb-vs-ray::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(255, 226, 140, 0.95) 0, rgba(255, 176, 40, 0.6) 22%, rgba(255, 140, 20, 0.22) 50%, transparent 72%);
+  filter: blur(3px);
+}
+.tb-vs-ray i {
+  position: absolute;
+  left: 2%;
+  right: 2%;
+  top: 50%;
+  height: 7px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, #fff 0, #fff 30%, rgba(255, 244, 205, 0.9) 55%, transparent 100%);
+  filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 10px rgba(255, 200, 80, 0.95));
+}
+.tb-vs-ray::after {
+  content: '';
+  position: absolute;
+  top: 30%;
+  bottom: 30%;
+  left: 0;
+  width: 18%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, #fff 0, rgba(255, 240, 200, 0.7) 40%, transparent 72%);
+  will-change: transform, opacity;
+  animation: tbVsGlint 3.4s ease-in-out infinite;
+}
+.tb-vs-ray.is-short { --len: 330px; --ang: 36deg; --thick: 34px; }
+.tb-vs-ray.is-short i { height: 5px; }
+.tb-vs-ray.is-short::after { animation-delay: -1.7s; }
+.tb-vs-img { position: relative; z-index: 1; width: 148px; height: auto; filter: sepia(0.22) saturate(1.65) contrast(1.1) brightness(1.02) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 14px rgba(255, 186, 50, 0.8)); }
+.tb-vs-shine { position: absolute; z-index: 2; width: 148px; height: 134px; background: linear-gradient(110deg, transparent 38%, rgba(255, 255, 255, 0.9) 50%, transparent 62%); background-size: 260% 100%; -webkit-mask: url('/images/ui/tb-vs-gold.png') center / contain no-repeat; mask: url('/images/ui/tb-vs-gold.png') center / contain no-repeat; mix-blend-mode: screen; animation: tbVsGleam 3.6s ease-in-out infinite; }
+/* 가운데 섬광 — 흰 점 + 가로로 길게 번지는 빛(렌즈 섬광) */
+.tb-vs-flare { position: absolute; z-index: 3; left: 52%; top: 46%; width: 54px; height: 54px; border-radius: 50%; background: radial-gradient(circle, #fff 0, #fff 9%, rgba(255, 238, 190, 0.85) 20%, rgba(255, 196, 80, 0.35) 42%, transparent 68%); mix-blend-mode: screen; animation: tbVsFlare 2.8s ease-in-out infinite; }
+.tb-vs-flare::before { content: ''; position: absolute; left: 50%; top: 50%; width: 190px; height: 4px; border-radius: 999px; transform: translate(-50%, -50%); background: radial-gradient(ellipse 50% 50% at 50% 50%, #fff 0, rgba(255, 226, 150, 0.7) 30%, transparent 70%); filter: blur(1px); }
+.tb-vs-spark { position: absolute; z-index: 3; width: 14px; height: 14px; background: #fff8e1; clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); filter: drop-shadow(0 0 4px #ffd27a); animation: tbVsTwinkle 2.4s ease-in-out infinite; }
+.tb-vs-spark.is-a { left: 68%; top: 22%; }
+.tb-vs-spark.is-b { left: 24%; top: 70%; width: 10px; height: 10px; animation-delay: -0.8s; }
+.tb-vs-spark.is-c { left: 36%; top: 30%; width: 12px; height: 12px; animation-delay: -1.6s; }
 
-.tb-slot-remove:hover { transform: scale(1.15); background: #b91c1c; }
+/* 덱 카드에서 흘러나오는 빛 — 내 덱 파랑 · 상대 덱 빨강. 카드 뒤에서 연기처럼 피어올라 바깥쪽(내 덱 왼쪽 · 상대 덱 오른쪽) 위로 흘러감 */
+@keyframes tbAuraBase {
+  0%, 100% { opacity: 0.7; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+@keyframes tbAuraFlow {
+  0% { opacity: 0; transform: translate(0, 10%) scale(0.6); }
+  25% { opacity: 0.95; }
+  100% { opacity: 0; transform: translate(calc(var(--dx) * 60%), -46%) scale(1.6); }
+}
+.tb-deck-card-wrap { position: relative; display: flex; }
+/* 두 카드의 안쪽 벽(VS 쪽)만 은은하게 빛남 — 내 덱 오른쪽 파랑 · 상대 덱 왼쪽 빨강. 카드 안 가장자리 빛(::after) + 바깥 살짝 번짐(.tb-deck-aura) */
+@keyframes tbEdgePulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.9; }
+}
+.tb-deck-aura { position: absolute; top: 10%; bottom: 10%; width: 28px; z-index: -1; pointer-events: none; border-radius: 50%; filter: blur(14px); opacity: 0.7; animation: tbEdgePulse 3.6s ease-in-out infinite; }
+.tb-deck-side.is-mine .tb-deck-aura { right: -14px; background: rgba(59, 130, 246, 0.55); }
+.tb-deck-side.is-enemy .tb-deck-aura { left: -14px; background: rgba(239, 68, 68, 0.5); }
+.tb-deck-card-wrap::after { content: ''; position: absolute; top: 0; bottom: 0; width: 44px; z-index: 3; pointer-events: none; border-radius: inherit; animation: tbEdgePulse 3.6s ease-in-out infinite; }
+.tb-deck-side.is-mine .tb-deck-card-wrap::after { right: 0; border-radius: 0 16px 16px 0; background: linear-gradient(270deg, rgba(96, 165, 250, 0.28), transparent); box-shadow: inset -1px 0 0 rgba(191, 219, 254, 0.55); }
+.tb-deck-side.is-enemy .tb-deck-card-wrap::after { left: 0; border-radius: 16px 0 0 16px; background: linear-gradient(90deg, rgba(248, 113, 113, 0.26), transparent); box-shadow: inset 1px 0 0 rgba(254, 202, 202, 0.5); }
 
-.tb-vs { display: flex; align-items: center; justify-content: center; }
-
-.tb-vs img { filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55)); animation: tbVsPulse 2.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .tb-vs-ray, .tb-vs-ray::after, .tb-vs-flare, .tb-vs-shine, .tb-vs-spark, .tb-deck-aura { animation: none; }
+}
 
 .tb-enemy-add {
   display: flex;
@@ -342,8 +437,8 @@
   gap: 6px;
   padding: 14px;
   border-radius: 20px;
-  border: 1.5px dashed rgba(248, 113, 113, 0.65);
-  background: rgba(220, 38, 38, 0.08);
+  border: 1.5px dashed rgba(248, 113, 113, 0.85);
+  background: linear-gradient(180deg, rgba(220, 38, 38, 0.2), rgba(220, 38, 38, 0.1)), rgba(12, 18, 34, 0.4);
   color: var(--tb-enemy-ink);
   font: inherit;
   cursor: pointer;
@@ -353,7 +448,7 @@
 
 .tb-enemy-add strong { font-size: 14px; font-weight: 900; color: #fff; }
 .tb-enemy-add span { font-size: 11.5px; font-weight: 700; line-height: 1.45; }
-.tb-enemy-add:hover { background: rgba(220, 38, 38, 0.18); border-color: var(--tb-enemy); transform: translateY(-2px); }
+.tb-enemy-add:hover { background: linear-gradient(180deg, rgba(220, 38, 38, 0.3), rgba(220, 38, 38, 0.16)), rgba(12, 18, 34, 0.4); border-color: var(--tb-enemy); transform: translateY(-2px); }
 
 .tb-enemy-off { align-self: flex-end; margin-top: -4px; border: none; background: transparent; color: rgba(255, 255, 255, 0.6); font: inherit; font-size: 11.5px; font-weight: 800; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .tb-enemy-off:hover { color: #fff; }
@@ -644,8 +739,8 @@
 .tb-picker-drop .hero-grid-picker-grid {
   grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)) !important;
   gap: 10px 8px !important;
-  height: 330px !important;
-  max-height: 330px !important;
+  height: 200px !important;
+  max-height: 200px !important;
 }
 
 .tb-picker-drop .hero-grid-picker-grid > div > div:first-child { width: 74px !important; }
@@ -694,116 +789,234 @@
 .tb-analysis-head h2 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 900; }
 
 /*
- * 내 덱 / 상대 덱 — 서로 마주 보는 기울어진 버튼 + 위쪽 불빛 · 아래 빛 띠 (Uiverse team-home / team-away 응용).
- * 고르지 않은 쪽은 흐리게, 고를 때마다 빛이 한 번 지나간다.
+ * 분석 기준 탭 — VS 대결 바(밍봉 2026-11-09).
+ * 왼쪽 「내 덱」 · 오른쪽 「상대 덱」 = 유리 알약 버튼(`.tb-clash-body`, 반투명 + 위 하이라이트 + 얇은 빛 테두리 + 덱 아이콘), 안쪽 끝은 가운데 구슬 뒤로.
+ * 고른 쪽은 그 색 유리로 물들고 메달 쪽에서 바깥으로 불길이 뿜어져 나감.
+ * 가운데 「전력 비교」 = 액체 구슬(Uiverse andrew-manzyk 로더 응용) — 파랑 · 보라 · 빨강만 천천히 돎, 안 고르면 어둡게 · 고르면 밝게.
  */
-.tb-view-switch {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: 2px 28px;
-  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.55), transparent);
+@property --tb-orb-a {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
 }
 
-.tb-view {
+.tb-clash { position: relative; width: min(100%, 680px); margin: 0 auto 20px; }
+.tb-clash-bar {
   position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+.tb-clash-half {
+  --fog: rgba(59, 130, 246, 0.5);
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.66);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+.tb-clash-half.is-enemy { --fog: rgba(239, 68, 68, 0.48); }
+.tb-clash-half:hover:not(.is-on) { color: #fff; }
+.tb-clash-half.is-on { color: #fff; }
+.tb-clash-half:focus-visible { outline: none; }
+
+/* 유리 알약 버튼 — 칸 끝까지(빈 곳 없이), [영웅 얼굴 … 아이콘 · 이름] / [이름 · 아이콘 … 영웅 얼굴], 효과는 버튼 안에서만(overflow 숨김) */
+.tb-clash-body {
+  position: relative;
+  isolation: isolate;
   overflow: hidden;
   display: flex;
+  flex: 1;
   align-items: center;
-  justify-content: center;
-  min-width: 170px;
-  padding: 8px 40px;
-  border: none;
-  color: #fff;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), inset 0 -10px 18px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.22);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  backdrop-filter: blur(12px) saturate(1.3);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+}
+.tb-clash-half.is-mine .tb-clash-body { padding: 0 18px 0 20px; }
+.tb-clash-half.is-enemy .tb-clash-body { padding: 0 20px 0 18px; }
+.tb-clash-tag { position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.tb-clash-faces { position: relative; z-index: 2; display: flex; align-items: center; gap: 4px; min-width: 0; opacity: 0.55; filter: grayscale(0.45); transition: opacity 0.3s ease, filter 0.3s ease; }
+/* 얼굴 22px · 간격 5px 고르게(겹치지 않음) — 5명이어도 알약 둥근 끝 안에 들어옴 */
+.tb-clash-faces { gap: 5px; }
+.tb-clash-faces .tb-mini-hero { flex-shrink: 0; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35); }
+.tb-clash-faces-empty { font-size: 11.5px; font-weight: 700; letter-spacing: 0; color: rgba(255, 255, 255, 0.45); white-space: nowrap; }
+.tb-clash-half:hover:not(.is-on) .tb-clash-faces { opacity: 0.85; filter: none; }
+.tb-clash-half.is-on .tb-clash-faces { opacity: 1; filter: none; }
+.tb-clash-icon { position: relative; z-index: 2; width: 22px; height: 22px; object-fit: contain; opacity: 0.6; filter: grayscale(0.5); transition: opacity 0.3s ease, filter 0.3s ease; pointer-events: none; -webkit-user-drag: none; }
+.tb-clash-half:hover:not(.is-on) .tb-clash-body { transform: translateY(-1px); border-color: rgba(255, 255, 255, 0.28); background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)); }
+.tb-clash-half:hover:not(.is-on) .tb-clash-icon { opacity: 0.9; filter: none; }
+.tb-clash-half:active .tb-clash-body { transform: scale(0.98); }
+.tb-clash-half:focus-visible .tb-clash-body { border-color: #fff; }
+.tb-clash-half.is-on .tb-clash-icon { opacity: 1; filter: drop-shadow(0 0 6px var(--fog)); }
+.tb-clash-half.is-mine.is-on .tb-clash-body {
+  border-color: rgba(147, 197, 253, 0.6);
+  background: linear-gradient(180deg, rgba(96, 165, 250, 0.42), rgba(37, 99, 235, 0.16));
+  box-shadow: inset 0 1px 0 rgba(219, 234, 254, 0.5), inset 0 -10px 18px rgba(0, 0, 0, 0.12), 0 0 14px rgba(59, 130, 246, 0.35), 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+.tb-clash-half.is-enemy.is-on .tb-clash-body {
+  border-color: rgba(252, 165, 165, 0.6);
+  background: linear-gradient(180deg, rgba(248, 113, 113, 0.42), rgba(220, 38, 38, 0.16));
+  box-shadow: inset 0 1px 0 rgba(254, 226, 226, 0.5), inset 0 -10px 18px rgba(0, 0, 0, 0.12), 0 0 14px rgba(239, 68, 68, 0.32), 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* 버튼 안 빛 물결 — 전력 비교 구슬과 같은 결(파랑 · 보라 / 빨강 · 보라 빛 두 덩이가 천천히 돌며 섞임).
+   안 고르면 어둡게 은은히, 고르면 밝게. 버튼 밖으로 안 나감(.tb-clash-body overflow 숨김) */
+@keyframes tbLiquidA {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-38%, 10%) scale(1.15); }
+  66% { transform: translate(22%, -8%) scale(0.9); }
+}
+@keyframes tbLiquidB {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  40% { transform: translate(48%, -10%) scale(0.85); }
+  75% { transform: translate(16%, 12%) scale(1.2); }
+}
+.tb-clash-liquid { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.28; filter: saturate(0.45) brightness(0.8); transition: opacity 0.4s ease, filter 0.4s ease; }
+.tb-clash-liquid::before,
+.tb-clash-liquid::after { content: ''; position: absolute; top: -70%; width: 52%; height: 240%; border-radius: 50%; filter: blur(14px); mix-blend-mode: screen; }
+.tb-clash-liquid::before { left: 42%; animation: tbLiquidA 6s ease-in-out infinite; }
+.tb-clash-liquid::after { left: 6%; animation: tbLiquidB 7.5s ease-in-out infinite; }
+.tb-clash-half.is-mine .tb-clash-liquid::before { background: radial-gradient(circle, rgba(59, 130, 246, 0.95), transparent 66%); }
+.tb-clash-half.is-mine .tb-clash-liquid::after { background: radial-gradient(circle, rgba(139, 92, 246, 0.8), transparent 66%); }
+.tb-clash-half.is-enemy .tb-clash-liquid::before { left: 6%; background: radial-gradient(circle, rgba(239, 68, 68, 0.95), transparent 66%); }
+.tb-clash-half.is-enemy .tb-clash-liquid::after { left: 42%; background: radial-gradient(circle, rgba(139, 92, 246, 0.75), transparent 66%); }
+.tb-clash-half:hover:not(.is-on) .tb-clash-liquid { opacity: 0.5; filter: saturate(0.75); }
+.tb-clash-half.is-on .tb-clash-liquid { opacity: 1; filter: none; }
+
+.tb-clash-name { position: relative; z-index: 2; white-space: nowrap; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45); }
+
+/* 가운데 「전력 비교」 = 액체 구슬. SVG mask(`#tb-orb-mask`) 안 흐린 삼각형들이 돌며 contrast로 뭉쳐 일렁임 */
+@keyframes tbOrbTurn { to { --tb-orb-a: 360deg; } }
+@keyframes tbOrbSpin { to { transform: rotate(360deg); } }
+@keyframes tbOrbRound {
+  0%, 60%, 100% { filter: contrast(15); }
+  20%, 40% { filter: contrast(3); }
+}
+@keyframes tbOrbGlow {
+  0%, 100% { box-shadow: 0 0 25px 0 rgba(59, 130, 246, 0.55), 0 16px 40px 0 rgba(239, 68, 68, 0.4); }
+  33% { box-shadow: 0 0 25px 0 rgba(139, 92, 246, 0.6), 0 16px 40px 0 rgba(59, 130, 246, 0.4); }
+  66% { box-shadow: 0 0 25px 0 rgba(239, 68, 68, 0.55), 0 16px 40px 0 rgba(139, 92, 246, 0.4); }
+}
+/* 가운데 버튼 = 양옆과 같은 유리 알약(조금 더 큼) · 왼쪽 구슬 · 가운데 「전력 비교」 아래 「4:3」 · 오른쪽 끝 화살표 + 가끔 빛이 훑고 지나감(누르는 버튼이라는 신호) */
+.tb-clash-medal {
+  position: relative;
+  isolation: isolate;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 54px;
+  padding: 0 18px 0 5px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26), inset 0 -10px 18px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.24);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  backdrop-filter: blur(12px) saturate(1.3);
+  color: rgba(255, 255, 255, 0.72);
   font: inherit;
   cursor: pointer;
-  opacity: 0.42;
-  filter: saturate(0.55);
-  transition: opacity 0.2s ease, filter 0.2s ease;
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease, color 0.25s ease;
 }
-
-.tb-view.is-mine { transform: skew(32deg, 0); border-radius: 10px 10px 10px 30px; background: linear-gradient(135deg, rgba(0, 72, 255, 0.4), rgba(8, 14, 40, 0.65)); }
-.tb-view.is-enemy { transform: skew(-32deg, 0); border-radius: 10px 10px 30px 10px; background: linear-gradient(225deg, rgba(255, 0, 0, 0.36), rgba(40, 8, 12, 0.65)); }
-.tb-view:hover:not(.is-on) { opacity: 0.72; }
-.tb-view.is-on { opacity: 1; filter: none; }
-
-.tb-view-name { position: relative; z-index: 2; white-space: nowrap; font-size: 16px; font-weight: 900; letter-spacing: 0.02em; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55); }
-.tb-view.is-mine .tb-view-name { transform: skew(-32deg, 0); }
-.tb-view.is-enemy .tb-view-name { transform: skew(32deg, 0); }
-.tb-view.is-mine.is-on .tb-view-name { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 12px rgba(125, 211, 252, 0.85); }
-.tb-view.is-enemy.is-on .tb-view-name { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 12px rgba(252, 165, 165, 0.85); }
-
-.tb-view::before,
-.tb-view::after { content: ''; position: absolute; pointer-events: none; }
-.tb-view.is-mine::after { top: -3px; left: -20px; width: 20px; height: 23px; border-radius: 27px; background: #00caff; filter: blur(2px); transform: rotate(208deg); box-shadow: 0 0 32px #00ffed; }
-.tb-view.is-mine::before { bottom: -15px; right: 0; width: 80%; height: 17px; border-radius: 80px; background: #0048ff; filter: blur(1px); transform: translate(-50%, 0); box-shadow: 0 0 32px #0026ff; }
-.tb-view.is-enemy::after { top: -3px; right: -20px; width: 20px; height: 23px; border-radius: 27px; background: #cc9d00; filter: blur(2px); transform: rotate(208deg); box-shadow: 0 0 32px #cc3700; }
-.tb-view.is-enemy::before { bottom: -15px; left: 0; width: 80%; height: 17px; border-radius: 80px; background: #ff0000; filter: blur(1px); transform: translate(50%, 0); box-shadow: 0 0 32px #d50000; }
-
-@keyframes tbViewSweep {
-  0% { transform: translateX(0); opacity: 0; }
-  15% { opacity: 1; }
-  100% { transform: translateX(620%); opacity: 0; }
-}
-.tb-view-shine { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-.tb-view-shine::before { content: ''; position: absolute; top: -30%; bottom: -30%; left: -35%; width: 30%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent); opacity: 0; }
-.tb-view.is-on .tb-view-shine::before { animation: tbViewSweep 0.8s ease-out 0.05s 1 both; }
-
-/* 가운데 빛 줄 — 파랑 ↔ 빨강으로 오가는 불꽃, 가운데를 지날 때마다 다이아몬드가 번쩍인다 (둘 다 1.6s 주기) */
-@keyframes tbViewSpark {
-  0% { transform: translateX(0) scaleX(1); background: #dbeafe; box-shadow: 0 0 6px 2px #3b82f6, 0 0 16px 4px rgba(37, 99, 235, 0.75); }
-  50% { transform: translateX(calc((var(--w) - 10px) / 2)) scaleX(2.4); background: #fff; box-shadow: 0 0 6px 2px #c084fc, 0 0 18px 5px rgba(168, 85, 247, 0.7); }
-  100% { transform: translateX(calc(var(--w) - 10px)) scaleX(1); background: #fee2e2; box-shadow: 0 0 6px 2px #ef4444, 0 0 16px 4px rgba(220, 38, 38, 0.75); }
-}
-@keyframes tbViewCore {
-  0%, 100% { transform: translate(-50%, -50%) rotate(45deg) scale(0.8); box-shadow: 0 0 4px #fff, 0 0 8px rgba(168, 85, 247, 0.6); }
-  50% { transform: translate(-50%, -50%) rotate(45deg) scale(1.35); box-shadow: 0 0 8px #fff, 0 0 18px 3px #a855f7, 0 0 30px 6px rgba(236, 72, 153, 0.45); }
-}
-.tb-view-dots { --w: 72px; position: relative; flex-shrink: 0; width: var(--w); height: 18px; }
-.tb-view-dots::before {
-  content: '';
+.tb-orb { --orb: 44px; --orb-scale: 0.44; flex-shrink: 0; position: relative; display: block; width: var(--orb); height: var(--orb); border-radius: 50%; background: radial-gradient(circle at 50% 35%, #1c2136, #090b15 75%); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 6px 16px rgba(0, 0, 0, 0.45); transition: transform 0.25s ease; }
+.tb-orb-svg { position: absolute; width: 0; height: 0; overflow: hidden; }
+.tb-orb-core {
   position: absolute;
   left: 0;
-  right: 0;
-  top: 50%;
-  height: 2px;
-  transform: translateY(-50%);
-  border-radius: 2px;
-  background: linear-gradient(90deg, rgba(59, 130, 246, 0), #3b82f6 22%, #e9d5ff 50%, #ef4444 78%, rgba(239, 68, 68, 0));
-  box-shadow: 0 0 8px rgba(168, 85, 247, 0.55);
-  opacity: 0.7;
+  top: 0;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  transform: scale(var(--orb-scale));
+  transform-origin: 0 0;
+  filter: brightness(0.42) saturate(0.55);
+  animation: tbOrbGlow 6s ease-in-out infinite;
+  transition: filter 0.4s ease;
 }
-.tb-view-dots::after {
+.tb-orb-core::before {
   content: '';
   position: absolute;
-  left: 50%;
-  top: 50%;
-  z-index: 1;
-  width: 7px;
-  height: 7px;
-  border-radius: 1px;
-  background: #fff;
-  transform: translate(-50%, -50%) rotate(45deg);
-  animation: tbViewCore 1.6s ease-in-out infinite;
+  inset: 0;
+  border-radius: 50%;
+  border-top: 1px solid #93c5fd;
+  border-bottom: 1px solid #f87171;
+  background: linear-gradient(180deg, rgba(96, 165, 250, 0.25), rgba(239, 68, 68, 0.28));
+  box-shadow: inset 0 10px 10px 0 rgba(96, 165, 250, 0.45), inset 0 -10px 10px 0 rgba(239, 68, 68, 0.45);
 }
-.tb-view-dots i {
+.tb-orb-box {
   position: absolute;
-  top: 50%;
-  left: 0;
-  z-index: 2;
-  width: 10px;
-  height: 4px;
-  margin-top: -2px;
-  border-radius: 4px;
-  animation: tbViewSpark 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite alternate;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(var(--tb-orb-a), #3b82f6 18%, #8b5cf6 50%, #ef4444 82%);
+  -webkit-mask: url(#tb-orb-mask);
+  mask: url(#tb-orb-mask);
+  animation: tbOrbTurn 6s linear infinite;
 }
+.tb-orb-svg mask { filter: contrast(15); animation: tbOrbRound 1s linear infinite; }
+.tb-orb-svg polygon { filter: blur(7px); }
+.tb-orb-svg polygon:nth-child(1) { transform-origin: 75% 25%; transform: rotate(90deg); }
+.tb-orb-svg polygon:nth-child(2) { transform-origin: 50% 50%; animation: tbOrbSpin 2s linear infinite reverse; }
+.tb-orb-svg polygon:nth-child(3) { transform-origin: 50% 60%; animation: tbOrbSpin 2s linear infinite; animation-delay: -0.67s; }
+.tb-orb-svg polygon:nth-child(4) { transform-origin: 40% 40%; animation: tbOrbSpin 2s linear infinite reverse; }
+.tb-orb-svg polygon:nth-child(5) { transform-origin: 40% 40%; animation: tbOrbSpin 2s linear infinite reverse; animation-delay: -1s; }
+.tb-orb-svg polygon:nth-child(6) { transform-origin: 60% 40%; animation: tbOrbSpin 2s linear infinite; }
+.tb-orb-svg polygon:nth-child(7) { transform-origin: 60% 40%; animation: tbOrbSpin 2s linear infinite; animation-delay: -1.33s; }
+/* 가운데 문장 — 원본 음영을 살린 흰색(`tb-duel-crest-white.png`) + 은은한 빛 */
+.tb-orb-icon { position: absolute; left: 50%; top: 50%; z-index: 2; width: 21px; height: auto; transform: translate(-50%, -52%); opacity: 0.8; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55)); pointer-events: none; -webkit-user-drag: none; transition: opacity 0.35s ease, filter 0.35s ease; }
+/* 이름표 = 「전력 비교」 / 「4:3 ›」 — 결과 미리보기 숫자 + 화살표로 눌러서 보는 버튼이라는 신호 */
+.tb-clash-label { display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1.15; white-space: nowrap; }
+.tb-clash-title { font-size: 14px; font-weight: 900; letter-spacing: 0.03em; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45); }
+.tb-clash-score { display: inline-flex; align-items: center; gap: 2px; font-size: 12.5px; font-weight: 900; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.tb-clash-score i { font-style: normal; }
+.tb-clash-score .is-ours { color: #93c5fd; }
+.tb-clash-score .is-theirs { color: #fca5a5; }
+.tb-clash-score.is-none { color: rgba(255, 255, 255, 0.6); font-size: 11px; font-weight: 800; }
+@keyframes tbClashSweep {
+  0%, 62% { transform: translateX(-120%) skewX(-20deg); }
+  100% { transform: translateX(260%) skewX(-20deg); }
+}
+.tb-clash-medal::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; z-index: 3; pointer-events: none; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent); animation: tbClashSweep 4.2s ease-in-out infinite; }
+.tb-clash-medal.is-on::after { display: none; }
+.tb-clash-medal:hover:not(.is-on) { transform: translateY(-1px); color: #fff; border-color: rgba(255, 255, 255, 0.3); background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.06)); }
+.tb-clash-medal:hover:not(.is-on) .tb-orb-core { filter: brightness(0.68) saturate(0.8); }
+.tb-clash-medal:hover:not(.is-on) .tb-orb-icon { opacity: 0.95; }
+.tb-clash-medal:active { transform: scale(0.98); }
+.tb-clash-medal.is-on {
+  color: #fff;
+  border-color: rgba(196, 181, 253, 0.6);
+  background: linear-gradient(180deg, rgba(167, 139, 250, 0.42), rgba(109, 40, 217, 0.16));
+  box-shadow: inset 0 1px 0 rgba(237, 233, 254, 0.5), inset 0 -10px 18px rgba(0, 0, 0, 0.12), 0 0 16px rgba(139, 92, 246, 0.4), 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+.tb-clash-medal.is-on .tb-orb-core { filter: brightness(1.1) saturate(1.15); }
+.tb-clash-medal.is-on .tb-orb-icon { opacity: 1; filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.6)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4)); }
+.tb-clash-medal:focus-visible { outline: none; border-color: #fff; }
 
 @media (prefers-reduced-motion: reduce) {
-  .tb-view.is-on .tb-view-shine::before,
-  .tb-view-dots::after,
-  .tb-view-dots i { animation: none; }
-  .tb-view-dots i { display: none; }
+  .tb-clash-liquid::before,
+  .tb-clash-liquid::after,
+  .tb-orb-core,
+  .tb-orb-box,
+  .tb-orb-svg mask,
+  .tb-orb-svg polygon { animation: none; }
 }
 
 .tb-view-body { display: flex; flex-direction: column; gap: 16px; animation: tbFadeUp 0.3s ease both; }
@@ -822,14 +1035,18 @@
 }
 
 .tb-block.is-ally { --b: rgba(59, 130, 246, 0.75); --b-ink: var(--tb-ally-ink); }
-.tb-block.is-enemy { --b: rgba(239, 68, 68, 0.75); --b-ink: var(--tb-enemy-ink); }
+/* 「우리 팀이 받는 디버프」 — 디버프 칸은 어느 쪽이든 보라(합계 뱃지와 같은 색) */
+.tb-block.is-enemy { --b: rgba(139, 92, 246, 0.75); --b-ink: var(--tb-gain-ink); }
 .tb-block.is-check { --b: rgba(148, 163, 184, 0.55); --b-ink: #fff; }
+/* 확인할 것이 하나도 없으면 칸 · 체크 아이콘이 초록 */
+.tb-block.is-check.is-ok { --b: rgba(34, 197, 94, 0.72); --b-ink: var(--tb-good-ink); }
 
 .tb-block-head { display: flex; align-items: center; gap: 12px; padding: 14px 18px 10px; }
 .tb-block-icon { width: 38px; height: 38px; border-radius: 13px; display: flex; align-items: center; justify-content: center; background: var(--b); color: #fff; flex-shrink: 0; }
 .tb-block-icon.is-plain { background: none; overflow: visible; }
 .tb-block-title { min-width: 0; flex: 1; }
 .tb-block-title h3 { margin: 0; font-size: 17px; font-weight: 900; color: var(--b-ink); letter-spacing: -0.02em; }
+.tb-block-title-note { margin-left: 4px; font-size: 12.5px; font-weight: 800; color: rgba(255, 255, 255, 0.6); letter-spacing: 0; }
 .tb-block-title p { margin: 3px 0 0; font-size: 12px; font-weight: 600; color: rgba(255, 255, 255, 0.75); line-height: 1.5; }
 .tb-block-count { padding: 4px 12px; border-radius: 999px; background: var(--tb-good); color: #052e16; font-size: 13px; font-weight: 900; }
 .tb-block-count.is-warn { background: var(--tb-warn); color: #1c1100; }
@@ -925,7 +1142,7 @@
 
 .tb-block-num { min-width: 28px; padding: 3px 10px; border-radius: 999px; text-align: center; font-size: 13px; font-weight: 900; color: #fff; }
 .tb-block-num.is-ally { background: var(--tb-ally); }
-.tb-block-num.is-enemy { background: var(--tb-enemy); }
+.tb-block-num.is-enemy { background: var(--tb-gain); }
 
 .tb-fxl { --f: var(--tb-ally); list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .tb-fxl.is-enemy { --f: var(--tb-enemy); }
@@ -1063,6 +1280,7 @@
 
 .tb-rings-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
 .tb-rings-head strong { font-size: 14px; font-weight: 900; color: #fde68a; }
+.tb-rings-note { font-size: 11.5px; font-weight: 700; color: rgba(253, 230, 138, 0.7); }
 .tb-rings-head span { font-size: 12px; font-weight: 600; color: rgba(255, 255, 255, 0.72); }
 
 .tb-rings-list { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -1443,12 +1661,86 @@
 .tb-block.is-rival { --b: rgba(249, 115, 22, 0.75); --b-ink: var(--tb-rival-ink); }
 .tb-block-num.is-gain { background: var(--tb-gain); }
 .tb-block-num.is-rival { background: var(--tb-rival); }
+.tb-block.is-duel { --b: rgba(168, 85, 247, 0.75); --b-ink: #e9d5ff; }
+.tb-block-num.is-duel { background: linear-gradient(135deg, var(--tb-ally), var(--tb-rival)); }
+
+/* 맞대결 요약 (`DuelBoard`) — 점수 알약 · 「우리가 앞서요 | 상대가 앞서요」 두 줄 · 비슷한 능력치 알약. 게이지 없음(밍봉: 깔끔하게) */
+.tb-duel { display: flex; flex-direction: column; gap: 12px; }
+/* 위 = 「6 우리 우위 [■■■■■■□□□] 상대 우위 3」 한 줄 */
+.tb-duel-score { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 4px 6px; }
+.tb-duel-score-num { display: inline-flex; align-items: baseline; gap: 6px; color: rgba(255, 255, 255, 0.7); font-size: 12.5px; font-weight: 800; white-space: nowrap; }
+.tb-duel-score-num b { font-size: 22px; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1; }
+.tb-duel-score-num.is-ours b { color: var(--tb-ally-ink); }
+.tb-duel-score-num.is-theirs b { color: var(--tb-rival-ink); }
+.tb-duel-score-bar { display: flex; gap: 3px; height: 8px; }
+.tb-duel-score-bar i { flex-basis: 0; min-width: 6px; border-radius: 999px; }
+.tb-duel-score-bar .is-ours { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+.tb-duel-score-bar .is-even { background: rgba(255, 255, 255, 0.22); }
+.tb-duel-score-bar .is-theirs { background: linear-gradient(90deg, #fb923c, #ea580c); }
+
+/* 능력치 줄 — [우리 수치 | 막대 → | 아이콘 · 이름 · 차이 | ← 막대 | 상대 수치], 모든 줄 같은 칸 너비라 세로로 반듯하게 맞음 */
+.tb-duel-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.tb-duel-row { border-radius: 12px; background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(255, 255, 255, 0.07); animation: tbFadeUp 0.3s ease backwards; animation-delay: calc(var(--i) * 25ms); }
+.tb-duel-row.is-open { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.16); }
+.tb-duel-line { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 58px minmax(0, 1fr) 168px minmax(0, 1fr) 58px; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; cursor: pointer; }
+.tb-duel-line:focus-visible { outline: 2px solid #fff; outline-offset: -2px; border-radius: 12px; }
+.tb-duel-val { font-size: 15px; font-weight: 900; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.45); }
+.tb-duel-val.is-ours { text-align: left; }
+.tb-duel-val.is-theirs { text-align: right; }
+.tb-duel-row.is-ours .tb-duel-val.is-ours { color: var(--tb-ally-ink); }
+.tb-duel-row.is-theirs .tb-duel-val.is-theirs { color: var(--tb-rival-ink); }
+.tb-duel-row.is-even .tb-duel-val { color: rgba(255, 255, 255, 0.7); }
+.tb-duel-track { position: relative; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); overflow: hidden; }
+.tb-duel-track i { position: absolute; top: 0; bottom: 0; border-radius: 999px; }
+.tb-duel-track.is-ours i { right: 0; background: linear-gradient(90deg, rgba(96, 165, 250, 0.25), #60a5fa); box-shadow: 0 0 8px rgba(96, 165, 250, 0.5); }
+.tb-duel-track.is-theirs i { left: 0; background: linear-gradient(270deg, rgba(251, 146, 60, 0.25), #fb923c); box-shadow: 0 0 8px rgba(251, 146, 60, 0.5); }
+.tb-duel-stat { display: grid; grid-template-columns: 20px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 7px; align-items: center; }
+.tb-duel-stat .tb-fx-icon { grid-row: 1 / 3; }
+.tb-duel-stat-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-size: 13.5px; font-weight: 900; }
+.tb-duel-stat small { color: rgba(255, 255, 255, 0.5); font-size: 11px; font-weight: 800; }
+.tb-duel-row.is-ours .tb-duel-stat small { color: var(--tb-ally-ink); }
+.tb-duel-row.is-theirs .tb-duel-stat small { color: var(--tb-rival-ink); }
+
+/* 펼침 — 왼쪽 우리 · 오른쪽 상대(줄 위 수치와 같은 쪽), 원인마다 [얼굴 | 이름 · 효과 · 수치 / → 대상] */
+.tb-duel-detail { display: flex; flex-direction: column; gap: 8px; padding: 0 12px 12px; }
+.tb-duel-mirror { margin: 0; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; padding: 5px 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.85); font-size: 12px; font-weight: 800; }
+.tb-duel-mirror .is-ours { color: var(--tb-ally-ink); }
+.tb-duel-mirror .is-theirs { color: var(--tb-rival-ink); }
+.tb-duel-sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.tb-duel-side { --c-ink: var(--tb-ally-ink); padding: 8px 10px; border-radius: 10px; background: rgba(0, 0, 0, 0.25); border-top: 2px solid var(--tb-ally); }
+.tb-duel-side.is-theirs { --c-ink: var(--tb-rival-ink); border-top-color: var(--tb-rival); }
+.tb-duel-side-title { display: block; margin-bottom: 6px; color: var(--c-ink); font-size: 12.5px; font-weight: 900; }
+.tb-duel-parts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.tb-duel-part { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; align-items: center; }
+.tb-duel-part-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.tb-duel-part-top { display: flex; align-items: baseline; gap: 6px; min-width: 0; font-size: 12px; }
+.tb-duel-part-who { flex-shrink: 0; color: #fff; font-weight: 900; }
+.tb-duel-part-fx { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255, 255, 255, 0.7); font-weight: 700; }
+.tb-duel-part-top b { flex-shrink: 0; color: #4ade80; font-weight: 900; font-variant-numeric: tabular-nums; }
+.tb-duel-part.is-minus .tb-duel-part-top b { color: #f87171; }
+.tb-duel-part-to { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255, 255, 255, 0.45); font-size: 11px; font-weight: 700; }
+.tb-giver-face { flex-shrink: 0; display: block; border-radius: 6px; object-fit: cover; background: rgba(0, 0, 0, 0.3); }
+.tb-giver-face.is-formation { object-fit: contain; padding: 1px; }
+.tb-duel-none { margin: 0; padding: 6px 2px; color: rgba(255, 255, 255, 0.45); font-size: 12px; }
+/* 전력 비교 아래 — 자기 자신만 받는 버프(팀 평균에서 뺀 것) */
+.tb-duel-self { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px dashed rgba(255, 255, 255, 0.14); }
+.tb-duel-self-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; margin: 0; color: #fff; font-size: 13.5px; font-weight: 900; }
+.tb-duel-self-title small { color: rgba(255, 255, 255, 0.5); font-size: 11.5px; font-weight: 700; }
+.tb-duel-self-side { --c-ink: var(--tb-ally-ink); display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: 10px; background: rgba(0, 0, 0, 0.25); border-top: 2px solid var(--tb-ally); }
+.tb-duel-self-side.is-theirs { --c-ink: var(--tb-rival-ink); border-top-color: var(--tb-rival); }
+.tb-duel-self-side-title { color: var(--c-ink); font-size: 12.5px; font-weight: 900; }
+.tb-duel-self-hero { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.tb-duel-self-name { font-size: 12.5px; font-weight: 900; color: #fff; }
+.tb-duel-self-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.tb-duel-self-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.12); color: rgba(255, 255, 255, 0.82); font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+.tb-duel-self-chip b { color: var(--c-ink); font-weight: 900; }
+.tb-duel-foot { margin: 0; text-align: center; color: rgba(255, 255, 255, 0.42); font-size: 11px; }
 .tb-fxl.tone-ally { --f: var(--tb-ally); }
 .tb-fxl.tone-gain { --f: var(--tb-gain); }
-.tb-fxl.tone-enemy { --f: var(--tb-enemy); }
+.tb-fxl.tone-enemy { --f: var(--tb-gain); }
 .tb-fxl.tone-rival { --f: var(--tb-rival); }
 .tb-fx-tabs.tone-gain { --t: var(--tb-gain); }
-.tb-fx-tabs.tone-enemy { --t: var(--tb-enemy); }
+.tb-fx-tabs.tone-enemy { --t: var(--tb-gain); }
 .tb-fx-tabs.tone-rival { --t: var(--tb-rival); }
 .tb-selfbuff.tone-rival { border-top-color: rgba(253, 186, 116, 0.4); }
 .tb-selfbuff.tone-rival .tb-selfbuff-title { color: var(--tb-rival-ink); }
@@ -1456,8 +1748,8 @@
 .tb-selfbuff.tone-rival .tb-selfbuff-chip:hover { border-color: var(--tb-rival); }
 .tb-selfbuff.tone-rival .tb-selfbuff-chip.is-on { background: var(--tb-rival); border-color: var(--tb-rival); box-shadow: 0 0 10px color-mix(in srgb, var(--tb-rival) 45%, transparent); }
 /* 방패 아이콘(파랑 · 빨강 원본)을 칸 색에 맞춰 돌림 — 빨강 → 보라, 파랑 → 주황 */
-.tb-block.is-gain .tb-block-icon img { filter: hue-rotate(265deg) saturate(1.05); }
-.tb-block.is-rival .tb-block-icon img { filter: hue-rotate(170deg) saturate(1.1); }
+/* 「상대 덱에서 조심할 것」 = 빨강(안의 주의 카드와 같은 색). 아래 「우리 팀이 받는 디버프」는 디버프 보라 · 「상대가 받는 버프」는 주황이라 안 겹침 */
+.tb-block.is-caution { --b: rgba(239, 68, 68, 0.75); --b-ink: var(--tb-enemy-ink); }
 /* 버프 · 디버프 · 특수 효과 아이콘 (lib/effectIcons) */
 .tb-fx-icon { display: block; flex-shrink: 0; border-radius: 5px; object-fit: contain; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
 /* 목록 이름 칸 — 아이콘은 칸 왼쪽 끝에 고정(글자 길이와 상관없이 세로 한 줄), 이름은 칸 가운데 그대로.
@@ -1498,7 +1790,7 @@ span.tb-fxl-name:hover { text-decoration: none; }
 .tb-tot-uniq-num { min-width: 20px; padding: 0 7px; border-radius: 999px; background: color-mix(in srgb, var(--c) 60%, transparent); color: #fff; font-size: 11px; font-weight: 900; text-align: center; }
 .tb-tot-uniq-head em { font-style: normal; font-size: 10.5px; font-weight: 700; color: rgba(255, 255, 255, 0.45); }
 .tb-tot-col.tone-gain { --c: var(--tb-gain); --c-ink: var(--tb-gain-ink); }
-.tb-tot-col.tone-enemy { --c: var(--tb-enemy); --c-ink: var(--tb-enemy-ink); }
+.tb-tot-col.tone-enemy { --c: var(--tb-gain); --c-ink: var(--tb-gain-ink); }
 .tb-tot-col.tone-rival { --c: var(--tb-rival); --c-ink: var(--tb-rival-ink); }
 .tb-tot-th.is-sum img { opacity: 0.9; }
 
@@ -1552,7 +1844,7 @@ span.tb-fxl-name:hover { text-decoration: none; }
 /* 칸 맨 아래 「요약 보기」 — 효과별 패시브 · 액티브 · 합계 표 */
 .tb-fx-detail { --d: var(--tb-ally); margin-top: 10px; }
 .tb-fx-detail.tone-gain { --d: var(--tb-gain); }
-.tb-fx-detail.tone-enemy { --d: var(--tb-enemy); }
+.tb-fx-detail.tone-enemy { --d: var(--tb-gain); }
 .tb-fx-detail.tone-rival { --d: var(--tb-rival); }
 .tb-fx-detail-btn {
   width: 100%;
@@ -1641,6 +1933,10 @@ span.tb-fxl-name:hover { text-decoration: none; }
 .tb-tot-cell.is-passive { color: #fff; background: color-mix(in srgb, var(--c) 30%, rgba(255, 255, 255, 0.02)); }
 .tb-tot-cell.is-skill { color: color-mix(in srgb, var(--c-ink) 92%, #fff); border: 1px dashed color-mix(in srgb, var(--c) 65%, rgba(255, 255, 255, 0.2)); }
 .tb-tot-cell.is-none { color: rgba(255, 255, 255, 0.22); font-weight: 600; background: none; border-color: transparent; }
+/* 패시브 칸 + 펫 몫(같은 효과 펫은 따로 중첩 → 패시브 아래 작은 칩, 합계에 더함) */
+.tb-tot-pcell { justify-self: center; display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
+.tb-tot-pet { display: inline-flex; align-items: center; gap: 3px; height: 15px; padding: 0 5px 0 1px; border-radius: 999px; background: rgba(250, 204, 21, 0.12); border: 1px solid rgba(250, 204, 21, 0.38); color: #fde68a; font-size: 10px; font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tb-tot-pet img { width: 13px; height: 13px; border-radius: 50%; object-fit: cover; }
 .tb-tot-cell i { position: absolute; top: -7px; right: -9px; font-style: normal; font-size: 8.5px; font-weight: 900; padding: 0 3px; border-radius: 4px; background: rgba(34, 211, 238, 0.2); color: #a5f3fc; }
 /* 합계 — 목록 뱃지와 같은 뜻: 버프 초록 · 디버프 보라 */
 .tb-tot-cell.is-sum b {
@@ -1673,6 +1969,7 @@ span.tb-fxl-name:hover { text-decoration: none; }
 .tb-tot-src + .tb-tot-src { padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.06); }
 .tb-tot-src-icon { flex-shrink: 0; width: 34px; height: 34px; border-radius: 9px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--c) 50%, rgba(255, 255, 255, 0.2)); background: rgba(0, 0, 0, 0.3); }
 .tb-tot-src-icon > img, .tb-tot-src-icon > div { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tb-tot-src-icon.is-formation > img { object-fit: contain; padding: 3px; box-sizing: border-box; }
 .tb-tot-src-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .tb-tot-src-top { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; font-size: 12px; font-weight: 700; color: rgba(255, 255, 255, 0.88); }
 .tb-tot-src-top b { margin-left: auto; font-weight: 900; color: #4ade80; font-variant-numeric: tabular-nums; }
@@ -1726,10 +2023,17 @@ span.tb-fxl-name:hover { text-decoration: none; }
 
 /* ───────── 반응형 ───────── */
 
-@media (max-width: 1100px) {
-  .tb-deck-bar.has-enemy { grid-template-columns: minmax(0, 1fr); }
-  .tb-vs { margin: -4px 0; }
-  .tb-vs img { height: 38px !important; width: auto !important; }
+/* 두 덱은 어느 폭이든 나란히 — 위아래로 쌓지 않음(태블릿에서 양옆이 휑하고 폰에서 너무 길어서, 밍봉 2026-11-10).
+   자리가 모자라면 DeckBar가 재서 넣는 --tb-pair-zoom으로 카드 전체를 같은 비율로 줄임 */
+.tb-deck-bar.has-enemy > .tb-deck-side { zoom: var(--tb-pair-zoom, 1); }
+
+/* 폰: 카드 여백을 줄여 원래 폭(276 → 약 228)을 좁힘. 두 덱 사이 칸(--tb-vs-gap)은 DeckBar가 폭에 맞춰 0 → 64px로 서서히 넓힘 —
+   칸이 30px보다 좁으면(data-vs="top") VS는 두 카드 위 가운데에 작게 겹쳐 띄움 */
+@media (max-width: 760px) {
+  .tb-deck-bar.has-enemy > .tb-deck-side { padding: 0; }
+  .tb-deck-bar.has-enemy .ingame-deck-card { width: auto !important; padding: 10px 8px !important; }
+  .tb-deck-bar.has-enemy .ingame-deck-card .deck-stage { padding: 4px; gap: 8px; }
+  .tb-deck-bar.has-enemy[data-vs="top"] > .tb-vs-stage { top: 2px; z-index: 4; transform: translate(-50%, 0) scale(var(--tb-vs-k, 0.3)); transform-origin: 50% 0; }
 }
 
 @media (max-width: 1000px) {
@@ -1739,16 +2043,21 @@ span.tb-fxl-name:hover { text-decoration: none; }
   .tb-dict-detail:not(.has-hero) { display: none; }
 }
 
+/* 헤더 모드 버튼 — 폭 구간마다 정해진 모양(밍봉 2026-11-10: 태블릿 · 큰 폰에서 줄바꿈 위치가 제멋대로였음)
+   > 1100 제목 오른쪽 한 줄 · ≤ 1100 제목 아래 꽉 찬 한 줄(4칸 같은 너비) · ≤ 760 「5 vs 5」 숨김 · ≤ 420 아이콘 위 · 이름 아래 */
 @media (max-width: 1100px) {
   .tb-mode-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tb-hero { flex-direction: column; align-items: stretch; gap: 14px; }
+  .tb-hero-copy { flex: none; }
+  .tb-mode-switch { width: 100%; }
+  .tb-mode-pill { flex: 1 1 0; min-width: 0; justify-content: center; white-space: nowrap; }
 }
 
 @media (max-width: 760px) {
   .tb-hero { padding: 16px; }
   .tb-hero h1 { font-size: 22px; }
   .tb-hero p { font-size: 12.5px; }
-  .tb-mode-switch { width: 100%; }
-  .tb-mode-pill { flex: 1 1 0; justify-content: center; gap: 5px; padding: 9px 4px; font-size: 12.5px; }
+  .tb-mode-pill { gap: 5px; padding: 9px 4px; font-size: 12.5px; }
   .tb-mode-pill b { display: none; }
   /* 모드 고르기 — 폰은 2×2 작은 카드로 한 화면에 */
   .tb-mode-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 10px; }
@@ -1765,16 +2074,15 @@ span.tb-fxl-name:hover { text-decoration: none; }
   .tb-deck-panel { padding: 10px; }
   .tb-deck-bar { grid-template-columns: minmax(0, 1fr); }
   .tb-deck-side { padding: 10px 10px 8px; }
-  .tb-slots { gap: 6px; }
-  .tb-slot-name { font-size: 10.5px; }
-  .tb-slot-remove { width: 18px; height: 18px; top: -5px; right: -4px; }
   .tb-enemy-add { flex-direction: row; justify-content: flex-start; text-align: left; padding: 12px 14px; }
   .tb-enemy-add span { display: none; }
-  .tb-picker-drop { padding: 10px 10px 2px; }
+  /* 폰: 영웅 고르기 = 화면 아래 붙는 시트(덱을 누른 뒤 아래로 내려갈 필요 없이 바로 고름). 누른 덱은 시트 위로 스크롤(PickerDropdown) */
+  .tb-picker-drop { position: fixed; left: 0; right: 0; bottom: 0; z-index: 950; max-height: 58vh; overflow-y: auto; overscroll-behavior: contain; padding: 10px 10px calc(8px + env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; border-width: 1.5px 0 0; background: rgba(10, 14, 26, 0.97); box-shadow: 0 -14px 40px rgba(0, 0, 0, 0.55); animation: tbSheetUp 0.26s ease both; }
+  .tb-page:has(.tb-picker-drop) { padding-bottom: 58vh; }
   .tb-picker-tabs > button:not(.tb-picker-out) { padding: 5px 12px; font-size: 13px; }
   .tb-herofx-panel { padding: 12px 10px 14px; }
   .tb-herofx-sides.is-split { grid-template-columns: minmax(0, 1fr); }
-  .tb-picker-drop .hero-grid-picker-grid { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)) !important; gap: 8px 4px !important; height: 300px !important; max-height: 300px !important; }
+  .tb-picker-drop .hero-grid-picker-grid { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)) !important; gap: 8px 4px !important; height: 178px !important; max-height: 178px !important; }
   .tb-picker-drop .hero-grid-picker-grid > div > div:first-child { width: 60px !important; }
   .tb-picker-drop .hero-grid-picker-grid > div > div:nth-child(2) { width: 64px !important; font-size: 11px !important; }
   .tb-finder { padding: 8px; }
@@ -1791,10 +2099,21 @@ span.tb-fxl-name:hover { text-decoration: none; }
   .tb-ftile-count { min-width: 18px; padding: 1px 4px; font-size: 10px; }
 
   .tb-analysis { padding: 14px 10px 16px; }
-  .tb-view-switch { width: 100%; gap: 8px; padding: 2px 22px; }
-  .tb-view { flex: 1 1 0; min-width: 0; padding: 7px 16px; }
-  .tb-view-name { font-size: 14px; }
-  .tb-view-dots { --w: 40px; }
+  .tb-clash { margin-bottom: 10px; }
+  .tb-clash-bar { gap: 5px; }
+  .tb-clash-half { font-size: 13.5px; letter-spacing: 0.02em; }
+  .tb-clash-body { gap: 4px; height: 42px; justify-content: center; }
+  .tb-clash-half.is-mine .tb-clash-body,
+  .tb-clash-half.is-enemy .tb-clash-body { padding: 0 8px; }
+  .tb-clash-tag { gap: 4px; }
+  .tb-clash-icon { width: 16px; height: 16px; }
+  /* 폰 — 세 버튼이 한 줄에 들어가게 얼굴은 숨김 */
+  .tb-clash-faces { display: none; }
+  .tb-clash-medal { height: 46px; gap: 6px; padding: 0 12px 0 4px; }
+  .tb-orb { --orb: 36px; --orb-scale: 0.36; }
+  .tb-orb-icon { width: 17px; }
+  .tb-clash-title { font-size: 12px; letter-spacing: 0.01em; }
+  .tb-clash-score { font-size: 11px; }
   .tb-block-head { padding: 12px 12px 8px; gap: 10px; }
   .tb-block-icon { width: 32px; height: 32px; }
   .tb-block-title h3 { font-size: 15.5px; }
@@ -1842,6 +2161,12 @@ span.tb-fxl-name:hover { text-decoration: none; }
   .tb-tot-cell.is-sum b { min-width: 52px; font-size: 12px; }
   .tb-tot-detail { margin: 4px 0 8px; padding: 7px; }
   .tb-tot-src-icon { width: 30px; height: 30px; }
+  .tb-duel-line { grid-template-columns: 46px minmax(0, 1fr) 118px minmax(0, 1fr) 46px; gap: 6px; padding: 8px; }
+  .tb-duel-val { font-size: 13px; }
+  .tb-duel-stat-name { font-size: 12.5px; }
+  .tb-duel-sides { grid-template-columns: minmax(0, 1fr); }
+  .tb-duel-score-num { font-size: 11px; }
+  .tb-duel-score-num b { font-size: 18px; }
 
   .tb-rings { padding: 8px 10px; gap: 6px 10px; }
   .tb-rings:has(.tb-rings-list) .tb-rings-head span { display: none; }
@@ -1853,6 +2178,27 @@ span.tb-fxl-name:hover { text-decoration: none; }
   .tb-threat-aim { font-size: 12px; }
   .tb-threat-what { font-size: 12.5px; }
   .tb-threat-todo { font-size: 12px; padding: 6px 8px; }
+  .tb-tot-faces .tb-giver-face { width: 20px; height: 20px; }
+}
+
+/* 키 작은 폰(SE 등) — 시트 제목 줄은 숨기고(아래 「영웅을 누르면 … 자리에 넣어요」가 같은 뜻) 간격을 줄여 영웅 두 줄이 시트 안에 다 보이게 */
+@media (max-width: 760px) and (max-height: 700px) {
+  .tb-picker-drop { max-height: 64vh; gap: 7px; padding-top: 8px; }
+  .tb-page:has(.tb-picker-drop) { padding-bottom: 64vh; }
+  .tb-picker-drop-head .tb-side-title { display: none; }
+  .tb-picker-drop .tb-finder { padding: 5px 8px; }
+}
+
+/* 가로로 눕힌 폰 — 화면 높이가 낮아 아래 시트가 덱을 다 가림 → 시트 대신 덱 바로 아래에 펼침 */
+@media (max-width: 760px) and (max-height: 480px) {
+  .tb-picker-drop { position: static; max-height: none; overflow: visible; padding: 10px; border-radius: 16px; border-width: 1px; box-shadow: none; animation: tbFadeUp 0.2s ease both; }
+  .tb-page:has(.tb-picker-drop) { padding-bottom: 0; }
+}
+
+/* 아주 좁은 폰 — 모드 버튼 4칸은 아이콘 위 · 이름 아래(한 줄에 아이콘 + 「효과 사전」이 안 들어감) */
+@media (max-width: 420px) {
+  .tb-mode-pill { flex-direction: column; gap: 3px; padding: 7px 2px 6px; font-size: 11.5px; line-height: 1.15; border-radius: 16px; }
+  .tb-mode-switch { border-radius: 20px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

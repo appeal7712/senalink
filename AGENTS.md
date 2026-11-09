@@ -322,6 +322,8 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | 패시브 탭 목록 · 겹침(높은 수치 하나만) · 자기 버프 | `effectCards`(`selfOnly`) · `findOverlaps`(팀 버프끼리만, `teamGroups`) · `scopeCovers` · `sharedRecipients`(일부 겹침 → `overlapNote`) · `selfClash` |
 | 스킬 · 발동 탭 목록 | `skillCards`(카드) · `skillCardText`(표시 이름 다듬기) · 화면 `SkillEffectList` |
 | 목록 상자 묶기 · 칸 숫자 · 버프/디버프 칸 표(패시브 · 액티브 · 합계) | `src/pages/teamBuilder/fxGroups.js` — `groupEffectCards` · `groupSkillCards` · `fxBoxCount` · `fxTotals` · `fxLedger`(칸 메인 표 `FxLedger` · 맨 아래 「자세히 보기」 `FxFold` 안에 목록) |
+| 덱 칸(공용 덱 배치 카드 · 진형 · 펫, 길드전 5칸 중 3명) | 화면 `TeamBuilderParts.jsx` `DeckSide`(= 공용 `InGameDeckCard`, `allowNoPet`) · `DeckVs`, 저장 `TeamBuilderPage.jsx` `loadStore`(`decks[mode].formation` · `.pet`), 엔진 `formationRows` · `formationCards` · `petEntries` · `petCards`, 데이터 `data/formations.js` · `data/pets.js` |
+| 전력 비교 탭(VS 대결 바 `.tb-clash` 가운데 액체 구슬) — 능력치별 두 팀 비교 · 이유 · 같은 영웅끼리 | 엔진 `duelSummary`(`DUEL_STATS` 능력치 목록 · `duelNets` 영웅별 「받는 버프 − 상대 디버프」) · 화면 `TeamBuilderParts.jsx` `DuelBoard` |
 | 칸 강조색(받는 버프 파랑 · 거는 디버프 보라 · 받는 디버프 빨강 · 상대 버프 주황) · 상대 덱 목록 대상 글 뒤집기 | `TeamBuilderParts.jsx` `tone` prop · `flipScope`(`perspective="enemy"`) — 뱃지 색은 `side` 그대로 |
 | PvE 전용 줄(탑 전용 · 보스 대상) | `makeEntries` `allowTower` — 탑 줄은 `tower: true`(「탑 전용」 표시), 「보스」 줄은 `SKIP_RE`(결투장 · 길드전은 건너뜀) / `SKIP_PVE_RE`(PvE는 읽음) |
 | 편성 조건 문구(「스킬2 생명력 전환 발동 안 함」) | `formationRequirements().effectText` · `heroSummary().conditions[].effectText` — 둘 다 `skillEffectText` 공용 |
@@ -510,7 +512,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.11.09.218** (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.11.10.219** (푸터 `APP_VERSION` 확인)
 - 저장소 2개: 사이트 `appeal7712/senalink`(이 폴더) · 원본 에셋 `appeal7712/senalink-assets`(비공개, `asset/` 폴더 = 그 저장소, 브랜치 `main`). 새 컴퓨터 복구 = 사이트 clone → 그 안에 `git clone …/senalink-assets.git asset` → `.env.local`(Firebase 웹 설정 6줄, 콘솔 → 프로젝트 설정에서 복사) → `npm install` → `npx firebase login`.
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 

@@ -5,6 +5,7 @@
  * 입력은 scraped_heroes.json 스키마의 영웅 객체:
  *   skills[].effects[] = { target, details[] }, skills[].skillEnhance[], skills[].transcendenceEffects{}, skills[].tooltips{}
  */
+import { formationsData } from '../data/formations';
 
 const ROLE_BY_KR = {
   공격형: 'offensive',
@@ -988,7 +989,7 @@ export function listLabel(name) {
 
 /** 수치 뱃지 — 이름에 증가 · 감소가 붙어 있으면 부호 없이(「방어력 감소 29%」), 아니면 ▲▼ 방향대로 +/− */
 export function fmtFxValue(value, label, dir) {
-  return fmtValue(value, /(증가|감소)$/.test(String(label || '')) ? null : dir);
+  return fmtValue(value, /(증가|감소)\s*(\([^)]*\))?$/.test(String(label || '')) ? null : dir);
 }
 
 /* ───────────── 전설 장신구 (불사 · 권능 · 부활) ───────────── */
@@ -1599,4 +1600,304 @@ export function targetingInsights(enemyAnalysis) {
     row.skills.add(e.skillLabel);
   }
   return [...map.values()].map((r) => ({ ...r, effects: [...r.effects], skills: [...r.skills] }));
+}
+
+/* ───────────── 맞대결 (내 덱 vs 상대 덱) ───────────── */
+
+/** 맞대결에서 비교하는 능력치. `typed` = 「물리 · 마법」 효과는 그 공격 타입 영웅에게만 셈 */
+const DUEL_STATS = [
+  { id: 'atk', label: '공격력', icon: '모든 공격력 증가', re: /^(물리 |마법 |모든 )?공격력$/, typed: true },
+  { id: 'dmg', label: '피해량', icon: '피해량 증가', re: /^(물리 |마법 )?피해량$/, typed: true },
+  { id: 'crit', label: '치명타 확률', icon: '치명타 확률 증가', re: /^치명타 확률$/ },
+  { id: 'critDmg', label: '치명타 피해', icon: '치명타 피해 증가', re: /^치명타 피해$/ },
+  { id: 'weak', label: '약점 공격 확률', icon: '약점 공격 확률 증가', re: /^약점 공격 확률$/ },
+  { id: 'weakDmg', label: '약점 공격 피해량', icon: '약점 공격 피해량 증가', re: /^약점 공격 피해량$/ },
+  { id: 'hit', label: '효과 적중', icon: '효과 적중 증가', re: /^효과 적중$/ },
+  { id: 'res', label: '효과 저항', icon: '효과 저항 증가', re: /^효과 저항$/ },
+  { id: 'def', label: '방어력', icon: '방어력 증가', re: /^방어력$/ },
+  { id: 'block', label: '막기 확률', icon: '막기 확률 증가', re: /^막기 확률$/ },
+  { id: 'guard', label: '피해 감쇄', icon: '감쇄', re: /^(물리 |마법 )?(감쇄|취약)$/ },
+  { id: 'heal', label: '받는 회복량', icon: '받는 회복량 증가', re: /^받는 회복량$/ },
+];
+const DUEL_EVEN = 2;
+
+function duelStatOf(e, hero) {
+  const n = String(e.name || '').replace(/\(중첩\)$/, '').trim();
+  const base = NAMED_STAT_BUFFS.get(n) || effectLabel(n).label;
+  const stat = DUEL_STATS.find((s) => s.re.test(base));
+  if (!stat) return null;
+  if (stat.typed) {
+    if (/^물리 /.test(base) && hero.attackType !== 'physical') return null;
+    if (/^마법 /.test(base) && hero.attackType !== 'magic') return null;
+  }
+  return stat;
+}
+
+function isDuelEntry(e, includeEnhance) {
+  return e.kind === 'effect'
+    && !e.special
+    && !e.ownHit
+    && ['stat', 'survival', 'antiheal'].includes(e.category)
+    && !!effectTiming(e)
+    && entryValue(e, includeEnhance) != null;
+}
+
+/**
+ * 한 팀 영웅마다 능력치별 「받는 버프 − 상대가 거는 디버프」. 같은 효과(같은 key · 같은 timing)는 가장 높은 수치 하나만,
+ * 다른 효과끼리는 더함 — **패시브만**: [상시] + 전투 시작 [N턴] + 진형 · 펫(밍봉 2026-11-10 — 액티브 · 조건 발동은 안 셈).
+ * 대상이 정해지지 않은 효과(1명 · 무작위)는 뺌. 「자신」만 받는 버프도 팀 평균에서 뺌(윤건 치명타 50% → 팀 평균 10%로 보이던 것,
+ * 밍봉 2026-11-10) — `duelSelfBuffs`로 따로 보여 줌.
+ */
+function duelNets(team, own, opp, includeEnhance, formation = null, extras = null) {
+  const nets = new Map(team.map((h) => [cleanHeroName(h.name), new Map()]));
+  const add = (e, recipients, sign) => {
+    for (const name of recipients || []) {
+      const hero = team.find((h) => cleanHeroName(h.name) === name);
+      const stat = hero && duelStatOf(e, hero);
+      if (!stat) continue;
+      const byStat = nets.get(name);
+      if (!byStat.has(stat.id)) byStat.set(stat.id, new Map());
+      const slots = byStat.get(stat.id);
+      const slot = `${sign}|${e.key}|${effectTiming(e) || 'skill'}`;
+      const value = entryValue(e, includeEnhance);
+      if (!slots.has(slot) || slots.get(slot).value < value) slots.set(slot, { e, value, sign });
+    }
+  };
+  for (const e of own?.entries || []) {
+    if (e.side === 'ally' && e.scope?.kind !== 'self' && isDuelEntry(e, includeEnhance)) add(e, scopeRecipients(e.scope, e.heroName, team), 1);
+  }
+  for (const e of opp?.entries || []) {
+    if (e.side === 'enemy' && isDuelEntry(e, includeEnhance)) add(e, scopeRecipients(e.scope, null, team), -1);
+  }
+  for (const e of formationEntries(formation)) add(e, e.recipients, 1);
+  for (const e of extras || []) add(e, e.recipients, e.side === 'enemy' ? -1 : 1);
+  return nets;
+}
+
+/** 전력 비교에서 뺀 「자신」만 받는 패시브 능력치 버프 — 영웅마다 [{ label, value, dir }] (같은 효과는 높은 수치 하나) */
+function duelSelfBuffs(team, own, includeEnhance) {
+  const byHero = new Map();
+  for (const e of own?.entries || []) {
+    if (e.side !== 'ally' || e.scope?.kind !== 'self' || !isDuelEntry(e, includeEnhance)) continue;
+    const name = cleanHeroName(e.heroName);
+    const hero = team.find((h) => cleanHeroName(h.name) === name);
+    if (!hero || !duelStatOf(e, hero)) continue;
+    const label = listLabel(e.name.replace(/\(중첩\)$/, ''));
+    const value = entryValue(e, includeEnhance);
+    if (!byHero.has(name)) byHero.set(name, new Map());
+    const items = byHero.get(name);
+    if (!items.has(label) || items.get(label).value < value) items.set(label, { label, value, dir: effectLabel(e.name).dir });
+  }
+  return [...byHero].map(([hero, items]) => ({ hero, items: [...items.values()] }));
+}
+
+/* ───────────── 펫 (영웅과 같은 스킬 · 효과 · 툴팁 형식 — data/pets.js) ───────────── */
+
+/**
+ * 펫의 상시 효과 → 엔진 entry(+ `recipients`). `side` = 'ally'(펫 주인 팀이 받는 버프, `team` = 주인 팀) ·
+ * 'enemy'(상대에게 거는 디버프, `team` = 상대 팀 — 유 「방어력 감소」 등). 펫은 덱 칸이 아니라서 받는 대상 계산에서 빠짐.
+ * 영웅 같은 이름 효과와 섞지 않게 key 앞에 `pet|`(진형처럼 따로 쌓이는 효과로 셈). 모험 보상 패시브(믹 · 더지 · 에리)는 수치 · 상시가 없어 빠짐.
+ */
+export function petEntries(pet, team, includeEnhance = true, side = 'ally') {
+  if (!pet?.skills?.length) return [];
+  const asHero = {
+    id: pet.id,
+    name: pet.name,
+    role: 'pet',
+    skills: pet.skills.map((s) => ({ ...s, type: 'passive', tooltips: { ...(pet.tooltips || {}), ...(s.tooltips || {}) } })),
+  };
+  const members = (team || []).filter(Boolean);
+  /** 상대 덱이 없을 때 거는 디버프는 받는 대상 모름(null) — 「상대가 받는 디버프」 표에는 그대로 나옴 */
+  const unknownTarget = side === 'enemy' && !members.length;
+  return collectHeroEntries(asHero, { includeEnhance })
+    .filter((e) => e.kind === 'effect' && e.side === side && effectTiming(e) === 'perm' && entryValue(e, includeEnhance) != null)
+    .map((e) => ({
+      ...e,
+      key: `pet|${e.key}`,
+      heroName: `${pet.name}(펫)`,
+      recipients: unknownTarget ? null : e.scope?.kind === 'self' ? [] : (scopeRecipients(e.scope, null, members) || members.map((h) => cleanHeroName(h.name))),
+    }))
+    .filter((e) => unknownTarget || e.recipients.length);
+}
+
+/** 버프 · 디버프 칸 표에 넣을 펫 카드 — 「물리 공격력 증가 (펫)」처럼 따로 한 줄 (`side`는 `petEntries`와 같음) */
+export function petCards(pet, team, includeEnhance = true, side = 'ally') {
+  return petEntries(pet, team, includeEnhance, side).map((e) => {
+    const name = `${listLabel(e.name)} (펫)`;
+    const value = entryValue(e, includeEnhance);
+    return {
+      id: `pet|${e.id}`,
+      key: e.key,
+      name,
+      label: name,
+      dir: effectLabel(e.name).dir,
+      side,
+      timing: 'perm',
+      turns: null,
+      value,
+      sources: [{
+        id: `pet|${e.id}`,
+        heroName: e.heroName,
+        value,
+        scope: scopeText(e),
+        scopeKind: e.scope?.kind || 'all',
+        recipients: e.recipients,
+        applied: true,
+        skillLabel: '펫',
+        skillName: e.skillName,
+        condition: null,
+        turns: null,
+      }],
+      recipients: e.recipients,
+      overlap: null,
+      overlapNote: null,
+      wasted: false,
+    };
+  });
+}
+
+/* ───────────── 진형 (전방 방어력 · 후방 모든 공격력) ───────────── */
+
+const pctOf = (text) => Number(String(text || '').match(/([\d.]+)%/)?.[1]) || 0;
+
+/**
+ * 5칸 진형 배치(`renderDeckFormationLayout`과 같은 칸 순서 — 앞쪽 `backCount`칸이 후방, 나머지가 전방)에서
+ * 후방 · 전방 영웅 이름과 진형 버프 수치. `names`는 5칸 배열(빈 칸 '').
+ */
+export function formationRows(formationId, names) {
+  const f = formationsData.find((x) => x.id === formationId) || formationsData[0];
+  const list = Array.from({ length: 5 }, (_, i) => cleanHeroName((names || [])[i] || ''));
+  return {
+    id: f.id,
+    name: f.name,
+    back: list.slice(0, f.backCount).filter(Boolean),
+    front: list.slice(f.backCount).filter(Boolean),
+    atk: pctOf(f.backBuff),
+    def: pctOf(f.frontBuff),
+  };
+}
+
+/** 진형 버프를 엔진 entry 모양으로 — 전력 비교(`duelSummary`)에서 영웅 효과와 같은 셈(다른 효과라 더해짐) */
+function formationEntries(rows) {
+  if (!rows) return [];
+  const make = (stat, value, recipients) => ({
+    kind: 'effect',
+    name: `${stat} 증가`,
+    key: `formation|${stat}`,
+    heroName: rows.name,
+    side: 'ally',
+    category: 'stat',
+    duration: { type: 'permanent' },
+    skillType: 'passive',
+    valueBase: value,
+    recipients,
+  });
+  return [make('모든 공격력', rows.atk, rows.back), make('방어력', rows.def, rows.front)].filter((e) => e.valueBase && e.recipients.length);
+}
+
+/**
+ * 버프 칸 표(`fxLedger`)에 넣을 진형 카드 — 「모든 공격력 증가 (진형)」 · 「방어력 증가 (진형)」 따로 한 줄
+ * (같은 이름 영웅 버프와 섞으면 높은 수치 하나만 남는 규칙에 걸림 — 진형은 따로 중첩).
+ */
+export function formationCards(formationId, names) {
+  const rows = formationRows(formationId, names);
+  return formationEntries(rows).map((e) => {
+    const label = `${e.name} (진형)`;
+    const scope = e.key === 'formation|방어력' ? '전방' : '후방';
+    return {
+      id: `formation|${e.key}`,
+      key: e.key,
+      name: label,
+      label,
+      dir: 'up',
+      side: 'ally',
+      timing: 'perm',
+      turns: null,
+      value: e.valueBase,
+      sources: [{
+        id: `formation|${e.key}`,
+        heroName: rows.name,
+        value: e.valueBase,
+        scope,
+        scopeKind: 'roles',
+        recipients: e.recipients,
+        applied: true,
+        skillLabel: '진형',
+        skillName: null,
+        condition: null,
+        turns: null,
+      }],
+      recipients: e.recipients,
+      overlap: null,
+      overlapNote: null,
+      wasted: false,
+    };
+  });
+}
+
+function duelSide(team, nets, statId) {
+  const per = new Map();
+  const parts = new Map();
+  for (const h of team) {
+    const name = cleanHeroName(h.name);
+    const slots = nets.get(name)?.get(statId);
+    let total = 0;
+    for (const { e, value, sign } of slots?.values() || []) {
+      total += sign * value;
+      const label = listLabel(e.name);
+      const k = `${sign}|${e.heroName}|${label}`;
+      const p = parts.get(k) || { giver: e.heroName, label, dir: effectLabel(e.name).dir, sign, value: 0, sum: 0, to: [] };
+      p.value = Math.max(p.value, value);
+      p.sum += value;
+      if (!p.to.includes(name)) p.to.push(name);
+      parts.set(k, p);
+    }
+    per.set(name, total);
+  }
+  const avg = team.length ? [...per.values()].reduce((a, b) => a + b, 0) / team.length : 0;
+  return { avg, per, parts: [...parts.values()] };
+}
+
+/**
+ * 맞대결 요약 — 능력치마다 두 팀 평균(영웅마다 「받는 버프 − 상대가 거는 디버프」의 평균)을 비교.
+ * `lead` = 'ours' | 'theirs' | 'even'(차이 2 미만), `reasons` = 앞선 쪽 차이를 만든 효과(양쪽에 같은 영웅 · 같은 효과가 있으면 상쇄로 보고 뺌),
+ * `mirror` = 양쪽에 같은 영웅이 있으면 그 영웅끼리 차이가 가장 큰 쪽.
+ */
+export function duelSummary(mine, myTeam, theirs, theirTeam, includeEnhance = true, formations = {}) {
+  const ours = (myTeam || []).filter(Boolean);
+  const them = (theirTeam || []).filter(Boolean);
+  if (!ours.length || !them.length) return { stats: [], counts: { ours: 0, theirs: 0, even: 0 }, selfBuffs: { ours: [], theirs: [] } };
+  const selfBuffs = { ours: duelSelfBuffs(ours, mine, includeEnhance), theirs: duelSelfBuffs(them, theirs, includeEnhance) };
+  const petFx = (ownPet, oppPet, team) => [
+    ...(ownPet ? petEntries(ownPet, team, includeEnhance, 'ally') : []),
+    ...(oppPet ? petEntries(oppPet, team, includeEnhance, 'enemy') : []),
+  ];
+  const ourNets = duelNets(ours, mine, theirs, includeEnhance, formations.ours || null, petFx(formations.oursPet, formations.theirsPet, ours));
+  const theirNets = duelNets(them, theirs, mine, includeEnhance, formations.theirs || null, petFx(formations.theirsPet, formations.oursPet, them));
+  const shared = ours.map((h) => cleanHeroName(h.name)).filter((n) => them.some((t) => cleanHeroName(t.name) === n));
+  const stats = [];
+  for (const s of DUEL_STATS) {
+    const a = duelSide(ours, ourNets, s.id);
+    const b = duelSide(them, theirNets, s.id);
+    if (!a.parts.length && !b.parts.length) continue;
+    const diff = a.avg - b.avg;
+    const lead = Math.abs(diff) < DUEL_EVEN ? 'even' : diff > 0 ? 'ours' : 'theirs';
+    const [win, lose, winSize] = lead === 'theirs' ? [b, a, them.length] : [a, b, ours.length];
+    const same = (list, p) => list.some((q) => q.sign === p.sign && q.giver === p.giver && q.label === p.label && q.value >= p.value);
+    const reasons = lead === 'even' ? [] : [
+      ...win.parts.filter((p) => p.sign > 0 && !same(lose.parts, p)).map((p) => ({ ...p, onRival: false, weight: p.sum / winSize })),
+      ...lose.parts.filter((p) => p.sign < 0 && !same(win.parts, p)).map((p) => ({ ...p, onRival: true, weight: p.sum / (lead === 'theirs' ? ours.length : them.length) })),
+    ].sort((x, y) => y.weight - x.weight).slice(0, 2);
+    let mirror = null;
+    for (const n of shared) {
+      const d = (a.per.get(n) || 0) - (b.per.get(n) || 0);
+      if (Math.abs(d) >= DUEL_EVEN && (!mirror || Math.abs(d) > Math.abs(mirror.diff))) mirror = { name: n, ours: a.per.get(n) || 0, theirs: b.per.get(n) || 0, diff: d };
+    }
+    const byWeight = (list) => [...list].sort((x, y) => y.sum - x.sum);
+    stats.push({ id: s.id, label: s.label, icon: s.icon, ours: a.avg, theirs: b.avg, diff, lead, reasons, mirror, parts: { ours: byWeight(a.parts), theirs: byWeight(b.parts) } });
+  }
+  stats.sort((x, y) => Math.abs(y.diff) - Math.abs(x.diff));
+  const counts = { ours: 0, theirs: 0, even: 0 };
+  for (const s of stats) counts[s.lead] += 1;
+  return { stats, counts, selfBuffs };
 }

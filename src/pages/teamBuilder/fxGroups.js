@@ -133,13 +133,15 @@ const LEDGER_GROUPS = [
 /**
  * 버프 · 디버프 칸 표(`FxLedger`) — 효과 이름 한 줄에 패시브 · 액티브 · 합계(= 패시브 + 액티브 가장 높은 것).
  * 수치 없는 효과는 `flags`(패시브 · 액티브 표시). `count` = 칸 머리 숫자(효과 가짓수).
+ * 펫 카드(「… (펫)」)는 같은 이름 영웅 효과 줄에 `pet`으로 합침 — 펫은 영웅 효과와 따로 중첩이라 합계에 그대로 더함.
  */
-export function fxLedger(passiveCards, skillCards) {
+export function fxLedger(passiveCards, skillCards, petCards = []) {
   const passive = fxTotals(passiveCards || [], 'passive');
   const skill = fxTotals(skillCards || [], 'skill');
+  const pet = fxTotals((petCards || []).map((c) => ({ ...c, label: String(c.label || c.name).replace(/\s*\(펫\)$/, '') })), 'passive');
   const rows = new Map();
   const put = (t, kind) => {
-    if (!rows.has(t.label)) rows.set(t.label, { id: t.label, label: t.label, dir: t.dir, rank: t.rank, passive: null, skill: null, heroes: [] });
+    if (!rows.has(t.label)) rows.set(t.label, { id: t.label, label: t.label, dir: t.dir, rank: t.rank, passive: null, skill: null, pet: null, heroes: [] });
     const r = rows.get(t.label);
     r[kind] = t;
     r.rank = Math.min(r.rank, t.rank);
@@ -147,11 +149,12 @@ export function fxLedger(passiveCards, skillCards) {
   };
   passive.stats.forEach((t) => put(t, 'passive'));
   skill.stats.forEach((t) => put(t, 'skill'));
+  pet.stats.forEach((t) => put(t, 'pet'));
   const list = [...rows.values()].map((r) => {
-    const parts = [...(r.passive?.parts || []), ...(r.skill?.parts || [])];
+    const parts = [...(r.passive?.parts || []), ...(r.skill?.parts || []), ...(r.pet?.parts || [])];
     return {
       ...r,
-      total: Math.round(((r.passive?.total || 0) + (r.skill?.total || 0)) * 10) / 10,
+      total: Math.round(((r.passive?.total || 0) + (r.skill?.total || 0) + (r.pet?.total || 0)) * 10) / 10,
       overlap: parts.some((p) => p.overlap),
       warn: parts.some((p) => p.wasted || p.note?.warn),
     };
@@ -174,12 +177,13 @@ export function fxLedger(passiveCards, skillCards) {
   };
   passive.flags.forEach((f) => flag(f, 'passive'));
   skill.flags.forEach((f) => flag(f, 'skill'));
+  pet.flags.forEach((f) => flag(f, 'passive'));
   const flagList = [...flags.values()].sort((a, b) => a.label.localeCompare(b.label, 'ko'));
   return {
     groups,
     rows: list,
     flags: flagList,
-    nPassive: list.filter((r) => r.passive).length + flagList.filter((f) => f.passive).length,
+    nPassive: list.filter((r) => r.passive || r.pet).length + flagList.filter((f) => f.passive).length,
     nSkill: list.filter((r) => r.skill).length + flagList.filter((f) => f.skill).length,
     count: list.length + flagList.length,
   };

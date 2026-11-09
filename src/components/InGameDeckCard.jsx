@@ -66,6 +66,8 @@ export default function InGameDeckCard({
   maxHeroes = null,
   hideReservationBtn = false,
   onHeroDrop = null,
+  /** 한 화면에 덱 카드가 여럿일 때 — 같은 범위 안에서만 끌어 옮기기(다른 카드로 넘어가 영웅이 복제되지 않게) */
+  dragScope = null,
   speedOrderNames = null,
   speedIgnoredNames = null,
   onSpeedConfigChange = null,
@@ -81,6 +83,8 @@ export default function InGameDeckCard({
   onUnderlyingCover = null,
   /** 길드전 공격 카운터: 세팅 확인에 같이 보여 줄 상대 덱 { title, formationId, heroNames, petObj } */
   overviewEnemyDeck = null,
+  /** 펫 안 고른 상태 허용(팀 빌더) — 기본 펫을 채우지 않고, 펫 고르기 창 맨 앞에 「펫 없음」 */
+  allowNoPet = false,
 }) {
   // 길드전(maxHeroes=3)도 PvE와 동일한 5칸 공식 진형 레이아웃을 쓰고,
   // 빈 칸은 공란으로 남겨 진형 형태를 확실히 보이게 한다.
@@ -93,7 +97,7 @@ export default function InGameDeckCard({
   const [isSpeedModalOpen, setIsSpeedModalOpen] = useState(false);
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [isPetModalOpen, setIsPetModalOpen] = useState(false);
-  const [selectedPet, setSelectedPet] = useState(petObj || pets[0]);
+  const [selectedPet, setSelectedPet] = useState(petObj || (allowNoPet ? null : pets[0]));
   const [dragSpeedIdx, setDragSpeedIdx] = useState(null);
   const [dragSlotIdx, setDragSlotIdx] = useState(null);
   const [dropHoverIdx, setDropHoverIdx] = useState(null);
@@ -113,7 +117,8 @@ export default function InGameDeckCard({
 
   useEffect(() => {
     if (petObj) setSelectedPet(petObj);
-  }, [petObj]);
+    else if (allowNoPet) setSelectedPet(null);
+  }, [petObj, allowNoPet]);
 
   useEffect(() => {
     const mapped = formationId === '2f1b' ? 'protect' : formationId === '1f2b' ? 'basic' : formationId;
@@ -329,6 +334,7 @@ export default function InGameDeckCard({
 
   const applyHeroDrop = (payload, toIdx) => {
     if (!canDragSlots || !onHeroDrop || !payload) return;
+    if (payload.source === 'slot' && (payload.scope || null) !== dragScope) return;
     if (payload.source === 'slot' && payload.fromIdx === toIdx) return;
     if (payload.source === 'picker' && maxHeroes && !displayHeroes[toIdx]
       && displayHeroes.filter(Boolean).length >= maxHeroes) {
@@ -346,8 +352,8 @@ export default function InGameDeckCard({
       setDropHoverIdx(null);
       setDragSlotIdx(null);
       applyHeroDropRef.current(payload, toIdx);
-    });
-  }, [canDragSlots]);
+    }, dragScope);
+  }, [canDragSlots, dragScope]);
 
   const handleSlotDrop = (e, toIdx) => {
     if (!canDragSlots || !onHeroDrop) return;
@@ -374,6 +380,7 @@ export default function InGameDeckCard({
           <div
             className="deck-hero-slot-face"
             data-deck-drop-idx={idx}
+            data-deck-scope={dragScope || undefined}
             onClick={() => handleSlotClickInternal(null, idx)}
             onDragOver={e => handleSlotDragOver(e, idx)}
             onDragLeave={() => { if (dropHoverIdx === idx) setDropHoverIdx(null); }}
@@ -392,7 +399,7 @@ export default function InGameDeckCard({
               ...dropStyle,
             }}
           >
-            {selected && !emptyLocked ? <span style={{ width: '9px', height: '9px', background: 'var(--accent-cyan)', display: 'inline-block', transform: 'rotate(45deg)' }} /> : `+${idx + 1}`}
+            <span className="hero-empty-mark"><Icon name="hero" size={compact ? 20 : 26} /></span>
           </div>
         </div>
       );
@@ -405,6 +412,7 @@ export default function InGameDeckCard({
         <div
           className={`deck-hero-slot-face${selected ? ' is-selected' : ''}`}
           data-deck-drop-idx={idx}
+            data-deck-scope={dragScope || undefined}
           draggable={canDragSlots}
           onDragStart={e => {
             if (!canDragSlots) return;
@@ -413,7 +421,7 @@ export default function InGameDeckCard({
               return;
             }
             markDeckHtml5DragStarted();
-            setDeckDragData(e, { source: 'slot', fromIdx: idx });
+            setDeckDragData(e, { source: 'slot', fromIdx: idx, scope: dragScope });
             setDragSlotIdx(idx);
           }}
           onDragEnd={() => { setDragSlotIdx(null); setDropHoverIdx(null); }}
@@ -423,7 +431,7 @@ export default function InGameDeckCard({
           onPointerDown={e => {
             if (!canDragSlots) return;
             markDeckPointerDown(e);
-            const started = startDeckPointerDrag(e, { source: 'slot', fromIdx: idx }, { label: cleanLabel });
+            const started = startDeckPointerDrag(e, { source: 'slot', fromIdx: idx, scope: dragScope }, { label: cleanLabel });
             if (started) setDragSlotIdx(idx);
           }}
           onClick={() => handleSlotClickInternal(h, idx)}
@@ -577,7 +585,7 @@ export default function InGameDeckCard({
 
           {!hidePet && (
             <div
-              className="pet-portrait-face"
+              className={`pet-portrait-face${selectedPet?.portraitUrl ? '' : ' is-empty'}`}
               onClick={() => canEditPetOrFormation && openPetModal()}
               style={{
                 position: 'relative',
@@ -591,7 +599,9 @@ export default function InGameDeckCard({
               {selectedPet?.portraitUrl ? (
                 <img src={selectedPet.portraitUrl} alt={selectedPet.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <Icon name="pet" size={compact ? 18 : 20} />
+                <span className="pet-empty-mark">
+                  <Icon name="pet" size={compact ? 24 : 30} />
+                </span>
               )}
             </div>
           )}
@@ -643,6 +653,19 @@ export default function InGameDeckCard({
 
             {/* 펫 그리드 내부 스크롤 처리 */}
             <div style={{ flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', paddingRight: '4px' }}>
+              {allowNoPet ? (
+                <div onClick={() => handleSelectPet(null)}
+                  style={{
+                    background: !selectedPet ? 'rgba(236,232,224,0.25)' : 'rgba(255,255,255,0.04)',
+                    border: !selectedPet ? '2px solid var(--gold-primary)' : '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '10px', padding: '8px 6px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', cursor: 'pointer',
+                  }}>
+                  <div style={{ width: '50px', height: '56px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed rgba(255,255,255,0.3)' }}>
+                    <Icon name="close" size={16} />
+                  </div>
+                  <div style={{ fontSize: '11px', fontWeight: 900, color: '#fff' }}>펫 없음</div>
+                </div>
+              ) : null}
               {pets.map(p => (
                 <div key={p.id} onClick={() => handleSelectPet(p)}
                   style={{

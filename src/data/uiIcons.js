@@ -91,6 +91,19 @@ export const UI_IMAGE_ICONS = {
   tbDebuff: { src: '/images/ui/tb-debuff-shield.png', w: 23, h: 28, activeInvert: false },
   tbThreat: { src: '/images/ui/tb-threat-warn.png', w: 128, h: 128, activeInvert: false },
   tbTotals: { src: '/images/ui/tb-totals-sum.png', w: 49, h: 49 },
+  /* 버프 · 디버프 칸 머리 아이콘 — 원본 asset/공용 아이콘/버프,디버프 아이콘.png를 칸 색(받는 버프 파랑 · 거는 디버프 보라 · 받는 디버프 빨강 · 상대 버프 주황)으로 다시 칠함 */
+  tbFxAlly: { src: '/images/ui/tb-fx-ally.png', w: 58, h: 62, activeInvert: false },
+  tbFxGain: { src: '/images/ui/tb-fx-gain.png', w: 58, h: 62, activeInvert: false },
+  tbFxEnemy: { src: '/images/ui/tb-fx-enemy.png', w: 58, h: 62, activeInvert: false },
+  tbFxRival: { src: '/images/ui/tb-fx-rival.png', w: 58, h: 62, activeInvert: false },
+  /* 덱 배치 — 가운데 VS · 전방(F · 파랑 별) / 후방(B · 빨강 별) (원본 asset/공용 아이콘/VS 아이콘 · 포워드 · 백 아이콘 · 별.png) */
+  tbVsGold: { src: '/images/ui/tb-vs-gold.png', w: 176, h: 160, activeInvert: false },
+  tbRowFront: { src: '/images/ui/tb-row-front.png', w: 28, h: 28, activeInvert: false },
+  tbRowBack: { src: '/images/ui/tb-row-back.png', w: 28, h: 28, activeInvert: false },
+  tbStarFront: { src: '/images/ui/tb-star-front.png', w: 24, h: 24, activeInvert: false },
+  tbStarBack: { src: '/images/ui/tb-star-back.png', w: 23, h: 23, activeInvert: false },
+  /* 분석 탭 가운데 전력 비교 문장 (원본 asset/공용 아이콘/맞대결 버튼.png, 음영 살려 왼쪽 파랑 · 오른쪽 빨강으로 다시 칠함) */
+  tbDuelCrest: { src: '/images/ui/tb-duel-crest-white.png', w: 204, h: 256, activeInvert: false },
   tbAim: { src: '/images/ui/tb-aim.png', w: 64, h: 64, activeInvert: false },
   tbVs: { src: '/images/ui/vs.png', w: 120, h: 112, activeInvert: false },
   tbGuildwar: { src: '/images/ui/tb-guildwar-castle.png', w: 114, h: 114 },

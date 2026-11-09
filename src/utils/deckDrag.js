@@ -2,7 +2,7 @@ export const DECK_DRAG_MIME = 'application/x-sn-deck-drag';
 /** 클릭과 구분: 이 거리(px) 이상 움직이면 드래그 시작 (홀드 시간 없음) */
 export const DECK_DRAG_THRESHOLD_PX = 8;
 
-/** @param {{ source: 'slot', fromIdx: number } | { source: 'picker', name: string }} payload */
+/** @param {{ source: 'slot', fromIdx: number, scope?: string } | { source: 'picker', name: string }} payload */
 export function setDeckDragData(e, payload) {
   e.dataTransfer.setData(DECK_DRAG_MIME, JSON.stringify(payload));
   e.dataTransfer.effectAllowed = 'copyMove';
@@ -21,14 +21,17 @@ export function hasDeckDrag(e) {
   return Array.from(e.dataTransfer?.types || []).includes(DECK_DRAG_MIME);
 }
 
-/** 현재 편집 중인 덱 카드의 터치 드롭 핸들러 */
-let registeredDropHandler = null;
+/**
+ * 현재 편집 중인 덱 카드의 터치 드롭 핸들러 — 범위(scope)마다 하나.
+ * 범위 없는 카드는 예전처럼 마지막 하나만, 범위 있는 카드(팀 빌더 내 덱 · 상대 덱)는 칸의 `data-deck-scope`가 같은 카드로만.
+ */
+const dropHandlers = new Map();
 
 /** @returns {() => void} unregister */
-export function registerDeckPointerDropTarget(fn) {
-  registeredDropHandler = fn;
+export function registerDeckPointerDropTarget(fn, scope = null) {
+  dropHandlers.set(scope, fn);
   return () => {
-    if (registeredDropHandler === fn) registeredDropHandler = null;
+    if (dropHandlers.get(scope) === fn) dropHandlers.delete(scope);
   };
 }
 
@@ -103,8 +106,9 @@ function beginPtrDragAt(clientX, clientY, pointerId, payload, label) {
     const dropPayload = ptrDrag.payload;
     clearPtrGhost();
     suppressClickUntil = Date.now() + 400;
-    if (Number.isInteger(toIdx) && typeof registeredDropHandler === 'function') {
-      registeredDropHandler(dropPayload, toIdx);
+    const handler = dropHandlers.get(slotEl?.getAttribute('data-deck-scope') || null);
+    if (Number.isInteger(toIdx) && typeof handler === 'function') {
+      handler(dropPayload, toIdx);
     }
   };
 

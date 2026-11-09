@@ -1,0 +1,516 @@
+/* 펫 도감 (PetDB.jsx) — 데이터: src/data/pets.js (scripts/import_7katlas_pets.mjs) */
+
+.pet-dex-toolbar {
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pet-dex-toolbar-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--gold-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;
+}
+
+.pet-dex-toolbar-title span {
+  font-size: 13px;
+  color: #e2e8f0;
+}
+
+.pet-dex-rarity {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.pet-dex-rarity button {
+  border: 0;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.pet-dex-rarity button.on {
+  background: rgba(255, 255, 255, 0.92);
+  color: #111;
+}
+
+.pet-dex-toolbar input {
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 13px;
+  width: 200px;
+}
+
+.pet-dex-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+}
+
+.pet-dex-card {
+  all: unset;
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  /* `all: unset`이 luxury-panel 유리 배경까지 지워서 — 영웅 도감 판과 같은 반투명 유리로 다시 */
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-main);
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.pet-dex-card:hover,
+.pet-dex-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(250, 204, 21, 0.55);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(250, 204, 21, 0.18) inset;
+}
+
+.pet-dex-card.is-R:hover,
+.pet-dex-card.is-R:focus-visible {
+  border-color: rgba(167, 139, 250, 0.6);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(167, 139, 250, 0.2) inset;
+}
+
+.pet-dex-card-head,
+.pet-dex-modal-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.pet-dex-face {
+  flex-shrink: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pet-dex-face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pet-dex-face.is-R {
+  background: linear-gradient(180deg, #a78bfa 0%, #6d28d9 100%);
+  border-color: #a78bfa;
+}
+
+.pet-dex-card-title {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pet-dex-name {
+  font-size: 18px;
+  font-weight: 900;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pet-dex-name.is-lg {
+  font-size: 22px;
+}
+
+.pet-dex-sub {
+  font-size: 12px;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+.pet-dex-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+.pet-dex-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+}
+
+.pet-dex-badge.is-L {
+  color: #fde68a;
+  border-color: rgba(250, 204, 21, 0.45);
+  background: rgba(250, 204, 21, 0.12);
+}
+
+.pet-dex-badge.is-R {
+  color: #ddd6fe;
+  border-color: rgba(167, 139, 250, 0.5);
+  background: rgba(139, 92, 246, 0.16);
+}
+
+.pet-dex-badge.is-soon {
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.5);
+  background: rgba(239, 68, 68, 0.14);
+}
+
+.pet-dex-skill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pet-dex-skill-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+}
+
+.pet-dex-skill-icon.is-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  color: #7dd3fc;
+}
+
+.pet-dex-skill.is-lg .pet-dex-skill-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+}
+
+.pet-dex-skill-name {
+  font-size: 14px;
+  font-weight: 900;
+  color: #7dd3fc;
+}
+
+.pet-dex-skill.is-lg .pet-dex-skill-name {
+  font-size: 17px;
+}
+
+.pet-dex-fx {
+  list-style: none;
+  margin: 0;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pet-dex-fx li,
+.pet-dex-passive-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pet-dex-fx img,
+.pet-dex-passive-head img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.pet-dex-fx-dot {
+  width: 8px;
+  height: 8px;
+  margin: 0 8px;
+  border-radius: 50%;
+  background: #fde68a;
+  flex-shrink: 0;
+}
+
+.pet-dex-fx-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: #f8fafc;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pet-dex-val {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 999px;
+  line-height: 18px;
+}
+
+.pet-dex-val.is-buff {
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(74, 222, 128, 0.45);
+}
+
+.pet-dex-val.is-debuff {
+  color: #e9d5ff;
+  background: rgba(147, 51, 234, 0.22);
+  border: 1px solid rgba(192, 132, 252, 0.5);
+}
+
+.pet-dex-empty {
+  text-align: center;
+  color: #cbd5e1;
+  padding: 40px 0;
+  font-weight: 700;
+}
+
+/* 상세 창 */
+.pet-dex-modal {
+  position: relative;
+  width: min(500px, 96vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pet-dex-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: none;
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+}
+
+.pet-dex-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.pet-dex-stats > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pet-dex-stats span {
+  font-size: 11px;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+.pet-dex-stats strong {
+  font-size: 16px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.pet-dex-skill-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--glass-inset, rgba(255, 255, 255, 0.06));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.pet-dex-passive {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pet-dex-passive.is-enemy {
+  border-color: rgba(192, 132, 252, 0.3);
+}
+
+.pet-dex-target {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fde68a;
+}
+
+.pet-dex-passive.is-enemy .pet-dex-target {
+  color: #f0abfc;
+}
+
+.pet-dex-sentence {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e2e8f0;
+  line-height: 1.55;
+}
+
+.pet-dex-levels {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.pet-dex-levels > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 2px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.pet-dex-levels span {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.pet-dex-levels strong {
+  font-size: 13px;
+  font-weight: 900;
+  color: #f8fafc;
+}
+
+.pet-dex-levels > div.is-max {
+  background: rgba(250, 204, 21, 0.14);
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.4) inset;
+}
+
+.pet-dex-levels > div.is-max strong {
+  color: #fde68a;
+}
+
+.pet-dex-note {
+  font-size: 12px;
+  color: #cbd5e1;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .pet-dex-toolbar input {
+    width: 100%;
+  }
+
+  .pet-dex-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .pet-dex-card {
+    padding: 12px 10px;
+    gap: 10px;
+  }
+
+  .pet-dex-card-head {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .pet-dex-card-head .pet-dex-badges {
+    justify-content: center;
+  }
+
+  .pet-dex-card .pet-dex-face {
+    width: 64px !important;
+    height: 64px !important;
+  }
+
+  .pet-dex-name {
+    font-size: 16px;
+  }
+
+  .pet-dex-skill-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .pet-dex-skill-name,
+  .pet-dex-fx-name {
+    font-size: 12px;
+  }
+
+  .pet-dex-fx {
+    padding: 6px 8px;
+  }
+
+  .pet-dex-fx img {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* 좁은 칸 — 효과 이름은 다 보이게 줄바꿈, 수치는 아래 줄 */
+  .pet-dex-fx li {
+    flex-wrap: wrap;
+    row-gap: 3px;
+  }
+
+  .pet-dex-fx-name {
+    flex-basis: calc(100% - 28px);
+    white-space: normal;
+    word-break: keep-all;
+    line-height: 1.3;
+  }
+
+  .pet-dex-fx .pet-dex-val {
+    margin-left: 28px;
+  }
+
+  .pet-dex-modal {
+    padding: 18px;
+  }
+}
