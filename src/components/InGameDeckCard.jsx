@@ -432,7 +432,17 @@ export default function InGameDeckCard({
             if (!canDragSlots) return;
             markDeckPointerDown(e);
             const started = startDeckPointerDrag(e, { source: 'slot', fromIdx: idx, scope: dragScope }, { label: cleanLabel });
-            if (started) setDragSlotIdx(idx);
+            if (!started) return;
+            setDragSlotIdx(idx);
+            const pid = e.pointerId;
+            const reset = (ev) => {
+              if (ev.pointerId !== pid) return;
+              window.removeEventListener('pointerup', reset);
+              window.removeEventListener('pointercancel', reset);
+              setDragSlotIdx(null);
+            };
+            window.addEventListener('pointerup', reset);
+            window.addEventListener('pointercancel', reset);
           }}
           onClick={() => handleSlotClickInternal(h, idx)}
           title={cleanLabel || undefined}

@@ -1685,8 +1685,28 @@
 .tb-duel-line { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 58px minmax(0, 1fr) 168px minmax(0, 1fr) 58px; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; cursor: pointer; }
 .tb-duel-line:focus-visible { outline: 2px solid #fff; outline-offset: -2px; border-radius: 12px; }
 .tb-duel-val { font-size: 15px; font-weight: 900; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.45); }
-.tb-duel-val.is-ours { text-align: left; }
-.tb-duel-val.is-theirs { text-align: right; }
+.tb-duel-val { display: flex; flex-direction: column; gap: 1px; line-height: 1.15; }
+.tb-duel-val.is-ours { text-align: left; align-items: flex-start; }
+.tb-duel-val.is-theirs { text-align: right; align-items: flex-end; }
+/* 그중 몫 — 「턴」(전투 시작 [N턴], 표의 「턴」과 같은 청록) · 「액티브」(표의 액티브 칸처럼 점선 느낌의 노랑) */
+.tb-duel-share { font-size: 10px; font-weight: 900; color: #a5f3fc; white-space: nowrap; }
+.tb-duel-share.is-act { color: #fde68a; }
+.tb-duel-turn-tag,
+.tb-duel-act-tag { flex-shrink: 0; padding: 0 5px; border-radius: 6px; font-size: 10px; font-weight: 800; white-space: nowrap; }
+.tb-duel-turn-tag { background: rgba(34, 211, 238, 0.14); border: 1px solid rgba(34, 211, 238, 0.45); color: #a5f3fc; }
+.tb-duel-act-tag { border: 1px dashed rgba(253, 230, 138, 0.6); color: #fde68a; }
+
+/* 비교 보기 — 패시브 · 액티브 사용 시 */
+.tb-duel-phase { display: flex; justify-content: center; gap: 4px; width: max-content; max-width: 100%; margin: 0 auto 12px; padding: 3px; border-radius: 999px; background: rgba(0, 0, 0, 0.28); border: 1px solid rgba(255, 255, 255, 0.1); }
+.tb-duel-phase button { all: unset; box-sizing: border-box; cursor: pointer; padding: 6px 14px; border-radius: 999px; color: rgba(255, 255, 255, 0.68); font-size: 12px; font-weight: 900; white-space: nowrap; transition: background 0.15s ease, color 0.15s ease; }
+.tb-duel-phase button small { margin-left: 3px; font-size: 10.5px; font-weight: 800; opacity: 0.7; }
+.tb-duel-phase button:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+.tb-duel-phase button:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+.tb-duel-phase button.is-on { background: rgba(255, 255, 255, 0.92); color: #0f172a; }
+/* 작은 폰 — 보조 글(상시 · 시작 턴 / + 스킬 효과)은 숨겨 한 줄 유지 */
+@media (max-width: 380px) {
+  .tb-duel-phase button small { display: none; }
+}
 .tb-duel-row.is-ours .tb-duel-val.is-ours { color: var(--tb-ally-ink); }
 .tb-duel-row.is-theirs .tb-duel-val.is-theirs { color: var(--tb-rival-ink); }
 .tb-duel-row.is-even .tb-duel-val { color: rgba(255, 255, 255, 0.7); }
@@ -1694,8 +1714,9 @@
 .tb-duel-track i { position: absolute; top: 0; bottom: 0; border-radius: 999px; }
 .tb-duel-track.is-ours i { right: 0; background: linear-gradient(90deg, rgba(96, 165, 250, 0.25), #60a5fa); box-shadow: 0 0 8px rgba(96, 165, 250, 0.5); }
 .tb-duel-track.is-theirs i { left: 0; background: linear-gradient(270deg, rgba(251, 146, 60, 0.25), #fb923c); box-shadow: 0 0 8px rgba(251, 146, 60, 0.5); }
-.tb-duel-stat { display: grid; grid-template-columns: 20px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 7px; align-items: center; }
-.tb-duel-stat .tb-fx-icon { grid-row: 1 / 3; }
+/* 가운데 칸 = [아이콘 · 이름] 한 줄 가운데 + 아래 「N% 차이」 가운데 */
+.tb-duel-stat { display: grid; grid-template-columns: auto minmax(0, auto); justify-content: center; align-items: center; column-gap: 6px; row-gap: 1px; min-width: 0; text-align: center; }
+.tb-duel-stat small { grid-column: 1 / -1; }
 .tb-duel-stat-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-size: 13.5px; font-weight: 900; }
 .tb-duel-stat small { color: rgba(255, 255, 255, 0.5); font-size: 11px; font-weight: 800; }
 .tb-duel-row.is-ours .tb-duel-stat small { color: var(--tb-ally-ink); }
@@ -1937,6 +1958,7 @@ span.tb-fxl-name:hover { text-decoration: none; }
 .tb-tot-pcell { justify-self: center; display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
 .tb-tot-pet { display: inline-flex; align-items: center; gap: 3px; height: 15px; padding: 0 5px 0 1px; border-radius: 999px; background: rgba(250, 204, 21, 0.12); border: 1px solid rgba(250, 204, 21, 0.38); color: #fde68a; font-size: 10px; font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .tb-tot-pet img { width: 13px; height: 13px; border-radius: 50%; object-fit: cover; }
+.tb-tot-pet-turn { margin-left: 1px; padding: 0 3px; border-radius: 4px; background: rgba(34, 211, 238, 0.2); color: #a5f3fc; font-style: normal; font-size: 8.5px; font-weight: 900; }
 .tb-tot-cell i { position: absolute; top: -7px; right: -9px; font-style: normal; font-size: 8.5px; font-weight: 900; padding: 0 3px; border-radius: 4px; background: rgba(34, 211, 238, 0.2); color: #a5f3fc; }
 /* 합계 — 목록 뱃지와 같은 뜻: 버프 초록 · 디버프 보라 */
 .tb-tot-cell.is-sum b {
@@ -2036,8 +2058,30 @@ span.tb-fxl-name:hover { text-decoration: none; }
   .tb-deck-bar.has-enemy[data-vs="top"] > .tb-vs-stage { top: 2px; z-index: 4; transform: translate(-50%, 0) scale(var(--tb-vs-k, 0.3)); transform-origin: 50% 0; }
 }
 
-@media (max-width: 1000px) {
+/* 받는 버프 | 받는 디버프 두 칸은 폰(≤760)에서만 위아래로 — 태블릿은 나란히(한 줄로 쌓으면 가운데가 휑함, 밍봉 2026-11-10) */
+@media (max-width: 760px) {
   .tb-fx-pair { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* 태블릿 · 작은 PC 두 칸 — 칸 폭이 좁아(약 350–510px) 표는 폰 모양(얼굴은 효과 이름 아래 줄, 수치 칸 좁게).
+   PC 표(얼굴이 이름 옆)는 칸 약 500px 미만이면 「감전 효과 적용 확률 증가」 같은 긴 이름이 잘려서 1150까지 이 모양 */
+@media (min-width: 761px) and (max-width: 1150px) {
+  .tb-fx-pair { gap: 12px; }
+  .tb-fx-pair .tb-block-body { padding-left: 10px; padding-right: 10px; }
+  .tb-tot-col { --tot-cols: minmax(0, 1fr) 46px 46px 56px; }
+  .tb-tot-sheet { padding: 8px 6px 6px; }
+  .tb-tot-uniq { padding: 8px 6px; }
+  .tb-tot-thead, .tb-tot-line { padding-left: 6px; padding-right: 6px; gap: 2px; }
+  .tb-tot-th { padding: 2px 6px; }
+  .tb-tot-th small { display: none; }
+  .tb-tot-name { flex-wrap: wrap; row-gap: 2px; }
+  .tb-tot-label { flex: 0 1 auto; font-size: 12px; letter-spacing: -0.2px; }
+  .tb-tot-faces { flex: 1 0 100%; margin-left: 0; padding-left: 26px; }
+  .tb-tot-cell.is-passive, .tb-tot-cell.is-skill { min-width: 46px; padding: 0 4px; }
+  .tb-tot-cell.is-sum b { min-width: 52px; }
+}
+
+@media (max-width: 1000px) {
   .tb-dict-body { grid-template-columns: minmax(0, 1fr); }
   .tb-dict-detail { position: static; max-height: none; overflow: visible; order: -1; scroll-margin-top: 80px; }
   .tb-dict-detail:not(.has-hero) { display: none; }

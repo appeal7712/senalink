@@ -1633,24 +1633,39 @@ function duelStatOf(e, hero) {
   return stat;
 }
 
-function isDuelEntry(e, includeEnhance) {
-  return e.kind === 'effect'
-    && !e.special
-    && !e.ownHit
-    && ['stat', 'survival', 'antiheal'].includes(e.category)
-    && !!effectTiming(e)
-    && entryValue(e, includeEnhance) != null;
+/** 액티브 스킬(기본 공격 · 스킬1 · 스킬2 · 각성기)을 쓸 때 거는 효과 — 패시브 조건 발동 · 「대상이 ○○ 상태일 경우」 같은 조건부는 뺌 */
+function isActiveCast(e) {
+  return !effectTiming(e)
+    && !!e.skillType && e.skillType !== 'passive'
+    && !isTextFragment(e)
+    && (!e.condition || /각 공격마다/.test(e.condition));
+}
+
+/** `phase` = 'passive'([상시] + 전투 시작 [N턴]) | 'active'(+ 액티브 사용 시) */
+function isDuelEntry(e, includeEnhance, phase = 'passive') {
+  if (e.kind !== 'effect' || e.special || e.ownHit) return false;
+  if (!['stat', 'survival', 'antiheal'].includes(e.category) || entryValue(e, includeEnhance) == null) return false;
+  if (effectTiming(e)) return true;
+  return phase === 'active' && isActiveCast(e);
+}
+
+/** 대상 수만 정해진 효과(「적군 3명」 · 「아군 1명」 · 무작위) — 팀 평균에 N/인원만큼(인원 이하면 전원). 대상 수를 모르면 1명 */
+function duelShare(e, team) {
+  const n = Number(String(e.target || '').match(/(\d+)\s*명/)?.[1]) || 1;
+  return { share: Math.min(1, n / (team.length || 1)), count: n };
 }
 
 /**
  * 한 팀 영웅마다 능력치별 「받는 버프 − 상대가 거는 디버프」. 같은 효과(같은 key · 같은 timing)는 가장 높은 수치 하나만,
- * 다른 효과끼리는 더함 — **패시브만**: [상시] + 전투 시작 [N턴] + 진형 · 펫(밍봉 2026-11-10 — 액티브 · 조건 발동은 안 셈).
- * 대상이 정해지지 않은 효과(1명 · 무작위)는 뺌. 「자신」만 받는 버프도 팀 평균에서 뺌(윤건 치명타 50% → 팀 평균 10%로 보이던 것,
- * 밍봉 2026-11-10) — `duelSelfBuffs`로 따로 보여 줌.
+ * 다른 효과끼리는 더함. `phase` 'passive' = [상시] + 전투 시작 [N턴] + 진형 · 펫(조건 발동은 안 셈),
+ * 'active' = 거기에 액티브 사용 시 효과(같은 효과는 액티브끼리 가장 높은 것 하나 — 표의 「액티브」 칸과 같은 규칙).
+ * 대상이 정해지지 않은 효과(1명 · 무작위): 패시브는 뺌, 액티브는 N/인원만큼 평균에 셈(밍봉 2026-11-10 — 액티브는 「적군 3명」이 대부분).
+ * 「자신」만 받는 버프는 팀 평균에서 뺌(윤건 치명타 50% → 팀 평균 10%로 보이던 것, 밍봉 2026-11-10) — `duelSelfBuffs`로 따로 보여 줌.
  */
-function duelNets(team, own, opp, includeEnhance, formation = null, extras = null) {
+function duelNets(team, own, opp, includeEnhance, formation = null, extras = null, phase = 'passive') {
   const nets = new Map(team.map((h) => [cleanHeroName(h.name), new Map()]));
-  const add = (e, recipients, sign) => {
+  const names = team.map((h) => cleanHeroName(h.name));
+  const add = (e, recipients, sign, spread = null) => {
     for (const name of recipients || []) {
       const hero = team.find((h) => cleanHeroName(h.name) === name);
       const stat = hero && duelStatOf(e, hero);
@@ -1659,34 +1674,48 @@ function duelNets(team, own, opp, includeEnhance, formation = null, extras = nul
       if (!byStat.has(stat.id)) byStat.set(stat.id, new Map());
       const slots = byStat.get(stat.id);
       const slot = `${sign}|${e.key}|${effectTiming(e) || 'skill'}`;
-      const value = entryValue(e, includeEnhance);
-      if (!slots.has(slot) || slots.get(slot).value < value) slots.set(slot, { e, value, sign });
+      const full = entryValue(e, includeEnhance);
+      const value = spread ? full * spread.share : full;
+      if (!slots.has(slot) || slots.get(slot).value < value) slots.set(slot, { e, value, full, sign, spread });
     }
   };
+  const route = (e, ownerName, sign) => {
+    const fixed = scopeRecipients(e.scope, ownerName, team);
+    if (fixed) add(e, fixed, sign);
+    else if (phase === 'active' && isActiveCast(e) && e.scope?.kind === 'some') add(e, names, sign, duelShare(e, team));
+  };
   for (const e of own?.entries || []) {
-    if (e.side === 'ally' && e.scope?.kind !== 'self' && isDuelEntry(e, includeEnhance)) add(e, scopeRecipients(e.scope, e.heroName, team), 1);
+    if (e.side === 'ally' && e.scope?.kind !== 'self' && isDuelEntry(e, includeEnhance, phase)) route(e, e.heroName, 1);
   }
   for (const e of opp?.entries || []) {
-    if (e.side === 'enemy' && isDuelEntry(e, includeEnhance)) add(e, scopeRecipients(e.scope, null, team), -1);
+    if (e.side === 'enemy' && isDuelEntry(e, includeEnhance, phase)) route(e, null, -1);
   }
   for (const e of formationEntries(formation)) add(e, e.recipients, 1);
   for (const e of extras || []) add(e, e.recipients, e.side === 'enemy' ? -1 : 1);
   return nets;
 }
 
-/** 전력 비교에서 뺀 「자신」만 받는 패시브 능력치 버프 — 영웅마다 [{ label, value, dir }] (같은 효과는 높은 수치 하나) */
-function duelSelfBuffs(team, own, includeEnhance) {
+/** 전투 시작 [N턴] 효과면 N, [상시] · 액티브면 null */
+const duelTurns = (e) => (effectTiming(e) === 'start' ? e.duration?.n ?? null : null);
+/** 액티브 사용 시 효과면 그 스킬 칸 이름(스킬1 · 스킬2 · 각성기 · 기본 공격), 아니면 null */
+const duelSlot = (e) => (effectTiming(e) ? null : e.skillLabel || '액티브');
+
+/** 전력 비교에서 뺀 「자신」만 받는 능력치 버프 — 영웅마다 [{ label, value, dir, turns, slot }] (같은 효과 · 같은 시점은 높은 수치 하나) */
+function duelSelfBuffs(team, own, includeEnhance, phase = 'passive') {
   const byHero = new Map();
   for (const e of own?.entries || []) {
-    if (e.side !== 'ally' || e.scope?.kind !== 'self' || !isDuelEntry(e, includeEnhance)) continue;
+    if (e.side !== 'ally' || e.scope?.kind !== 'self' || !isDuelEntry(e, includeEnhance, phase)) continue;
     const name = cleanHeroName(e.heroName);
     const hero = team.find((h) => cleanHeroName(h.name) === name);
     if (!hero || !duelStatOf(e, hero)) continue;
     const label = listLabel(e.name.replace(/\(중첩\)$/, ''));
     const value = entryValue(e, includeEnhance);
+    const turns = duelTurns(e);
+    const slot = duelSlot(e);
+    const k = `${label}|${turns ?? ''}|${slot ?? ''}`;
     if (!byHero.has(name)) byHero.set(name, new Map());
     const items = byHero.get(name);
-    if (!items.has(label) || items.get(label).value < value) items.set(label, { label, value, dir: effectLabel(e.name).dir });
+    if (!items.has(k) || items.get(k).value < value) items.set(k, { label, value, dir: effectLabel(e.name).dir, turns, slot });
   }
   return [...byHero].map(([hero, items]) => ({ hero, items: [...items.values()] }));
 }
@@ -1697,6 +1726,7 @@ function duelSelfBuffs(team, own, includeEnhance) {
  * 펫의 상시 효과 → 엔진 entry(+ `recipients`). `side` = 'ally'(펫 주인 팀이 받는 버프, `team` = 주인 팀) ·
  * 'enemy'(상대에게 거는 디버프, `team` = 상대 팀 — 유 「방어력 감소」 등). 펫은 덱 칸이 아니라서 받는 대상 계산에서 빠짐.
  * 영웅 같은 이름 효과와 섞지 않게 key 앞에 `pet|`(진형처럼 따로 쌓이는 효과로 셈). 모험 보상 패시브(믹 · 더지 · 에리)는 수치 · 상시가 없어 빠짐.
+ * [상시]와 전투 시작 [N턴](제오 「모든 공격력 증가 [4턴]」 등)을 받음 — 예전엔 상시만 받아서 제오 모든 공격력이 통째로 빠졌음.
  */
 export function petEntries(pet, team, includeEnhance = true, side = 'ally') {
   if (!pet?.skills?.length) return [];
@@ -1710,7 +1740,7 @@ export function petEntries(pet, team, includeEnhance = true, side = 'ally') {
   /** 상대 덱이 없을 때 거는 디버프는 받는 대상 모름(null) — 「상대가 받는 디버프」 표에는 그대로 나옴 */
   const unknownTarget = side === 'enemy' && !members.length;
   return collectHeroEntries(asHero, { includeEnhance })
-    .filter((e) => e.kind === 'effect' && e.side === side && effectTiming(e) === 'perm' && entryValue(e, includeEnhance) != null)
+    .filter((e) => e.kind === 'effect' && e.side === side && ['perm', 'start'].includes(effectTiming(e)) && entryValue(e, includeEnhance) != null)
     .map((e) => ({
       ...e,
       key: `pet|${e.key}`,
@@ -1725,6 +1755,7 @@ export function petCards(pet, team, includeEnhance = true, side = 'ally') {
   return petEntries(pet, team, includeEnhance, side).map((e) => {
     const name = `${listLabel(e.name)} (펫)`;
     const value = entryValue(e, includeEnhance);
+    const turns = duelTurns(e);
     return {
       id: `pet|${e.id}`,
       key: e.key,
@@ -1732,8 +1763,8 @@ export function petCards(pet, team, includeEnhance = true, side = 'ally') {
       label: name,
       dir: effectLabel(e.name).dir,
       side,
-      timing: 'perm',
-      turns: null,
+      timing: turns ? 'start' : 'perm',
+      turns,
       value,
       sources: [{
         id: `pet|${e.id}`,
@@ -1746,7 +1777,7 @@ export function petCards(pet, team, includeEnhance = true, side = 'ally') {
         skillLabel: '펫',
         skillName: e.skillName,
         condition: null,
-        turns: null,
+        turns,
       }],
       recipients: e.recipients,
       overlap: null,
@@ -1835,45 +1866,58 @@ export function formationCards(formationId, names) {
   });
 }
 
+/**
+ * 한 팀 · 능력치 하나 — `avg` 팀 평균, `turnAvg` 그중 전투 시작 [N턴] 몫, `actAvg` 그중 액티브 사용 시 몫.
+ * 원인 `parts`: `value` = 받는 영웅 한 명이 받는 원래 수치, `turns` · `slot` = 시작 N턴 · 스킬 칸, `count` = 대상 수만 정해진 효과의 N(→ 「N명」)
+ */
 function duelSide(team, nets, statId) {
   const per = new Map();
   const parts = new Map();
+  let turnSum = 0;
+  let actSum = 0;
   for (const h of team) {
     const name = cleanHeroName(h.name);
     const slots = nets.get(name)?.get(statId);
     let total = 0;
-    for (const { e, value, sign } of slots?.values() || []) {
+    for (const { e, value, full, sign, spread } of slots?.values() || []) {
       total += sign * value;
+      const turns = duelTurns(e);
+      const slot = duelSlot(e);
+      if (turns) turnSum += sign * value;
+      if (slot) actSum += sign * value;
       const label = listLabel(e.name);
-      const k = `${sign}|${e.heroName}|${label}`;
-      const p = parts.get(k) || { giver: e.heroName, label, dir: effectLabel(e.name).dir, sign, value: 0, sum: 0, to: [] };
-      p.value = Math.max(p.value, value);
+      const k = `${sign}|${e.heroName}|${label}|${turns ?? ''}|${slot ?? ''}`;
+      const p = parts.get(k) || { giver: e.heroName, label, dir: effectLabel(e.name).dir, sign, turns, slot, count: spread ? spread.count : null, value: 0, sum: 0, to: [] };
+      p.value = Math.max(p.value, full ?? value);
       p.sum += value;
-      if (!p.to.includes(name)) p.to.push(name);
+      if (!spread && !p.to.includes(name)) p.to.push(name);
       parts.set(k, p);
     }
     per.set(name, total);
   }
-  const avg = team.length ? [...per.values()].reduce((a, b) => a + b, 0) / team.length : 0;
-  return { avg, per, parts: [...parts.values()] };
+  const n = team.length || 1;
+  const avg = team.length ? [...per.values()].reduce((a, b) => a + b, 0) / n : 0;
+  return { avg, turnAvg: turnSum / n, actAvg: actSum / n, per, parts: [...parts.values()] };
 }
 
 /**
  * 맞대결 요약 — 능력치마다 두 팀 평균(영웅마다 「받는 버프 − 상대가 거는 디버프」의 평균)을 비교.
  * `lead` = 'ours' | 'theirs' | 'even'(차이 2 미만), `reasons` = 앞선 쪽 차이를 만든 효과(양쪽에 같은 영웅 · 같은 효과가 있으면 상쇄로 보고 뺌),
  * `mirror` = 양쪽에 같은 영웅이 있으면 그 영웅끼리 차이가 가장 큰 쪽.
+ * `phase` = 'passive'([상시] + 전투 시작 [N턴]) | 'active'(+ 액티브 사용 시). `oursTurn` · `theirsTurn` = 평균 중 [N턴] 몫,
+ * `oursAct` · `theirsAct` = 평균 중 액티브 몫.
  */
-export function duelSummary(mine, myTeam, theirs, theirTeam, includeEnhance = true, formations = {}) {
+export function duelSummary(mine, myTeam, theirs, theirTeam, includeEnhance = true, formations = {}, phase = 'passive') {
   const ours = (myTeam || []).filter(Boolean);
   const them = (theirTeam || []).filter(Boolean);
-  if (!ours.length || !them.length) return { stats: [], counts: { ours: 0, theirs: 0, even: 0 }, selfBuffs: { ours: [], theirs: [] } };
-  const selfBuffs = { ours: duelSelfBuffs(ours, mine, includeEnhance), theirs: duelSelfBuffs(them, theirs, includeEnhance) };
+  if (!ours.length || !them.length) return { stats: [], counts: { ours: 0, theirs: 0, even: 0 }, selfBuffs: { ours: [], theirs: [] }, phase };
+  const selfBuffs = { ours: duelSelfBuffs(ours, mine, includeEnhance, phase), theirs: duelSelfBuffs(them, theirs, includeEnhance, phase) };
   const petFx = (ownPet, oppPet, team) => [
     ...(ownPet ? petEntries(ownPet, team, includeEnhance, 'ally') : []),
     ...(oppPet ? petEntries(oppPet, team, includeEnhance, 'enemy') : []),
   ];
-  const ourNets = duelNets(ours, mine, theirs, includeEnhance, formations.ours || null, petFx(formations.oursPet, formations.theirsPet, ours));
-  const theirNets = duelNets(them, theirs, mine, includeEnhance, formations.theirs || null, petFx(formations.theirsPet, formations.oursPet, them));
+  const ourNets = duelNets(ours, mine, theirs, includeEnhance, formations.ours || null, petFx(formations.oursPet, formations.theirsPet, ours), phase);
+  const theirNets = duelNets(them, theirs, mine, includeEnhance, formations.theirs || null, petFx(formations.theirsPet, formations.oursPet, them), phase);
   const shared = ours.map((h) => cleanHeroName(h.name)).filter((n) => them.some((t) => cleanHeroName(t.name) === n));
   const stats = [];
   for (const s of DUEL_STATS) {
@@ -1894,10 +1938,10 @@ export function duelSummary(mine, myTeam, theirs, theirTeam, includeEnhance = tr
       if (Math.abs(d) >= DUEL_EVEN && (!mirror || Math.abs(d) > Math.abs(mirror.diff))) mirror = { name: n, ours: a.per.get(n) || 0, theirs: b.per.get(n) || 0, diff: d };
     }
     const byWeight = (list) => [...list].sort((x, y) => y.sum - x.sum);
-    stats.push({ id: s.id, label: s.label, icon: s.icon, ours: a.avg, theirs: b.avg, diff, lead, reasons, mirror, parts: { ours: byWeight(a.parts), theirs: byWeight(b.parts) } });
+    stats.push({ id: s.id, label: s.label, icon: s.icon, ours: a.avg, theirs: b.avg, oursTurn: a.turnAvg, theirsTurn: b.turnAvg, oursAct: a.actAvg, theirsAct: b.actAvg, diff, lead, reasons, mirror, parts: { ours: byWeight(a.parts), theirs: byWeight(b.parts) } });
   }
   stats.sort((x, y) => Math.abs(y.diff) - Math.abs(x.diff));
   const counts = { ours: 0, theirs: 0, even: 0 };
   for (const s of stats) counts[s.lead] += 1;
-  return { stats, counts, selfBuffs };
+  return { stats, counts, selfBuffs, phase };
 }

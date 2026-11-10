@@ -361,6 +361,8 @@ export default function TeamBuilderPage() {
     setFxOpen(true);
   };
   const narrow = useIsNarrow();
+  /** 덱 칸 끌어 옮기기는 마우스만 — 폰 · 태블릿은 손가락으로 쓸어 내릴 때 영웅이 잡혀서 뺌 */
+  const mouseDrag = useIsNarrow('(hover: hover) and (pointer: fine)');
 
   useEffect(() => {
     let current = teamModeFromPath(window.location.pathname);
@@ -463,12 +465,22 @@ export default function TeamBuilderPage() {
     theirBuff: theirFx ? fxLedger(theirFx.buffs, theirFx.buffSkill, petFx.theirBuff) : null,
   }), [buffCards, buffSkillCards, debuffCards, debuffSkillCards, theirFx, petFx]);
 
-  const duel = useMemo(() => (theirs ? duelSummary(mine, myHeroes, theirs, enemyHeroes, true, {
-    ours: formationRows(myFormation, deck.mine),
-    theirs: formationRows(theirFormation, deck.enemy),
-    oursPet: myPet,
-    theirsPet: theirPet,
-  }) : null), [mine, myHeroes, theirs, enemyHeroes, myFormation, theirFormation, deck, myPet, theirPet]);
+  /** 전력 비교 — 패시브만 · 액티브 사용 시(패시브 + 액티브) 두 가지 */
+  const duelBoth = useMemo(() => {
+    if (!theirs) return null;
+    const setup = {
+      ours: formationRows(myFormation, deck.mine),
+      theirs: formationRows(theirFormation, deck.enemy),
+      oursPet: myPet,
+      theirsPet: theirPet,
+    };
+    return {
+      passive: duelSummary(mine, myHeroes, theirs, enemyHeroes, true, setup, 'passive'),
+      active: duelSummary(mine, myHeroes, theirs, enemyHeroes, true, setup, 'active'),
+    };
+  }, [mine, myHeroes, theirs, enemyHeroes, myFormation, theirFormation, deck, myPet, theirPet]);
+  const [duelPhase, setDuelPhase] = useState('passive');
+  const duel = duelBoth?.[duelPhase] || null;
 
   const threats = useMemo(() => {
     if (!theirs || !meta) return { cards: [], groups: [] };
@@ -663,7 +675,7 @@ export default function TeamBuilderPage() {
               resolveHero={resolveHero}
               active={pickerOpen ? active : null}
               onSelect={onSelectSlot}
-              onDrop={onHeroDrop}
+              onDrop={mouseDrag ? onHeroDrop : null}
               onRemove={onRemove}
               onClear={onClear}
               onToggleEnemy={() => setEnemy(true)}
@@ -918,12 +930,12 @@ export default function TeamBuilderPage() {
                     tone="duel"
                     icon="tbDuelCrest"
                     iconPlain={30}
-                    title={<>전력 비교 <small className="tb-block-title-note">(패시브 효과만)</small></>}
+                    title={<>전력 비교 <small className="tb-block-title-note">{duelPhase === 'active' && duel.stats.some((s) => Math.round(s.oursAct || 0) || Math.round(s.theirsAct || 0)) ? '(패시브 + 액티브 사용 시)' : '(패시브 효과만)'}</small></>}
                     sub="능력치마다 두 팀이 받는 버프 · 디버프를 합쳐 누가 앞서는지"
                     aside={<span className="tb-block-num is-duel">{duel.stats.length}</span>}
                     index={0}
                   >
-                    <DuelBoard data={duel} teams={{ ours: myHeroes.length, theirs: enemyHeroes.length }} resolveHero={resolveHero} />
+                    <DuelBoard phases={duelBoth} phase={duelPhase} onPhase={setDuelPhase} teams={{ ours: myHeroes.length, theirs: enemyHeroes.length }} resolveHero={resolveHero} />
                   </Block>
                 </div>
               )
