@@ -15,11 +15,15 @@
   --tb-good-ink: #bbf7d0;
   --tb-purple: #a855f7;
   --tb-purple-ink: #e9d5ff;
-  /* 효과 칸 강조색 — 우리 이득은 찬색(받는 버프 파랑 · 거는 디버프 보라), 우리 손해는 더운색(받는 디버프 빨강 · 상대 버프 주황) */
+  /* 칸 색(밍봉 2026-11-11 최종): 우리 팀이 받는 버프 파랑 · 상대가 받는 버프 빨강 · 디버프 칸 둘(상대가 받는 · 우리 팀이 받는) 보라.
+     칸 안(표 합계 · 「자세히 보기」 수치 뱃지 · 탭 · 펼침 수치)도 전부 그 칸 색. 칸 제목 옆 뱃지 글자(`Block` tag)로 무슨 칸인지.
+     gain = 상대가 받는 디버프 · hurt = 우리 팀이 받는 디버프 · rival = 상대가 받는 버프 */
   --tb-gain: #8b5cf6;
   --tb-gain-ink: #ddd6fe;
-  --tb-rival: #f97316;
-  --tb-rival-ink: #fed7aa;
+  --tb-hurt: #8b5cf6;
+  --tb-hurt-ink: #ddd6fe;
+  --tb-rival: #ef4444;
+  --tb-rival-ink: #fecaca;
   color: #fff;
 }
 
@@ -270,7 +274,6 @@
     radial-gradient(ellipse 28% 80% at 68% 50%, rgba(239, 68, 68, 0.18), transparent 72%);
 }
 
-.tb-deck-side-head { position: relative; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 26px; }
 .tb-side-title { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 900; letter-spacing: -0.02em; }
 .tb-deck-side.is-mine .tb-side-title, .tb-side-title.is-mine { color: var(--tb-ally-ink); }
 .tb-deck-side.is-enemy .tb-side-title, .tb-side-title.is-enemy { color: var(--tb-enemy-ink); }
@@ -313,7 +316,6 @@
 }
 
 .tb-link-btn:hover { color: #fff; }
-
 
 /* 두 덱 사이 VS(결투장 준비 화면처럼) — 진한 금색 VS + 긴 「/」 · 짧은 「\」 빛줄기.
    빛줄기 = 가운데가 가장 밝고 끝으로 갈수록 사라지는 흰 심 + 넓게 번지는 금빛 + 줄을 따라 흐르는 반짝임.
@@ -449,6 +451,11 @@
 .tb-enemy-add strong { font-size: 14px; font-weight: 900; color: #fff; }
 .tb-enemy-add span { font-size: 11.5px; font-weight: 700; line-height: 1.45; }
 .tb-enemy-add:hover { background: linear-gradient(180deg, rgba(220, 38, 38, 0.3), rgba(220, 38, 38, 0.16)), rgba(12, 18, 34, 0.4); border-color: var(--tb-enemy); transform: translateY(-2px); }
+
+/* 상대 덱 없을 때 — 오른쪽 끝 상대 덱 자리에 내 덱 카드와 같은 크기 빈 카드(`--tb-ghost-w` · `--tb-ghost-h` = DeckBar가 잼) */
+.tb-deck-bar.is-waiting::before { opacity: 0.55; }
+.tb-deck-side.is-ghost .tb-enemy-add { box-sizing: border-box; width: var(--tb-ghost-w, 276px); height: var(--tb-ghost-h, auto); min-height: 160px; max-width: 100%; padding: 18px 16px; border-radius: 16px; gap: 8px; }
+.tb-deck-side.is-ghost .tb-enemy-add span { max-width: 200px; }
 
 .tb-enemy-off { align-self: flex-end; margin-top: -4px; border: none; background: transparent; color: rgba(255, 255, 255, 0.6); font: inherit; font-size: 11.5px; font-weight: 800; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .tb-enemy-off:hover { color: #fff; }
@@ -1035,17 +1042,20 @@
 }
 
 .tb-block.is-ally { --b: rgba(59, 130, 246, 0.75); --b-ink: var(--tb-ally-ink); }
-/* 「우리 팀이 받는 디버프」 — 디버프 칸은 어느 쪽이든 보라(합계 뱃지와 같은 색) */
-.tb-block.is-enemy { --b: rgba(139, 92, 246, 0.75); --b-ink: var(--tb-gain-ink); }
+/* 「우리 팀이 받는 디버프」 — 디버프 칸은 보라 */
+.tb-block.is-enemy { --b: rgba(139, 92, 246, 0.75); --b-ink: var(--tb-hurt-ink); }
+/* 「덱 세팅 체크」 — 확인할 것이 있으면 회색, 하나도 없으면 칸 · 체크 아이콘 · OK 뱃지가 파랑(내 덱 탭 색, 밍봉 2026-11-11) */
 .tb-block.is-check { --b: rgba(148, 163, 184, 0.55); --b-ink: #fff; }
-/* 확인할 것이 하나도 없으면 칸 · 체크 아이콘이 초록 */
-.tb-block.is-check.is-ok { --b: rgba(34, 197, 94, 0.72); --b-ink: var(--tb-good-ink); }
+.tb-block.is-check.is-ok { --b: rgba(59, 130, 246, 0.75); --b-ink: var(--tb-ally-ink); }
+.tb-block.is-check .tb-block-count:not(.is-warn) { background: var(--tb-ally); color: #fff; }
 
 .tb-block-head { display: flex; align-items: center; gap: 12px; padding: 14px 18px 10px; }
 .tb-block-icon { width: 38px; height: 38px; border-radius: 13px; display: flex; align-items: center; justify-content: center; background: var(--b); color: #fff; flex-shrink: 0; }
 .tb-block-icon.is-plain { background: none; overflow: visible; }
 .tb-block-title { min-width: 0; flex: 1; }
 .tb-block-title h3 { margin: 0; font-size: 17px; font-weight: 900; color: var(--b-ink); letter-spacing: -0.02em; }
+/* 제목 옆 뱃지 글자 — 칸 색을 옅게 깐 작은 알약 */
+.tb-block-tag { display: inline-flex; align-items: center; margin-left: 8px; padding: 1px 8px; border-radius: 999px; vertical-align: 2px; background: color-mix(in srgb, var(--b) 22%, transparent); border: 1px solid color-mix(in srgb, var(--b) 60%, transparent); color: var(--b-ink); font-size: 11px; font-weight: 900; letter-spacing: 0; white-space: nowrap; }
 .tb-block-title-note { margin-left: 4px; font-size: 12.5px; font-weight: 800; color: rgba(255, 255, 255, 0.6); letter-spacing: 0; }
 .tb-block-title p { margin: 3px 0 0; font-size: 12px; font-weight: 600; color: rgba(255, 255, 255, 0.75); line-height: 1.5; }
 .tb-block-count { padding: 4px 12px; border-radius: 999px; background: var(--tb-good); color: #052e16; font-size: 13px; font-weight: 900; }
@@ -1142,7 +1152,7 @@
 
 .tb-block-num { min-width: 28px; padding: 3px 10px; border-radius: 999px; text-align: center; font-size: 13px; font-weight: 900; color: #fff; }
 .tb-block-num.is-ally { background: var(--tb-ally); }
-.tb-block-num.is-enemy { background: var(--tb-gain); }
+.tb-block-num.is-enemy { background: var(--tb-hurt); }
 
 .tb-fxl { --f: var(--tb-ally); list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .tb-fxl.is-enemy { --f: var(--tb-enemy); }
@@ -1233,6 +1243,8 @@
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3), 0 0 10px rgba(74, 222, 128, 0.25);
 }
 .tb-fxl.is-enemy .tb-fxl-val { background: #c084fc; color: #2e1065; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3), 0 0 10px rgba(192, 132, 252, 0.28); }
+/* 분석 칸(우리 팀이 받는 버프 · 디버프 칸 · 상대가 받는 버프) 「자세히 보기」 안 수치 뱃지 = 그 칸 색(`--f` = tone). 효과 사전 등 다른 화면은 위 초록 · 보라 그대로 */
+.tb-fx-block .tb-fxl .tb-fxl-val { background: var(--f); color: #fff; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3), 0 0 10px color-mix(in srgb, var(--f) 35%, transparent); }
 .tb-fxl-when { padding: 1px 7px; border-radius: 6px; background: rgba(34, 211, 238, 0.14); border: 1px solid rgba(34, 211, 238, 0.55); color: #a5f3fc; font-size: 11px; font-weight: 800; white-space: nowrap; }
 .tb-fxl-flag { padding: 2px 8px; border-radius: 999px; background: var(--tb-warn); color: #1c1100; font-size: 10.5px; font-weight: 900; white-space: nowrap; }
 
@@ -1355,7 +1367,6 @@
   border-radius: 18px;
   background: linear-gradient(150deg, color-mix(in srgb, var(--t) 24%, rgba(8, 12, 22, 0.75)), rgba(8, 12, 22, 0.62));
   border: 1.5px solid color-mix(in srgb, var(--t) 65%, transparent);
-  border-left-width: 6px;
   animation: tbFadeUp 0.35s ease both;
   animation-delay: calc(var(--i, 0) * 50ms);
 }
@@ -1658,14 +1669,22 @@
 /* ───────── 효과 칸 강조색 (tone) — 뱃지(버프 초록 · 디버프 보라)는 side 그대로, 칸 색만 바꿈 ───────── */
 
 .tb-block.is-gain { --b: rgba(139, 92, 246, 0.75); --b-ink: var(--tb-gain-ink); }
-.tb-block.is-rival { --b: rgba(249, 115, 22, 0.75); --b-ink: var(--tb-rival-ink); }
+.tb-block.is-rival { --b: rgba(239, 68, 68, 0.75); --b-ink: var(--tb-rival-ink); }
 .tb-block-num.is-gain { background: var(--tb-gain); }
 .tb-block-num.is-rival { background: var(--tb-rival); }
-.tb-block.is-duel { --b: rgba(168, 85, 247, 0.75); --b-ink: #e9d5ff; }
-.tb-block-num.is-duel { background: linear-gradient(135deg, var(--tb-ally), var(--tb-rival)); }
+/* 전력 비교 칸 — 보라 대신 왼쪽 파랑 → 오른쪽 빨강(최종 합계 판 · VS와 같은 결, 밍봉 2026-11-11) */
+.tb-block.is-duel { --b: rgba(148, 163, 184, 0.5); --b-ink: #fff; position: relative; border: 0; padding: 1.5px; background:
+    radial-gradient(55% 80% at 0% 0%, rgba(59, 130, 246, 0.12), transparent 70%),
+    radial-gradient(55% 80% at 100% 0%, rgba(239, 68, 68, 0.1), transparent 70%),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.06), rgba(255, 255, 255, 0.015) 50%, rgba(239, 68, 68, 0.055)); }
+/* 테두리만 파랑 → 흰 → 빨강 고리 — 그라데이션을 칸 배경(border-box)에 깔면 유리 칸 안쪽 전체가 진하게 물듦 */
+.tb-block.is-duel::before { content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; padding: 1.5px; pointer-events: none; background: linear-gradient(90deg, rgba(96, 165, 250, 0.6), rgba(255, 255, 255, 0.14) 50%, rgba(248, 113, 113, 0.6)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+.tb-duel-final > .tb-duel-none { text-align: center; }
+.tb-block-num.is-duel { background: linear-gradient(135deg, var(--tb-ally), var(--tb-enemy)); }
 
-/* 맞대결 요약 (`DuelBoard`) — 점수 알약 · 「우리가 앞서요 | 상대가 앞서요」 두 줄 · 비슷한 능력치 알약. 게이지 없음(밍봉: 깔끔하게) */
-.tb-duel { display: flex; flex-direction: column; gap: 12px; }
+/* 전력 비교 (`DuelBoard`) — 색은 우리 파랑 · 상대 빨강 두 가지만(덱 카드 · VS와 같은 색, 밍봉 2026-11-10 — 파랑 · 주황 · 빨강 셋은 산만함).
+   다른 칸의 「상대 버프」 주황은 그대로라 여기서만 --tb-rival을 빨강으로 */
+.tb-duel { --tb-rival: #ef4444; --tb-rival-ink: #fca5a5; display: flex; flex-direction: column; gap: 12px; }
 /* 위 = 「6 우리 우위 [■■■■■■□□□] 상대 우위 3」 한 줄 */
 .tb-duel-score { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 4px 6px; }
 .tb-duel-score-num { display: inline-flex; align-items: baseline; gap: 6px; color: rgba(255, 255, 255, 0.7); font-size: 12.5px; font-weight: 800; white-space: nowrap; }
@@ -1676,57 +1695,96 @@
 .tb-duel-score-bar i { flex-basis: 0; min-width: 6px; border-radius: 999px; }
 .tb-duel-score-bar .is-ours { background: linear-gradient(90deg, #2563eb, #60a5fa); }
 .tb-duel-score-bar .is-even { background: rgba(255, 255, 255, 0.22); }
-.tb-duel-score-bar .is-theirs { background: linear-gradient(90deg, #fb923c, #ea580c); }
+.tb-duel-score-bar .is-theirs { background: linear-gradient(90deg, #f87171, #dc2626); }
 
 /* 능력치 줄 — [우리 수치 | 막대 → | 아이콘 · 이름 · 차이 | ← 막대 | 상대 수치], 모든 줄 같은 칸 너비라 세로로 반듯하게 맞음 */
 .tb-duel-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+
+/* 최종 합계 판 — 맨 위 따로 한 판(제목 Σ = 받는 버프 표 「합계」 아이콘). 양 끝만 은은하게 우리 파랑 · 상대 주황(맞대결 요약 느낌),
+   판 안 줄은 칸 없이 얇은 구분선만. 수치는 채운 알약 대신 큰 글자 — 앞선 쪽만 팀 색 글자 + 은은한 빛, 진 쪽은 흐리게.
+   줄 왼쪽 띠 · 진한 채움은 쓰지 않음(밍봉 2026-11-10) */
+/* 우리 · 상대 구분 = 배경만(왼쪽 반 파랑 · 오른쪽 반 빨강 기운). 글자 · 막대 색은 수치 부호(+ 파랑 · − 빨강, 밍봉 2026-11-11) */
+/* 양 끝 빛 번짐(띠 아님) + 위 가운데 은은한 하이라이트 + 테두리 파랑 → 흰 → 빨강 */
+.tb-duel-final { margin-bottom: 14px; padding: 12px 14px 8px; border-radius: 16px; border: 1px solid transparent; background:
+    radial-gradient(70% 120% at 0% 50%, rgba(59, 130, 246, 0.3), rgba(59, 130, 246, 0.08) 45%, transparent 70%) padding-box,
+    radial-gradient(70% 120% at 100% 50%, rgba(239, 68, 68, 0.28), rgba(239, 68, 68, 0.07) 45%, transparent 70%) padding-box,
+    radial-gradient(45% 40% at 50% 0%, rgba(255, 255, 255, 0.08), transparent 75%) padding-box,
+    linear-gradient(180deg, rgba(14, 20, 40, 0.6), rgba(6, 9, 20, 0.62)) padding-box,
+    linear-gradient(90deg, rgba(96, 165, 250, 0.6), rgba(255, 255, 255, 0.12) 50%, rgba(248, 113, 113, 0.6)) border-box;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 12px 32px -14px rgba(0, 0, 0, 0.6), 0 0 24px -10px rgba(96, 165, 250, 0.35), 0 0 24px -10px rgba(239, 68, 68, 0.3); }
+.tb-duel-final-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 7px; margin: 0 0 6px; color: rgba(255, 255, 255, 0.92); font-size: 12.5px; font-weight: 900; letter-spacing: 0.06em; }
+.tb-duel-final-title { display: inline-flex; align-items: center; gap: 7px; }
+.tb-duel-final-head img { width: 16px; height: 16px; opacity: 0.9; }
+.tb-duel-final-side { justify-self: start; padding: 2px 10px; border-radius: 999px; background: rgba(59, 130, 246, 0.18); border: 1px solid rgba(96, 165, 250, 0.4); color: #bfdbfe; font-size: 11.5px; letter-spacing: 0.04em; box-shadow: 0 0 12px -4px rgba(96, 165, 250, 0.6); }
+.tb-duel-final-side.is-theirs { justify-self: end; background: rgba(239, 68, 68, 0.16); border-color: rgba(248, 113, 113, 0.4); color: #fecaca; box-shadow: 0 0 12px -4px rgba(239, 68, 68, 0.6); }
+.tb-duel-final .tb-duel-rows { gap: 0; }
+.tb-duel-final .tb-duel-row { background: transparent; border: 0; border-radius: 0; }
+.tb-duel-final .tb-duel-row + .tb-duel-row { border-top: 1px solid rgba(255, 255, 255, 0.13); }
+.tb-duel-final .tb-duel-row { transition: background 0.15s ease; }
+.tb-duel-final .tb-duel-row:hover { background: rgba(255, 255, 255, 0.03); }
+.tb-duel-final .tb-duel-row.is-open { background: rgba(255, 255, 255, 0.045); border-radius: 12px; }
+.tb-duel-final .tb-duel-line { padding-top: 10px; padding-bottom: 10px; }
+.tb-duel-final .tb-duel-track { height: 8px; }
+.tb-duel-final .tb-duel-stat-name { font-size: 14px; }
+.tb-duel-final .tb-duel-num b { font-size: 18px; letter-spacing: -0.01em; color: rgba(255, 255, 255, 0.38); }
+.tb-duel-final .tb-duel-val.is-plus b { color: #93c5fd; text-shadow: 0 0 12px rgba(96, 165, 250, 0.45); }
+.tb-duel-final .tb-duel-val.is-neg b { color: #fca5a5; text-shadow: 0 0 12px rgba(239, 68, 68, 0.45); }
+/* 맨 아래 「차이 없음」 한 줄 — 능력치마다 작은 칩(같은 값이라 하나만) */
+.tb-duel-even { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 6px; padding: 12px 0 6px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.tb-duel-even-head { display: flex; flex-direction: column; align-items: center; gap: 1px; margin: 0; text-align: center; }
+.tb-duel-even-head b { color: #fff; font-size: 13px; font-weight: 900; }
+.tb-duel-even-head span { color: rgba(255, 255, 255, 0.55); font-size: 11px; font-weight: 700; }
+.tb-duel-even-list { list-style: none; margin: 0; padding: 0; width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 210px)); justify-content: center; gap: 6px; }
+.tb-duel-even-chip { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 5px 10px 5px 6px; border-radius: 10px; background: rgba(255, 255, 255, 0.045); border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.85); font-size: 12px; font-weight: 800; }
+.tb-duel-even-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tb-duel-even-chip b { flex: none; color: rgba(255, 255, 255, 0.6); font-weight: 900; font-variant-numeric: tabular-nums; }
+.tb-duel-even-chip b.is-plus { color: #93c5fd; }
+.tb-duel-even-chip b.is-minus { color: #fca5a5; }
+/* 최종 줄 펼침 — 효과별 몫 [효과 아이콘 · 이름 · 준(건) 영웅 얼굴 … 몫] */
+.tb-duel-comps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.tb-duel-comps li { display: flex; align-items: center; gap: 7px; min-height: 24px; color: rgba(255, 255, 255, 0.85); font-size: 12px; font-weight: 700; }
+.tb-duel-comp-name { white-space: nowrap; }
+.tb-duel-comp-faces { display: inline-flex; align-items: center; gap: 3px; }
+.tb-duel-comps li b { margin-left: auto; color: #93c5fd; font-weight: 900; font-variant-numeric: tabular-nums; }
+.tb-duel-comps li.is-minus b { color: #fca5a5; }
 .tb-duel-row { border-radius: 12px; background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(255, 255, 255, 0.07); animation: tbFadeUp 0.3s ease backwards; animation-delay: calc(var(--i) * 25ms); }
 .tb-duel-row.is-open { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.16); }
-.tb-duel-line { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 58px minmax(0, 1fr) 168px minmax(0, 1fr) 58px; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; cursor: pointer; }
+.tb-duel-line { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 96px minmax(0, 1fr) 168px minmax(0, 1fr) 96px; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; cursor: pointer; }
 .tb-duel-line:focus-visible { outline: 2px solid #fff; outline-offset: -2px; border-radius: 12px; }
 .tb-duel-val { font-size: 15px; font-weight: 900; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.45); }
 .tb-duel-val { display: flex; flex-direction: column; gap: 1px; line-height: 1.15; }
 .tb-duel-val.is-ours { text-align: left; align-items: flex-start; }
 .tb-duel-val.is-theirs { text-align: right; align-items: flex-end; }
-/* 그중 몫 — 「턴」(전투 시작 [N턴], 표의 「턴」과 같은 청록) · 「액티브」(표의 액티브 칸처럼 점선 느낌의 노랑) */
-.tb-duel-share { font-size: 10px; font-weight: 900; color: #a5f3fc; white-space: nowrap; }
-.tb-duel-share.is-act { color: #fde68a; }
-.tb-duel-turn-tag,
-.tb-duel-act-tag { flex-shrink: 0; padding: 0 5px; border-radius: 6px; font-size: 10px; font-weight: 800; white-space: nowrap; }
-.tb-duel-turn-tag { background: rgba(34, 211, 238, 0.14); border: 1px solid rgba(34, 211, 238, 0.45); color: #a5f3fc; }
-.tb-duel-act-tag { border: 1px dashed rgba(253, 230, 138, 0.6); color: #fde68a; }
+/* 수치 + 「턴」(그중 전투 시작 [N턴] 효과 — 받는 버프 표 `.tb-tot-cell i`와 같은 청록 표시). 상대 쪽은 「턴」이 안쪽(왼쪽) */
+.tb-duel-num { display: inline-flex; align-items: center; gap: 4px; }
+/* 수치 옆 아이콘 자리 — 아이콘이 없어도(0%) 같은 폭이라 수치가 줄마다 같은 자리 */
+.tb-duel-num-icon { display: inline-flex; flex: none; width: 18px; height: 18px; }
+.tb-duel-val.is-theirs .tb-duel-num { flex-direction: row-reverse; }
+.tb-duel-turn { flex-shrink: 0; padding: 0 4px; border-radius: 4px; background: rgba(34, 211, 238, 0.2); color: #a5f3fc; font-style: normal; font-size: 9.5px; font-weight: 900; line-height: 1.35; white-space: nowrap; }
 
-/* 비교 보기 — 패시브 · 액티브 사용 시 */
-.tb-duel-phase { display: flex; justify-content: center; gap: 4px; width: max-content; max-width: 100%; margin: 0 auto 12px; padding: 3px; border-radius: 999px; background: rgba(0, 0, 0, 0.28); border: 1px solid rgba(255, 255, 255, 0.1); }
-.tb-duel-phase button { all: unset; box-sizing: border-box; cursor: pointer; padding: 6px 14px; border-radius: 999px; color: rgba(255, 255, 255, 0.68); font-size: 12px; font-weight: 900; white-space: nowrap; transition: background 0.15s ease, color 0.15s ease; }
-.tb-duel-phase button small { margin-left: 3px; font-size: 10.5px; font-weight: 800; opacity: 0.7; }
-.tb-duel-phase button:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
-.tb-duel-phase button:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
-.tb-duel-phase button.is-on { background: rgba(255, 255, 255, 0.92); color: #0f172a; }
-/* 작은 폰 — 보조 글(상시 · 시작 턴 / + 스킬 효과)은 숨겨 한 줄 유지 */
-@media (max-width: 380px) {
-  .tb-duel-phase button small { display: none; }
-}
-.tb-duel-row.is-ours .tb-duel-val.is-ours { color: var(--tb-ally-ink); }
-.tb-duel-row.is-theirs .tb-duel-val.is-theirs { color: var(--tb-rival-ink); }
 .tb-duel-row.is-even .tb-duel-val { color: rgba(255, 255, 255, 0.7); }
 .tb-duel-track { position: relative; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); overflow: hidden; }
 .tb-duel-track i { position: absolute; top: 0; bottom: 0; border-radius: 999px; }
-.tb-duel-track.is-ours i { right: 0; background: linear-gradient(90deg, rgba(96, 165, 250, 0.25), #60a5fa); box-shadow: 0 0 8px rgba(96, 165, 250, 0.5); }
-.tb-duel-track.is-theirs i { left: 0; background: linear-gradient(270deg, rgba(251, 146, 60, 0.25), #fb923c); box-shadow: 0 0 8px rgba(251, 146, 60, 0.5); }
+.tb-duel-track.is-ours i { right: 0; }
+.tb-duel-track.is-theirs i { left: 0; }
+.tb-duel-track i.is-plus { background: linear-gradient(90deg, rgba(96, 165, 250, 0.25), #60a5fa); box-shadow: 0 0 8px rgba(96, 165, 250, 0.5); }
+.tb-duel-track i.is-minus { background: linear-gradient(90deg, rgba(239, 68, 68, 0.25), #ef4444); box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+.tb-duel-track.is-theirs i { transform: scaleX(-1); }
 /* 가운데 칸 = [아이콘 · 이름] 한 줄 가운데 + 아래 「N% 차이」 가운데 */
-.tb-duel-stat { display: grid; grid-template-columns: auto minmax(0, auto); justify-content: center; align-items: center; column-gap: 6px; row-gap: 1px; min-width: 0; text-align: center; }
-.tb-duel-stat small { grid-column: 1 / -1; }
+/* 가운데 칸 = 이름 · 「N% 차이」 글자만. 아이콘은 양쪽 수치 옆(`.tb-duel-num-icon`, 밍봉 2026-11-11) */
+.tb-duel-stat { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 0; text-align: center; }
+.tb-duel-stat-name { max-width: 100%; }
 .tb-duel-stat-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-size: 13.5px; font-weight: 900; }
 .tb-duel-stat small { color: rgba(255, 255, 255, 0.5); font-size: 11px; font-weight: 800; }
-.tb-duel-row.is-ours .tb-duel-stat small { color: var(--tb-ally-ink); }
-.tb-duel-row.is-theirs .tb-duel-stat small { color: var(--tb-rival-ink); }
+/* 최종 합계 가운데 「N% 차이」 — 파랑 · 빨강 사이 보라 글씨(어느 편도 아닌 비교값), 숫자 · 「차이」 같은 굵기 · 크기 */
+.tb-duel-final .tb-duel-stat small { color: #c4b5fd; font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
 
 /* 펼침 — 왼쪽 우리 · 오른쪽 상대(줄 위 수치와 같은 쪽), 원인마다 [얼굴 | 이름 · 효과 · 수치 / → 대상] */
 .tb-duel-detail { display: flex; flex-direction: column; gap: 8px; padding: 0 12px 12px; }
 .tb-duel-mirror { margin: 0; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; padding: 5px 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.85); font-size: 12px; font-weight: 800; }
-.tb-duel-mirror .is-ours { color: var(--tb-ally-ink); }
-.tb-duel-mirror .is-theirs { color: var(--tb-rival-ink); }
+.tb-duel-mirror .is-plus { color: #93c5fd; }
+.tb-duel-mirror .is-minus { color: #fca5a5; }
 .tb-duel-sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .tb-duel-side { --c-ink: var(--tb-ally-ink); padding: 8px 10px; border-radius: 10px; background: rgba(0, 0, 0, 0.25); border-top: 2px solid var(--tb-ally); }
 .tb-duel-side.is-theirs { --c-ink: var(--tb-rival-ink); border-top-color: var(--tb-rival); }
@@ -1755,22 +1813,23 @@
 .tb-duel-self-chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .tb-duel-self-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.12); color: rgba(255, 255, 255, 0.82); font-size: 11.5px; font-weight: 700; white-space: nowrap; }
 .tb-duel-self-chip b { color: var(--c-ink); font-weight: 900; }
-.tb-duel-foot { margin: 0; text-align: center; color: rgba(255, 255, 255, 0.42); font-size: 11px; }
+
 .tb-fxl.tone-ally { --f: var(--tb-ally); }
 .tb-fxl.tone-gain { --f: var(--tb-gain); }
-.tb-fxl.tone-enemy { --f: var(--tb-gain); }
+.tb-fxl.tone-enemy { --f: var(--tb-hurt); }
 .tb-fxl.tone-rival { --f: var(--tb-rival); }
 .tb-fx-tabs.tone-gain { --t: var(--tb-gain); }
-.tb-fx-tabs.tone-enemy { --t: var(--tb-gain); }
+.tb-fx-tabs.tone-enemy { --t: var(--tb-hurt); }
 .tb-fx-tabs.tone-rival { --t: var(--tb-rival); }
-.tb-selfbuff.tone-rival { border-top-color: rgba(253, 186, 116, 0.4); }
+.tb-selfbuff.tone-rival { border-top-color: rgba(252, 165, 165, 0.4); }
 .tb-selfbuff.tone-rival .tb-selfbuff-title { color: var(--tb-rival-ink); }
-.tb-selfbuff.tone-rival .tb-selfbuff-chip { border-color: rgba(253, 186, 116, 0.4); }
+.tb-selfbuff.tone-rival .tb-selfbuff-chip { border-color: rgba(252, 165, 165, 0.4); }
 .tb-selfbuff.tone-rival .tb-selfbuff-chip:hover { border-color: var(--tb-rival); }
 .tb-selfbuff.tone-rival .tb-selfbuff-chip.is-on { background: var(--tb-rival); border-color: var(--tb-rival); box-shadow: 0 0 10px color-mix(in srgb, var(--tb-rival) 45%, transparent); }
 /* 방패 아이콘(파랑 · 빨강 원본)을 칸 색에 맞춰 돌림 — 빨강 → 보라, 파랑 → 주황 */
-/* 「상대 덱에서 조심할 것」 = 빨강(안의 주의 카드와 같은 색). 아래 「우리 팀이 받는 디버프」는 디버프 보라 · 「상대가 받는 버프」는 주황이라 안 겹침 */
+/* 「상대 덱에서 조심할 것」 — 상대 덱 탭이라 빨강, 조심할 카드가 없으면 초록(덱 세팅 체크와 같은 규칙) */
 .tb-block.is-caution { --b: rgba(239, 68, 68, 0.75); --b-ink: var(--tb-enemy-ink); }
+.tb-block.is-caution.is-ok { --b: rgba(34, 197, 94, 0.72); --b-ink: var(--tb-good-ink); }
 /* 버프 · 디버프 · 특수 효과 아이콘 (lib/effectIcons) */
 .tb-fx-icon { display: block; flex-shrink: 0; border-radius: 5px; object-fit: contain; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
 /* 목록 이름 칸 — 아이콘은 칸 왼쪽 끝에 고정(글자 길이와 상관없이 세로 한 줄), 이름은 칸 가운데 그대로.
@@ -1811,7 +1870,7 @@ span.tb-fxl-name:hover { text-decoration: none; }
 .tb-tot-uniq-num { min-width: 20px; padding: 0 7px; border-radius: 999px; background: color-mix(in srgb, var(--c) 60%, transparent); color: #fff; font-size: 11px; font-weight: 900; text-align: center; }
 .tb-tot-uniq-head em { font-style: normal; font-size: 10.5px; font-weight: 700; color: rgba(255, 255, 255, 0.45); }
 .tb-tot-col.tone-gain { --c: var(--tb-gain); --c-ink: var(--tb-gain-ink); }
-.tb-tot-col.tone-enemy { --c: var(--tb-gain); --c-ink: var(--tb-gain-ink); }
+.tb-tot-col.tone-enemy { --c: var(--tb-hurt); --c-ink: var(--tb-hurt-ink); }
 .tb-tot-col.tone-rival { --c: var(--tb-rival); --c-ink: var(--tb-rival-ink); }
 .tb-tot-th.is-sum img { opacity: 0.9; }
 
@@ -1865,7 +1924,7 @@ span.tb-fxl-name:hover { text-decoration: none; }
 /* 칸 맨 아래 「요약 보기」 — 효과별 패시브 · 액티브 · 합계 표 */
 .tb-fx-detail { --d: var(--tb-ally); margin-top: 10px; }
 .tb-fx-detail.tone-gain { --d: var(--tb-gain); }
-.tb-fx-detail.tone-enemy { --d: var(--tb-gain); }
+.tb-fx-detail.tone-enemy { --d: var(--tb-hurt); }
 .tb-fx-detail.tone-rival { --d: var(--tb-rival); }
 .tb-fx-detail-btn {
   width: 100%;
@@ -1946,7 +2005,6 @@ span.tb-fxl-name:hover { text-decoration: none; }
 .tb-tot-row.is-open .tb-tot-line { background: color-mix(in srgb, var(--c) 14%, transparent); border-color: color-mix(in srgb, var(--c) 40%, transparent); }
 .tb-tot-name { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .tb-tot-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; font-weight: 800; color: #fff; }
-.tb-tot-reach { flex-shrink: 0; font-style: normal; padding: 0 5px; border-radius: 999px; background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.5); color: var(--tb-warn-ink); font-size: 9.5px; font-weight: 900; }
 .tb-tot-faces { display: inline-flex; gap: 3px; margin-left: auto; flex-shrink: 0; }
 .tb-tot-cell { position: relative; justify-self: center; font-size: 12.5px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .tb-tot-cell.is-passive,
@@ -1956,11 +2014,11 @@ span.tb-fxl-name:hover { text-decoration: none; }
 .tb-tot-cell.is-none { color: rgba(255, 255, 255, 0.22); font-weight: 600; background: none; border-color: transparent; }
 /* 패시브 칸 + 펫 몫(같은 효과 펫은 따로 중첩 → 패시브 아래 작은 칩, 합계에 더함) */
 .tb-tot-pcell { justify-self: center; display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
-.tb-tot-pet { display: inline-flex; align-items: center; gap: 3px; height: 15px; padding: 0 5px 0 1px; border-radius: 999px; background: rgba(250, 204, 21, 0.12); border: 1px solid rgba(250, 204, 21, 0.38); color: #fde68a; font-size: 10px; font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.tb-tot-pet img { width: 13px; height: 13px; border-radius: 50%; object-fit: cover; }
-.tb-tot-pet-turn { margin-left: 1px; padding: 0 3px; border-radius: 4px; background: rgba(34, 211, 238, 0.2); color: #a5f3fc; font-style: normal; font-size: 8.5px; font-weight: 900; }
-.tb-tot-cell i { position: absolute; top: -7px; right: -9px; font-style: normal; font-size: 8.5px; font-weight: 900; padding: 0 3px; border-radius: 4px; background: rgba(34, 211, 238, 0.2); color: #a5f3fc; }
-/* 합계 — 목록 뱃지와 같은 뜻: 버프 초록 · 디버프 보라 */
+.tb-tot-pet { display: inline-flex; align-items: center; gap: 3px; height: 17px; padding: 0 6px 0 1px; border-radius: 999px; background: rgba(250, 204, 21, 0.12); border: 1px solid rgba(250, 204, 21, 0.38); color: #fde68a; font-size: 10.5px; font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tb-tot-pet img { width: 15px; height: 15px; border-radius: 50%; object-fit: cover; }
+.tb-tot-pet-turn { margin-left: 1px; padding: 0 3px; border-radius: 4px; background: rgba(34, 211, 238, 0.2); color: #a5f3fc; font-style: normal; font-size: 9.5px; font-weight: 900; }
+.tb-tot-cell i { position: absolute; top: -8px; right: -10px; font-style: normal; font-size: 9.5px; font-weight: 900; line-height: 1.35; padding: 0 4px; border-radius: 4px; background: rgba(34, 211, 238, 0.2); color: #a5f3fc; }
+/* 합계 — 칸 색(`--c`: 내 덱 탭 파랑 · 상대 덱 탭 빨강) 뱃지, 부호는 칸 종류(버프 + · 디버프 −, 밍봉 2026-11-11) */
 .tb-tot-cell.is-sum b {
   display: inline-flex;
   align-items: center;
@@ -1970,13 +2028,13 @@ span.tb-fxl-name:hover { text-decoration: none; }
   padding: 0 7px;
   box-sizing: border-box;
   border-radius: 7px;
-  background: #4ade80;
-  color: #052e16;
+  background: var(--c);
+  color: #fff;
   font-size: 12.5px;
   font-weight: 900;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3), 0 0 10px rgba(74, 222, 128, 0.25);
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3), 0 0 10px color-mix(in srgb, var(--c) 35%, transparent);
 }
-.tb-tot-col.is-enemy .tb-tot-cell.is-sum b { background: #c084fc; color: #2e1065; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3), 0 0 10px rgba(192, 132, 252, 0.28); }
 
 /* 중복(같은 효과 겹침) · 확인(받는 영웅 없음 · 참고) 줄 — 목록의 주황 행과 같은 뜻 */
 .tb-tot-flagtag { flex-shrink: 0; font-style: normal; padding: 0 6px; border-radius: 999px; background: var(--tb-warn); color: #1c1100; font-size: 9.5px; font-weight: 900; }
@@ -1994,8 +2052,7 @@ span.tb-fxl-name:hover { text-decoration: none; }
 .tb-tot-src-icon.is-formation > img { object-fit: contain; padding: 3px; box-sizing: border-box; }
 .tb-tot-src-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .tb-tot-src-top { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; font-size: 12px; font-weight: 700; color: rgba(255, 255, 255, 0.88); }
-.tb-tot-src-top b { margin-left: auto; font-weight: 900; color: #4ade80; font-variant-numeric: tabular-nums; }
-.tb-tot-col.is-enemy .tb-tot-src-top b { color: #d8b4fe; }
+.tb-tot-src-top b { margin-left: auto; font-weight: 900; color: color-mix(in srgb, var(--c) 55%, #fff); font-variant-numeric: tabular-nums; }
 .tb-tot-src-meta { display: flex; flex-wrap: wrap; gap: 3px 6px; font-size: 10.5px; font-weight: 700; color: rgba(255, 255, 255, 0.62); }
 .tb-tot-src-meta span { min-width: 0; }
 .tb-tot-src-meta .is-turn { padding: 0 6px; border-radius: 6px; background: rgba(34, 211, 238, 0.14); border: 1px solid rgba(34, 211, 238, 0.45); color: #a5f3fc; }
@@ -2041,8 +2098,6 @@ span.tb-fxl-name:hover { text-decoration: none; }
 .tb-tot-detail.is-flag { margin: 8px 0 0; }
 .tb-tot-flag-title { display: flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 900; color: var(--c-ink); }
 .tb-tot-src-meta .is-amt { padding: 0 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.25); color: #f8fafc; }
-.tb-tot-empty { padding: 8px 4px 2px; font-size: 12px; font-weight: 700; color: rgba(255, 255, 255, 0.45); }
-
 /* ───────── 반응형 ───────── */
 
 /* 두 덱은 어느 폭이든 나란히 — 위아래로 쌓지 않음(태블릿에서 양옆이 휑하고 폰에서 너무 길어서, 밍봉 2026-11-10).
@@ -2120,6 +2175,7 @@ span.tb-fxl-name:hover { text-decoration: none; }
   .tb-deck-side { padding: 10px 10px 8px; }
   .tb-enemy-add { flex-direction: row; justify-content: flex-start; text-align: left; padding: 12px 14px; }
   .tb-enemy-add span { display: none; }
+  .tb-deck-side.is-ghost .tb-enemy-add { flex-direction: column; justify-content: center; text-align: center; padding: 10px; min-height: 0; }
   /* 폰: 영웅 고르기 = 화면 아래 붙는 시트(덱을 누른 뒤 아래로 내려갈 필요 없이 바로 고름). 누른 덱은 시트 위로 스크롤(PickerDropdown) */
   .tb-picker-drop { position: fixed; left: 0; right: 0; bottom: 0; z-index: 950; max-height: 58vh; overflow-y: auto; overscroll-behavior: contain; padding: 10px 10px calc(8px + env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; border-width: 1.5px 0 0; background: rgba(10, 14, 26, 0.97); box-shadow: 0 -14px 40px rgba(0, 0, 0, 0.55); animation: tbSheetUp 0.26s ease both; }
   .tb-page:has(.tb-picker-drop) { padding-bottom: 58vh; }
@@ -2205,9 +2261,18 @@ span.tb-fxl-name:hover { text-decoration: none; }
   .tb-tot-cell.is-sum b { min-width: 52px; font-size: 12px; }
   .tb-tot-detail { margin: 4px 0 8px; padding: 7px; }
   .tb-tot-src-icon { width: 30px; height: 30px; }
-  .tb-duel-line { grid-template-columns: 46px minmax(0, 1fr) 118px minmax(0, 1fr) 46px; gap: 6px; padding: 8px; }
+  .tb-duel-line { grid-template-columns: 74px minmax(0, 1fr) 108px minmax(0, 1fr) 74px; gap: 6px; padding: 8px; }
+  .tb-duel-final .tb-duel-num b { font-size: 14px; }
+  /* 폰은 막대를 빼고 [우리 수치 | 이름 | 상대 수치] — 막대 칸이 점처럼 작아져서. 색 · 배경으로 충분 */
+  .tb-duel-final .tb-duel-line { grid-template-columns: minmax(0, 1fr) 112px minmax(0, 1fr); }
+  .tb-duel-final .tb-duel-track { display: none; }
+  .tb-duel-num-icon, .tb-duel-num-icon .tb-fx-icon { width: 15px; height: 15px; }
+  .tb-duel-even-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tb-duel-even-chip { padding: 5px 8px 5px 5px; font-size: 11.5px; gap: 5px; }
+  .tb-duel-final .tb-duel-num { gap: 3px; }
+  .tb-duel-final { padding: 8px 6px 4px; }
   .tb-duel-val { font-size: 13px; }
-  .tb-duel-stat-name { font-size: 12.5px; }
+  .tb-duel-stat-name { font-size: 12.5px; white-space: normal; word-break: keep-all; line-height: 1.15; }
   .tb-duel-sides { grid-template-columns: minmax(0, 1fr); }
   .tb-duel-score-num { font-size: 11px; }
   .tb-duel-score-num b { font-size: 18px; }
@@ -2215,7 +2280,7 @@ span.tb-fxl-name:hover { text-decoration: none; }
   .tb-rings { padding: 8px 10px; gap: 6px 10px; }
   .tb-rings:has(.tb-rings-list) .tb-rings-head span { display: none; }
 
-  .tb-threat { padding: 10px 11px 11px; gap: 8px; border-left-width: 5px; }
+  .tb-threat { padding: 10px 11px 11px; gap: 8px; }
   .tb-threat-head { gap: 8px; padding-bottom: 8px; }
   .tb-threat-head .tb-mini-hero { width: 36px !important; }
   .tb-threat-id > strong { font-size: 14px; }

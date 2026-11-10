@@ -91,11 +91,13 @@ export const UI_IMAGE_ICONS = {
   tbDebuff: { src: '/images/ui/tb-debuff-shield.png', w: 23, h: 28, activeInvert: false },
   tbThreat: { src: '/images/ui/tb-threat-warn.png', w: 128, h: 128, activeInvert: false },
   tbTotals: { src: '/images/ui/tb-totals-sum.png', w: 49, h: 49 },
-  /* 버프 · 디버프 칸 머리 아이콘 — 원본 asset/공용 아이콘/버프,디버프 아이콘.png를 칸 색(받는 버프 파랑 · 거는 디버프 보라 · 받는 디버프 빨강 · 상대 버프 주황)으로 다시 칠함 */
+  /* 버프 · 디버프 칸 머리 아이콘 — 원본 asset/공용 아이콘/버프,디버프 아이콘.png를 색만 다시 칠함. 우리 팀이 받는 버프 파랑 = Ally · 상대가 받는 버프 빨강 = Enemy (디버프 칸은 아래 tbFxDebuff). Gain · Rival은 안 씀 */
   tbFxAlly: { src: '/images/ui/tb-fx-ally.png', w: 58, h: 62, activeInvert: false },
   tbFxGain: { src: '/images/ui/tb-fx-gain.png', w: 58, h: 62, activeInvert: false },
   tbFxEnemy: { src: '/images/ui/tb-fx-enemy.png', w: 58, h: 62, activeInvert: false },
   tbFxRival: { src: '/images/ui/tb-fx-rival.png', w: 58, h: 62, activeInvert: false },
+  /* 디버프 칸 머리 아이콘(두 디버프 칸 공용 보라) — 원본 asset/공용 아이콘/디버프 아이콘.png(빨강)을 색상만 보라로 돌려 음영 그대로 */
+  tbFxDebuff: { src: '/images/ui/tb-fx-debuff-purple.png', w: 64, h: 64, activeInvert: false },
   /* 덱 배치 — 가운데 VS · 전방(F · 파랑 별) / 후방(B · 빨강 별) (원본 asset/공용 아이콘/VS 아이콘 · 포워드 · 백 아이콘 · 별.png) */
   tbVsGold: { src: '/images/ui/tb-vs-gold.png', w: 176, h: 160, activeInvert: false },
   tbRowFront: { src: '/images/ui/tb-row-front.png', w: 28, h: 28, activeInvert: false },

@@ -16,7 +16,6 @@ import {
   effectCards,
   fmtValue,
   formationRequirements,
-  formationRows,
   petCards,
   finderKey,
   ownRevivals,
@@ -64,7 +63,6 @@ const bareName = (name) => String(name || '').replace(/\(중첩\)$/, '').trim();
 const ALLY_SIG = new Set(Object.entries(SIGNATURE_TIPS).filter(([, v]) => v.ally).map(([k]) => k));
 const ENEMY_SIG = new Set(Object.entries(SIGNATURE_TIPS).filter(([, v]) => v.enemy).map(([k]) => k));
 const LEVEL_ORDER = { danger: 0, warn: 1, info: 2 };
-const LEDGER_SUB = '효과마다 패시브 + 액티브를 더한 값 · 줄을 누르면 스킬 · 겹침까지';
 const MISSING_GROUPS = [
   { id: 'role', label: '역할' },
   { id: 'ally', label: '팀 버프' },
@@ -361,8 +359,6 @@ export default function TeamBuilderPage() {
     setFxOpen(true);
   };
   const narrow = useIsNarrow();
-  /** 덱 칸 끌어 옮기기는 마우스만 — 폰 · 태블릿은 손가락으로 쓸어 내릴 때 영웅이 잡혀서 뺌 */
-  const mouseDrag = useIsNarrow('(hover: hover) and (pointer: fine)');
 
   useEffect(() => {
     let current = teamModeFromPath(window.location.pathname);
@@ -465,22 +461,10 @@ export default function TeamBuilderPage() {
     theirBuff: theirFx ? fxLedger(theirFx.buffs, theirFx.buffSkill, petFx.theirBuff) : null,
   }), [buffCards, buffSkillCards, debuffCards, debuffSkillCards, theirFx, petFx]);
 
-  /** 전력 비교 — 패시브만 · 액티브 사용 시(패시브 + 액티브) 두 가지 */
-  const duelBoth = useMemo(() => {
-    if (!theirs) return null;
-    const setup = {
-      ours: formationRows(myFormation, deck.mine),
-      theirs: formationRows(theirFormation, deck.enemy),
-      oursPet: myPet,
-      theirsPet: theirPet,
-    };
-    return {
-      passive: duelSummary(mine, myHeroes, theirs, enemyHeroes, true, setup, 'passive'),
-      active: duelSummary(mine, myHeroes, theirs, enemyHeroes, true, setup, 'active'),
-    };
-  }, [mine, myHeroes, theirs, enemyHeroes, myFormation, theirFormation, deck, myPet, theirPet]);
-  const [duelPhase, setDuelPhase] = useState('passive');
-  const duel = duelBoth?.[duelPhase] || null;
+  /** 전력 비교 — 게임 시작하자마자 양쪽에 걸리는 패시브 + 펫 합산 하나 */
+  const duel = useMemo(() => (theirs
+    ? duelSummary(mine, myHeroes, theirs, enemyHeroes, true, { ours: myPet, theirs: theirPet })
+    : null), [mine, myHeroes, theirs, enemyHeroes, myPet, theirPet]);
 
   const threats = useMemo(() => {
     if (!theirs || !meta) return { cards: [], groups: [] };
@@ -522,6 +506,13 @@ export default function TeamBuilderPage() {
 
   const closePicker = useCallback(() => setPickerOpen(false), [setPickerOpen]);
   const isFull = (side) => deck[side].filter(Boolean).length >= meta.size;
+  /** 영웅 선택 창을 열 칸 — 자리가 있으면 첫 빈 칸, 가득 찼으면 영웅이 있는 칸(바꾸기). 길드전 5칸 중 3명이 넘지 않게 */
+  const pickTarget = (side, prefer = -1) => {
+    const list = deck[side];
+    if (prefer >= 0 && (list[prefer] || !isFull(side))) return prefer;
+    if (!isFull(side)) return Math.max(0, list.findIndex((n) => !n));
+    return Math.max(0, list.findIndex(Boolean));
+  };
 
   const onSelectSlot = (side, idx) => {
     if (shouldSuppressDeckClick()) return;
@@ -538,7 +529,7 @@ export default function TeamBuilderPage() {
   const openFinder = (group, chipId) => {
     setFinder((f) => ({ ...f, group, chipId, open: true }));
     const empty = isFull('mine') ? -1 : deck.mine.findIndex((n) => !n);
-    setActive({ side: 'mine', idx: empty === -1 ? (active.side === 'mine' ? active.idx : 0) : empty });
+    setActive({ side: 'mine', idx: empty !== -1 ? empty : pickTarget('mine', active.side === 'mine' ? active.idx : -1) });
     setPickerOpen(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -548,6 +539,10 @@ export default function TeamBuilderPage() {
     const copy = [...deck[side]];
     const dup = copy.indexOf(name);
     if (dup !== -1 && dup !== idx) copy[dup] = copy[idx] || '';
+    else if (!copy[idx] && isFull(side)) {
+      setPickerOpen(false);
+      return;
+    }
     copy[idx] = name;
     updateDeck(side, copy);
     setFxFocus({ side, name });
@@ -600,8 +595,7 @@ export default function TeamBuilderPage() {
       return copy;
     });
     if (on) {
-      const firstEmpty = deck.enemy.findIndex((n) => !n);
-      setActive({ side: 'enemy', idx: firstEmpty === -1 ? 0 : firstEmpty });
+      setActive({ side: 'enemy', idx: pickTarget('enemy') });
       setPickerOpen(true);
       setView('enemy');
     } else {
@@ -675,7 +669,7 @@ export default function TeamBuilderPage() {
               resolveHero={resolveHero}
               active={pickerOpen ? active : null}
               onSelect={onSelectSlot}
-              onDrop={mouseDrag ? onHeroDrop : null}
+              onDrop={onHeroDrop}
               onRemove={onRemove}
               onClear={onClear}
               onToggleEnemy={() => setEnemy(true)}
@@ -749,7 +743,7 @@ export default function TeamBuilderPage() {
                       </span>
                       <span className="tb-clash-label">
                         <span className="tb-clash-title">전력 비교</span>
-                        {duel?.stats.length ? (
+                        {duel?.finals.length ? (
                           <b className="tb-clash-score" aria-label={`우리 우위 ${duel.counts.ours} · 상대 우위 ${duel.counts.theirs}`}>
                             <i className="is-ours">{duel.counts.ours}</i>:<i className="is-theirs">{duel.counts.theirs}</i>
                           </b>
@@ -798,12 +792,12 @@ export default function TeamBuilderPage() {
                       icon="tbFxAlly"
                       iconPlain={32}
                       title="우리 팀이 받는 버프"
-                      sub={LEDGER_SUB}
+                      tag="아군 버프"
                       aside={<span className="tb-block-num is-ally">{ledgers.buff.count}</span>}
                       index={1}
                       className="tb-fx-block"
                     >
-                      <FxLedger data={ledgers.buff} side="ally" tone="ally" teamSize={myHeroes.length} resolveHero={resolveHero} emptyText="팀에 거는 버프가 없어요." />
+                      <FxLedger data={ledgers.buff} side="ally" tone="ally" resolveHero={resolveHero} emptyText="팀에 거는 버프가 없어요." />
                       <FxFold open={!!foldOpen.buff} onToggle={() => toggleFold('buff')} tone="ally" hint={selfCards.length || selfSkillCards.length ? '누가 누구에게 · 자기 자신만 받는 버프' : '누가 누구에게 거는지'}>
                       <FxTabs
                         side="ally"
@@ -827,15 +821,15 @@ export default function TeamBuilderPage() {
                     </Block>
                     <Block
                       tone="gain"
-                      icon="tbFxGain"
+                      icon="tbFxDebuff"
                       iconPlain={32}
                       title={isPve ? '보스가 받는 디버프' : '상대가 받는 디버프'}
-                      sub={LEDGER_SUB}
+                      tag="적 디버프"
                       aside={<span className="tb-block-num is-gain">{ledgers.debuff.count}</span>}
                       index={2}
                       className="tb-fx-block"
                     >
-                      <FxLedger data={ledgers.debuff} side="enemy" tone="gain" teamSize={myHeroes.length} resolveHero={resolveHero} emptyText={isPve ? '보스에게 거는 디버프가 없어요.' : '상대에게 거는 디버프가 없어요.'} />
+                      <FxLedger data={ledgers.debuff} side="enemy" tone="gain" resolveHero={resolveHero} emptyText={isPve ? '보스에게 거는 디버프가 없어요.' : '상대에게 거는 디버프가 없어요.'} />
                       <FxFold open={!!foldOpen.debuff} onToggle={() => toggleFold('debuff')} tone="gain" hint="누가 누구에게 거는지">
                       <FxTabs side="enemy" tone="gain" value={fxTab.enemy} onChange={(v) => setFxTab((t) => ({ ...t, enemy: v }))} passiveCount={fxBoxCount(debuffCards)} skillCount={fxBoxCount(debuffSkillCards, 'skill')} />
                       {fxTab.enemy === 'skill' ? (
@@ -859,7 +853,7 @@ export default function TeamBuilderPage() {
                 </div>
               ) : (
                 <div key="enemy" className="tb-view-body">
-                  <Block tone="caution" icon="tbThreat" iconPlain={44} title="상대 덱에서 조심할 것" sub="상대가 노리는 우리 영웅과 대비" index={0}>
+                  <Block tone="caution" icon="tbThreat" iconPlain={44} title="상대 덱에서 조심할 것" tag="주요 위협" sub="상대가 노리는 우리 영웅과 대비" index={0} className={threats.cards.length ? '' : 'is-ok'}>
                     <TargetStrip groups={threats.groups} resolveHero={resolveHero} />
                     <ThreatCards cards={threats.cards} resolveHero={resolveHero} emptyText="이 상대 덱에는 특정 영웅을 노리는 기믹이 없어요." />
                   </Block>
@@ -867,15 +861,15 @@ export default function TeamBuilderPage() {
                     <div className="tb-fx-pair">
                       <Block
                         tone="enemy"
-                        icon="tbFxGain"
+                        icon="tbFxDebuff"
                         iconPlain={32}
                         title="우리 팀이 받는 디버프"
-                        sub={LEDGER_SUB}
+                        tag="아군 디버프"
                         aside={<span className="tb-block-num is-enemy">{ledgers.theirDebuff.count}</span>}
                         index={1}
                         className="tb-fx-block"
                       >
-                        <FxLedger data={ledgers.theirDebuff} side="enemy" tone="enemy" perspective="enemy" teamSize={enemyHeroes.length} resolveHero={resolveHero} emptyText="상대가 거는 디버프가 없어요." />
+                        <FxLedger data={ledgers.theirDebuff} side="enemy" tone="enemy" perspective="enemy" resolveHero={resolveHero} emptyText="상대가 거는 디버프가 없어요." />
                         <FxFold open={!!foldOpen.theirDebuff} onToggle={() => toggleFold('theirDebuff')} tone="enemy" hint="누가 누구에게 거는지">
                         <FxTabs side="enemy" tone="enemy" value={fxTab.theirDebuff} onChange={(v) => setFxTab((t) => ({ ...t, theirDebuff: v }))} passiveCount={fxBoxCount(theirFx.debuffs)} skillCount={fxBoxCount(theirFx.debuffSkill, 'skill')} />
                         {fxTab.theirDebuff === 'skill' ? (
@@ -887,15 +881,15 @@ export default function TeamBuilderPage() {
                       </Block>
                       <Block
                         tone="rival"
-                        icon="tbFxRival"
+                        icon="tbFxEnemy"
                         iconPlain={32}
                         title="상대가 받는 버프"
-                        sub={LEDGER_SUB}
+                        tag="적 버프"
                         aside={<span className="tb-block-num is-rival">{ledgers.theirBuff.count}</span>}
                         index={2}
                         className="tb-fx-block"
                       >
-                        <FxLedger data={ledgers.theirBuff} side="ally" tone="rival" perspective="enemy" teamSize={enemyHeroes.length} resolveHero={resolveHero} emptyText="상대가 받는 팀 버프가 없어요." />
+                        <FxLedger data={ledgers.theirBuff} side="ally" tone="rival" perspective="enemy" resolveHero={resolveHero} emptyText="상대가 받는 팀 버프가 없어요." />
                         <FxFold open={!!foldOpen.theirBuff} onToggle={() => toggleFold('theirBuff')} tone="rival" hint={theirFx.self.length || theirFx.selfSkill.length ? '누가 누구에게 · 자기 자신만 받는 버프' : '누가 누구에게 거는지'}>
                         <FxTabs side="ally" tone="rival" value={fxTab.theirBuff} onChange={(v) => setFxTab((t) => ({ ...t, theirBuff: v }))} passiveCount={fxBoxCount(theirFx.buffs)} skillCount={fxBoxCount(theirFx.buffSkill, 'skill')} />
                         {fxTab.theirBuff === 'skill' ? (
@@ -930,12 +924,12 @@ export default function TeamBuilderPage() {
                     tone="duel"
                     icon="tbDuelCrest"
                     iconPlain={30}
-                    title={<>전력 비교 <small className="tb-block-title-note">{duelPhase === 'active' && duel.stats.some((s) => Math.round(s.oursAct || 0) || Math.round(s.theirsAct || 0)) ? '(패시브 + 액티브 사용 시)' : '(패시브 효과만)'}</small></>}
+                    title={<>전력 비교 <small className="tb-block-title-note">(패시브 · 펫)</small></>}
                     sub="능력치마다 두 팀이 받는 버프 · 디버프를 합쳐 누가 앞서는지"
-                    aside={<span className="tb-block-num is-duel">{duel.stats.length}</span>}
+                    aside={<span className="tb-block-num is-duel">{duel.finals.length}</span>}
                     index={0}
                   >
-                    <DuelBoard phases={duelBoth} phase={duelPhase} onPhase={setDuelPhase} teams={{ ours: myHeroes.length, theirs: enemyHeroes.length }} resolveHero={resolveHero} />
+                    <DuelBoard data={duel} resolveHero={resolveHero} />
                   </Block>
                 </div>
               )

@@ -27,6 +27,8 @@ export default function HeroGridPicker({
   loungeDensity = false,
   /** (선택) 이름 아래 작은 표시 — 팀 빌더 「필요한 효과로 찾기」 수치 등 */
   renderBadge = null,
+  /** false면 손가락으로 끌어 덱에 넣기를 끔(목록을 쓸어 내릴 때 영웅이 잡히지 않게) — 마우스 끌기는 그대로 */
+  touchDrag = true,
 }) {
   const [roleFilter, setRoleFilter] = useState('all');
   const [q, setQ] = useState('');
@@ -87,7 +89,7 @@ export default function HeroGridPicker({
               draggable
               onPointerDown={e => {
                 markDeckPointerDown(e);
-                startDeckPointerDrag(e, { source: 'picker', name: cleanName }, { label: cleanName });
+                if (touchDrag) startDeckPointerDrag(e, { source: 'picker', name: cleanName }, { label: cleanName });
               }}
               onDragStart={e => {
                 if (!allowHtml5DeckDrag(e)) {
