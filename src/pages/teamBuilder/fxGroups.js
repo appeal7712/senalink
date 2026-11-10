@@ -58,6 +58,8 @@ function partOf(c, applied, heroes) {
       skillName: s.skillName,
       skillTag: s.skillTag,
       scope: s.scope,
+      scopeKind: s.scopeKind || null,
+      scopeRoles: s.scopeRoles || null,
       condition: s.condition || c.condition || null,
     })),
     duration: c.duration || null,

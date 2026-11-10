@@ -9,6 +9,7 @@ import { formationsData } from '../../data/formations';
 import InGameDeckCard from '../../components/InGameDeckCard';
 import { UI_IMAGE_ICONS, formationIconName } from '../../data/uiIcons';
 import { pets } from '../../data/pets';
+import { ROLE_ICONS, ROLE_LABELS } from '../../data/roleIcons';
 import { skillIconUrl } from '../../lib/skillIcon';
 import { effectIconUrl } from '../../lib/effectIcons';
 import { LEGEND_RINGS, ROLE_TILES, effectLabel, entryValue, fmtFxValue, fmtValue, listLabel, targetLabel } from '../../lib/teamBuilderAnalysis';
@@ -23,6 +24,17 @@ export function FxIcon({ name, size = 20, className = '' }) {
   const src = effectIconUrl(name);
   if (!src) return null;
   return <img className={`tb-fx-icon${className ? ` ${className}` : ''}`} src={src} alt="" width={size} height={size} loading="lazy" decoding="async" />;
+}
+
+/** 대상이 유형으로 정해진 효과(「아군 방어형 · 만능형」)의 역할 아이콘 — 비어 있으면 안 그림 */
+function RoleMarks({ roles }) {
+  if (!roles?.length) return null;
+  const label = `${roles.map((r) => ROLE_LABELS[r] || r).join(' · ')}만`;
+  return (
+    <span className="tb-role-marks" title={label} aria-label={label}>
+      {roles.map((r) => (ROLE_ICONS[r] ? <img key={r} src={ROLE_ICONS[r]} alt="" draggable={false} /> : null))}
+    </span>
+  );
 }
 
 const PET_BY_NAME = new Map(pets.map((p) => [p.name, p]));
@@ -938,12 +950,16 @@ function LedgerRow({ r, side, scopeText, resolveHero, index }) {
     p.wasted ? `${p.srcs[0]?.heroName || ''}의 효과 대상(${scopeText(p.scope)})이 덱에 없어요.` : null,
     p.note?.text || null,
   ]).filter(Boolean);
+  /* 모든 출처가 유형 대상(「아군 방어형 · 만능형」)일 때만 역할 아이콘 — 한 곳이라도 전체 대상이면 안 붙임 */
+  const srcs = parts.flatMap((p) => p.srcs);
+  const rowRoles = srcs.length && srcs.every((s) => s.scopeKind === 'roles' && s.scopeRoles?.length) ? [...new Set(srcs.flatMap((s) => s.scopeRoles))] : [];
   return (
     <li className={`tb-tot-row${open ? ' is-open' : ''}${r.overlap || r.warn ? ' is-warn' : ''}`} style={{ '--i': Math.min(index, 20) }}>
       <button type="button" className="tb-tot-line" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
         <span className="tb-tot-name">
           <FxIcon name={r.label} size={22} />
           <span className="tb-tot-label">{r.label}</span>
+          <RoleMarks roles={rowRoles} />
           {r.overlap ? <em className="tb-tot-flagtag">중복</em> : r.warn ? <em className="tb-tot-flagtag">확인</em> : null}
           <span className="tb-tot-faces">{r.heroes.slice(0, 3).map((n) => <GiverFace key={n} name={n} resolveHero={resolveHero} size={24} />)}</span>
         </span>
@@ -1124,6 +1140,7 @@ function DuelComps({ comps, resolveHero }) {
         <li key={c.label} className={c.value < 0 ? 'is-minus' : ''}>
           <FxIcon name={c.label} size={18} />
           <span className="tb-duel-comp-name">{c.label}</span>
+          <RoleMarks roles={c.roles} />
           <span className="tb-duel-comp-faces">
             {c.givers.map((g) => <GiverFace key={g} name={g} resolveHero={resolveHero} size={20} />)}
           </span>

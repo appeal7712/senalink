@@ -1745,6 +1745,9 @@
 .tb-duel-comps li { display: flex; align-items: center; gap: 7px; min-height: 24px; color: rgba(255, 255, 255, 0.85); font-size: 12px; font-weight: 700; }
 .tb-duel-comp-name { white-space: nowrap; }
 .tb-duel-comp-faces { display: inline-flex; align-items: center; gap: 3px; }
+/* 대상이 유형으로 정해진 효과(「아군 방어형 · 만능형」) — 이름 옆 작은 역할 아이콘 */
+.tb-role-marks { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; padding: 1px 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.14); }
+.tb-role-marks img { display: block; width: 14px; height: 14px; object-fit: contain; }
 .tb-duel-comps li b { margin-left: auto; color: #93c5fd; font-weight: 900; font-variant-numeric: tabular-nums; }
 .tb-duel-comps li.is-minus b { color: #fca5a5; }
 .tb-duel-row { border-radius: 12px; background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(255, 255, 255, 0.07); animation: tbFadeUp 0.3s ease backwards; animation-delay: calc(var(--i) * 25ms); }

@@ -1076,6 +1076,7 @@ export function effectCards(analysis, team, includeEnhance = true, { selfOnly = 
           value: fxValue(e, includeEnhance),
           scope: scopeText(e),
           scopeKind: e.scope.kind,
+          scopeRoles: e.scope.kind === 'roles' ? e.scope.roles : null,
           recipients,
           applied: !lostIds.has(e.id),
           skillLabel: e.skillLabel,
@@ -1201,6 +1202,7 @@ export function skillCards(analysis, team, includeEnhance = true) {
         value,
         scope: scopeText(e),
         scopeKind: e.scope.kind,
+        scopeRoles: e.scope.kind === 'roles' ? e.scope.roles : null,
         recipients,
         applied: true,
         skillLabel: e.skillLabel,
@@ -1280,6 +1282,7 @@ export function heroSummary(hero, { rareSet } = {}) {
         value,
         scope: scopeText(e),
         scopeKind: e.scope.kind,
+        scopeRoles: e.scope.kind === 'roles' ? e.scope.roles : null,
         skillLabel: e.skillLabel,
         skillName: e.skillName,
         source: e.source,
@@ -1322,6 +1325,7 @@ export function heroSummary(hero, { rareSet } = {}) {
       value: c.value,
       scope: s.scope,
       scopeKind: s.scopeKind,
+      scopeRoles: s.scopeRoles,
       condition: c.condition,
     };
   });
@@ -1595,17 +1599,27 @@ const DUEL_STATS = [
   { id: 'dmg', label: '피해량', re: /^피해량$/ },
   { id: 'dmgPhys', label: '물리 피해량', re: /^물리 피해량$/, only: 'physical' },
   { id: 'dmgMag', label: '마법 피해량', re: /^마법 피해량$/, only: 'magic' },
+  /* 공격기 인원별 피해량 · 효과 적용 확률(상태 이상마다) · 최대 생명력 · 방어 무시 효율 · 5인 공격기 감쇄는 위 능력치와 다른 게임 효과라 따로 한 줄(밍봉 2026-11-11 — 겔리두스 · 로지 효과 적용 확률이 빠졌던 것) */
+  { id: 'dmg1', label: '1인 공격기 피해량', re: /^1인 공격기 피해량$/ },
+  { id: 'dmg3', label: '3인 공격기 피해량', re: /^3인 공격기 피해량$/ },
+  { id: 'dmg45', label: '4~5인 공격기 피해량', re: /^4~5인 공격기 피해량$/ },
   { id: 'crit', label: '치명타 확률', re: /^치명타 확률$/ },
   { id: 'critDmg', label: '치명타 피해', re: /^치명타 피해$/ },
   { id: 'weak', label: '약점 공격 확률', re: /^약점 공격 확률$/ },
   { id: 'weakDmg', label: '약점 공격 피해량', re: /^약점 공격 피해량$/ },
+  { id: 'ignoreDef', label: '방어 무시 효율', re: /^방어 무시 효율$/ },
   { id: 'hit', label: '효과 적중', re: /^효과 적중$/ },
   { id: 'res', label: '효과 저항', re: /^효과 저항$/ },
+  { id: 'apply', label: '효과 적용 확률', re: /^효과 적용 확률$/ },
+  { id: 'applyDeath', label: '즉사 효과 적용 확률', re: /^즉사 효과 적용 확률$/ },
+  { id: 'applyShock', label: '감전 효과 적용 확률', re: /^감전 효과 적용 확률$/ },
   { id: 'def', label: '방어력', re: /^방어력$/ },
+  { id: 'hp', label: '최대 생명력', re: /^최대 생명력$/ },
   { id: 'block', label: '막기 확률', re: /^막기 확률$/ },
   { id: 'guard', label: '감쇄', re: /^감쇄$/, buff: '감쇄', debuff: null },
   { id: 'guardPhys', label: '물리 감쇄', re: /^물리 감쇄$/, buff: '물리 감쇄', debuff: null },
   { id: 'guardMag', label: '마법 감쇄', re: /^마법 감쇄$/, buff: '마법 감쇄', debuff: null },
+  { id: 'guard5', label: '5인 공격기 감쇄', re: /^5인 공격기 감쇄$/, buff: '5인 공격기 감쇄', debuff: null },
   { id: 'heal', label: '받는 회복량', re: /^받는 회복량$/ },
   { id: 'vulnPhys', label: '물리 취약', re: /^물리 취약$/, buff: null, debuff: '물리 취약' },
   { id: 'vulnMag', label: '마법 취약', re: /^마법 취약$/, buff: null, debuff: '마법 취약' },
@@ -1620,7 +1634,7 @@ const DUEL_FINALS = [
   { id: 'atkMag', label: '마법 공격력', icon: '마법 공격력 증가', only: 'magic', ids: ['atkMag', 'atk'] },
   { id: 'dmgPhys', label: '물리 피해량', icon: '물리 피해량 증가', only: 'physical', ids: ['dmgPhys', 'dmg'] },
   { id: 'dmgMag', label: '마법 피해량', icon: '마법 피해량 증가', only: 'magic', ids: ['dmgMag', 'dmg'] },
-  ...['crit', 'critDmg', 'weak', 'weakDmg', 'hit', 'res', 'def', 'block', 'guard', 'guardPhys', 'guardMag', 'vulnPhys', 'vulnMag', 'heal'].map((id) => {
+  ...['dmg1', 'dmg3', 'dmg45', 'crit', 'critDmg', 'weak', 'weakDmg', 'ignoreDef', 'hit', 'res', 'apply', 'applyDeath', 'applyShock', 'def', 'hp', 'block', 'guard', 'guardPhys', 'guardMag', 'guard5', 'vulnPhys', 'vulnMag', 'heal'].map((id) => {
     const s = DUEL_STATS.find((x) => x.id === id);
     const icon = s.buff || s.debuff || `${s.label} 증가`;
     return { id, label: s.label, icon, ids: [id] };
@@ -1684,13 +1698,28 @@ function duelNets(team, own, opp, includeEnhance, extras = null) {
     }
   };
   for (const e of own?.entries || []) {
-    if (e.side === 'ally' && e.scope?.kind !== 'self' && isDuelEntry(e, includeEnhance)) add(e, scopeRecipients(e.scope, e.heroName, team), 1);
+    if (!(e.side === 'ally' && e.scope?.kind !== 'self' && isDuelEntry(e, includeEnhance))) continue;
+    const recipients = scopeRecipients(e.scope, e.heroName, team);
+    add(e, recipients, 1);
+    for (const d of namedDrawbacks(e)) add(d, recipients, -1);
   }
   for (const e of opp?.entries || []) {
     if (e.side === 'enemy' && isDuelEntry(e, includeEnhance)) add(e, scopeRecipients(e.scope, null, team), -1);
   }
   for (const e of extras || []) add(e, e.recipients, e.side === 'enemy' ? -1 : 1);
   return nets;
+}
+
+/**
+ * 고유 이름 능력치 버프의 「단, ○○이 N% 감소합니다」 부작용 — 같은 대상이 받는 디버프로(여포 용이무모 = 물리 공격력 증가 + 마법 공격력 90% 감소, 밍봉 2026-11-11).
+ * 전력 비교에서만 씀(받는 버프 표에는 `BUFF_NOTES` 경고 문구로 이미 있음).
+ */
+function namedDrawbacks(e) {
+  if (!NAMED_STAT_BUFFS.has(String(e.name || '').replace(/\(중첩\)$/, '').trim())) return [];
+  return [...String(e.tooltip || '').matchAll(/단,\s*(.+?)(?:이|가)\s*([\d.]+)%\s*감소/g)].map((m, i) => {
+    const v = Number(m[2]);
+    return { ...e, id: `${e.id}-drawback${i}`, name: `${m[1].trim()} 감소`, key: `${e.key}|drawback|${normKey(m[1])}`, valueBase: v, valueEnhanced: v, drawback: true };
+  });
 }
 
 /** 전투 시작 [N턴] 효과면 N, [상시]면 null */
@@ -1767,6 +1796,7 @@ export function petCards(pet, team, includeEnhance = true, side = 'ally') {
         value,
         scope: scopeText(e),
         scopeKind: e.scope?.kind || 'all',
+        scopeRoles: e.scope?.kind === 'roles' ? e.scope.roles : null,
         recipients: e.recipients,
         applied: true,
         skillLabel: '펫',
@@ -1803,9 +1833,12 @@ function duelFinalSide(team, nets, def) {
         total += sign * value;
         if (duelTurns(e)) turnSum += sign * value;
         const label = duelRowName(DUEL_STATS.find((s) => s.id === id), sign);
-        const c = comps.get(label) || { value: 0, givers: [] };
+        const c = comps.get(label) || { value: 0, givers: [], recv: new Set(), roles: new Set(), allRoles: false };
         c.value += sign * value;
         if (!c.givers.includes(e.heroName)) c.givers.push(e.heroName);
+        c.recv.add(name);
+        if (e.scope?.kind === 'roles') e.scope.roles.forEach((r) => c.roles.add(r));
+        else c.allRoles = true;
         comps.set(label, c);
       }
     }
@@ -1818,7 +1851,9 @@ function duelFinalSide(team, nets, def) {
     turnAvg: avg(turnSum),
     n,
     per,
-    comps: [...comps].map(([label, c]) => ({ label, value: avg(c.value), givers: c.givers })).filter((c) => Math.round(c.value)),
+    /* `roles` = 대상이 유형으로 정해진 효과(「아군 방어형 · 만능형」 · 「적 공격형 · 마법형」)면 그 유형 — 화면 역할 아이콘(일부만 받아 평균이 줄어든 이유).
+       한 곳이라도 「전체」 대상이면 빈 배열. `recv` / `of` = 받은 영웅 수 / 셈에 든 영웅 수 */
+    comps: [...comps].map(([label, c]) => ({ label, value: avg(c.value), givers: c.givers, recv: c.recv.size, of: n, roles: c.allRoles ? [] : [...c.roles] })).filter((c) => Math.round(c.value)),
   };
 }
 
