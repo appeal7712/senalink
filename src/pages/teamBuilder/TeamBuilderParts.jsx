@@ -635,7 +635,8 @@ export function RingCheck({ rows, resolveHero }) {
 
 const DIR_MARK = { up: '▲', down: '▼' };
 
-const badgeValue = (c) => fmtFxValue(c.value, c.label, c.dir);
+/** 분석 칸 「자세히 보기」 수치 뱃지 — 칸 종류로 부호(버프 목록 「+25%」 · 디버프 목록 「−24%」, 표 합계와 같은 규칙) */
+const badgeValue = (c, side) => fmtValue(c.value, side === 'enemy' ? 'down' : 'up');
 
 /**
  * 상대 덱 기준 목록 — 엔진의 대상 글은 그 덱 입장(「아군 전체」 · 「적 1명」)이라 우리 입장으로 바꿈:
@@ -743,7 +744,7 @@ export function EffectList({ cards, side, tone, perspective, teamSize, resolveHe
                         <button type="button" data-finder className="tb-fxl-name" onClick={() => onFind?.(c)} title="이 효과를 가진 영웅 찾기">{c.label}</button>
                       ) : <span className="tb-fxl-name">{c.label}</span>}
                     </span>
-                    {c.value != null ? <span className="tb-fxl-val">{badgeValue(c)}</span> : null}
+                    {c.value != null ? <span className="tb-fxl-val">{badgeValue(c, side)}</span> : null}
                     {c.timing === 'start' ? <span className="tb-fxl-when" title="전투 시작 시 적용 — [상시] 효과와는 중첩돼요">시작 {c.turns}턴</span> : null}
                     {c.tower ? <span className="tb-fxl-tower" title="무한의 탑 · 시련의 탑에서만 적용">탑 전용</span> : null}
                     {c.overlap ? <span className="tb-fxl-flag">중복</span> : null}
@@ -804,7 +805,7 @@ export function SkillEffectList({ cards, side, tone, perspective, resolveHero, e
                 {row.cards.map((c) => (
                   <span key={c.id} className="tb-fxl-fx">
                     <span className="tb-fxl-key"><FxIcon name={c.label} size={20} /><span className="tb-fxl-name">{c.label}</span></span>
-                    {c.value != null ? <span className="tb-fxl-val">{badgeValue(c)}</span> : null}
+                    {c.value != null ? <span className="tb-fxl-val">{badgeValue(c, side)}</span> : null}
                     {c.amountText ? <span className="tb-fxl-amt">{c.amountText}</span> : null}
                     {c.chance ? <span className="tb-fxl-amt">{c.chance}% 확률</span> : null}
                     {c.duration ? <span className="tb-fxl-when">{c.duration}</span> : null}
@@ -920,8 +921,9 @@ function LedgerSource({ p, s, kind, fmt, scopeText, resolveHero }) {
 function LedgerRow({ r, side, scopeText, resolveHero, index }) {
   const [open, setOpen] = useState(false);
   const fmt = (v) => fmtFxValue(v, r.label, r.dir);
-  /* 합계는 칸 종류로 부호 — 버프 칸 「+25%」 · 디버프 칸 「−24%」(밍봉 2026-11-11) */
-  const sumText = fmtValue(r.total, side === 'enemy' ? 'down' : 'up');
+  /* 합계 · 펼침 영웅별 수치는 칸 종류로 부호 — 버프 칸 「+25%」 · 디버프 칸 「−24%」(밍봉 2026-11-11) */
+  const signed = (v) => fmtValue(v, side === 'enemy' ? 'down' : 'up');
+  const sumText = signed(r.total);
   const passiveTurn = r.passive?.segs.some((s) => s.timing === 'start');
   const petInfo = r.pet ? petOfGiver(r.pet.heroes[0]) : null;
   const petTurn = r.pet?.segs.some((s) => s.timing === 'start');
@@ -967,7 +969,7 @@ function LedgerRow({ r, side, scopeText, resolveHero, index }) {
         <div className="tb-tot-detail">
           <ul className="tb-tot-srcs">
             {parts.flatMap((p) => p.srcs.map((s) => (
-              <LedgerSource key={`${p.kind}-${p.id}-${s.id}`} p={p} s={s} kind={p.kind} fmt={fmt} scopeText={scopeText} resolveHero={resolveHero} />
+              <LedgerSource key={`${p.kind}-${p.id}-${s.id}`} p={p} s={s} kind={p.kind} fmt={signed} scopeText={scopeText} resolveHero={resolveHero} />
             )))}
           </ul>
           {notes.map((n) => <p key={n} className="tb-tot-warn">{n}</p>)}
