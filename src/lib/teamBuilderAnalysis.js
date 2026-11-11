@@ -1813,23 +1813,34 @@ export function petCards(pet, team, includeEnhance = true, side = 'ally') {
 }
 
 /**
- * 「최종」 줄 한 팀 몫. **팀 평균 아님**(밍봉 2026-11-11 — 로지 효과 적용 확률 26%를 방어형 · 만능형 2명만 받으면 5인 평균 10%로 보여 헷갈림):
- * 효과마다 받은 영웅 1명이 받는 수치(`comps[].value`, 받은 영웅들끼리 평균 — 「+26%」)를 그대로 쓰고, 줄 수치 `avg` = 그 합(펼침 몫을 다 더하면 줄 수치).
- * 누가 받는지는 `roles`(유형 대상이면 역할 아이콘). `per` = 영웅마다 「버프 − 디버프」 합(같은 영웅끼리 비교), `turnAvg` = 그중 시작 N턴 몫.
- * `comps` = 효과별 몫(「물리 공격력 증가 +31」 · 「모든 공격력 감소 −22」, 0인 것은 뺌, `givers` = 그 효과를 준 · 건 영웅 · 펫).
+ * 「최종」 줄 한 팀 몫(밍봉 2026-11-11 — 효과마다 받는 영웅이 달라 숫자 하나로 못 줄임: 로지 효과 적용 확률 +26%는 방어형 · 만능형만,
+ * 겔리두스 −26%는 전원이면 2명은 0% · 3명은 −26%).
+ * `groups` = 같은 양을 받는 영웅끼리 묶음([{ value, heroes, turn }], 큰 값부터) — 화면은 묶음이 하나면 숫자 하나, 여럿이면 얼굴 + 값으로 나눠 보여 줌.
+ * `avg` = 영웅마다 받은 양의 평균 — **판정(막대 · 우위 점수)에만** 씀(2명만 받는 버프와 5명 다 받는 버프를 같은 무게로 치지 않게), 화면 숫자로는 안 보임.
+ * `per` = 영웅마다 「버프 − 디버프」 합(같은 영웅끼리 비교), `turnAvg` = 평균 중 시작 N턴 몫.
+ * `heroes` = 영웅마다 [{ name, total, items: [{ label, value(±), giver, turns }] }](팀 순서) — 줄 펼침 「영웅별」, 받는 효과가 없으면 items 빈 배열.
+ * `comps` = 효과별 몫 — 받은 영웅 1명이 받는 수치(「+26%」, 받은 영웅들끼리 평균), `roles` = 유형 대상이면 그 유형(역할 아이콘),
+ * `givers` = 그 효과를 준 · 건 영웅 · 펫, `turnGivers` = 그중 전투 시작 [N턴] 효과를 준 쪽.
  */
 function duelFinalSide(team, nets, def) {
   const members = def.only ? team.filter((h) => h.attackType === def.only) : team;
   const n = members.length;
   const comps = new Map();
   const per = new Map();
+  const perTurn = new Map();
+  /* 영웅마다 받는 효과 목록 — 줄 펼침 「영웅별」(누가 무엇을 받고 누가 못 받는지, 밍봉 2026-11-11) */
+  const heroes = [];
   for (const h of members) {
     const name = cleanHeroName(h.name);
     const byStat = nets.get(name);
     let total = 0;
+    let turnTotal = 0;
+    const items = [];
     for (const id of def.ids) {
       for (const { e, value, sign } of byStat?.get(id)?.values() || []) {
         total += sign * value;
+        if (duelTurns(e)) turnTotal += sign * value;
+        items.push({ label: duelRowName(DUEL_STATS.find((s) => s.id === id), sign), value: sign * value, giver: e.heroName, turns: duelTurns(e) });
         const label = duelRowName(DUEL_STATS.find((s) => s.id === id), sign);
         const c = comps.get(label) || { value: 0, turn: 0, givers: [], turnGivers: new Set(), recv: new Set(), roles: new Set(), allRoles: false };
         c.value += sign * value;
@@ -1845,7 +1856,19 @@ function duelFinalSide(team, nets, def) {
       }
     }
     per.set(name, total);
+    perTurn.set(name, turnTotal);
+    heroes.push({ name, total, items: items.filter((it) => Math.round(it.value)).sort((x, y) => y.value - x.value) });
   }
+  const groupMap = new Map();
+  for (const [name, total] of per) {
+    const v = Math.round(total);
+    if (!groupMap.has(v)) groupMap.set(v, { value: v, heroes: [], turn: false });
+    const g = groupMap.get(v);
+    g.heroes.push(name);
+    if (Math.round(perTurn.get(name) || 0)) g.turn = true;
+  }
+  const groups = [...groupMap.values()].sort((x, y) => y.value - x.value);
+  const sumOf = (m) => [...m.values()].reduce((t, v) => t + v, 0);
   /* 받은 영웅 1명 기준 — `roles` = 대상이 유형으로 정해진 효과면 그 유형, 한 곳이라도 「전체」 대상이면 빈 배열 */
   const list = [...comps].map(([label, c]) => ({
     label,
@@ -1857,18 +1880,24 @@ function duelFinalSide(team, nets, def) {
     roles: c.allRoles ? [] : [...c.roles],
   })).filter((c) => Math.round(c.value));
   return {
-    avg: list.reduce((t, c) => t + c.value, 0),
-    turnAvg: list.reduce((t, c) => t + c.turn, 0),
+    avg: n ? sumOf(per) / n : 0,
+    turnAvg: n ? sumOf(perTurn) / n : 0,
     n,
     per,
+    groups,
+    heroes,
     comps: list,
   };
 }
 
+/** 두 팀 묶음 값이 같은지(인원 수는 무시 — 물리 영웅 2명 +25% vs 3명 +25%는 같음) */
+const sameGroupValues = (a, b) => a.length === b.length && a.every((g, i) => g.value === b[i].value);
+
 /**
  * 맞대결 요약 — 한 화면 요약 하나 「최종 합계」(밍봉 2026-11-10 — 근거 목록은 없애고 줄 펼침에 효과별 몫 · 준 영웅).
- * `finals` = `DUEL_FINALS` 순서, 줄마다 `ours` · `theirs` = 효과별 「받은 영웅 1명 기준 수치」의 합(±, `duelFinalSide`), `diff` = 우리 − 상대, `lead` = 'ours' | 'theirs' | 'even'(차이 2 미만),
- * `mirror` = 양쪽에 같은 영웅이 있으면 그 영웅끼리 차이가 가장 큰 쪽, `oursTurn` · `theirsTurn` = 그중 전투 시작 [N턴] 몫,
+ * `finals` = `DUEL_FINALS` 순서, 줄마다 `groups.ours` · `groups.theirs` = 같은 양을 받는 영웅 묶음(화면 숫자), `ours` · `theirs` = 영웅마다 받은 양의 평균(판정용 · 화면에 안 보임),
+ * `diff` = 우리 − 상대, `lead` = 'ours' | 'theirs' | 'even'(평균 차이 2 미만 + 묶음 값 같음),
+ * `mirror` = 양쪽에 같은 영웅이 있으면 그 영웅끼리 차이가 가장 큰 쪽, `oursTurn` · `theirsTurn` = 평균 중 전투 시작 [N턴] 몫,
  * `n` = 셈에 든 영웅 수(물리 · 마법 줄은 그 타입만 — 0이면 화면에 「—」), `counts` = 우위 점수.
  * 게임 시작하자마자 양쪽에 걸리는 패시브 + 펫(`pets` = { ours, theirs })만 — 진형 · 액티브는 안 셈(밍봉 2026-11-10).
  */
@@ -1899,10 +1928,15 @@ export function duelSummary(mine, myTeam, theirs, theirTeam, includeEnhance = tr
     /* 양쪽 다 디버프뿐인 줄은 이름 · 아이콘도 디버프로(「받는 회복량」 + 증가 아이콘 → 「받는 회복량 감소」, 밍봉 2026-11-10). 취약은 원래 디버프 이름 */
     const debuffOnly = ![...a.comps, ...b.comps].some((c) => c.value > 0);
     const name = debuffOnly && def.icon !== def.label ? `${def.label} 감소` : def.label;
+    /* 같음 = 평균 차이 2 미만 + 묶음 값도 같을 때(평균만 비슷하고 영웅마다 받는 양이 다르면 같다고 안 함) */
+    const even = (Math.abs(diff) < DUEL_EVEN && sameGroupValues(a.groups, b.groups)) || diff === 0;
     finals.push({
       id: `final-${def.id}`, label: name, icon: debuffOnly ? name : def.icon, debuffOnly, icons: duelSideIcons(def),
       ours: a.avg, theirs: b.avg, oursTurn: a.turnAvg, theirsTurn: b.turnAvg, n: { ours: a.n, theirs: b.n },
-      diff, lead: Math.abs(diff) < DUEL_EVEN ? 'even' : diff > 0 ? 'ours' : 'theirs', mirror,
+      groups: { ours: a.groups, theirs: b.groups },
+      heroes: { ours: a.heroes, theirs: b.heroes },
+      only: def.only || null,
+      diff, lead: even ? 'even' : diff > 0 ? 'ours' : 'theirs', mirror,
       comps: { ours: a.comps, theirs: b.comps },
     });
   }

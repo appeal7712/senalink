@@ -1115,53 +1115,156 @@ const duelFmt = (value) => {
 const duelSign = (value) => (Math.round(value) > 0 ? 'is-plus' : Math.round(value) < 0 ? 'is-minus' : undefined);
 
 /**
- * 아이콘 + 수치 + 「턴」(그중 전투 시작 [N턴] 효과가 있으면 — 받는 버프 표의 「턴」과 같은 모양). `none` = 그 공격 타입 영웅이 없음 → 「—」.
- * 아이콘 = 그 팀이 받은 결과 — + 면 증가 · − 면 감소 아이콘(`icons`), 0이면 없음(밍봉 2026-11-11)
+ * 접힌 줄 큰 숫자 — 0이 아닌 값 중 가장 많은 영웅이 받는 값(같으면 절댓값 큰 쪽). 전원이 그 값이면 `dots` 없음,
+ * 아니면 영웅 점(full = 그 값 · part = 다른 양 · zero = 못 받음 — 로지 +26%를 2명만 → 「+26%」 ●●○○○, 밍봉 2026-11-11 회의).
+ * `list` = 엔진 `heroes.ours | theirs`(영웅마다 { name, total, items })
  */
-function DuelNum({ side, value, turn, none, icons }) {
-  const t = Math.round(turn || 0);
-  const v = Math.round(value);
+function duelHeadline(list) {
+  const totals = list.map((h) => ({ name: h.name, v: Math.round(h.total) }));
+  const count = new Map();
+  for (const t of totals) if (t.v) count.set(t.v, (count.get(t.v) || 0) + 1);
+  if (!count.size) return { value: 0, dots: null };
+  const value = [...count.entries()].sort((a, b) => b[1] - a[1] || Math.abs(b[0]) - Math.abs(a[0]))[0][0];
+  if (totals.every((t) => t.v === value)) return { value, dots: null };
+  const kind = (t) => (t.v === value ? 'full' : t.v ? 'part' : 'zero');
+  const order = { full: 0, part: 1, zero: 2 };
+  return { value, dots: totals.map((t) => ({ ...t, kind: kind(t) })).sort((a, b) => order[a.kind] - order[b.kind]) };
+}
+
+function DuelDots({ dots }) {
+  if (!dots) return null;
+  return (
+    <span className="tb-duel-dots" title={dots.map((d) => `${d.name} ${duelFmt(d.v)}`).join(' · ')}>
+      {dots.map((d) => <i key={d.name} className={`tb-duel-dot is-${d.kind} ${duelSign(d.v) || 'is-zero'}`} />)}
+    </span>
+  );
+}
+
+/**
+ * 한 팀 수치 — 아이콘 + 큰 숫자(`duelHeadline`) + 일부만 받으면 아래 영웅 점. 접힌 줄에는 「턴」 없음.
+ * `none` = 그 공격 타입 영웅이 없음 → 「—」. 아이콘 = + 면 증가 · − 면 감소 아이콘(`icons`), 0이면 없음
+ */
+function DuelNum({ side, list, none, icons }) {
+  const { value: v, dots } = none ? { value: 0, dots: null } : duelHeadline(list);
   const icon = none || !v ? null : v > 0 ? icons?.up : icons?.down;
   return (
     <span className={`tb-duel-val is-${side}${none ? '' : v > 0 ? ' is-plus' : v < 0 ? ' is-neg' : ''}`}>
       <span className="tb-duel-num" title={none ? '이 공격 타입 영웅이 없어요' : undefined}>
         <span className="tb-duel-num-icon">{icon ? <FxIcon name={icon} size={18} /> : null}</span>
-        <b>{none ? '—' : duelFmt(value)}</b>
-        {t ? <i className="tb-duel-turn" title={`이 중 ${duelFmt(t)}는 전투 시작 턴 효과 — 턴이 지나면 빠져요`}>턴</i> : null}
+        <b>{none ? '—' : duelFmt(v)}</b>
       </span>
+      <DuelDots dots={dots} />
     </span>
   );
 }
 
-/** 줄 펼침 — 합친 값을 이루는 효과별 몫 한 줄씩 [효과 아이콘 · 이름 · 준(건) 영웅 얼굴들 … 몫]. 같은 효과를 여러 영웅이 주면 한 줄에 얼굴 나란히 */
-function DuelComps({ comps, resolveHero }) {
-  if (!comps.length) return <p className="tb-duel-none">받는 효과 없음</p>;
+/** 효과 기준 묶기 — 같은 효과 · 수치 · 준 영웅 · 턴이면 한 줄, `got` = 받는 영웅 이름 */
+function duelEffectLines(list) {
+  const map = new Map();
+  for (const h of list) {
+    for (const it of h.items) {
+      const key = `${it.label}|${Math.round(it.value)}|${it.giver}|${it.turns ?? ''}`;
+      if (!map.has(key)) map.set(key, { ...it, key, got: new Set() });
+      map.get(key).got.add(h.name);
+    }
+  }
+  return [...map.values()];
+}
+
+/**
+ * 줄 펼침 한 팀 칸 — **효과 기준**(밍봉 2026-11-11 회의 · 시안 `dev/duel-mock.html` 확정):
+ * 효과 한 줄 [효과 아이콘 | 이름 | 수치 | 준 영웅 · 펫 ○ | N턴] + 아래 그 팀 영웅 얼굴(받은 영웅 밝게 · 못 받은 영웅 흐리게, 「전원」 표시 없음).
+ * 받는 영웅 = 네모, 준 영웅 = 동그라미. 한 영웅이 효과 2개 이상이면 맨 아래 「영웅별 합계」. 상자는 팀 칸 하나뿐, 안은 구분선
+ */
+/**
+ * 두 팀 칸 줄 맞추기 — 같은 효과 이름은 우리 · 상대 같은 높이 줄에(밍봉 2026-11-11). 우리 순서 먼저, 상대에만 있는 효과는 뒤에.
+ * 같은 이름이 한쪽에 여러 줄이면 그 수만큼 칸, 없는 쪽은 빈 줄. `slots` = [{ label, i }]
+ */
+function duelSlots(linesBySide) {
+  const order = [];
+  const need = new Map();
+  for (const lines of linesBySide) {
+    const count = new Map();
+    for (const e of lines) count.set(e.label, (count.get(e.label) || 0) + 1);
+    for (const [label, n] of count) {
+      if (!need.has(label)) { order.push(label); need.set(label, 0); }
+      need.set(label, Math.max(need.get(label), n));
+    }
+  }
+  return order.flatMap((label) => Array.from({ length: need.get(label) }, (_, i) => ({ label, i })));
+}
+
+function DuelSide({ k, list, lines, slots, totalsRow, none, only, resolveHero }) {
+  const byLabel = new Map();
+  for (const e of lines) {
+    if (!byLabel.has(e.label)) byLabel.set(e.label, []);
+    byLabel.get(e.label).push(e);
+  }
+  const totals = new Map();
+  if (list.some((h) => h.items.length > 1)) {
+    for (const h of list) {
+      const v = Math.round(h.total);
+      if (!totals.has(v)) totals.set(v, []);
+      totals.get(v).push(h.name);
+    }
+  }
+  /* 턴 칸은 그 팀 칸에 턴제 효과가 하나라도 있을 때만 자리 확보 — 줄마다 얼굴 · 턴 · 수치 세로 줄이 같은 자리 */
+  const hasTurn = lines.some((e) => e.turns);
   return (
-    <ul className="tb-duel-comps">
-      {comps.map((c) => (
-        <li key={c.label} className={c.value < 0 ? 'is-minus' : ''}>
-          <FxIcon name={c.label} size={18} />
-          <span className="tb-duel-comp-name">{c.label}</span>
-          <span className="tb-duel-comp-faces">
-            {c.givers.map((g) => (
-              <span key={g} className="tb-duel-comp-giver">
-                <GiverFace name={g} resolveHero={resolveHero} size={20} />
-                {c.turnGivers?.includes(g) ? <i className="tb-duel-turn" title="전투 시작 턴 효과 — 턴이 지나면 빠져요">턴</i> : null}
+    <div className={`tb-duel-side is-${k}${hasTurn ? ' has-turn' : ''}`}>
+      <span className="tb-duel-side-title">
+        {k === 'ours' ? '우리' : '상대'}
+        {only ? <em className="tb-duel-side-note">{only === 'physical' ? '물리 영웅만' : '마법 영웅만'}</em> : null}
+      </span>
+      {none || !lines.length ? (
+        <p className="tb-duel-empty" style={{ gridRow: `span ${Math.max(1, slots.length)}` }}>{none ? '이 공격 타입 영웅 없음' : '받는 효과 없음'}</p>
+      ) : (
+        <ul className="tb-duel-fxs">
+          {slots.map((slot) => {
+            const e = byLabel.get(slot.label)?.[slot.i];
+            if (!e) return <li key={`blank-${slot.label}-${slot.i}`} className="tb-duel-fx is-blank" aria-hidden="true" />;
+            return (
+            <li key={e.key} className={`tb-duel-fx ${e.value < 0 ? 'is-minus' : 'is-plus'}`}>
+              <span className="tb-duel-fx-icon"><FxIcon name={e.label} size={18} /></span>
+              <span className="tb-duel-fx-name">{e.label}</span>
+              <b className="tb-duel-fx-val">{duelFmt(e.value)}</b>
+              {e.giver ? (
+                <span className="tb-duel-fx-giver" title={`${e.giver}이(가) 줌`}>
+                  <GiverFace name={e.giver} resolveHero={resolveHero} size={22} />
+                </span>
+              ) : null}
+              {e.turns ? <i className="tb-duel-turn" title="전투 시작 시 이 턴 동안만 — 턴이 지나면 빠져요">{e.turns}턴</i> : null}
+              <span className="tb-duel-fx-recv">
+                {list.map((h) => (
+                  <span key={h.name} className={`tb-duel-fx-face${e.got.has(h.name) ? '' : ' is-off'}`} title={`${h.name} ${e.got.has(h.name) ? '받음' : '못 받음'}`}>
+                    <MiniHero hero={resolveHero(h.name)} size={22} />
+                  </span>
+                ))}
               </span>
-            ))}
-            <RoleMarks roles={c.roles} />
-          </span>
-          <b>{duelFmt(c.value)}</b>
-        </li>
-      ))}
-    </ul>
+            </li>
+            );
+          })}
+        </ul>
+      )}
+      {totals.size ? (
+        <div className="tb-duel-totals">
+          <span className="tb-duel-totals-head">영웅별 합계</span>
+          {[...totals.entries()].map(([v, names]) => (
+            <span key={v} className="tb-duel-total">
+              {names.map((n) => <MiniHero key={n} hero={resolveHero(n)} size={18} />)}
+              <b className={duelSign(v) || 'is-zero'}>{duelFmt(v)}</b>
+            </span>
+          ))}
+        </div>
+      ) : totalsRow ? <div className="tb-duel-totals is-blank" aria-hidden="true" /> : null}
+    </div>
   );
 }
 
 /**
- * 최종 합계 한 줄 — [우리 수치 | 막대 · 능력치 | 상대 수치], 누르면 효과별 몫 · 준 영웅(`DuelComps`).
+ * 최종 합계 한 줄 — [우리 수치 | 막대 · 능력치 | 상대 수치], 누르면 우리 | 상대 반반 효과 목록(`DuelSide`, 폰도 반반).
  * 색 = 수치 부호만(+ 파랑 · − 빨강), 우리 · 상대 구분은 판 배경(왼쪽 파랑 · 오른쪽 빨강 기운, 밍봉 2026-11-11).
- * 막대 = 그 팀 합계 % 그대로(100% 넘으면 꽉), 0이면 없음
+ * 막대 = 그 팀 영웅들이 받은 양의 평균 %(판정값, 100% 넘으면 꽉), 0이면 없음. 가운데 「N% 차이」는 두 팀 다 전원 같은 양일 때만
  */
 function DuelRow({ s, resolveHero, index }) {
   const [open, setOpen] = useState(false);
@@ -1172,13 +1275,15 @@ function DuelRow({ s, resolveHero, index }) {
     if (none(k) || !v) return null;
     return <i className={v > 0 ? 'is-plus' : 'is-minus'} style={{ width: `${Math.max(3, Math.min(100, Math.abs(v)))}%` }} />;
   };
-  const val = (k) => <DuelNum side={k} value={s[k]} turn={s[`${k}Turn`]} none={none(k)} icons={s.icons} />;
-  const side = (k) => (
-    <div className={`tb-duel-side is-${k}`}>
-      <span className="tb-duel-side-title">{k === 'ours' ? '우리' : '상대'} {none(k) ? '—' : duelFmt(s[k])}</span>
-      {none(k) ? <p className="tb-duel-none">이 공격 타입 영웅 없음</p> : <DuelComps comps={s.comps[k]} resolveHero={resolveHero} />}
-    </div>
-  );
+  const list = (k) => s.heroes?.[k] || [];
+  const uniform = (k) => none(k) || !duelHeadline(list(k)).dots;
+  const val = (k) => <DuelNum side={k} list={list(k)} none={none(k)} icons={s.icons} />;
+  /* 펼침 두 칸은 subgrid로 줄 높이를 공유 — [제목 | 효과 줄 … | 영웅별 합계] */
+  const lines = { ours: none('ours') ? [] : duelEffectLines(list('ours')), theirs: none('theirs') ? [] : duelEffectLines(list('theirs')) };
+  const slots = duelSlots([lines.ours, lines.theirs]);
+  const totalsRow = ['ours', 'theirs'].some((k) => !none(k) && list(k).some((h) => h.items.length > 1));
+  const sideRows = 1 + Math.max(1, slots.length) + (totalsRow ? 1 : 0);
+  const side = (k) => <DuelSide k={k} list={list(k)} lines={lines[k]} slots={slots} totalsRow={totalsRow} none={none(k)} only={s.only} resolveHero={resolveHero} />;
   return (
     <li className={`tb-duel-row is-${s.lead}${open ? ' is-open' : ''}`} style={{ '--i': Math.min(index, 16) }}>
       <button type="button" className="tb-duel-line" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
@@ -1186,7 +1291,7 @@ function DuelRow({ s, resolveHero, index }) {
         <span className="tb-duel-track is-ours">{bar('ours')}</span>
         <span className="tb-duel-stat">
           <span className="tb-duel-stat-name">{s.label}</span>
-          <small>{`${gap}% 차이`}</small>
+          {uniform('ours') && uniform('theirs') ? <small>{`${gap}% 차이`}</small> : null}
         </span>
         <span className="tb-duel-track is-theirs">{bar('theirs')}</span>
         {val('theirs')}
@@ -1199,7 +1304,7 @@ function DuelRow({ s, resolveHero, index }) {
               {s.mirror.name}끼리 — 우리 <b className={duelSign(s.mirror.ours)}>{duelFmt(s.mirror.ours)}</b> · 상대 <b className={duelSign(s.mirror.theirs)}>{duelFmt(s.mirror.theirs)}</b>
             </div>
           ) : null}
-          <div className="tb-duel-sides">
+          <div className="tb-duel-sides is-aligned" style={{ gridTemplateRows: `repeat(${sideRows}, auto)` }}>
             {side('ours')}
             {side('theirs')}
           </div>
@@ -1295,12 +1400,16 @@ export function DuelBoard({ data, resolveHero }) {
             </p>
             <ul className="tb-duel-even-list">
               {evens.map((s) => {
-                const same = Math.round(s.ours) === Math.round(s.theirs);
+                /* 같음 = 두 팀 묶음 값이 같음 — 접힌 줄과 같은 큰 숫자 + 일부만 받으면 영웅 점 */
+                const { value: top, dots } = duelHeadline(s.heroes?.ours || []);
                 return (
-                  <li key={s.id} className="tb-duel-even-chip" title={`우리 ${duelFmt(s.ours)} · 상대 ${duelFmt(s.theirs)}`}>
-                    <FxIcon name={Math.round(s.ours) < 0 ? s.icons?.down : s.icons?.up} size={16} />
+                  <li key={s.id} className="tb-duel-even-chip">
+                    <FxIcon name={top < 0 ? s.icons?.down : s.icons?.up} size={16} />
                     <span className="tb-duel-even-name">{s.label}</span>
-                    <b className={duelSign(s.ours)}>{same ? duelFmt(s.ours) : `${duelFmt(s.ours)} · ${duelFmt(s.theirs)}`}</b>
+                    <span className="tb-duel-even-val">
+                      <b className={duelSign(top)}>{duelFmt(top)}</b>
+                      <DuelDots dots={dots} />
+                    </span>
                   </li>
                 );
               })}

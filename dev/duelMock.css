@@ -1,0 +1,141 @@
+/* 전력 비교 시안 — 로컬 전용. PC · 폰 크기를 한 화면에: `.dm-frame`이 컨테이너, 폰 규칙은 @container (max-width: 760px) */
+body { margin: 0; background: #0b1024; }
+.dm-page { position: relative; z-index: 1; min-height: 100vh; padding: 28px 24px 80px; color: #fff; font-family: inherit; background:
+  radial-gradient(60% 40% at 20% 0%, rgba(59, 130, 246, 0.18), transparent 70%),
+  radial-gradient(60% 40% at 80% 0%, rgba(239, 68, 68, 0.14), transparent 70%), #0b1024; }
+.dm-head { max-width: 1440px; margin: 0 auto 18px; }
+.dm-head h1 { margin: 0 0 6px; font-size: 22px; font-weight: 900; }
+.dm-head p { margin: 0 0 10px; color: rgba(255, 255, 255, 0.65); font-size: 13px; }
+.dm-rules { margin: 0; padding: 10px 14px 10px 30px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.82); font-size: 12.5px; line-height: 1.7; }
+.dm-rules b { color: #fff; }
+
+.dm-case { max-width: 1440px; margin: 26px auto 0; }
+.dm-case h2 { margin: 0 0 6px; font-size: 16px; font-weight: 900; }
+.dm-case h2 small { margin-left: 8px; color: #c4b5fd; font-size: 12px; font-weight: 800; }
+.dm-deck { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; margin: 0 0 10px; color: rgba(255, 255, 255, 0.6); font-size: 11.5px; font-weight: 800; }
+.dm-deck-side { padding: 1px 8px; border-radius: 999px; background: rgba(59, 130, 246, 0.18); color: #bfdbfe; }
+.dm-deck-side.is-theirs { background: rgba(239, 68, 68, 0.16); color: #fecaca; }
+.dm-deck-vs { margin: 0 6px; }
+.dm-deck-pet { border-radius: 50%; }
+
+.dm-frames { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 20px; }
+.dm-frame { position: relative; container-type: inline-size; }
+.dm-frame.is-pc { flex: 1 1 760px; max-width: 1040px; min-width: 780px; }
+.dm-frame.is-phone { flex: 0 0 360px; width: 360px; }
+.dm-frame-tag { position: absolute; top: -9px; left: 12px; z-index: 2; padding: 0 7px; border-radius: 999px; background: #1e293b; color: rgba(255, 255, 255, 0.7); font-size: 10px; font-weight: 900; }
+
+/* 판 — 실제 `.tb-duel-final` 모양 그대로 */
+.dm-board { padding: 12px 14px 8px; border-radius: 16px; border: 1px solid transparent; background:
+    radial-gradient(70% 120% at 0% 50%, rgba(59, 130, 246, 0.3), rgba(59, 130, 246, 0.08) 45%, transparent 70%) padding-box,
+    radial-gradient(70% 120% at 100% 50%, rgba(239, 68, 68, 0.28), rgba(239, 68, 68, 0.07) 45%, transparent 70%) padding-box,
+    linear-gradient(180deg, rgba(14, 20, 40, 0.6), rgba(6, 9, 20, 0.62)) padding-box,
+    linear-gradient(90deg, rgba(96, 165, 250, 0.6), rgba(255, 255, 255, 0.12) 50%, rgba(248, 113, 113, 0.6)) border-box; }
+.dm-rows { list-style: none; margin: 0; padding: 0; }
+.dm-row + .dm-row { border-top: 1px solid rgba(255, 255, 255, 0.13); }
+.dm-row.is-open { background: rgba(255, 255, 255, 0.045); border-radius: 12px; }
+
+/* 접힌 줄 [우리 수치 | 막대 | 이름 · 차이 | 막대 | 상대 수치] */
+.dm-line { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 104px minmax(0, 1fr) 168px minmax(0, 1fr) 104px; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; cursor: pointer; }
+.dm-val { display: flex; flex-direction: column; gap: 3px; font-variant-numeric: tabular-nums; }
+.dm-val.is-ours { align-items: flex-start; }
+.dm-val.is-theirs { align-items: flex-end; }
+.dm-num { display: inline-flex; align-items: center; gap: 4px; }
+.dm-val.is-theirs .dm-num { flex-direction: row-reverse; }
+.dm-num-icon { display: inline-flex; width: 18px; height: 18px; flex: none; }
+.dm-num b { font-size: 18px; font-weight: 900; color: rgba(255, 255, 255, 0.38); }
+.dm-val.is-plus .dm-num b { color: #93c5fd; text-shadow: 0 0 12px rgba(96, 165, 250, 0.45); }
+.dm-val.is-minus .dm-num b { color: #fca5a5; text-shadow: 0 0 12px rgba(239, 68, 68, 0.45); }
+/* 영웅 점 — ● 그 값 · ◌ 다른 양 · ○ 못 받음. 숫자 아이콘 폭만큼 들여 숫자 아래에 */
+.dm-dots { display: inline-flex; gap: 3px; padding-left: 22px; }
+.dm-val.is-theirs .dm-dots { padding-left: 0; padding-right: 22px; }
+.dm-dot { width: 7px; height: 7px; border-radius: 50%; box-sizing: border-box; border: 1.5px solid rgba(255, 255, 255, 0.3); }
+.dm-dot.is-full.is-plus { background: #60a5fa; border-color: #60a5fa; box-shadow: 0 0 5px rgba(96, 165, 250, 0.7); }
+.dm-dot.is-full.is-minus { background: #f87171; border-color: #f87171; box-shadow: 0 0 5px rgba(239, 68, 68, 0.7); }
+.dm-dot.is-part.is-plus { border-color: #60a5fa; }
+.dm-dot.is-part.is-minus { border-color: #f87171; }
+.dm-track { position: relative; height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); overflow: hidden; }
+.dm-track i { position: absolute; top: 0; bottom: 0; border-radius: 999px; }
+.dm-track.is-ours i { right: 0; }
+.dm-track.is-theirs i { left: 0; }
+.dm-track i.is-plus { background: linear-gradient(90deg, rgba(96, 165, 250, 0.25), #60a5fa); }
+.dm-track i.is-minus { background: linear-gradient(90deg, rgba(239, 68, 68, 0.25), #ef4444); }
+.dm-track.is-theirs i { transform: scaleX(-1); }
+.dm-stat { display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 0; text-align: center; }
+.dm-stat-name { max-width: 100%; color: #fff; font-size: 14px; font-weight: 900; word-break: keep-all; line-height: 1.2; }
+.dm-stat small { color: #c4b5fd; font-size: 12px; font-weight: 800; }
+
+/* 펼침 — 우리 | 상대 반반. 상자는 팀 칸 하나뿐(2단), 안은 구분선 */
+.dm-detail { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 10px; row-gap: 0; padding: 0 12px 12px; }
+/* 두 칸이 subgrid로 줄 높이 공유 — 같은 효과는 같은 높이, 한쪽에만 있으면 다른 쪽은 빈 줄 */
+.dm-detail > .dm-side { grid-row: 1 / -1; display: grid; grid-template-rows: subgrid; row-gap: 0; }
+.dm-detail .dm-fx-list { display: contents; }
+.dm-fx.is-blank { padding: 0; }
+.dm-totals.is-blank { border-top-color: transparent; padding: 0; margin: 0; }
+/* 팀 칸은 옆 칸과 같은 높이 — 「받는 효과 없음」 점선 칸도 남은 높이를 다 채워 두 칸 안 상자 크기가 같음 */
+.dm-side { display: flex; flex-direction: column; padding: 8px 10px 6px; border-radius: 10px; background: rgba(0, 0, 0, 0.26); border-top: 2px solid #3b82f6; min-width: 0; }
+.dm-side.is-theirs { border-top-color: #ef4444; }
+.dm-side-title { margin: 0 0 2px; color: #bfdbfe; font-size: 12.5px; font-weight: 900; }
+.dm-side.is-theirs .dm-side-title { color: #fca5a5; }
+.dm-side-title em { margin-left: 6px; color: rgba(255, 255, 255, 0.5); font-size: 11px; font-style: normal; font-weight: 800; }
+.dm-empty { flex: 1; display: flex; align-items: center; justify-content: center; margin: 6px 0 4px; padding: 7px; border-radius: 8px; border: 1px dashed rgba(255, 255, 255, 0.14); color: rgba(255, 255, 255, 0.45); font-size: 11.5px; font-weight: 800; text-align: center; }
+.dm-fx-list { list-style: none; margin: 0; padding: 0; }
+/* 효과 한 줄: [아이콘 | 이름 | 수치 | 준 영웅 ○ | 턴] / [   | 받는 영웅 얼굴 …] */
+.dm-fx { --turn-w: 0px; display: grid; grid-template-columns: 20px minmax(0, 1fr) var(--turn-w) 22px 46px; grid-template-areas: 'icon name turn giver val' '. recv recv recv recv'; align-items: center; gap: 5px 7px; padding: 8px 2px; }
+.dm-side.has-turn .dm-fx { --turn-w: 32px; }
+.dm-fx-val { justify-self: end; text-align: right; }
+.dm-turn { justify-self: center; }
+.dm-fx + .dm-fx { border-top: 1px solid rgba(255, 255, 255, 0.09); }
+.dm-fx-icon { grid-area: icon; display: inline-flex; }
+.dm-fx-name { grid-area: name; min-width: 0; color: rgba(255, 255, 255, 0.92); font-size: 12.5px; font-weight: 800; word-break: keep-all; line-height: 1.2; }
+.dm-fx-val { grid-area: val; font-size: 14px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.dm-fx.is-plus .dm-fx-val { color: #93c5fd; }
+.dm-fx.is-minus .dm-fx-val { color: #fca5a5; }
+.dm-giver { grid-area: giver; display: inline-flex; width: 22px; height: 22px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.35); }
+.dm-giver .tb-mini-hero { width: 22px !important; }
+.dm-giver img { width: 100%; height: 100%; object-fit: cover; }
+.dm-turn { grid-area: turn; padding: 0 5px; border-radius: 4px; background: rgba(34, 211, 238, 0.2); color: #a5f3fc; font-style: normal; font-size: 10px; font-weight: 900; line-height: 1.5; white-space: nowrap; }
+.dm-recv { grid-area: recv; display: flex; flex-wrap: wrap; align-items: center; gap: 3px; }
+.dm-recv-face { display: inline-flex; border-radius: 5px; overflow: hidden; }
+.dm-recv-face .tb-mini-hero { width: 22px !important; }
+.dm-recv-face.is-off { filter: grayscale(1); opacity: 0.28; }
+/* 한 영웅이 효과 2개 이상일 때만 — 영웅별 최종 */
+.dm-totals { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 2px; padding: 7px 2px 3px; border-top: 1px solid rgba(255, 255, 255, 0.18); }
+.dm-totals-head { color: rgba(255, 255, 255, 0.6); font-size: 11px; font-weight: 900; }
+.dm-total { display: inline-flex; align-items: center; gap: 3px; }
+.dm-total .tb-mini-hero { width: 18px !important; border-radius: 4px; overflow: hidden; }
+.dm-total b { margin-left: 2px; font-size: 13px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.dm-total b.is-plus { color: #93c5fd; }
+.dm-total b.is-minus { color: #fca5a5; }
+.dm-total b.is-zero { color: rgba(255, 255, 255, 0.55); }
+
+/* ───────── 폰 (칸 폭 ≤760) ───────── */
+@container (max-width: 760px) {
+  .dm-board { padding: 8px 6px 4px; }
+  .dm-line { grid-template-columns: minmax(0, 1fr) 104px minmax(0, 1fr); gap: 6px; padding: 9px 6px; }
+  .dm-track { display: none; }
+  .dm-num-icon { width: 15px; height: 15px; }
+  .dm-num-icon .tb-fx-icon { width: 15px; height: 15px; }
+  .dm-num b { font-size: 15px; }
+  .dm-dots { padding-left: 19px; }
+  .dm-val.is-theirs .dm-dots { padding-right: 19px; }
+  .dm-stat-name { font-size: 12.5px; }
+  .dm-stat small { font-size: 11px; }
+  .dm-detail { column-gap: 5px; padding: 0 2px 8px; }
+  .dm-side { padding: 6px 5px 4px; }
+  .dm-side-title { font-size: 12px; }
+  .dm-side-title em { display: block; margin: 0; font-size: 10px; }
+  /* 효과 한 줄: [아이콘 | 이름(두 줄까지) | 수치] / [아이콘 | 이름 | ○ · 턴] / [받는 영웅 얼굴 …] */
+  .dm-fx { grid-template-columns: 16px minmax(0, 1fr) auto auto; grid-template-areas: 'icon name name val' '. . turn giver' 'recv recv recv recv'; gap: 3px 4px; padding: 6px 1px; }
+  .dm-fx-icon .tb-fx-icon { width: 16px; height: 16px; }
+  .dm-fx-name { font-size: 11px; letter-spacing: -0.02em; }
+  .dm-fx-val { font-size: 12.5px; justify-self: end; }
+  .dm-giver { justify-self: end; width: 18px; height: 18px; }
+  .dm-giver .tb-mini-hero { width: 18px !important; }
+  .dm-turn { justify-self: end; font-size: 9px; padding: 0 3px; }
+  .dm-recv { gap: 2px; }
+  .dm-recv-face .tb-mini-hero { width: 19px !important; }
+  .dm-totals { gap: 4px 8px; }
+  .dm-totals-head { flex-basis: 100%; font-size: 10px; }
+  .dm-total .tb-mini-hero { width: 16px !important; }
+  .dm-total b { font-size: 12px; }
+}

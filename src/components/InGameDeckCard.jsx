@@ -28,6 +28,7 @@ import { shareSettingPng } from '../lib/copyNodeImage';
 import HeroPortraitCard from './HeroPortraitCard';
 import SettingOverviewModal from './SettingOverviewModal';
 import { renderFormationCircleIcon, renderDeckFormationLayout } from './deckFormation';
+import { effectIconUrl } from '../lib/effectIcons';
 
 /** 이미 body에 떠 있는 modal-scrim을 동기적으로 숨김 (다음 페인트 전에 처리) */
 function coverUnderlyingScrims() {
@@ -872,55 +873,48 @@ export default function InGameDeckCard({
       {/* 진형 선택 모달 */}
       {isFormationModalOpen && (
         <div className="modal-scrim" style={{ zIndex: 5800 }} {...backdropDismissProps(() => dismissSubModal(closeFormationModal))}>
-          <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} className="glass-modal formation-picker-modal" style={{
-            width: '680px', padding: '28px', borderRadius: '20px',
-            display: 'flex', flexDirection: 'column', gap: '20px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-gold)', paddingBottom: '12px' }}>
-              <h3 style={{ fontSize: '22px', fontWeight: 900, color: 'var(--gold-primary)', display: 'flex', alignItems: 'center', gap: '9px' }}>
+          {/* 모든 덱 편성 공용 진형 창 — 카드를 누르면 바로 적용되고 닫힘(「완료」 버튼 없음). 모양은 index.css 「진형 선택 창」 한 곳 */}
+          <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} className="glass-modal formation-picker-modal">
+            <div className="formation-picker-head">
+              <h3 className="formation-picker-title">
                 <FormationPlateIcon formationId="protect" size={20} /> 진형 선택
               </h3>
-              <button onClick={() => dismissSubModal(closeFormationModal)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><Icon name="closeBtn" size={20} /></button>
+              <button type="button" className="formation-picker-close" aria-label="닫기" onClick={() => dismissSubModal(closeFormationModal)}><Icon name="closeBtn" size={18} /></button>
             </div>
+            <p className="formation-picker-hint">전방 영웅은 방어력, 후방 영웅은 모든 공격력이 올라가요.</p>
 
-            <div className="formation-picker-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className="formation-picker-grid">
               {formationSet.map(f => {
                 const isCurrent = f.id === currentFormationId;
+                const rows = [
+                  { key: 'back', place: '후방', count: f.backCount, buff: f.backBuff, icon: '모든 공격력 증가' },
+                  { key: 'front', place: '전방', count: f.frontCount, buff: f.frontBuff, icon: '방어력 증가' },
+                ];
                 return (
-                  <div key={f.id} className="formation-picker-card" onClick={() => handleSelectFormation(f.id)}
-                    style={{
-                      background: isCurrent ? 'rgba(236,232,224,0.18)' : 'rgba(0,0,0,0.5)',
-                      border: isCurrent ? '2px solid var(--gold-primary)' : '1px solid var(--border-subtle)',
-                      borderRadius: '14px', padding: '18px', cursor: 'pointer', transition: 'all 0.2s ease',
-                      display: 'flex', gap: '14px', alignItems: 'center'
-                    }}>
-                    
-                    {renderFormationCircleIcon(f.id)}
-
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ fontSize: '16px', fontWeight: 900, color: isCurrent ? 'var(--gold-primary)' : '#fff' }}>
-                          {f.name}
-                        </div>
-                        {isCurrent && <span className="formation-picker-badge" style={{ fontSize: '11px', background: 'var(--gold-primary)', color: '#000', padding: '2px 6px', borderRadius: '4px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '3px' }}><Icon name="check" size={11} color="#000" /> 선택됨</span>}
-                      </div>
-
-                      <div className="formation-picker-buffs" style={{ fontSize: '12px', color: 'var(--accent-cyan)', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <div>• 후방 ({f.backCount}명): <strong style={{ color: 'var(--gold-primary)' }}>{f.backBuff}</strong></div>
-                        <div>• 전방 ({f.frontCount}명): <strong style={{ color: '#fff' }}>{f.frontBuff}</strong></div>
-                      </div>
-                    </div>
-
-                  </div>
+                  <button type="button" key={f.id} className={`formation-picker-card${isCurrent ? ' is-current' : ''}`} aria-pressed={isCurrent} onClick={() => handleSelectFormation(f.id)}>
+                    <span className="formation-picker-icon">{renderFormationCircleIcon(f.id, 48)}</span>
+                    <span className="formation-picker-body">
+                      <span className="formation-picker-top">
+                        <span className="formation-picker-name">{f.name}</span>
+                        {isCurrent ? <span className="formation-picker-badge"><Icon name="check" size={11} /> 사용 중</span> : null}
+                      </span>
+                      {rows.map((r) => {
+                        const m = String(r.buff).match(/^(.*?)\s*([\d.]+)%$/);
+                        const iconUrl = effectIconUrl(r.icon);
+                        return (
+                          <span key={r.key} className={`formation-picker-stat is-${r.key}`}>
+                            {iconUrl ? <img src={iconUrl} alt="" width={18} height={18} /> : null}
+                            <span className="formation-picker-place">{r.place} {r.count}명</span>
+                            <span className="formation-picker-stat-name">{m ? m[1] : r.buff}</span>
+                            {m ? <b>+{m[2]}%</b> : null}
+                          </span>
+                        );
+                      })}
+                    </span>
+                  </button>
                 );
               })}
             </div>
-
-            <button onClick={() => dismissSubModal(closeFormationModal)} className="btn-ops" style={{
-              width: '100%', padding: '12px 0', justifyContent: 'center'
-            }}>
-              진형 선택 완료
-            </button>
           </div>
         </div>
       )}

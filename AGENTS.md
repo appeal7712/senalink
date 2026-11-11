@@ -323,7 +323,7 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | 스킬 · 발동 탭 목록 | `skillCards`(카드) · `skillCardText`(표시 이름 다듬기) · 화면 `SkillEffectList` |
 | 목록 상자 묶기 · 칸 숫자 · 버프/디버프 칸 표(패시브 · 액티브 · 합계) | `src/pages/teamBuilder/fxGroups.js` — `groupEffectCards` · `groupSkillCards` · `fxBoxCount` · `fxTotals` · `fxLedger`(칸 메인 표 `FxLedger` · 맨 아래 「자세히 보기」 `FxFold` 안에 목록) |
 | 덱 칸(공용 덱 배치 카드 · 진형 · 펫, 길드전 5칸 중 3명) | 화면 `TeamBuilderParts.jsx` `DeckSide`(= 공용 `InGameDeckCard`, `allowNoPet`) · `DeckVs`, 저장 `TeamBuilderPage.jsx` `loadStore`(`decks[mode].formation` · `.pet`), 엔진 `formationRows` · `petEntries` · `petCards`(진형은 전력 비교에만 — 받는 버프 표에는 안 넣음), 데이터 `data/formations.js` · `data/pets.js` |
-| 전력 비교 탭(VS 대결 바 `.tb-clash` 가운데 액체 구슬) — 「Σ 최종 합계」 판 하나 · 같은 영웅끼리 · 두 팀 같음 | 엔진 `duelSummary`(`DUEL_STATS` 능력치 목록 · `DUEL_FINALS` 합친 줄 · `duelNets` 영웅별 「받는 버프 − 상대 디버프」 · `duelSideIcons`) · 화면 `TeamBuilderParts.jsx` `DuelBoard` · `DuelRow` |
+| 전력 비교 탭(VS 대결 바 `.tb-clash` 가운데 액체 구슬) — 「Σ 최종 합계」 판 하나 · 같은 영웅끼리 · 두 팀 같음 | 엔진 `duelSummary`(`DUEL_STATS` 능력치 목록 · `DUEL_FINALS` 합친 줄 · `duelNets` 영웅별 「받는 버프 − 상대 디버프」 · `duelSideIcons`) · 화면 `TeamBuilderParts.jsx` `DuelBoard` · `DuelRow` · `DuelNum`(큰 숫자 + 영웅 점 `duelHeadline`) · `DuelSide`(펼침 효과 기준). **화면 규칙 정본 = 시안 `dev/duel-mock.html`**(밍봉 2026-11-11 회의 확정 — 바꿀 땐 시안부터, features.md §10.10 「전력 비교 화면」) |
 | 칸 강조색(우리 팀이 받는 버프 파랑 · 상대가 받는 버프 빨강 · 디버프 칸 둘 보라 + 제목 옆 뱃지 글자, 칸 안 합계 · 「자세히 보기」 뱃지도 칸 색) · 상대 덱 목록 대상 글 뒤집기 | `TeamBuilderParts.jsx` `Block` `tone` · `tag` prop · `flipScope`(`perspective="enemy"`) — 색 변수 `teamBuilder.css` `.tb-page`(`--tb-gain` · `--tb-hurt` · `--tb-rival`), 상세 features.md §10.10 「분석 칸 색」 |
 | PvE 전용 줄(탑 전용 · 보스 대상) | `makeEntries` `allowTower` — 탑 줄은 `tower: true`(「탑 전용」 표시), 「보스」 줄은 `SKIP_RE`(결투장 · 길드전은 건너뜀) / `SKIP_PVE_RE`(PvE는 읽음) |
 | 편성 조건 문구(「스킬2 생명력 전환 발동 안 함」) | `formationRequirements().effectText` · `heroSummary().conditions[].effectText` — 둘 다 `skillEffectText` 공용 |
@@ -406,7 +406,7 @@ App
 └── SiteFooter (버전)
 ```
 
-덱/장비 UI 공통: `InGameDeckCard`(세팅 확인 창 내용은 `SettingOverviewModal` · 진형 그리기 `deckFormation.jsx`), `HeroGearPanel`, `HeroGridPicker`, `HeroPortraitCard`, `equipments.js` 옵션. 길드전 공격 상대 덱 검색칸 `GwDeckSearch` + 판정 `lib/gwDeckSearch.js`(features.md §10.2).
+덱/장비 UI 공통: `InGameDeckCard`(세팅 확인 창 내용은 `SettingOverviewModal` · 진형 그리기 `deckFormation.jsx` · **진형 선택 창**도 여기 하나 — 모든 덱 편성 공용, 모양은 index.css 「진형 선택 창」 `.formation-picker-*` 한 곳, 카드 누르면 바로 적용 · 닫힘), `HeroGearPanel`, `HeroGridPicker`, `HeroPortraitCard`, `equipments.js` 옵션. 길드전 공격 상대 덱 검색칸 `GwDeckSearch` + 판정 `lib/gwDeckSearch.js`(features.md §10.2).
 
 ### 12.1 영웅 목록 정렬 (전역 공통 규칙)
 
@@ -513,7 +513,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.11.11.224** (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.11.11.225** (푸터 `APP_VERSION` 확인)
 - 저장소 2개: 사이트 `appeal7712/senalink`(이 폴더) · 원본 에셋 `appeal7712/senalink-assets`(비공개, `asset/` 폴더 = 그 저장소, 브랜치 `main`). 새 컴퓨터 복구 = 사이트 clone → 그 안에 `git clone …/senalink-assets.git asset` → `.env.local`(Firebase 웹 설정 6줄, 콘솔 → 프로젝트 설정에서 복사) → `npm install` → `npx firebase login`.
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 
