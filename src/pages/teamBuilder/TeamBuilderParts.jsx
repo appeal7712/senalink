@@ -959,9 +959,11 @@ function LedgerRow({ r, side, scopeText, resolveHero, index }) {
         <span className="tb-tot-name">
           <FxIcon name={r.label} size={22} />
           <span className="tb-tot-label">{r.label}</span>
-          <RoleMarks roles={rowRoles} />
           {r.overlap ? <em className="tb-tot-flagtag">중복</em> : r.warn ? <em className="tb-tot-flagtag">확인</em> : null}
-          <span className="tb-tot-faces">{r.heroes.slice(0, 3).map((n) => <GiverFace key={n} name={n} resolveHero={resolveHero} size={24} />)}</span>
+          <span className="tb-tot-faces">
+            {r.heroes.slice(0, 3).map((n) => <GiverFace key={n} name={n} resolveHero={resolveHero} size={24} />)}
+            <RoleMarks roles={rowRoles} />
+          </span>
         </span>
         <span className="tb-tot-pcell">
           <span className={`tb-tot-cell is-passive${r.passive ? '' : ' is-none'}`}>
@@ -1140,9 +1142,14 @@ function DuelComps({ comps, resolveHero }) {
         <li key={c.label} className={c.value < 0 ? 'is-minus' : ''}>
           <FxIcon name={c.label} size={18} />
           <span className="tb-duel-comp-name">{c.label}</span>
-          <RoleMarks roles={c.roles} />
           <span className="tb-duel-comp-faces">
-            {c.givers.map((g) => <GiverFace key={g} name={g} resolveHero={resolveHero} size={20} />)}
+            {c.givers.map((g) => (
+              <span key={g} className="tb-duel-comp-giver">
+                <GiverFace name={g} resolveHero={resolveHero} size={20} />
+                {c.turnGivers?.includes(g) ? <i className="tb-duel-turn" title="전투 시작 턴 효과 — 턴이 지나면 빠져요">턴</i> : null}
+              </span>
+            ))}
+            <RoleMarks roles={c.roles} />
           </span>
           <b>{duelFmt(c.value)}</b>
         </li>
@@ -1202,7 +1209,7 @@ function DuelRow({ s, resolveHero, index }) {
   );
 }
 
-/** 자기 자신만 받는 버프 — 우리 | 상대 두 칸, 영웅마다 얼굴 + 효과 칩(팀 평균에는 안 넣음) */
+/** 자기 자신만 받는 버프 — 우리 | 상대 두 칸, 영웅마다 얼굴 + 효과 칩(팀 줄에는 안 넣음) */
 /** 전력 비교에서 뺀 「자기 자신만 받는 버프」 — 우리 | 상대 두 칸, 영웅마다 얼굴 + 효과 칩 */
 function DuelSelfBuffs({ data, resolveHero }) {
   if (!data?.ours.length && !data?.theirs.length) return null;

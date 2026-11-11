@@ -1590,7 +1590,7 @@ export function targetingInsights(enemyAnalysis) {
  * 맞대결에서 비교하는 능력치 — 이 순서대로. 화면 줄은 능력치마다 **버프 줄 · 디버프 줄을 따로**(밍봉 2026-11-10 — 「버프 − 디버프」로
  * 합치면 상대에게 받는 회복량 감소를 걸었을 때 우리 받는 회복량이 오른 것처럼 보였음). 줄 이름은 게임 효과 이름 그대로
  * (`buff` 기본 「○○ 증가」, `debuff` 기본 「○○ 감소」, 없는 쪽은 null). 공격력 · 피해량은 모든 · 물리 · 마법 따로.
- * `only` = 그 공격 타입 영웅만 받고 평균도 그 영웅들끼리. 감쇄 · 취약의 물리 · 마법은 「받는 피해」 종류라 공격 타입과 무관.
+ * `only` = 그 공격 타입 영웅만 받음. 감쇄 · 취약의 물리 · 마법은 「받는 피해」 종류라 공격 타입과 무관.
  */
 const DUEL_STATS = [
   { id: 'atk', label: '모든 공격력', re: /^(모든 )?공격력$/ },
@@ -1680,7 +1680,7 @@ function isDuelEntry(e, includeEnhance) {
 /**
  * 한 팀 영웅마다 능력치별 「받는 버프 − 상대가 거는 디버프」 — 패시브 + 펫(`extras`). 같은 효과(같은 key · 같은 timing)는 가장 높은 수치 하나만,
  * 다른 효과끼리는 더함. 대상이 정해지지 않은 효과(1명 · 무작위)는 뺌.
- * 「자신」만 받는 버프는 팀 평균에서 뺌(윤건 치명타 50% → 팀 평균 10%로 보이던 것, 밍봉 2026-11-10) — `duelSelfBuffs`로 따로.
+ * 「자신」만 받는 버프는 팀 줄에서 뺌(윤건 치명타 50%가 팀 비교로 보이던 것, 밍봉 2026-11-10) — `duelSelfBuffs`로 따로.
  */
 function duelNets(team, own, opp, includeEnhance, extras = null) {
   const nets = new Map(team.map((h) => [cleanHeroName(h.name), new Map()]));
@@ -1725,7 +1725,7 @@ function namedDrawbacks(e) {
 /** 전투 시작 [N턴] 효과면 N, [상시]면 null */
 const duelTurns = (e) => (effectTiming(e) === 'start' ? e.duration?.n ?? null : null);
 
-/** 팀 평균에서 뺀 「자신」만 받는 능력치 버프 — 영웅마다 [{ label, value, dir, turns }] (같은 효과 · 같은 timing은 높은 수치 하나) */
+/** 팀 줄에서 뺀 「자신」만 받는 능력치 버프 — 영웅마다 [{ label, value, dir, turns }] (같은 효과 · 같은 timing은 높은 수치 하나) */
 function duelSelfBuffs(team, own, includeEnhance) {
   const byHero = new Map();
   for (const e of own?.entries || []) {
@@ -1813,17 +1813,16 @@ export function petCards(pet, team, includeEnhance = true, side = 'ally') {
 }
 
 /**
- * 「최종」 줄 한 팀 몫 — 영웅마다 `def.ids` 능력치의 「버프 − 디버프」 합의 평균(`only` 타입 영웅끼리), `per` = 영웅마다 그 합.
- * `comps` = 그 평균을 이루는 효과별 몫(「물리 공격력 증가 +31」 · 「모든 공격력 감소 −15」, 0인 것은 뺌, `givers` = 그 효과를 준 · 건 영웅 · 펫),
- * `turnAvg` = 그중 시작 N턴 몫.
+ * 「최종」 줄 한 팀 몫. **팀 평균 아님**(밍봉 2026-11-11 — 로지 효과 적용 확률 26%를 방어형 · 만능형 2명만 받으면 5인 평균 10%로 보여 헷갈림):
+ * 효과마다 받은 영웅 1명이 받는 수치(`comps[].value`, 받은 영웅들끼리 평균 — 「+26%」)를 그대로 쓰고, 줄 수치 `avg` = 그 합(펼침 몫을 다 더하면 줄 수치).
+ * 누가 받는지는 `roles`(유형 대상이면 역할 아이콘). `per` = 영웅마다 「버프 − 디버프」 합(같은 영웅끼리 비교), `turnAvg` = 그중 시작 N턴 몫.
+ * `comps` = 효과별 몫(「물리 공격력 증가 +31」 · 「모든 공격력 감소 −22」, 0인 것은 뺌, `givers` = 그 효과를 준 · 건 영웅 · 펫).
  */
 function duelFinalSide(team, nets, def) {
   const members = def.only ? team.filter((h) => h.attackType === def.only) : team;
   const n = members.length;
   const comps = new Map();
   const per = new Map();
-  let sum = 0;
-  let turnSum = 0;
   for (const h of members) {
     const name = cleanHeroName(h.name);
     const byStat = nets.get(name);
@@ -1831,10 +1830,13 @@ function duelFinalSide(team, nets, def) {
     for (const id of def.ids) {
       for (const { e, value, sign } of byStat?.get(id)?.values() || []) {
         total += sign * value;
-        if (duelTurns(e)) turnSum += sign * value;
         const label = duelRowName(DUEL_STATS.find((s) => s.id === id), sign);
-        const c = comps.get(label) || { value: 0, givers: [], recv: new Set(), roles: new Set(), allRoles: false };
+        const c = comps.get(label) || { value: 0, turn: 0, givers: [], turnGivers: new Set(), recv: new Set(), roles: new Set(), allRoles: false };
         c.value += sign * value;
+        if (duelTurns(e)) {
+          c.turn += sign * value;
+          c.turnGivers.add(e.heroName);
+        }
         if (!c.givers.includes(e.heroName)) c.givers.push(e.heroName);
         c.recv.add(name);
         if (e.scope?.kind === 'roles') e.scope.roles.forEach((r) => c.roles.add(r));
@@ -1843,24 +1845,30 @@ function duelFinalSide(team, nets, def) {
       }
     }
     per.set(name, total);
-    sum += total;
   }
-  const avg = (v) => (n ? v / n : 0);
+  /* 받은 영웅 1명 기준 — `roles` = 대상이 유형으로 정해진 효과면 그 유형, 한 곳이라도 「전체」 대상이면 빈 배열 */
+  const list = [...comps].map(([label, c]) => ({
+    label,
+    value: c.recv.size ? c.value / c.recv.size : 0,
+    turn: c.recv.size ? c.turn / c.recv.size : 0,
+    givers: c.givers,
+    /* 전투 시작 [N턴] 효과를 준 영웅 · 펫 — 화면에서 그 얼굴 옆 「턴」(펫 제오 모든 공격력 증가 [4턴] 등) */
+    turnGivers: [...c.turnGivers],
+    roles: c.allRoles ? [] : [...c.roles],
+  })).filter((c) => Math.round(c.value));
   return {
-    avg: avg(sum),
-    turnAvg: avg(turnSum),
+    avg: list.reduce((t, c) => t + c.value, 0),
+    turnAvg: list.reduce((t, c) => t + c.turn, 0),
     n,
     per,
-    /* `roles` = 대상이 유형으로 정해진 효과(「아군 방어형 · 만능형」 · 「적 공격형 · 마법형」)면 그 유형 — 화면 역할 아이콘(일부만 받아 평균이 줄어든 이유).
-       한 곳이라도 「전체」 대상이면 빈 배열. `recv` / `of` = 받은 영웅 수 / 셈에 든 영웅 수 */
-    comps: [...comps].map(([label, c]) => ({ label, value: avg(c.value), givers: c.givers, recv: c.recv.size, of: n, roles: c.allRoles ? [] : [...c.roles] })).filter((c) => Math.round(c.value)),
+    comps: list,
   };
 }
 
 /**
  * 맞대결 요약 — 한 화면 요약 하나 「최종 합계」(밍봉 2026-11-10 — 근거 목록은 없애고 줄 펼침에 효과별 몫 · 준 영웅).
- * `finals` = `DUEL_FINALS` 순서, 줄마다 `ours` · `theirs` = 「버프 − 디버프」 평균(±), `diff` = 우리 − 상대, `lead` = 'ours' | 'theirs' | 'even'(차이 2 미만),
- * `mirror` = 양쪽에 같은 영웅이 있으면 그 영웅끼리 차이가 가장 큰 쪽, `oursTurn` · `theirsTurn` = 평균 중 전투 시작 [N턴] 몫,
+ * `finals` = `DUEL_FINALS` 순서, 줄마다 `ours` · `theirs` = 효과별 「받은 영웅 1명 기준 수치」의 합(±, `duelFinalSide`), `diff` = 우리 − 상대, `lead` = 'ours' | 'theirs' | 'even'(차이 2 미만),
+ * `mirror` = 양쪽에 같은 영웅이 있으면 그 영웅끼리 차이가 가장 큰 쪽, `oursTurn` · `theirsTurn` = 그중 전투 시작 [N턴] 몫,
  * `n` = 셈에 든 영웅 수(물리 · 마법 줄은 그 타입만 — 0이면 화면에 「—」), `counts` = 우위 점수.
  * 게임 시작하자마자 양쪽에 걸리는 패시브 + 펫(`pets` = { ours, theirs })만 — 진형 · 액티브는 안 셈(밍봉 2026-11-10).
  */

@@ -1745,6 +1745,8 @@
 .tb-duel-comps li { display: flex; align-items: center; gap: 7px; min-height: 24px; color: rgba(255, 255, 255, 0.85); font-size: 12px; font-weight: 700; }
 .tb-duel-comp-name { white-space: nowrap; }
 .tb-duel-comp-faces { display: inline-flex; align-items: center; gap: 3px; }
+/* 주는 영웅 · 펫 얼굴 + (전투 시작 [N턴] 효과면) 바로 옆 「턴」 */
+.tb-duel-comp-giver { display: inline-flex; align-items: center; gap: 3px; }
 /* 대상이 유형으로 정해진 효과(「아군 방어형 · 만능형」) — 이름 옆 작은 역할 아이콘 */
 .tb-role-marks { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; padding: 1px 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.14); }
 .tb-role-marks img { display: block; width: 14px; height: 14px; object-fit: contain; }
@@ -1804,7 +1806,7 @@
 .tb-giver-face { flex-shrink: 0; display: block; border-radius: 6px; object-fit: cover; background: rgba(0, 0, 0, 0.3); }
 .tb-giver-face.is-formation { object-fit: contain; padding: 1px; }
 .tb-duel-none { margin: 0; padding: 6px 2px; color: rgba(255, 255, 255, 0.45); font-size: 12px; }
-/* 전력 비교 아래 — 자기 자신만 받는 버프(팀 평균에서 뺀 것) */
+/* 전력 비교 아래 — 자기 자신만 받는 버프(팀 줄에서 뺀 것) */
 .tb-duel-self { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px dashed rgba(255, 255, 255, 0.14); }
 .tb-duel-self-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; margin: 0; color: #fff; font-size: 13.5px; font-weight: 900; }
 .tb-duel-self-title small { color: rgba(255, 255, 255, 0.5); font-size: 11.5px; font-weight: 700; }
