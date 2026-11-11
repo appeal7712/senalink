@@ -1777,6 +1777,8 @@
    효과를 하나도 못 받은 영웅 줄은 회색 얼굴 · 회색 0%(밍봉 2026-11-11) */
 .tb-duel-total { --turn-w: 0px; display: grid; grid-template-columns: 24px minmax(0, 1fr) var(--turn-w) 22px 46px; grid-template-areas: '. faces faces faces val'; align-items: center; gap: 0 7px; }
 .tb-duel-total-faces { grid-area: faces; display: flex; flex-wrap: wrap; align-items: center; gap: 3px; }
+/* 묶음이 여럿이면 줄 사이 구분선 — 얼굴과 멀리 떨어진 수치가 어느 줄 것인지 헷갈리지 않게(밍봉 2026-11-11) */
+.tb-duel-total + .tb-duel-total { padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
 .tb-duel-total-face { display: inline-flex; border-radius: 5px; overflow: hidden; }
 .tb-duel-total-face .tb-mini-hero { width: 22px !important; }
 .tb-duel-total.is-none .tb-duel-total-face { filter: grayscale(1); opacity: 0.45; }
@@ -2373,6 +2375,7 @@ span.tb-fxl-name:hover { text-decoration: none; }
   .tb-duel-totals { margin: 4px -5px 0; padding: 7px 5px 6px; gap: 6px; }
   .tb-duel-totals-head { gap: 4px; font-size: 13px; }
   .tb-duel-total { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'faces val'; gap: 0 4px; }
+  .tb-duel-total + .tb-duel-total { padding-top: 4px; }
   .tb-duel-total-icon { width: 18px; height: 18px; }
   .tb-duel-total-faces { gap: 2px; }
   .tb-duel-total-face .tb-mini-hero { width: 17px !important; }

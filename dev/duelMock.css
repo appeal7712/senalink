@@ -107,6 +107,7 @@ body { margin: 0; background: #0b1024; }
 .dm-total-icon { flex: none; width: 24px; height: 22px; object-fit: contain; }
 .dm-total { --turn-w: 0px; display: grid; grid-template-columns: 24px minmax(0, 1fr) var(--turn-w) 22px 46px; grid-template-areas: '. faces faces faces val'; align-items: center; gap: 0 7px; }
 .dm-total-faces { grid-area: faces; display: flex; flex-wrap: wrap; align-items: center; gap: 3px; }
+.dm-total + .dm-total { padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
 .dm-total-face { display: inline-flex; border-radius: 5px; overflow: hidden; }
 .dm-total-face .tb-mini-hero { width: 22px !important; }
 .dm-total.is-none .dm-total-face { filter: grayscale(1); opacity: 0.45; }
@@ -144,6 +145,7 @@ body { margin: 0; background: #0b1024; }
   .dm-totals { margin: 4px -5px 0; padding: 7px 5px 6px; gap: 6px; }
   .dm-totals-head { gap: 4px; font-size: 13px; }
   .dm-total { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'faces val'; gap: 0 4px; }
+  .dm-total + .dm-total { padding-top: 4px; }
   .dm-total-icon { width: 18px; height: 18px; }
   .dm-total-faces { gap: 1px; }
   .dm-total-face .tb-mini-hero { width: 16px !important; }
