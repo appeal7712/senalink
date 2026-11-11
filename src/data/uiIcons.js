@@ -91,6 +91,8 @@ export const UI_IMAGE_ICONS = {
   tbDebuff: { src: '/images/ui/tb-debuff-shield.png', w: 23, h: 28, activeInvert: false },
   tbThreat: { src: '/images/ui/tb-threat-warn.png', w: 128, h: 128, activeInvert: false },
   tbTotals: { src: '/images/ui/tb-totals-sum.png', w: 49, h: 49 },
+  /* 전력 비교 펼침 「영웅별 합계」 제목 — 원본 asset/공용 아이콘/팀빌더 영웅별 합계.png 그대로(색 변형 없음, 밍봉 2026-11-11) */
+  tbDuelTotal: { src: '/images/ui/tb-duel-total-star.png', w: 91, h: 86, activeInvert: false },
   /* 버프 · 디버프 칸 머리 아이콘 — 원본 asset/공용 아이콘/버프,디버프 아이콘.png를 색만 다시 칠함. 우리 팀이 받는 버프 파랑 = Ally · 상대가 받는 버프 빨강 = Enemy (디버프 칸은 아래 tbFxDebuff). Gain · Rival은 안 씀 */
   tbFxAlly: { src: '/images/ui/tb-fx-ally.png', w: 58, h: 62, activeInvert: false },
   tbFxGain: { src: '/images/ui/tb-fx-gain.png', w: 58, h: 62, activeInvert: false },

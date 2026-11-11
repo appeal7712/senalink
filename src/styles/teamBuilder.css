@@ -324,11 +324,12 @@
   0%, 100% { opacity: 0.82; }
   50% { opacity: 1; }
 }
+/* 반짝임 = VS(가운데)에서 시작해 양 끝으로 퍼져 나감(밍봉 2026-11-11 — 바깥 → 안쪽이 아니라 안쪽 → 바깥). --dir 1 = 오른쪽 위 · -1 = 왼쪽 아래 */
 @keyframes tbVsGlint {
-  0%, 30% { transform: translateX(-120%); opacity: 0; }
-  40% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { transform: translateX(420%); opacity: 0; }
+  0%, 30% { transform: translateX(0); opacity: 0; }
+  38% { opacity: 1; }
+  80% { opacity: 0.9; }
+  100% { transform: translateX(calc(var(--dir, 1) * 270%)); opacity: 0; }
 }
 @keyframes tbVsFlare {
   0%, 100% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.85; }
@@ -379,21 +380,21 @@
   background: radial-gradient(ellipse 50% 50% at 50% 50%, #fff 0, #fff 30%, rgba(255, 244, 205, 0.9) 55%, transparent 100%);
   filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 10px rgba(255, 200, 80, 0.95));
 }
-.tb-vs-ray::after {
-  content: '';
+.tb-vs-ray b {
   position: absolute;
   top: 30%;
   bottom: 30%;
-  left: 0;
+  left: 41%;
   width: 18%;
   border-radius: 50%;
   background: radial-gradient(ellipse 50% 50% at 50% 50%, #fff 0, rgba(255, 240, 200, 0.7) 40%, transparent 72%);
   will-change: transform, opacity;
   animation: tbVsGlint 3.4s ease-in-out infinite;
 }
+.tb-vs-ray b.is-l { --dir: -1; }
 .tb-vs-ray.is-short { --len: 330px; --ang: 36deg; --thick: 34px; }
 .tb-vs-ray.is-short i { height: 5px; }
-.tb-vs-ray.is-short::after { animation-delay: -1.7s; }
+.tb-vs-ray.is-short b { animation-delay: -1.7s; }
 .tb-vs-img { position: relative; z-index: 1; width: 148px; height: auto; filter: sepia(0.22) saturate(1.65) contrast(1.1) brightness(1.02) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 14px rgba(255, 186, 50, 0.8)); }
 .tb-vs-shine { position: absolute; z-index: 2; width: 148px; height: 134px; background: linear-gradient(110deg, transparent 38%, rgba(255, 255, 255, 0.9) 50%, transparent 62%); background-size: 260% 100%; -webkit-mask: url('/images/ui/tb-vs-gold.png') center / contain no-repeat; mask: url('/images/ui/tb-vs-gold.png') center / contain no-repeat; mix-blend-mode: screen; animation: tbVsGleam 3.6s ease-in-out infinite; }
 /* 가운데 섬광 — 흰 점 + 가로로 길게 번지는 빛(렌즈 섬광) */
@@ -428,7 +429,7 @@
 .tb-deck-side.is-enemy .tb-deck-card-wrap::after { left: 0; border-radius: 16px 0 0 16px; background: linear-gradient(90deg, rgba(248, 113, 113, 0.26), transparent); box-shadow: inset 1px 0 0 rgba(254, 202, 202, 0.5); }
 
 @media (prefers-reduced-motion: reduce) {
-  .tb-vs-ray, .tb-vs-ray::after, .tb-vs-flare, .tb-vs-shine, .tb-vs-spark, .tb-deck-aura { animation: none; }
+  .tb-vs-ray, .tb-vs-ray b, .tb-vs-flare, .tb-vs-shine, .tb-vs-spark, .tb-deck-aura { animation: none; }
 }
 
 .tb-enemy-add {
@@ -1744,12 +1745,14 @@
    효과 한 줄 [아이콘 | 이름 | 수치 | 준 영웅 ○ | 턴] / [   | 그 팀 영웅 얼굴 — 못 받은 영웅 흐리게]. 상자는 팀 칸 하나, 안은 구분선 */
 .tb-duel-fxs { list-style: none; margin: 0; padding: 0; }
 /* [이름 | 턴 | 준 영웅 | 수치] — 늘 있는 초상화가 수치 바로 옆, 가끔 있는 턴은 바깥쪽. 칸 폭 고정이라 줄마다 세로 정렬(밍봉 2026-11-11) */
-.tb-duel-fx { --turn-w: 0px; display: grid; grid-template-columns: 20px minmax(0, 1fr) var(--turn-w) 22px 46px; grid-template-areas: 'icon name turn giver val' '. recv recv recv recv'; align-items: center; gap: 5px 7px; padding: 8px 2px; }
-.tb-duel-side.has-turn .tb-duel-fx { --turn-w: 32px; }
+/* 오른쪽 [턴 | 준 영웅 | 수치]는 이름 줄 + 얼굴 줄 두 줄을 같이 차지 → 효과 상자 기준 세로 가운데(밍봉 2026-11-11) */
+.tb-duel-fx { --turn-w: 0px; display: grid; grid-template-columns: 24px minmax(0, 1fr) var(--turn-w) 22px 46px; grid-template-areas: 'icon name turn giver val' '. recv turn giver val'; align-items: center; align-content: start; gap: 5px 7px; padding: 8px 2px; }
+.tb-duel-side.has-turn .tb-duel-fx, .tb-duel-side.has-turn .tb-duel-total { --turn-w: 32px; }
 .tb-duel-fx-val { justify-self: end; text-align: right; }
 .tb-duel-fx .tb-duel-turn { justify-self: center; }
 .tb-duel-fx + .tb-duel-fx { border-top: 1px solid rgba(255, 255, 255, 0.09); }
 .tb-duel-fx-icon { grid-area: icon; display: inline-flex; }
+.tb-duel-fx-icon .tb-fx-icon { width: 22px; height: 22px; }
 .tb-duel-fx-name { grid-area: name; min-width: 0; color: rgba(255, 255, 255, 0.92); font-size: 12.5px; font-weight: 800; word-break: keep-all; line-height: 1.2; }
 .tb-duel-fx-val { grid-area: val; font-size: 14px; font-weight: 900; font-variant-numeric: tabular-nums; }
 .tb-duel-fx.is-plus .tb-duel-fx-val { color: #93c5fd; }
@@ -1765,15 +1768,21 @@
 .tb-duel-fx-face.is-off { filter: grayscale(1); opacity: 0.28; }
 /* 「받는 효과 없음」 · 「이 공격 타입 영웅 없음」 — 남은 높이를 다 채워 옆 칸과 안쪽 상자 크기가 같음 */
 .tb-duel-empty { flex: 1; display: flex; align-items: center; justify-content: center; margin: 6px 0 4px; padding: 7px; border-radius: 8px; border: 1px dashed rgba(255, 255, 255, 0.14); color: rgba(255, 255, 255, 0.45); font-size: 11.5px; font-weight: 800; text-align: center; }
-/* 한 영웅이 효과 2개 이상일 때만 — 영웅별 최종 */
-.tb-duel-totals { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 2px; padding: 7px 2px 3px; border-top: 1px solid rgba(255, 255, 255, 0.18); }
-.tb-duel-totals-head { color: rgba(255, 255, 255, 0.6); font-size: 11px; font-weight: 900; }
-.tb-duel-total { display: inline-flex; align-items: center; gap: 3px; }
-.tb-duel-total .tb-mini-hero { width: 18px !important; border-radius: 4px; overflow: hidden; }
-.tb-duel-total b { margin-left: 2px; font-size: 13px; font-weight: 900; font-variant-numeric: tabular-nums; }
-.tb-duel-total b.is-plus { color: #93c5fd; }
-.tb-duel-total b.is-minus { color: #fca5a5; }
-.tb-duel-total b.is-zero { color: rgba(255, 255, 255, 0.55); }
+/* 영웅별 합계 = 이 줄의 찐 최종 — 효과 줄과 같은 칸 [Σ 아이콘 | 얼굴 … | 수치(맨 오른쪽, 같은 세로 줄)], 얼굴 · 수치는 효과 줄보다 크게 · 밝은 바탕(밍봉 2026-11-11) */
+.tb-duel-totals { display: flex; flex-direction: column; gap: 6px; margin: 4px -5px 0; padding: 8px 6px 7px; border-radius: 9px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.14); }
+/* 제목 = 합계 수치와 같은 크기(토탈이라 작게 두지 않음, 밍봉 2026-11-11) + 앞에 합계 아이콘 하나 */
+.tb-duel-totals-head { display: flex; align-items: center; gap: 7px; color: #fff; font-size: 16px; font-weight: 900; line-height: 1.2; }
+.tb-duel-total-icon { flex: none; width: 24px; height: 22px; object-fit: contain; }
+/* 묶음 한 줄 = 효과 줄과 같은 칸 [  | 얼굴(위 효과 줄 얼굴과 같은 시작 위치 · 크기, 왼쪽부터 빈칸 없이 쌓음) | 턴 | 준 영웅 | 수치].
+   효과를 하나도 못 받은 영웅 줄은 회색 얼굴 · 회색 0%(밍봉 2026-11-11) */
+.tb-duel-total { --turn-w: 0px; display: grid; grid-template-columns: 24px minmax(0, 1fr) var(--turn-w) 22px 46px; grid-template-areas: '. faces faces faces val'; align-items: center; gap: 0 7px; }
+.tb-duel-total-faces { grid-area: faces; display: flex; flex-wrap: wrap; align-items: center; gap: 3px; }
+.tb-duel-total-face { display: inline-flex; border-radius: 5px; overflow: hidden; }
+.tb-duel-total-face .tb-mini-hero { width: 22px !important; }
+.tb-duel-total.is-none .tb-duel-total-face { filter: grayscale(1); opacity: 0.45; }
+.tb-duel-total-val { grid-area: val; justify-self: end; min-width: 46px; text-align: right; font-size: 16px; font-weight: 900; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.6); }
+.tb-duel-total.is-plus .tb-duel-total-val { color: #93c5fd; text-shadow: 0 0 10px rgba(96, 165, 250, 0.45); }
+.tb-duel-total.is-minus .tb-duel-total-val { color: #fca5a5; text-shadow: 0 0 10px rgba(239, 68, 68, 0.45); }
 .tb-duel-side-note { margin-left: 6px; color: rgba(255, 255, 255, 0.5); font-size: 11px; font-weight: 800; font-style: normal; }
 /* 대상이 유형으로 정해진 효과(「아군 방어형 · 만능형」) — 이름 옆 작은 역할 아이콘 */
 .tb-role-marks { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; padding: 1px 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.14); }
@@ -1789,12 +1798,13 @@
 /* 수치 + 「턴」(그중 전투 시작 [N턴] 효과 — 받는 버프 표 `.tb-tot-cell i`와 같은 청록 표시). 상대 쪽은 「턴」이 안쪽(왼쪽) */
 .tb-duel-num { display: inline-flex; align-items: center; gap: 4px; }
 /* 수치 옆 아이콘 자리 — 아이콘이 없어도(0%) 같은 폭이라 수치가 줄마다 같은 자리 */
-.tb-duel-num-icon { display: inline-flex; flex: none; width: 18px; height: 18px; }
+.tb-duel-num-icon { display: inline-flex; flex: none; width: 21px; height: 21px; }
+.tb-duel-num-icon .tb-fx-icon { width: 21px; height: 21px; }
 .tb-duel-val.is-theirs .tb-duel-num { flex-direction: row-reverse; }
 /* 일부 영웅만 받을 때 큰 숫자 아래 영웅 점 — ● 그 값 · 색 테두리 = 다른 양 · ○ 못 받음(숫자 아이콘 폭만큼 들여 숫자 아래) */
 .tb-duel-val { gap: 3px; }
-.tb-duel-dots { display: inline-flex; gap: 3px; padding-left: 22px; }
-.tb-duel-val.is-theirs .tb-duel-dots { padding-left: 0; padding-right: 22px; }
+.tb-duel-dots { display: inline-flex; gap: 3px; padding-left: 25px; }
+.tb-duel-val.is-theirs .tb-duel-dots { padding-left: 0; padding-right: 25px; }
 .tb-duel-dot { width: 7px; height: 7px; border-radius: 50%; box-sizing: border-box; border: 1.5px solid rgba(255, 255, 255, 0.3); }
 .tb-duel-dot.is-full.is-plus { background: #60a5fa; border-color: #60a5fa; box-shadow: 0 0 5px rgba(96, 165, 250, 0.7); }
 .tb-duel-dot.is-full.is-minus { background: #f87171; border-color: #f87171; box-shadow: 0 0 5px rgba(239, 68, 68, 0.7); }
@@ -1835,17 +1845,8 @@
 .tb-duel-sides.is-aligned > .tb-duel-side { grid-row: 1 / -1; display: grid; grid-template-rows: subgrid; row-gap: 0; }
 .tb-duel-sides.is-aligned .tb-duel-fxs { display: contents; }
 .tb-duel-fx.is-blank { padding: 0; }
-.tb-duel-totals.is-blank { border-top-color: transparent; padding: 0; margin: 0; }
+.tb-duel-totals.is-blank { padding: 0; margin: 0; background: none; border-color: transparent; }
 .tb-duel-side-title { display: block; margin-bottom: 2px; color: var(--c-ink); font-size: 12.5px; font-weight: 900; }
-.tb-duel-parts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.tb-duel-part { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; align-items: center; }
-.tb-duel-part-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.tb-duel-part-top { display: flex; align-items: baseline; gap: 6px; min-width: 0; font-size: 12px; }
-.tb-duel-part-who { flex-shrink: 0; color: #fff; font-weight: 900; }
-.tb-duel-part-fx { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255, 255, 255, 0.7); font-weight: 700; }
-.tb-duel-part-top b { flex-shrink: 0; color: #4ade80; font-weight: 900; font-variant-numeric: tabular-nums; }
-.tb-duel-part.is-minus .tb-duel-part-top b { color: #f87171; }
-.tb-duel-part-to { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255, 255, 255, 0.45); font-size: 11px; font-weight: 700; }
 .tb-giver-face { flex-shrink: 0; display: block; border-radius: 6px; object-fit: cover; background: rgba(0, 0, 0, 0.3); }
 .tb-giver-face.is-formation { object-fit: contain; padding: 1px; }
 .tb-duel-none { margin: 0; padding: 6px 2px; color: rgba(255, 255, 255, 0.45); font-size: 12px; }
@@ -2314,35 +2315,18 @@ span.tb-fxl-name:hover { text-decoration: none; }
   /* 폰은 막대를 빼고 [우리 수치 | 이름 | 상대 수치] — 막대 칸이 점처럼 작아져서. 색 · 배경으로 충분 */
   .tb-duel-final .tb-duel-line { grid-template-columns: minmax(0, 1fr) 104px minmax(0, 1fr); }
   .tb-duel-final .tb-duel-track { display: none; }
-  .tb-duel-num-icon, .tb-duel-num-icon .tb-fx-icon { width: 15px; height: 15px; }
+  .tb-duel-num-icon, .tb-duel-num-icon .tb-fx-icon { width: 17px; height: 17px; }
   .tb-duel-even-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tb-duel-even-chip { padding: 5px 8px 5px 5px; font-size: 11.5px; gap: 5px; }
   .tb-duel-final .tb-duel-num { gap: 3px; }
   .tb-duel-final { padding: 8px 6px 4px; }
   .tb-duel-val { font-size: 13px; }
   .tb-duel-stat-name { font-size: 12.5px; white-space: normal; word-break: keep-all; line-height: 1.15; }
-  /* 폰도 우리 | 상대 반반 — 위아래로 쌓으면 비교가 안 됨(밍봉 2026-11-11) */
+  /* 폰 · 태블릿도 우리 | 상대 반반 — 위아래로 쌓으면 비교가 안 됨(밍봉 2026-11-11). 펼침 줄 모양은 아래 641~760(태블릿 = PC 한 줄) · ≤640(폰 고정 칸) 블록 */
   .tb-duel-detail { padding: 0 2px 8px; }
   .tb-duel-sides { gap: 5px; }
-  .tb-duel-side { padding: 6px 5px 4px; }
-  .tb-duel-side-title { margin-bottom: 0; font-size: 12px; }
-  .tb-duel-side-note { display: block; margin: 1px 0 0; font-size: 10px; }
-  /* 효과 한 줄: [아이콘 | 이름(두 줄까지) | 수치] / [… 턴 | 준 영웅 ○(수치 바로 아래)] / [그 팀 영웅 얼굴 …] (밍봉 2026-11-11) */
-  .tb-duel-fx { grid-template-columns: 16px minmax(0, 1fr) auto auto; grid-template-areas: 'icon name name val' '. . turn giver' 'recv recv recv recv'; gap: 3px 4px; padding: 6px 1px; }
-  .tb-duel-fx-icon .tb-fx-icon { width: 16px; height: 16px; }
-  .tb-duel-fx-name { font-size: 11px; letter-spacing: -0.02em; }
-  .tb-duel-fx-val { font-size: 12.5px; justify-self: end; }
-  .tb-duel-fx-giver { justify-self: end; width: 18px; height: 18px; }
-  .tb-duel-fx-giver .tb-mini-hero { width: 18px !important; }
-  .tb-duel-fx .tb-duel-turn { justify-self: end; padding: 0 3px; font-size: 9px; }
-  .tb-duel-fx-recv { gap: 2px; }
-  .tb-duel-fx-face .tb-mini-hero { width: 19px !important; }
-  .tb-duel-totals { gap: 4px 8px; }
-  .tb-duel-totals-head { flex-basis: 100%; font-size: 10px; }
-  .tb-duel-total .tb-mini-hero { width: 16px !important; }
-  .tb-duel-total b { font-size: 12px; }
-  .tb-duel-dots { padding-left: 19px; }
-  .tb-duel-val.is-theirs .tb-duel-dots { padding-right: 19px; }
+  .tb-duel-dots { padding-left: 20px; }
+  .tb-duel-val.is-theirs .tb-duel-dots { padding-right: 20px; }
   .tb-duel-score-num { font-size: 11px; }
   .tb-duel-score-num b { font-size: 18px; }
 
@@ -2357,6 +2341,48 @@ span.tb-fxl-name:hover { text-decoration: none; }
   .tb-threat-what { font-size: 12.5px; }
   .tb-threat-todo { font-size: 12px; padding: 6px 8px; }
   .tb-tot-faces .tb-giver-face { width: 20px; height: 20px; }
+}
+
+/* 전력 비교 펼침 — 태블릿(561~760): 칸이 넉넉하니 PC와 같은 한 줄 [아이콘 · 이름 | 턴 | 준 영웅 | 수치] / [얼굴 …] 그대로(얼굴만 20px),
+   가운데 능력치 이름 칸만 넓혀 「1인 공격기 피해량」이 한 줄에(밍봉 2026-11-11 — 화면 크기를 잘 쓰게) */
+@media (min-width: 561px) and (max-width: 760px) {
+  .tb-duel-final .tb-duel-line { grid-template-columns: minmax(0, 1fr) 150px minmax(0, 1fr); }
+  .tb-duel-side { padding: 8px 8px 6px; }
+  .tb-duel-fx-recv, .tb-duel-total-faces { gap: 2px; }
+  .tb-duel-fx-face .tb-mini-hero, .tb-duel-total-face .tb-mini-hero { width: 20px !important; }
+}
+
+/* 전력 비교 펼침 — 폰(≤560): 반쪽 폭(≈130px)에 맞춘 두 줄 고정(밍봉 2026-11-11 — 뒤죽박죽 · 정보가 안 들어온다는 지적).
+   효과 한 줄 = 윗줄 [효과 아이콘 | 이름(두 줄까지) | 턴 | 준 영웅 ○] / 아랫줄 [받는 영웅 얼굴 … | 수치(맨 오른쪽)].
+   아랫줄은 칸 맨 아래에 붙음(align-content: space-between) → 상대 칸 줄이 길어도 우리 · 상대 얼굴 줄과 수치가 같은 높이.
+   합계 묶음도 [얼굴 … | 수치] 한 줄 = 효과 아랫줄과 같은 모양 */
+@media (max-width: 560px) {
+  .tb-duel-side { padding: 6px 4px 4px; }
+  .tb-duel-side-title { margin-bottom: 0; font-size: 12px; }
+  .tb-duel-side-note { display: block; margin: 1px 0 0; font-size: 10px; }
+  .tb-duel-fx { grid-template-columns: 18px minmax(0, 1fr) auto auto; grid-template-areas: 'icon name turn giver' 'recv recv recv val'; gap: 5px 4px; padding: 7px 1px 6px; align-content: space-between; }
+  .tb-duel-fx-icon { align-self: start; }
+  .tb-duel-fx-icon .tb-fx-icon { width: 18px; height: 18px; }
+  .tb-duel-fx-name { align-self: center; font-size: 11px; line-height: 1.25; letter-spacing: -0.02em; }
+  .tb-duel-fx-giver { align-self: start; justify-self: end; width: 18px; height: 18px; }
+  .tb-duel-fx-giver .tb-mini-hero { width: 18px !important; }
+  .tb-duel-fx .tb-duel-turn { align-self: start; margin-top: 2px; padding: 0 3px; font-size: 9px; }
+  .tb-duel-fx-val { align-self: center; justify-self: end; min-width: 0; font-size: 13px; }
+  .tb-duel-fx-recv { gap: 2px; }
+  .tb-duel-fx-face .tb-mini-hero { width: 17px !important; }
+  .tb-duel-totals { margin: 4px -5px 0; padding: 7px 5px 6px; gap: 6px; }
+  .tb-duel-totals-head { gap: 4px; font-size: 13px; }
+  .tb-duel-total { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'faces val'; gap: 0 4px; }
+  .tb-duel-total-icon { width: 18px; height: 18px; }
+  .tb-duel-total-faces { gap: 2px; }
+  .tb-duel-total-face .tb-mini-hero { width: 17px !important; }
+  .tb-duel-total-val { min-width: 0; font-size: 13px; }
+}
+/* 작은 폰(≤380, 반쪽 ≈128px) — 5명 얼굴 + 수치가 한 줄에 들어가게 얼굴 16px · 간격 1px */
+@media (max-width: 380px) {
+  .tb-duel-fx-recv, .tb-duel-total-faces { gap: 1px; }
+  .tb-duel-fx-face .tb-mini-hero, .tb-duel-total-face .tb-mini-hero { width: 16px !important; }
+  .tb-duel-fx-val, .tb-duel-total-val { font-size: 12.5px; letter-spacing: -0.02em; }
 }
 
 /* 키 작은 폰(SE 등) — 시트 제목 줄은 숨기고(아래 「영웅을 누르면 … 자리에 넣어요」가 같은 뜻) 간격을 줄여 영웅 두 줄이 시트 안에 다 보이게 */

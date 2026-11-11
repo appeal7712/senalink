@@ -32,6 +32,7 @@ React + Vite + Firebase (Auth / Firestore / Storage / Functions asia-northeast3)
 |--------|------|------|
 | 스킬 `senalink-deploy` | `.cursor/skills/senalink-deploy/` | 배포 전 점검 → 버전·패치 내역 → 배포 → 커밋·푸시 |
 | 스킬 `senalink-preview-hub` | `.cursor/skills/senalink-preview-hub/` | 에뮬레이터 + dev 서버로 로컬 연습장 |
+| `npm run check:content` | `scripts/check-content.mjs` + `check-content.baseline.json` | 신규 영웅 · 효과 점검(데이터 · 엔진 오류 · 못 읽은 문장 · 아이콘 · 전력 비교), 새로 생긴 문제만 표시 — §13.0 |
 | 훅 `guard-shell` | `.cursor/hooks.json` → `.cursor/hooks/guard-shell.mjs` | senalink 외 프로젝트 배포·Firestore 일괄 삭제·강제 푸시·시크릿 커밋 차단, 배포·rules·functions 명령은 확인 요청 |
 | 규칙 `firebase-safety` | `.cursor/rules/firebase-safety.mdc` | rules·functions·저장 경로 파일을 열면 §2.1 자동 첨부 |
 
@@ -132,6 +133,7 @@ npm run dev              # Vite http://127.0.0.1:5173
 npm run emulators        # Auth 9099 / FS 8080 / Functions 5001 / Storage 9199
 npm run seed:admin       # 에뮬레이터 슈퍼관리자 시드
 npm run seed:preview     # 에뮬레이터 허브에 테스트 공략 (길드전 공격·방어·대체 덱, 공성 4진형, 메타 덱). 빈 칸만 · `-- --force`는 에뮬레이터 안에서 덮어씀. 127.0.0.1:8080 고정 = 라이브 무관
+npm run check:content # 신규 영웅 · 효과 점검(§13.0) — 데이터 · 엔진 바꾼 뒤 항상
 npm run build
 npx firebase deploy --only hosting --project senalink
 npx firebase deploy --only firestore:rules --project senalink   # 규칙 변경 시
@@ -323,14 +325,14 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 | 스킬 · 발동 탭 목록 | `skillCards`(카드) · `skillCardText`(표시 이름 다듬기) · 화면 `SkillEffectList` |
 | 목록 상자 묶기 · 칸 숫자 · 버프/디버프 칸 표(패시브 · 액티브 · 합계) | `src/pages/teamBuilder/fxGroups.js` — `groupEffectCards` · `groupSkillCards` · `fxBoxCount` · `fxTotals` · `fxLedger`(칸 메인 표 `FxLedger` · 맨 아래 「자세히 보기」 `FxFold` 안에 목록) |
 | 덱 칸(공용 덱 배치 카드 · 진형 · 펫, 길드전 5칸 중 3명) | 화면 `TeamBuilderParts.jsx` `DeckSide`(= 공용 `InGameDeckCard`, `allowNoPet`) · `DeckVs`, 저장 `TeamBuilderPage.jsx` `loadStore`(`decks[mode].formation` · `.pet`), 엔진 `formationRows` · `petEntries` · `petCards`(진형은 전력 비교에만 — 받는 버프 표에는 안 넣음), 데이터 `data/formations.js` · `data/pets.js` |
-| 전력 비교 탭(VS 대결 바 `.tb-clash` 가운데 액체 구슬) — 「Σ 최종 합계」 판 하나 · 같은 영웅끼리 · 두 팀 같음 | 엔진 `duelSummary`(`DUEL_STATS` 능력치 목록 · `DUEL_FINALS` 합친 줄 · `duelNets` 영웅별 「받는 버프 − 상대 디버프」 · `duelSideIcons`) · 화면 `TeamBuilderParts.jsx` `DuelBoard` · `DuelRow` · `DuelNum`(큰 숫자 + 영웅 점 `duelHeadline`) · `DuelSide`(펼침 효과 기준). **화면 규칙 정본 = 시안 `dev/duel-mock.html`**(밍봉 2026-11-11 회의 확정 — 바꿀 땐 시안부터, features.md §10.10 「전력 비교 화면」) |
+| 전력 비교 탭(VS 대결 바 `.tb-clash` 가운데 액체 구슬) — 「Σ 최종 합계」 판 하나 · 같은 영웅끼리 · 두 팀 같음 | 엔진 `duelSummary`(`DUEL_STATS` 능력치 목록 · `DUEL_FINALS` 합친 줄 · `duelNets` 영웅별 「받는 버프 − 상대 디버프」 · `duelSideIcons`) · 화면 **`src/pages/teamBuilder/DuelBoard.jsx`**(`DuelBoard` · `DuelRow` · `DuelNum` 큰 숫자 + 영웅 점 `duelHeadline` · `DuelSide` 펼침 효과 기준 · `duelSlots` 두 팀 줄 맞춤 · `duelShowTotals` 영웅별 합계) · 스타일 `teamBuilder.css` `.tb-duel-*`. **화면 규칙 정본 = 시안 `dev/duel-mock.html`**(밍봉 2026-11-11 회의 확정 — 바꿀 땐 시안부터, features.md §10.10 「전력 비교 화면」) |
 | 칸 강조색(우리 팀이 받는 버프 파랑 · 상대가 받는 버프 빨강 · 디버프 칸 둘 보라 + 제목 옆 뱃지 글자, 칸 안 합계 · 「자세히 보기」 뱃지도 칸 색) · 상대 덱 목록 대상 글 뒤집기 | `TeamBuilderParts.jsx` `Block` `tone` · `tag` prop · `flipScope`(`perspective="enemy"`) — 색 변수 `teamBuilder.css` `.tb-page`(`--tb-gain` · `--tb-hurt` · `--tb-rival`), 상세 features.md §10.10 「분석 칸 색」 |
 | PvE 전용 줄(탑 전용 · 보스 대상) | `makeEntries` `allowTower` — 탑 줄은 `tower: true`(「탑 전용」 표시), 「보스」 줄은 `SKIP_RE`(결투장 · 길드전은 건너뜀) / `SKIP_PVE_RE`(PvE는 읽음) |
 | 편성 조건 문구(「스킬2 생명력 전환 발동 안 함」) | `formationRequirements().effectText` · `heroSummary().conditions[].effectText` — 둘 다 `skillEffectText` 공용 |
 | 덱 세팅 체크 항목 | `src/pages/teamBuilder/TeamBuilderPage.jsx` `buildChecks` |
 | 상대 덱에서 조심할 것 | 같은 파일 `buildThreats` (노림 문장 `targetingSentence` · 쿨타임 증가 · 물리/마법 면역·감쇄 `damageGuardLines` · 영웅별 팁) |
 | 영웅·효과별 직접 쓴 문구 | `src/data/teamBuilderTips.js` — `SIGNATURE_TIPS`(효과 이름) · `HERO_TIPS`(영웅, `enemy`는 객체 또는 배열) · `BUFF_NOTES`(버프 카드 아래 참고 문구) |
-| 화면 조각(덱 바 · 영웅 선택 창 · 효과 요약 칸 · 버프/디버프 목록 · 주의 카드) | `src/pages/teamBuilder/TeamBuilderParts.jsx` |
+| 화면 조각(덱 바 · 영웅 선택 창 · 효과 요약 칸 · 버프/디버프 목록 · 주의 카드) | `src/pages/teamBuilder/TeamBuilderParts.jsx` — 파일 안 `/* ───── 이름 ───── */` 구역 순서: 공통(FxIcon · GiverFace · MiniHero) → 모드 선택 → 덱 바 · VS → 영웅 선택 드롭다운 → 블록 → 덱 세팅 체크 → 전설 장신구 → 효과 목록 → 버프 · 디버프 칸 표 → 상대 덱 주의. **전력 비교 판은 따로 `DuelBoard.jsx`** |
 | 스타일(모바일은 파일 끝 `@media` 블록) | `src/styles/teamBuilder.css` |
 | 도감 「효과 요약」 탭 | `src/components/HeroEffectSummary.jsx` + `src/styles/heroEffectSummary.css` (엔진 `heroSummary`) |
 | 엔진이 스킬 문장을 어떻게 읽었는지 확인 | 로컬 전용 점검표 `http://127.0.0.1:5173/dev/tb-audit.html` (`dev/`, 배포본 미포함) |
@@ -357,10 +359,10 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 3. 이름만 있는 버프(여포 「용이무모」처럼 실제 능력치를 이름에 안 쓰는 것) → `NAMED_STAT_BUFFS`에 「이름 → 능력치」 추가. 툴팁에 「단, ○○이 N% 감소합니다」 부작용이 있으면 전력 비교는 `namedDrawbacks`가 자동으로 읽음(문장 모양이 다르면 정규식 확인).
 4. 상대 덱 경고가 필요한 고유 기믹 → `teamBuilderTips.js` `SIGNATURE_TIPS` / `HERO_TIPS`.
 4-1. **전력 비교 줄:** 새 능력치 효과 이름(「○○ 증가 · 감소」, 예: 「기절 효과 적용 확률 증가」)은 `DUEL_STATS`에 줄을 넣어야 전력 비교에 나옴(정규식에 안 걸리면 조용히 빠짐 — 2026-11-11 겔리두스 · 로지 「효과 적용 확률」이 빠졌던 것). 확인: 영웅 · 펫 패시브 entry 중 수치가 있고 `DUEL_STATS`에 안 걸리는 이름을 뽑아 볼 것(features.md §10.10 「전력 비교 계산」의 「안 넣는 것」 목록과 비교). 게임에 아이콘이 없는 이름은 `effectIcons.js` `ALIASES`.
-5. 아래 검증(영웅 전체 실행 · 점검표)으로 새 영웅 줄이 다 읽혔는지 확인.
+5. `npm run check:content`로 새 영웅 줄이 다 읽혔는지 확인 — 전체 절차는 **§13.0 신규 영웅 · 신규 효과 런북**.
 
 검증 방법(에이전트):
-- 엔진 변경 후: esbuild로 `teamBuilderAnalysis.js`를 번들해 영웅 전체 + 무작위 덱(3인 · 5인, PvE on/off)으로 `analyzeTeam` · `effectCards`(+`selfOnly`) · `skillCards` · `formationRequirements` · `heroSummary` 돌려 오류 0 확인(임시 스크립트는 `%TEMP%`에 두고 저장소에 남기지 말 것). 같이 볼 것: ① 스킬 `details` 줄 중 어떤 entry의 `raw`에도 안 잡힌 줄(2026-11-07 기준 「사용 가능」 안내 2줄만 정상) ② `utility`로 빠진 효과 이름 목록(메커니즘만이어야 함) ③ 이름에 숫자 · 괄호가 남은 효과.
+- 엔진 · 데이터 변경 후: **`npm run check:content`**(`scripts/check-content.mjs` — 영웅 전체 + 펫 + 무작위 덱 400판으로 `analyzeTeam` · `effectCards`(+`selfOnly`) · `skillCards` · `formationRequirements` · `heroSummary` · `duelSummary` 오류 0, 스킬 문장 못 읽음 · 아이콘 없음 · utility · 전력 비교 빠짐을 기준선과 비교). 임시 번들 스크립트를 새로 짜지 말 것. 엔진 리팩터링이면 바꾸기 전 파일을 `%TEMP%`에 복사해 두고 같은 무작위 덱으로 `duelSummary` 등 결과 JSON이 같은지 비교(2026-11-11 정리 때 3,000판 동일 확인 — 엔진은 import가 없는 순수 파일이라 복사본끼리 바로 비교 가능).
 - 개발 서버(Vite)가 저장 순간 파일을 **빈 내용으로 캐시**하는 일이 있음 → 「일시적인 오류」 + 모듈 export 없음이면, 디스크 파일이 정상인지 보고 파일 수정 시각만 갱신(`(Get-Item 파일).LastWriteTime = Get-Date`) 후 새로고침. 배포 빌드는 디스크를 읽어서 무관.
 - 확인용 탭은 `browser_navigate`에 `newTab: true`로 따로 열 것(`viewId` 없이 열면 밍봉 탭을 가로챔).
 - 브라우저 확인은 **밍봉 탭에서 클릭 금지**(읽기·스크린샷만). 팀 빌더는 store 변경마다 localStorage 전체를 저장해서, 오래된 탭에서 버튼을 누르면 밍봉 덱을 덮어씀. 확인용 탭에는 데모 DOM을 넣어 보고 다른 주소로 이동(탭 닫기 도구는 다른 탭을 닫은 적 있음 → 쓰지 말 것).
@@ -448,6 +450,28 @@ API:
 
 신규 영웅·각성·스킬 변경·콜라보·펫·장비·장신구 작업 시 반드시 열 것. 핵심만:
 
+### 13.0 신규 영웅 · 신규 효과 런북 (이 순서대로 — 도감 · 효과 사전 · 팀 빌더가 한 번에 맞춰짐)
+
+도감 · 효과 사전 · 도감 「효과 요약」 · 팀 빌더(버프 목록 · 액티브 · 전력 비교 · 상대 덱 주의)는 **전부 같은 데이터(`scraped_heroes.json`)를 같은 엔진(`lib/teamBuilderAnalysis.js`)으로 읽음** → 영웅마다 화면 코드를 따로 쓰지 않음. 데이터만 맞게 넣고 아래 점검만 통과하면 끝.
+
+1. **데이터 넣기** — 영웅 `src/data/scraped_heroes.json`(스킬 문장 정본 7katlas, `id` · `group` · `category` · `role` · `attackType` · `isAwakened` 필수) + `public/images/{id}/`(portrait · skills 아이콘) + 전용장비 아이콘(`exclusiveGearMeta.generated.json`), 펫은 `src/data/pets.js`. 상세 절차 encyclopedia.md §13. 새 스페셜 소속이면 `heroes.js` `HERO_FACTION_ORDER`만(정렬은 자동, §12.1).
+2. **효과 아이콘** — `node scripts/sync-effect-icons.cjs`(7katlas에서 다시 받음).
+3. **점검 한 번** — `npm run check:content`(라이브 무관, 15초). 기준선(`scripts/check-content.baseline.json`)에 없던 문제만 「새로 생김」으로 나옴 → 항목별로 고칠 곳:
+
+   | 새로 생김 | 고칠 곳 |
+   |------|------|
+   | 영웅 데이터(초상화 · 역할 · 공격 타입 · 소속 · 전용장비 · 스킬 아이콘) | 데이터 파일 · `public/images/{id}/` (§13 · encyclopedia.md) |
+   | 엔진 오류 | `teamBuilderAnalysis.js` — 오류 영웅 이름이 같이 나옴 |
+   | 스킬 문장 못 읽음 | `npm run check:content -- --hero 이름`으로 문장별 확인(점검표 `/dev/tb-audit.html`과 같은 판정) → 엔진 문장 규칙(`makeEntries` · `upgradeSegments` · `applyUpgradeRules`) |
+   | 효과 아이콘 없음 | `lib/effectIcons.js` `ALIASES`에 「새 이름 → 있는 아이콘 이름」 |
+   | 분류 안 됨(버프/디버프 목록에서 빠짐) | 메커니즘(관통 · 반격 …)이면 정상 → `--update`. 능력치 버프면 `classify` 키워드 또는 이름만 있는 버프 `NAMED_STAT_BUFFS` |
+   | 전력 비교 빠짐 | 새 능력치 이름이면 `DUEL_STATS`(+ 필요하면 `DUEL_FINALS`)에 줄 추가. 비례 · 고유 버프처럼 안 넣는 것이면 `--update` (features.md §10.10 「안 넣는 것」) |
+
+   다 고쳤거나 「원래 그런 것」으로 확인했으면 `npm run check:content -- --update`로 기준선 갱신(기준선 파일도 커밋).
+4. **영웅 팁(선택)** — 상대 덱 경고가 필요한 고유 기믹은 `src/data/teamBuilderTips.js` `SIGNATURE_TIPS` / `HERO_TIPS`.
+5. **화면 확인** — 미리보기 허브(§4.1)에서 `/dex` 새 영웅(스킬 · 효과 요약), `/team/effects` 효과 사전 칩, `/team` 덱에 넣고 버프 목록 · 전력 비교. 덱 편성 피커 정렬은 §12.1.
+6. 배포 — skill `senalink-deploy`.
+
 - 앱이 import하는 파일만 UI에 반영: 영웅 `src/data/scraped_heroes.json`(+`public/images/{id}/`), 펫 `src/data/pets.js`, 장비 `equipments.js` + `gearDex`. `asset/`은 원본·재생성 소스.
 - 신규 영웅이면 **전용장비 아이콘도 같이** (`exclusiveGearMeta.generated.json`).
 - 목록 정렬 수동 금지 — §12.1 `sortHeroesForList`.
@@ -474,7 +498,7 @@ API:
 12. 덱 수정 모달 패치 시 §12.5 회귀 체크리스트 참고.
 13. 커밋/푸시는 밍봉 요청 시. 시크릿(`.env*`)·`.firebase/hosting.*.cache` 커밋 금지.
 14. 배포 요청을 받으면 스킬 **`senalink-deploy`** 순서대로 (점검 → 버전·패치 내역 → Functions 먼저, Hosting 나중 → 라이브 확인 → 커밋·푸시).
-15. 팀 빌더 · 효과 엔진 · 스킬 데이터 패치 시 §10.10 요약의 검증 방법(엔진 전체 실행 · 점검표 · 밍봉 탭 클릭 금지)대로 확인.
+15. 팀 빌더 · 효과 엔진 · 스킬 데이터 패치 시 `npm run check:content`(§13.0) + §10.10 요약의 검증 방법(점검표 · 밍봉 탭 클릭 금지)대로 확인. 신규 영웅 · 효과는 §13.0 런북 순서대로.
 16. 커밋 시 경로를 하나씩 지정(`git add .` 금지). 커밋하지 않는 것: `asset/`(원본 에셋 — 사이트 저장소에선 무시됨. 에셋을 추가 · 수정했으면 **`asset/` 안에서** 따로 `git add -A` → `git commit` → `git push` = senalink-assets 백업) · `scripts/tmp_*` · `tmp_missing_gear.json` · `scripts/sync_exclusive_gear_ui_assets.py` · 줄바꿈만 바뀐 파일(`ExclusiveGearPicker.jsx` · `exclusiveGearSlots.js` · `heroSearch.js` · `unsavedGuard.js` — `git diff -w`가 비면 제외) · 안 쓰는 `public/images/ui/tb-tab2-*.png` · `tb-guildwar.png`(성 아이콘 `tb-guildwar-castle.png`로 교체됨). `dev/`(로컬 점검표)는 커밋 O · 배포본 X.
 
 ### 14.1 안전하게 고치는 법 · 자주 빠지는 함정 (실제로 겪은 것)
@@ -513,7 +537,7 @@ API:
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.11.11.225** (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.11.11.226** (푸터 `APP_VERSION` 확인)
 - 저장소 2개: 사이트 `appeal7712/senalink`(이 폴더) · 원본 에셋 `appeal7712/senalink-assets`(비공개, `asset/` 폴더 = 그 저장소, 브랜치 `main`). 새 컴퓨터 복구 = 사이트 clone → 그 안에 `git clone …/senalink-assets.git asset` → `.env.local`(Firebase 웹 설정 6줄, 콘솔 → 프로젝트 설정에서 복사) → `npm install` → `npx firebase login`.
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 

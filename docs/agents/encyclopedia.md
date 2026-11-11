@@ -11,7 +11,9 @@
 각성 → 스페셜(`HERO_FACTION_ORDER.special` 소속순) → 준스페셜(아스가르드·아이샤) → 일반 → 기타.  
 `heroes.js`의 `sortHeroesForList` / `compareHeroesForList`가 단일 소스. 새 소속이면 `HERO_FACTION_ORDER`에만 추가.
 
-런타임 영웅: `scraped_heroes.json` ← `heroes.js` ← `HeroDB` / 피커 / 세팅·스킬 예약.
+런타임 영웅: `scraped_heroes.json` ← `heroes.js` ← `HeroDB` / 피커 / 세팅·스킬 예약 · 팀 빌더 · 효과 사전(엔진 `lib/teamBuilderAnalysis.js`).
+
+**전체 흐름(도감 → 효과 사전 → 팀 빌더) = AGENTS.md §13.0 런북.** 아래 13.1은 그중 1단계(데이터 넣기) 상세. 데이터를 넣은 뒤 반드시 `npm run check:content`로 새로 생긴 문제(초상화 · 전용장비 · 못 읽은 스킬 문장 · 효과 아이콘 · 전력 비교)를 확인.
 
 ### 13.1 영웅 — 신규 캐릭터 추가 (체크리스트)
 

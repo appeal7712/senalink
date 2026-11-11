@@ -9,6 +9,7 @@ import { heroes } from '../src/data/heroes';
 import { pets } from '../src/data/pets';
 import { analyzeTeam, buildRareEffectSet, duelSummary } from '../src/lib/teamBuilderAnalysis';
 import { FxIcon, GiverFace, MiniHero } from '../src/pages/teamBuilder/TeamBuilderParts';
+import { UI_IMAGE_ICONS } from '../src/data/uiIcons';
 import '../src/index.css';
 import '../src/styles/teamBuilder.css';
 import './duelMock.css';
@@ -59,7 +60,7 @@ function Value({ side, list, none, icons }) {
   return (
     <span className={`dm-val is-${side} ${none ? 'is-zero' : sign(value)}`}>
       <span className="dm-num">
-        <span className="dm-num-icon">{icon ? <FxIcon name={icon} size={18} /> : null}</span>
+        <span className="dm-num-icon">{icon ? <FxIcon name={icon} size={21} /> : null}</span>
         <b>{none ? '—' : fmt(value)}</b>
       </span>
       <Dots dots={dots} />
@@ -104,26 +105,30 @@ function slotsOf(linesBySide) {
   return order.flatMap((label) => Array.from({ length: need.get(label) }, (_, i) => ({ label, i })));
 }
 
+/** 효과가 한 줄뿐이고 전원이 받으면 합계가 위 줄과 똑같아서 안 보임 */
+const showTotals = (lines, list) => lines.length > 0 && !(lines.length === 1 && lines[0].got.size === list.length);
+
 function Side({ k, list, lines, slots, totalsRow, none, only }) {
   const byLabel = new Map();
   for (const e of lines) { if (!byLabel.has(e.label)) byLabel.set(e.label, []); byLabel.get(e.label).push(e); }
-  const multi = list.some((h) => h.items.length > 1);
+  const multi = !none && showTotals(lines, list);
   const totals = new Map();
-  if (multi) for (const h of list) { const v = Math.round(h.total); if (!totals.has(v)) totals.set(v, []); totals.get(v).push(h.name); }
+  if (multi) for (const h of list) { const key = h.items.length ? Math.round(h.total) : 'none'; if (!totals.has(key)) totals.set(key, new Set()); totals.get(key).add(h.name); }
+  const totalKeys = [...totals.keys()].sort((a, b) => (a === 'none') - (b === 'none') || (a === 'none' ? 0 : b - a));
   return (
     <div className={`dm-side is-${k}${lines.some((e) => e.turns) ? ' has-turn' : ''}`}>
       <p className="dm-side-title">
         {k === 'ours' ? '우리' : '상대'}
         {only ? <em>{only === 'physical' ? '물리 영웅만' : '마법 영웅만'}</em> : null}
       </p>
-      {none || !lines.length ? <p className="dm-empty" style={{ gridRow: `span ${Math.max(1, slots.length)}` }}>{none ? '이 공격 타입 영웅 없음' : '받는 효과 없음'}</p> : (
+      {none || !lines.length ? <p className="dm-empty" style={{ gridRow: `span ${Math.max(1, slots.length) + (totalsRow ? 1 : 0)}` }}>{none ? '이 공격 타입 영웅 없음' : '받는 효과 없음'}</p> : (
         <ul className="dm-fx-list">
           {slots.map((slot) => {
             const e = byLabel.get(slot.label)?.[slot.i];
             if (!e) return <li key={`blank-${slot.label}-${slot.i}`} className="dm-fx is-blank" aria-hidden="true" />;
             return (
               <li key={`${e.label}|${e.value}|${e.giver}|${e.turns}`} className={`dm-fx ${sign(e.value)}`}>
-                <span className="dm-fx-icon"><FxIcon name={e.label} size={18} /></span>
+                <span className="dm-fx-icon"><FxIcon name={e.label} size={22} /></span>
                 <span className="dm-fx-name">{e.label}</span>
                 <b className="dm-fx-val">{fmt(e.value)}</b>
                 <Giver name={e.giver} />
@@ -142,15 +147,28 @@ function Side({ k, list, lines, slots, totalsRow, none, only }) {
       )}
       {multi ? (
         <div className="dm-totals">
-          <span className="dm-totals-head">영웅별 합계</span>
-          {[...totals.entries()].map(([v, names]) => (
-            <span key={v} className="dm-total">
-              {names.map((n) => <MiniHero key={n} hero={resolveHero(n)} size={18} />)}
-              <b className={sign(v)}>{fmt(v)}</b>
-            </span>
-          ))}
+          <span className="dm-totals-head">
+            <img className="dm-total-icon" src={UI_IMAGE_ICONS.tbDuelTotal.src} alt="" draggable={false} />
+            영웅별 합계
+          </span>
+          {totalKeys.map((key) => {
+            const names = totals.get(key);
+            const isNone = key === 'none';
+            return (
+              <span key={key} className={`dm-total ${isNone ? 'is-none is-zero' : sign(key)}`}>
+                <span className="dm-total-faces">
+                  {list.filter((h) => names.has(h.name)).map((h) => (
+                    <span key={h.name} className="dm-total-face">
+                      <MiniHero hero={resolveHero(h.name)} size={22} />
+                    </span>
+                  ))}
+                </span>
+                <b className="dm-total-val">{isNone ? '0%' : fmt(key)}</b>
+              </span>
+            );
+          })}
         </div>
-      ) : totalsRow ? <div className="dm-totals is-blank" aria-hidden="true" /> : null}
+      ) : totalsRow && !none && lines.length ? <div className="dm-totals is-blank" aria-hidden="true" /> : null}
     </div>
   );
 }
@@ -180,7 +198,7 @@ function Row({ s, defaultOpen = false }) {
       {open ? (() => {
         const lines = { ours: none('ours') ? [] : effectLines(list('ours')), theirs: none('theirs') ? [] : effectLines(list('theirs')) };
         const slots = slotsOf([lines.ours, lines.theirs]);
-        const totalsRow = ['ours', 'theirs'].some((k) => !none(k) && list(k).some((h) => h.items.length > 1));
+        const totalsRow = showTotals(lines.ours, list('ours')) || showTotals(lines.theirs, list('theirs'));
         const rows = 1 + Math.max(1, slots.length) + (totalsRow ? 1 : 0);
         const side = (k) => <Side k={k} list={list(k)} lines={lines[k]} slots={slots} totalsRow={totalsRow} none={none(k)} only={s.only} />;
         return (

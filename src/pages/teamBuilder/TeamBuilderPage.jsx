@@ -27,7 +27,6 @@ import {
   CheckList,
   ClashFaces,
   DeckBar,
-  DuelBoard,
   EffectList,
   FxFold,
   FxLedger,
@@ -41,6 +40,7 @@ import {
   TargetStrip,
   ThreatCards,
 } from './TeamBuilderParts';
+import { DuelBoard } from './DuelBoard';
 import { fxBoxCount, fxLedger } from './fxGroups';
 import EffectDictionary from './EffectDictionary';
 import '../../styles/teamBuilder.css';
