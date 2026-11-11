@@ -788,9 +788,10 @@ export default function GuildWarAttackPanel({
           reorderTargets(fromId, rowId);
         }}
       >
-        <div className="gw-counter-lead gw-attack-target-lead">
-          {isMain ? (
-            renderListDragHandle({
+        {/* 순서 바꾸기 손잡이는 상대 덱만 — 파생 덱은 손잡이 · 구분선 칸 자체가 없고 그 폭을 제목에 씀 */}
+        {isMain ? (
+          <div className="gw-counter-lead gw-attack-target-lead">
+            {renderListDragHandle({
               kind: 'target',
               id: rowId,
               title: deck.title,
@@ -800,12 +801,10 @@ export default function GuildWarAttackPanel({
               handleTitle: '끌어 옮겨 순서 변경',
               ariaLabel: '드래그로 순서 변경',
               onDrop: (ghost, toId) => reorderTargets(ghost.fromId, toId),
-            })
-          ) : (
-            <span className="gw-attack-alt-lead-spacer" aria-hidden="true" />
-          )}
-          <span className="gw-counter-rule" aria-hidden>|</span>
-        </div>
+            })}
+            <span className="gw-counter-rule" aria-hidden>|</span>
+          </div>
+        ) : null}
         <div className="gw-attack-target-heroes-col">
           <MiniHeroTrio
             heroNames={deck.heroNames}

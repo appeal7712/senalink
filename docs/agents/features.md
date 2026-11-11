@@ -14,7 +14,7 @@
 | 구독/저장 | `src/lib/siteMain.js` → `useSiteMain()` |
 | Ops 편집 | `/ops` → **메인페이지** → `MainSiteEditor.jsx` (저장만, 「비우기」없음) |
 | 필드 | headline, subhead, highlight, metaDecks(4), pickRates(5), news[], entranceBanner, updatedAt/By |
-| 결투장 메타 덱 배치 | **항상 가로 한 줄**(밍봉 — 2×2로 두 줄 깔리면 안 됨). PC(>1100) 4열 그리드(`.meta-deck-row--desktop`) · ≤1100 캐러셀(`MetaDeckCarousel`, 한 장씩 넘김): 900~1100 세 장(`is-three`) · 700~899 두 장(`is-two`) · 700 미만 폰 한 장. 한 줄 4장은 ≤1100에서 카드가 덱 배치보다 좁아져서 안 씀. CSS는 index.css 「메인 결투장 메타 덱: ≤1100은 캐러셀」 블록(기본 `.meta-deck-carousel { display: none }`보다 뒤에 둘 것) |
+| 결투장 메타 덱 배치 | **항상 가로 한 줄**(밍봉 — 2×2로 두 줄 깔리면 안 됨). PC(>1100) 4열 그리드(`.meta-deck-row--desktop`) · ≤1100 캐러셀(`MetaDeckCarousel`, 한 장씩 넘김): 900~1100 세 장(`is-three`) · 700~899 두 장(`is-two`) · 700 미만 폰 한 장. 넘기기 = 카드 양옆 글라스 `<` `>`(34×64, 원래 모양 유지 — 카드 아래 바로 옮겨 봤다가 밍봉이 되돌림 2026-11-11) + 아래 점(누르면 그 덱으로) + 터치로 좌우 밀기(40px 이상 · 가로가 세로보다 클 때), 넘긴 방향에서 카드가 들어옴(`is-from-next` / `is-from-prev`). 한 줄 4장은 ≤1100에서 카드가 덱 배치보다 좁아져서 안 씀. CSS는 index.css 「메인 결투장 메타 덱: ≤1100은 캐러셀」 블록(기본 `.meta-deck-carousel { display: none }`보다 뒤에 둘 것) |
 | 입장 배너 UI | `SiteEntranceBanner.jsx` (오늘 안 보기: localStorage) |
 | 방문 집계 | `siteVisitStats.js` — 쓰기: **32 샤드** `site/stats/visitShards/{id}` 랜덤 +1(충돌 시 다른 샤드). 읽기: 레거시 `site/stats` + 샤드 합산. 브라우저당 KST 하루 1회(`senalink_site_visit_day`). 히어로·ops 표시. 시크릿 창 어뷰징 완전차단 불가 |
 | 기용률·뉴스 2열 | PC: 기용률 패널이 행 높이 기준, 뉴스(`.main-news-scroller`)만 내부 스크롤. 모바일(≤900px): 1열, 뉴스 `max-height` 후 스크롤 |
@@ -40,6 +40,8 @@
 - 검색칸은 `components/GwDeckSearch.jsx`.
 - **맞은 영웅 강조:** `gwDeckHitHeroes(deck, query)` = 검색어를 나누는 데 쓰일 수 있는 영웅들(방법이 여러 개면 전부). 상대 덱 목록에서 맞은 초상만 또렷 · 나머지 흐리게(`.has-search-hits` + `.is-search-hit`, `MiniHeroTrio`). 제목으로만 맞은 덱은 흐리게 안 함.
 - **카운터 우선순위:** `counters[]` **배열 순서 = 1위부터**. 왼쪽 그립 드래그로 재정렬(스키마 추가 없음). 리드 UI: **그립 `|` 우선순위 `|` 초상** (구분선은 lead 안에 두어 모바일에서도 유지).
+- **파생 덱 행:** 순서 바꾸기 손잡이가 없음(기능 없음) → lead 칸(손잡이 자리 · `|`) 자체를 렌더하지 않고 `[초상 | 제목 · 메타 | 수정 · 삭제]`(`.gw-attack-list .gw-attack-target-row.gw-attack-alt-row`), 빈 자리만큼 제목이 넓음(밍봉 2026-11-11 — 세 글자도 잘림). 상대 덱 행은 손잡이로 순서 변경이 되므로 lead 유지.
+- **태블릿 세로 · 좁은 2열(1021~1300):** PC 축소 규칙이 `orientation: landscape`라 세로 태블릿엔 안 걸림 → 카운터 덱 행 수정 · 삭제를 **상대 덱 목록과 같은 모양**(위아래 · 같은 크기 버튼)으로, 「상세」 글자 숨김(행을 누르면 열림). 권한 없는 행은 버튼 칸이 비고 제목이 그만큼 넓어짐(상대 덱 목록과 같은 동작). 1024 측정: 카운터 제목 0 → 120px, 파생 덱 제목 37 → 79px.
 - **방어 리스트:** PC·모바일 모두 **1열** (공용 PvP 결투장과 동일). `.gw-defense-grid--stack`. 접힌 헤더 lead: **그립 `|` 덱 티어 `|`** 초상·메타 | 수정·삭제·대체 덱. 펼침: 덱(세팅 확인) → 스킬 예약 → **기타 디테일**. **방어 덱 수정 모달**은 결투장과 동일 PC 통스크롤(`arena-body-scroll-modal` · §12.4) — 헤더만 덱 티어·세팅·덱 유형·기타 디테일·속공 수치 유지. 모달 클래스 `gw-defense-edit-modal`.
 - **기타 디테일 박스:** PC에서 스킬 예약과 **같은 열 폭** (`max-width` 제한 없음). 모바일에서 `.build-panel-body { display: contents }` 사용 시 **반드시 `order: 4`** — 없으면 order 0으로 맨 위에 붙음.
 
