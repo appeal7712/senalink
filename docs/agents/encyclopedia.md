@@ -3,6 +3,39 @@
 > AGENTS.md에서 분리한 상세 문서 (원문 그대로). 절 번호(§)는 AGENTS.md와 동일하게 유지한다.
 > 공통 금지·데이터 보호 규칙은 항상 루트 `AGENTS.md` §2.1이 우선.
 
+### 13.0 신규 영웅 · 신규 효과 런북 (이 순서대로 — 도감 · 효과 사전 · 팀 빌더가 한 번에 맞춰짐)
+
+도감 · 효과 사전 · 도감 「효과 요약」 · 팀 빌더(버프 목록 · 액티브 · 전력 비교 · 상대 덱 주의)는 **전부 같은 데이터(`scraped_heroes.json`)를 같은 엔진(`lib/teamBuilderAnalysis.js`)으로 읽음** → 영웅마다 화면 코드를 따로 쓰지 않음. 데이터만 맞게 넣고 아래 점검만 통과하면 끝.
+
+1. **데이터 넣기** — **`npm run add:hero -- 이름`**(asset 폴더 → 아래 데이터 · 이미지 · 메타 전부, `--dry` = 미리보기, 다시 돌려도 같은 결과). 손으로 할 때 대상: 영웅 `src/data/scraped_heroes.json`(스킬 문장 정본 7katlas, `id` · `group` · `category` · `role` · `attackType` · `isAwakened` 필수) + `public/images/{id}/`(portrait · skills 아이콘) + 전용장비 아이콘(`exclusiveGearMeta.generated.json`), 펫은 `src/data/pets.js`. 상세 절차 encyclopedia.md §13. 새 스페셜 소속이면 `heroes.js` `HERO_FACTION_ORDER`만(정렬은 자동, §12.1).
+2. **효과 아이콘** — `node scripts/sync-effect-icons.cjs`(7katlas에서 다시 받음).
+3. **점검 한 번** — `npm run check:content`(라이브 무관, 15초). 기준선(`scripts/check-content.baseline.json`)에 없던 문제만 「새로 생김」으로 나옴 → 항목별로 고칠 곳:
+
+   | 새로 생김 | 고칠 곳 |
+   |------|------|
+   | 영웅 데이터(초상화 · 역할 · 공격 타입 · 소속 · 전용장비 · 스킬 아이콘) | 데이터 파일 · `public/images/{id}/` (§13 · encyclopedia.md) |
+   | 엔진 오류 | `teamBuilderAnalysis.js` — 오류 영웅 이름이 같이 나옴 |
+   | 스킬 문장 못 읽음 | `npm run check:content -- --hero 이름`으로 문장별 확인(점검표 `/dev/tb-audit.html`과 같은 판정) → 엔진 문장 규칙(`makeEntries` · `upgradeSegments` · `applyUpgradeRules`) |
+   | 효과 아이콘 없음 | `lib/effectIcons.js` `ALIASES`에 「새 이름 → 있는 아이콘 이름」 |
+   | 분류 안 됨(버프/디버프 목록에서 빠짐) | 메커니즘(관통 · 반격 …)이면 정상 → `--update`. 능력치 버프면 `classify` 키워드 또는 이름만 있는 버프 `NAMED_STAT_BUFFS` |
+   | 전력 비교 빠짐 | 새 능력치 이름이면 `DUEL_STATS`(+ 필요하면 `DUEL_FINALS`)에 줄 추가. 비례 · 고유 버프처럼 안 넣는 것이면 `--update` (features.md §10.10 「안 넣는 것」) |
+
+   다 고쳤거나 「원래 그런 것」으로 확인했으면 `npm run check:content -- --update`로 기준선 갱신(기준선 파일도 커밋).
+4. **영웅 팁(선택)** — 상대 덱 경고가 필요한 고유 기믹은 `src/data/teamBuilderTips.js` `SIGNATURE_TIPS` / `HERO_TIPS`.
+5. **화면 확인** — 미리보기 허브(§4.1)에서 `/dex` 새 영웅(스킬 · 효과 요약), `/team/effects` 효과 사전 칩, `/team` 덱에 넣고 버프 목록 · 전력 비교. 덱 편성 피커 정렬은 §12.1.
+6. 배포 — skill `senalink-deploy`.
+
+- 앱이 import하는 파일만 UI에 반영: 영웅 `src/data/scraped_heroes.json`(+`public/images/{id}/`), 펫 `src/data/pets.js`, 장비 `equipments.js` + `gearDex`. `asset/`은 원본·재생성 소스.
+- 신규 영웅이면 **전용장비 아이콘도 같이** (`exclusiveGearMeta.generated.json`).
+- 목록 정렬 수동 금지 — §12.1 `sortHeroesForList`.
+- 장신구 세공: `accessory2`는 optional. **기본값에 `accessory2`를 넣지 말 것**(구 문서 해석이 깨짐). 해석·표시는 `lib/accessoryCraft.js`.
+- **버프 · 디버프 · 특수 효과 아이콘:** 원본 `asset/특수효과, 버프, 디버프 아이콘/`(버프 · 디버프 · 특수효과 한글 이름 + 원본 ID + `목록.md`), 사이트용 `public/images/effects/{ID}.webp`, 이름 표 `src/data/effectIcons.json`, 찾기 `lib/effectIcons.js` `effectIconUrl(name)`(띄어쓰기 무시 · 「(중첩)」 · 별명 `ALIASES`). 쓰는 곳: 팀 빌더 표 · 특수 효과 알약 · 목록(`FxIcon`), 도감 시스템 「상태이상 & 특수 효과」 카드. 새 영웅 · 새 효과가 나오면 `node scripts/sync-effect-icons.cjs`(7katlas 도감에서 다시 받음, 라이브 무관) → 아이콘 못 찾는 이름은 `ALIASES`에 추가.
+- **스킬 텍스트 정본 = [7katlas](https://7katlas.com/codex.html)** (2026-11 전 영웅 동기화, §13.1.2). 각성 영웅은 강화 수치가 기본 수치에 합쳐져 있어 「스킬 강화」 줄이 비는 게 정상. 스킬 문장을 바꾸면 팀 빌더 분석도 같이 바뀌므로 점검표(`/dev/tb-audit.html`)로 확인.
+- 스킬 · UI 아이콘 교체: 이미지 먼저 넣고 코드 참조. UI 아이콘은 `src/data/uiIcons.js` 키(예: 도감 `dexSkill` · `dexEffectSummary` · 장신구 도감 탭 `dexAccessory` · 장비 부위 필터 `statPhysical` / `statMagic` / `statArmor` — `gearDex.js` `SLOT_META.icon`, 원본 `asset/장비, 장신구/능력치 아이콘/`). 흰 아이콘은 선택된 탭에서 `index.css` 규칙으로 자동 검정(`brightness(0)`)이라 따로 만들 필요 없음. 색 있는 원본을 흰색으로 바꿀 때는 **음영을 살려** 밝기 비율만 유지(밍봉 선호 — 고해상도 음영 아이콘이 크게 보일 때 품질이 좋음). 팀 빌더 모드 아이콘 `tbArena` · `tbGuildwar` · `tbPve`(가면, `tb-pve-mask.png` — 공용 `pve` 아이콘과 별개) · `tbEffects`(책, `tb-effects-book.png`), 도구 준비 중 카드 `toolGacha` · `toolRuby`가 그 예. **UI 아이콘 그림을 바꿀 땐 새 파일 이름으로** (같은 이름 덮어쓰기 → 브라우저 캐시로 밍봉·방문자 화면에 예전 그림이 남음).
+
+---
+
+
 ## 13. 도감 업데이트 유의 사항 (영웅 · 펫 · 장비 · 전용장비)
 
 앱이 **실제로 import하는 파일**만 고치면 UI에 반영된다. `asset/`은 원본·재생성 소스.
@@ -40,7 +73,7 @@
 - 공식 대상 칸 오류: 「N% 확률」 디버프인데 대상이 「자신」으로 적힌 경우가 있음(노호 2초월, 사라 악마의 유혹 2초월) → 대상 표시 제거해 스킬 대상으로 읽게 함.
 - **각성 영웅은 스킬 강화가 기본 수치에 합쳐져 있음**(7katlas 각성 스킬 `enhancement` 비어 있음 — 예: 실베스타 기본 공격 기본 145% = 옛 강화 수치). 그래서 각성 영웅 강화 줄이 비는 것은 정상. 각성 스킬 자체 강화만 있음.
 - 추가 정리: 델론즈 변신 · 오공 분신 기본 공격 = 공식 두 번째 기본 공격으로 병합, 쥬피 「연사」 추가(`쥬피_active1_alt`, 저격자세 변형), 벨리카 「어둠의 환영」 → 공식 「어둠의 화염」(내용·아이콘 교체), 이름 맞춤(루시 신비한 춤사위 · 델론즈 사신의 가호 — 아이콘 경로는 기존 파일 유지), 클로에 스킬 위치 바로잡음(청소 시간=스킬1 · 고양이 춤=스킬2 · 고양이의 은혜=패시브).
-- 7katlas에만 있는 영웅: 바엘 · 클레오 · 이브 · 기드온. 초선 「폐월의 미소」 2초월(받는 회복량 증가)은 공식에 없어 뺌(밍봉 확인: 공식이 맞음).
+- 7katlas에만 있는 영웅: 바엘 · 클레오 · 기드온 (이브는 2026-11-12 추가). 초선 「폐월의 미소」 2초월(받는 회복량 증가)은 공식에 없어 뺌(밍봉 확인: 공식이 맞음).
 - **스킬 아이콘 대조(518개):** 7katlas 아이콘과 그림 비교 → 엇갈림(클로에 3개 · 빅토리아 2개)·다른 그림(사라 악마의 계약)·리뉴얼 전 그림·`iconUrl` 빈 칸(캐티 마구 할퀴기 · 초선 폐월의 미소 · 유신 뇌운 흑영랑)을 공식 그림 128×128 PNG로 교체(`public/images/{id}/skills/` + asset). 파일명이 같아서 브라우저는 강력 새로고침해야 바뀐 그림이 보임.
 
 #### 13.1.1 전용장비 (신규·각성 시 같이)
@@ -88,7 +121,7 @@
 | 단계 | 할 일 |
 |------|--------|
 | 1 | asset에 `(각성)` 폴더·JSON·초상·스킬 아이콘·전용장비 갱신 |
-| 2 | `scraped_heroes.json` 해당 영웅: `isAwakened: true`, 스킬에 **Awakening** 추가, 쿨/설명/아이콘 경로 갱신. asset에 `gauge` / `gauge_decrease`가 있으면 각성 스킬에 optional `awakenGauge` / `awakenGaugeDecrease`로 옮김 (도감 「각성 게이지 75 · 자기 턴마다 25 감소 (3턴 유지)」 — 현재 아리스만) |
+| 2 | `scraped_heroes.json` 해당 영웅: `isAwakened: true`, 스킬에 **Awakening** 추가, 쿨/설명/아이콘 경로 갱신. asset에 `gauge` / `gauge_decrease`가 있으면 각성 스킬에 optional `awakenGauge` / `awakenGaugeDecrease`로 옮김 (도감 「각성 게이지 75 · 자기 턴마다 25 감소 (3턴 유지)」 — 아리스 · 쥬다스 · 이브) |
 | 3 | `public/images/{id}/` 초상·스킬·전용장비 덮어쓰기 |
 | 4 | 정렬은 자동(각성이 일반보다 앞). 같은 소속끼리는 이름순 |
 

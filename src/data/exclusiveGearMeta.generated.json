@@ -474,5 +474,9 @@
   "쥬다스": {
     "heroName": "쥬다스",
     "iconUrl": "/images/쥬다스/exclusive-gear.png"
+  },
+  "이브": {
+    "heroName": "이브",
+    "iconUrl": "/images/이브/exclusive-gear.png"
   }
 }

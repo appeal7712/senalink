@@ -79,4 +79,9 @@ export function sortHeroesForList(list) {
   return [...(list || [])].sort(compareHeroesForList);
 }
 
-export const heroes = sortHeroesForList(scrapedHeroes);
+/** 툴팁은 영웅 단위 `tooltips`에 한 번만 저장 — 스킬에 따로 있는 것(녹스 등)만 스킬 값을 씀 */
+const withSkillTooltips = (h) => (h.tooltips
+  ? { ...h, skills: h.skills.map((s) => (s.tooltips ? s : { ...s, tooltips: h.tooltips })) }
+  : h);
+
+export const heroes = sortHeroesForList(scrapedHeroes.map(withSkillTooltips));

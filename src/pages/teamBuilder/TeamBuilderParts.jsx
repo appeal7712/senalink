@@ -564,15 +564,67 @@ export function Block({ tone, icon, iconPlain = 0, iconSize = 17, title, tag, su
 
 const CHECK_MARK = { good: '✓', warn: '!', info: 'i', purple: '✦' };
 
+/** 중복 — 적용되는 쪽은 초록 알약, 나머지는 흐리게 + 취소선 */
+function CheckGivers({ givers }) {
+  return (
+    <div className="tb-ck-row">
+      {givers.map((g) => (
+        <span key={`${g.name}${g.value}`} className={`tb-ck-chip ${g.applied ? 'is-on' : 'is-lost'}`} title={g.applied ? '적용' : '반영 안 됨'}>
+          {g.applied ? <i aria-hidden="true">✓</i> : null}
+          {g.name} <b>{g.value}</b>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/** 편성 조건 — 1줄 역할 수(채움 초록 · 부족 빨강) + 발동 뱃지, 2줄 스킬 태그 + 효과 알약(효과는 항상 둘째 줄부터) */
+function CheckReq({ req }) {
+  return (
+    <>
+      <div className="tb-ck-row">
+        {req.have.map((h) => (
+          <span key={h.role} className={`tb-ck-chip ${h.short ? 'is-short' : 'is-on'}`}>
+            <i aria-hidden="true">{h.short ? '✕' : '✓'}</i>
+            {h.role} <b>{h.n}명</b>{h.boosted ? <small>({h.boostedBy ? `${h.boostedBy} ` : ''}+1)</small> : null}
+            {h.short ? <em>{h.short}명 부족</em> : null}
+          </span>
+        ))}
+        <span className={`tb-ck-state ${req.met ? 'is-on' : 'is-off'}`}>{req.met ? '발동' : '미발동'}</span>
+      </div>
+      <div className="tb-ck-row">
+        {req.groups.map((g) => {
+          const fx = (n) => <span key={n} className={`tb-ck-fx${req.met ? '' : ' is-off'}`}>{n}</span>;
+          const [first, ...rest] = g.names;
+          return (
+            <span key={`${g.skills.join()}|${g.names.join()}`} className="tb-ck-group">
+              {/* 스킬 이름은 첫 효과와 붙여서 줄 끝에 혼자 남지 않게(스킬이 여럿일 때) */}
+              <span className="tb-ck-lead">
+                {g.skills.length ? <span className="tb-ck-skill">{g.skills.join(' · ')}</span> : null}
+                {first ? fx(first) : null}
+              </span>
+              {rest.map(fx)}
+            </span>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
 export function CheckList({ items, resolveHero, onFinder }) {
   return (
     <ul className="tb-checks">
       {items.map((it, i) => (
-        <li key={it.id} className={`tb-check is-${it.tone}${it.finders ? ' is-wide' : ''}`} style={{ '--i': Math.min(i, 12) }}>
+        <li key={it.id} className={`tb-check is-${it.tone}${it.finders ? ' is-wide' : ''}`} style={{ '--i': Math.min(i, 12), '--faces': Math.min(it.heroes?.length || 0, 5) }}>
           <span className="tb-check-mark" aria-hidden="true">{CHECK_MARK[it.tone]}</span>
           <div className="tb-check-body">
             <strong>{it.title}</strong>
-            {it.detail ? <p>{it.detail}</p> : null}
+            {it.givers ? <CheckGivers givers={it.givers} /> : null}
+            {it.req ? <CheckReq req={it.req} /> : null}
+            {Array.isArray(it.detail)
+              ? <p>{it.detail.map((line) => <span key={line} className="tb-check-line">{line}</span>)}</p>
+              : it.detail ? <p>{it.detail}</p> : null}
             {it.finders?.length ? (
               <div className="tb-check-finders">
                 {it.finders.map((g) => (

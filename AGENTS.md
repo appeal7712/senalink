@@ -15,26 +15,33 @@
 React + Vite + Firebase (Auth / Firestore / Storage / Functions asia-northeast3).  
 라우터는 React Router가 아니라 `src/config/routes.js` + History API (`App.jsx`).
 
+
 ### 1.1 문서 지도 (필요할 때만 열기)
 
-이 파일은 **모든 작업에 항상 읽히는 핵심**만 둔다. 상세는 아래 문서로 분리했다(원문 그대로, 절 번호 § 동일). 이 파일에 없는 §번호는 해당 문서에서 찾을 것.
+이 파일은 **모든 요청에 자동으로 붙는 핵심**만 둔다(길면 매 요청 토큰이 그만큼 듦 — 상세는 아래 문서로, 새 내용도 되도록 아래 문서에 쓸 것). 이 파일에 없는 §번호는 해당 문서에서 찾을 것.
 
 | 문서 | 내용 (§) | 언제 |
 |------|----------|------|
-| [docs/agents/preview-hub.md](docs/agents/preview-hub.md) | §4.1 미리보기 허브 | 「미리보기 허브 켜줘」·로컬 테스트 |
-| [docs/agents/features.md](docs/agents/features.md) | §10 기능별 동작 (CMS·길드전·세팅 확인·시즌 카드·테마·쿠폰) | 해당 기능 패치 |
+| [docs/agents/architecture.md](docs/agents/architecture.md) | §6–9 인증 · 역할 · 연합 · Firestore 경로/rules 표 · Storage · Functions, §11–12 lib · 컴포넌트 지도 · 정렬 적용 표, §15 | rules · Functions · 허브 저장 경로 · Ops |
+| [docs/agents/team-builder.md](docs/agents/team-builder.md) | §10.10 팀 빌더 · 효과 엔진 「어디를 고칠지」 표 · 밍봉 확정 화면 규칙 · 새 영웅 체크 · 검증 | 팀 빌더 · 효과 사전 · 도감 효과 요약 |
+| [docs/agents/features.md](docs/agents/features.md) | §10 기능별 동작 (CMS·길드전·세팅 확인·시즌 카드·테마·쿠폰·팀 빌더 상세) | 해당 기능 패치 |
+| [docs/agents/encyclopedia.md](docs/agents/encyclopedia.md) | §13.0 신규 영웅 런북 · §13 도감 (영웅·펫·장비·장신구) | 영웅·장비 추가/변경 |
 | [docs/agents/ui-layout.md](docs/agents/ui-layout.md) | §12.2–12.5 모바일 CSS·덱 수정 모달 | 모바일·덱 수정 모달 CSS |
-| [docs/agents/encyclopedia.md](docs/agents/encyclopedia.md) | §13 도감 (영웅·펫·장비·장신구) | 영웅·장비 추가/변경 |
+| [docs/agents/pitfalls.md](docs/agents/pitfalls.md) | §14.1 CSS 순서 · 큰 정리 · 브라우저 확인 함정 | CSS 이동 · 리팩터링 · 브라우저 확인 |
+| [docs/agents/preview-hub.md](docs/agents/preview-hub.md) | §4.1 미리보기 허브 | 「미리보기 허브 켜줘」·로컬 테스트 |
 | [docs/agents/patch-history.md](docs/agents/patch-history.md) | §17 패치 내역 | 배포 시 맨 위에 추가 |
 | [docs/content-season-schedule.md](docs/content-season-schedule.md) | 시즌 카드 정본 | 시즌 카드 패치 전 필수 |
 
 | 자동화 | 위치 | 역할 |
 |--------|------|------|
-| 스킬 `senalink-deploy` | `.cursor/skills/senalink-deploy/` | 배포 전 점검 → 버전·패치 내역 → 배포 → 커밋·푸시 |
-| 스킬 `senalink-preview-hub` | `.cursor/skills/senalink-preview-hub/` | 에뮬레이터 + dev 서버로 로컬 연습장 |
-| `npm run check:content` | `scripts/check-content.mjs` + `check-content.baseline.json` | 신규 영웅 · 효과 점검(데이터 · 엔진 오류 · 못 읽은 문장 · 아이콘 · 전력 비교), 새로 생긴 문제만 표시 — §13.0 |
-| 훅 `guard-shell` | `.cursor/hooks.json` → `.cursor/hooks/guard-shell.mjs` | senalink 외 프로젝트 배포·Firestore 일괄 삭제·강제 푸시·시크릿 커밋 차단, 배포·rules·functions 명령은 확인 요청 |
+| `npm run add:hero -- 이름` | `scripts/add-hero.mjs` | 신규 영웅 · 각성 · 리메이크 — asset 폴더 → 데이터 · 이미지 · 메타 한 번에 (§13) |
+| `npm run check:content` | `scripts/check-content.mjs` + 기준선 | 영웅 · 효과 점검, 새로 생긴 문제만 표시 (§13.0) |
+| `node scripts/sync-effect-icons.cjs` | 7katlas 효과 아이콘 | 버전별 캐시 — 바뀐 영웅만 받음 |
+| 스킬 `senalink-deploy` · `senalink-preview-hub` | `.cursor/skills/` | 배포 순서 · 로컬 연습장 |
+| 훅 `guard-shell` | `.cursor/hooks/guard-shell.mjs` | senalink 외 배포 · 일괄 삭제 · 강제 푸시 · 시크릿 커밋 차단 |
 | 규칙 `firebase-safety` | `.cursor/rules/firebase-safety.mdc` | rules·functions·저장 경로 파일을 열면 §2.1 자동 첨부 |
+
+**토큰 아끼기:** `scraped_heroes.json`(500KB) · `features.md` · `patch-history.md` · `index.css`는 통째로 읽지 말고 Grep · 줄 범위로. 영웅 데이터 변경은 `add:hero`, 점검은 `check:content -- --hero 이름`.
 
 ---
 
@@ -133,6 +140,7 @@ npm run dev              # Vite http://127.0.0.1:5173
 npm run emulators        # Auth 9099 / FS 8080 / Functions 5001 / Storage 9199
 npm run seed:admin       # 에뮬레이터 슈퍼관리자 시드
 npm run seed:preview     # 에뮬레이터 허브에 테스트 공략 (길드전 공격·방어·대체 덱, 공성 4진형, 메타 덱). 빈 칸만 · `-- --force`는 에뮬레이터 안에서 덮어씀. 127.0.0.1:8080 고정 = 라이브 무관
+npm run add:hero -- 이름 # 신규 영웅 · 각성 · 리메이크를 asset 폴더에서 한 번에 (§13)
 npm run check:content # 신규 영웅 · 효과 점검(§13.0) — 데이터 · 엔진 바꾼 뒤 항상
 npm run build
 npx firebase deploy --only hosting --project senalink
@@ -170,131 +178,10 @@ npx firebase deploy --only functions --project senalink         # functions 변�
 
 ---
 
-## 6. Context · 인증 · 역할
 
-Provider 순서 (`main.jsx`): **SuperAdmin → UserProfile → Lounge → App**.
+## 6–9. 인증 · Firestore · Storage · Functions → [docs/agents/architecture.md](docs/agents/architecture.md)
 
-### 6.1 SuperAdmin (`SuperAdminContext.jsx`)
-- Firestore `admins/{uid}`에 `{ role: "super" }` 가 있어야 함. **앱에서 생성 불가** (콘솔/시드만).
-- `/ops` 로그인: 구글 팝업 또는 에뮬레이터 `enterLocalOpsAdmin`.
-- 실제 쓰기 권한은 URL이 아니라 **Firestore `isSuperAdmin()`**.
-
-### 6.2 사이트 유저 프로필 (`UserProfileContext.jsx`)
-- 문서: `users/{uid}` 실시간 구독 + `saveProfile`.
-- 필드: `nickname`(2–12), `photoURL`, `totalwarTier`, `arenaTier`, `arenaLeague`(선택, `rookie`·`elite`·`champions` — 결투장 리그, 없으면 미선택), `destructionScore`, `combatPower`(선택, 내 전투력 총합·본인 입력), `hubId`, `recommendCount`, `lastProfileRecommendDate`, `dailyTarotPeriodId`(선택, KST 09:00 주기 일일 타로 클릭), `updatedAt`.
-- **마이페이지:** GNB `ProfileDropdown` → `MyPageModal` (본인만 수정).
-- **일일 타로카드:** GNB `DailyTarotButton` — 외부 링크 + `dailyTarotPeriodId` / localStorage. 규칙 화이트리스트 필드(완화 아님).
-- **닉네임 게이트:** `NicknameGate` — 닉 없을 때 강제 모달 (`/ops` 제외).
-- **공개 프로필:** `PublicProfileModal` — 읽기 전용 + 일일 추천.
-- 아바타 Storage: `userAvatars/{uid}/avatar.jpg` (`avatarUpload.js`).
-
-### 6.3 길드 허브 (`LoungeContext.jsx`)
-- 허브 세션, 멤버/공지/게시글/히스토리/점수, 생성·가입·탈퇴·해산, 초대코드, `publicGuilds` 동기화.
-- 멤버 역할 (`hubs/{id}/members/{uid}.role`):
-  - **master** — 개설, 관리자 임명, 마스터 이양, 초대 재발급, 일부 설정
-  - **admin** — 공지·강퇴(다른 admin 제외)·점수·빌드 삭제 등. **`masterId` / `inviteCode` 변경 불가**
-  - **member** — 가입은 Callable `joinHub`만. 빌드 편집·본인 글 가능
-- 상한: `MAX_HUB_MEMBERS=30`, `MAX_ADMINS=3` (`loungeMeta.js`).
-- **허브 갱신 알림:** 활동 없이 `HUB_RENEW_WARN_DAYS`(70)일이 지난 허브에 길드원(마스터 · 관리자 · 멤버, 연합 게스트 · 슈퍼 관전 제외)이 들어오면 `HubRenewPrompt` 「100일간 … 삭제됩니다. 갱신하시겠습니까?」. 「갱신」 = `renewHub()` → history 한 줄(`action: 'renew_hub'`) → Functions `onHubHistoryCreated`가 `lastActivityAt` 갱신(**rules · Functions 변경 없음**, 기존 경로). 「나중에」 = 이 탭 `sessionStorage`만. 알림을 못 볼 만큼 안 쓰는 허브는 100일에 기존대로 삭제.
-- **`users.hubId` 보호:** 멤버 스냅샷 오류·빈 목록만으로 hubId를 지우지 말 것. 클리어 전 `getDoc(members/{uid})`로 소속 확인. 로그인 후 세션 없으면 Callable **`resolveMyHub`**로 복구(허브 `members` 스캔 → `users.hubId` 복원).
-
-#### 6.3.1 연합 (1군 호스트 ↔ 2군 게스트, 읽기 전용)
-
-길드 허브 **홈 하단**: 왼쪽 **연합** · 오른쪽 **허브 나가기**.
-
-| | 내용 |
-|--|--|
-| 목적 | 2군이 1군 공략을 **열람** (멤버 가입 아님) |
-| 코드 | `7A-XXXX-XXXX` · `allianceIndex/{code}` (초대코드 `7K-` / `inviteIndex`와 분리) |
-| 스키마 | host: `allianceEnabled`/`allianceCode` + `allianceGuests/{guestHubId}` · guest: `allianceHostId`/`allianceHostName` |
-| 상한 | 호스트당 게스트 허브 **최대 3** (`MAX_ALLIANCE_GUESTS`) |
-| 쓰기 | **전부 Callable** — 클라이언트 `allianceIndex`/`allianceGuests` write 금지. hub의 연합 필드는 client update로 변경 불가(`allianceFieldsUnchanged`) |
-| 읽기 | rules: `isAllianceGuestOf(hostId)`일 때만 host hub·서브컬렉션 **read** 추가. **write 완화 없음** |
-| UI | 게스트 뷰: `session.allianceGuest` · `canEditBuilds`/`isAdmin` false · 상단 읽기전용 배너 · builds auto-save 가드 |
-| Callable | `createAlliance` · `joinAlliance` · `leaveAlliance` · `revokeAllianceGuest` · `regenAllianceCode` · `dissolveAlliance`(1군 종료) |
-| 배포 | rules+functions 함께. **라이브는 밍봉 명시 시에만** |
-### 6.4 프로필 일일 추천
-- 클라이언트: `src/lib/profileRecommend.js`
-- Claim: `profileDailyRecommends/{fromUid}_{toUid}_{YYYY-MM-DD}` + 대상 `users.recommendCount` +1 (같은 배치).
-- **추천자×대상**당 KST 하루 1회. 같은 날 다른 사람은 추가 추천 가능. 같은 사람은 다음 KST 자정 이후 다시 가능. 취소 없음.
-- `users.lastProfileRecommendDate`는 마지막 추천일 참고용(전체 하루 1회 게이트 아님).
-- 어뷰징은 ops에서 감시만 (삭제 UI 없음).
-
----
-
-## 7. Firestore 경로 (`src/config/firestorePaths.js`)
-
-```js
-COL = {
-  ADMINS, SITE, HUBS, INVITE_INDEX, PUBLIC_GUILDS, USERS,
-  PROFILE_DAILY_RECOMMENDS, COMMUNITY_GUIDES, COMMUNITY_TIER_LISTS,
-  EXCLUSIVE_GEAR_GUIDES, META_DECK_SUBMISSIONS,
-}
-SITE_MAIN_DOC = ['site', 'main']   // CMS
-// site/stats 는 방문 집계 (헬퍼에만, COL 상수 없음)
-// hubs/{id}/builds|notices|posts|history|scores|members
-```
-
-### 읽기/쓰기 요약 (`firestore.rules`)
-
-| 경로 | 읽기 | 쓰기 |
-|------|------|------|
-| `admins/{uid}` | 본인 get | 클라이언트 불가 |
-| `site/main` | 공개 | Super만 (`updatedBy` = 본인) |
-| `site/stats` | 공개 | 레거시 +1 (구 클라). 신규는 `site/stats/visitShards/{0–31}` 동일 +1 규칙 |
-| `users/{uid}` | signed-in get / **list=Super** | 본인 화이트리스트; 타인 recommend +1은 claim과 함께만 |
-| `profileDailyRecommends/…` | 본인 claim | 본인 create만 (`from_to_date`, 대상당 하루 1) |
-| `communityGuides/{id}` | 공개 | Super 전부; signed-in은 PvP(arena/totalwar) 본인 글 |
-| `communityTierLists/{pve\|pvp}` | 공개 | Super만 |
-| `metaDeckSubmissions/{uid}` | 본인 get · **list=Super** | 본인만 create/update(문서 id = 내 uid, 필드 8개 화이트리스트, `status=='pending'`, `deckJson` ≤20,000자, 인게임 닉 1–20자) · 본인 삭제 · Super 승인/반려(`status` pending/approved/rejected) |
-| `inviteIndex/{code}` | signed-in get | 허브 admin 생성; master/super 삭제 |
-| `allianceIndex/{code}` | **불가** (Callable만) | **불가** (Callable만) |
-| `publicGuilds/{hubId}` | 공개 | 허브 admin/master |
-| `hubs/{hubId}` | 멤버·**연합 게스트**·Super | 생성=본인이 master; 수정 master/admin/super(제약·연합필드 클라 변경 불가); 삭제 master/super |
-| `hubs/…/allianceGuests` | 호스트 멤버·해당 게스트 허브 멤버·super | **불가** (Callable만) |
-| `hubs/…/members` | 멤버·본인·**연합게스트 read**·super | 생성은 개설 시 master; 가입은 **Functions joinHub**; 역할 변경 master/super |
-| `hubs/…/builds` | 멤버·**연합게스트 read**·super | 멤버 C/U; 삭제 admin/super |
-| `hubs/…/notices, posts` | 멤버/super | 피드 검증; 수정/삭제 admin 또는 작성자 |
-| `hubs/…/history` | 멤버/super | create만 |
-| `hubs/…/scores` | 멤버/super | admin/super |
-
-**슈퍼관리자:** `admins/{uid}.role == 'super'`.
-
-`firestore.indexes.json`: `communityGuides` (section + updatedAt desc), `members.uid` collectionGroup (resolveMyHub용).
-
----
-
-## 8. Storage (`storage.rules`)
-
-| 경로 | 읽기 | 쓰기 |
-|------|------|------|
-| `userAvatars/{uid}/avatar.jpg` | 공개 | 본인, ≤500KB jpeg/png/webp |
-| `hubEmblems/{hubId}/byUser/{uid}/mark.jpg` | 공개 | 본인 동일 제한 |
-| `hubEmblems/{hubId}/mark.jpg` | 공개 | write 불가(레거시) |
-
----
-
-## 9. Cloud Functions (`functions/index.js`)
-
-| 이름 | 종류 | 역할 |
-|------|------|------|
-| `onHubHistoryCreated` | onCreate | 허브 `lastActivityAt` 갱신 |
-| `onHubMemberDeleted` | onDelete | 매칭 시 `users.hubId` 클리어 |
-| `joinHub` | Callable | 초대코드 가입 (Admin SDK 트랜잭션, 좀비 hubId 정리) |
-| `resolveMyHub` | Callable | 로그인 유저의 허브 멤버십 재탐색 → `users.hubId` 복구 (모바일에서 hubId만 날아간 경우) |
-| `disbandHub` | Callable | 허브 통째 삭제 (super 또는 마지막 멤버) |
-| `createAlliance` | Callable | 호스트 연합 활성화·코드 발급 (`7A-…`) |
-| `joinAlliance` | Callable | 게스트 허브를 호스트에 연결 (멤버십 불변, 최대 3) |
-| `leaveAlliance` | Callable | 게스트 측 연합 해제 |
-| `revokeAllianceGuest` | Callable | 호스트가 특정 게스트 끊기 |
-| `regenAllianceCode` | Callable | 호스트 마스터 연합 코드 재발급 |
-| `dissolveAlliance` | Callable | 호스트 마스터 연합 종료(코드·게스트 연결 정리) |
-| `purgeIdleHubs` | Schedule 매일 04:00 KST | 100일 유휴 허브 삭제 (`HUB_IDLE_DAYS` — `functions/index.js`·`src/data/loungeMeta.js` 같이 맞춤). 70일부터 허브 화면에 갱신 알림(§6.3) |
-| `syncCoupons` | Schedule 매일 00:00 KST | 7katlas 쿠폰 목록(+한글 번역) → `site/coupons` (파싱 실패 시 기존 유지) |
-| `snapshotVisitDaily` | Schedule 10분마다 (KST) | 오늘 방문자 합계(`site/stats`+`visitShards` 읽기만) → `site/visitDaily.days[YYYY-MM-DD]` (커질 때만) · Ops 대시보드 그래프용 |
-| `redeemCoupon` | Callable (로그인 불필요) | 넷마블 쿠폰 API 중계 (`{uid, code}` → `{status}`) · Firestore 무접근 · IP당 10분 60회 |
-
-허브 삭제 시 지우는 서브컬렉션: `members`, `history`, `notices`, `posts`, `scores`, `builds`, `allianceGuests` (+ `allianceIndex`·게스트 역포인터 정리).
+Provider 순서(`main.jsx`): **SuperAdmin → UserProfile → Lounge → App**. 슈퍼관리자 = `admins/{uid}.role == 'super'`(앱에서 생성 불가). 허브 역할 master/admin/member, 가입은 Callable `joinHub`만, 연합(`7A-` 코드) 쓰기는 전부 Callable. `users.hubId`는 `members/{uid}` 소속 확인 없이 지우지 말 것(복구 Callable `resolveMyHub`). 경로 상수 `src/config/firestorePaths.js`. **rules · Functions · 허브 저장 경로를 만지기 전에 위 문서의 읽기/쓰기 표 · Functions 목록을 열 것.**
 
 ---
 
@@ -309,131 +196,22 @@ SITE_MAIN_DOC = ['site', 'main']   // CMS
 - 10.7 컨텐츠 시즌 카드 — 정본 `docs/content-season-schedule.md` **패치 전 필수 열람**, 정본이 코드보다 우선
 - 10.8 화면 테마 유리/선명 다크 (`uiTheme.js`, `themeSolidDark.css`, `UiThemeToggle`)
 - 10.9 쿠폰 (GNB 「쿠폰」, `site/coupons`, Callable `redeemCoupon`) — UID는 localStorage만, 클라 write 규칙 추가 금지
-- 10.10 팀 빌더 (`/team`) — 덱 효과 분석은 `lib/teamBuilderAnalysis.js` 순수 함수, 팁은 `data/teamBuilderTips.js`. 덱 저장은 localStorage만 (Firestore 무접근). 빠른 지도는 아래 §10.10 요약
+- 10.10 팀 빌더 (`/team`) — 덱 효과 분석은 `lib/teamBuilderAnalysis.js` 순수 함수, 팁은 `data/teamBuilderTips.js`. 덱 저장은 localStorage만 (Firestore 무접근). 빠른 지도는 team-builder.md
 
-### 10.10 요약 — 팀 빌더 · 효과 엔진 (자주 고치는 곳)
 
-상세·규칙 전체는 [docs/agents/features.md](docs/agents/features.md) §10.10. 패치 전 이 표로 위치부터 찾을 것.
+### 10.10 팀 빌더 · 효과 엔진 → [docs/agents/team-builder.md](docs/agents/team-builder.md)
 
-| 바꾸고 싶은 것 | 위치 |
-|------|------|
-| 스킬 문장 읽기(대상·턴·확률·수치·조건) · 강화/초월 반영 | `src/lib/teamBuilderAnalysis.js` — `collectHeroEntries` · `makeEntries` · `upgradeSegments` · `applyUpgradeRules` · `embeddedEffects` · `skillEffects` |
-| 효과 이름 표시 · 버프/디버프 분류 · 이름 붙은 버프(여포 용이무모 = 물리 공격력) | 같은 파일 `effectLabel`(▲▼ 방향만) · **`listLabel`(화면 이름 — 모든 화면 공용)** · **`fmtFxValue`(수치 뱃지 — 모든 화면 공용)** · `classify` · `NAMED_STAT_BUFFS` |
-| 효과로 찾기 칩 묶기(「방어력 감소(중첩)」 · 「…감소 효과」 → 한 칩) | `finderKey` — 색인 `buildHeroEffectIndex` 와 목록 이름 클릭 `findCard` 둘 다 이것으로 칩 id |
-| 공격 스킬의 「치명타 · 약점 공격 확률 증가 100%」(지속 턴 없음) | `makeEntries` `ownHit` → 적 디버프 아님, **자신 버프 · 「이 스킬 공격 때」**(원래 대상 글은 남겨 노림 문장 `targetingInsights`에 계속 씀) |
-| 패시브 탭 목록 · 겹침(높은 수치 하나만) · 자기 버프 | `effectCards`(`selfOnly`) · `findOverlaps`(팀 버프끼리만, `teamGroups`) · `scopeCovers` · `sharedRecipients`(일부 겹침 → `overlapNote`) · `selfClash` |
-| 스킬 · 발동 탭 목록 | `skillCards`(카드) · `skillCardText`(표시 이름 다듬기) · 화면 `SkillEffectList` |
-| 목록 상자 묶기 · 칸 숫자 · 버프/디버프 칸 표(패시브 · 액티브 · 합계) | `src/pages/teamBuilder/fxGroups.js` — `groupEffectCards` · `groupSkillCards` · `fxBoxCount` · `fxTotals` · `fxLedger`(칸 메인 표 `FxLedger` · 맨 아래 「자세히 보기」 `FxFold` 안에 목록) |
-| 덱 칸(공용 덱 배치 카드 · 진형 · 펫, 길드전 5칸 중 3명) | 화면 `TeamBuilderParts.jsx` `DeckSide`(= 공용 `InGameDeckCard`, `allowNoPet`) · `DeckVs`, 저장 `TeamBuilderPage.jsx` `loadStore`(`decks[mode].formation` · `.pet`), 엔진 `formationRows` · `petEntries` · `petCards`(진형은 전력 비교에만 — 받는 버프 표에는 안 넣음), 데이터 `data/formations.js` · `data/pets.js` |
-| 전력 비교 탭(VS 대결 바 `.tb-clash` 가운데 액체 구슬) — 「Σ 최종 합계」 판 하나 · 같은 영웅끼리 · 두 팀 같음 | 엔진 `duelSummary`(`DUEL_STATS` 능력치 목록 · `DUEL_FINALS` 합친 줄 · `duelNets` 영웅별 「받는 버프 − 상대 디버프」 · `duelSideIcons`) · 화면 **`src/pages/teamBuilder/DuelBoard.jsx`**(`DuelBoard` · `DuelRow` · `DuelNum` 큰 숫자 + 영웅 점 `duelHeadline` · `DuelSide` 펼침 효과 기준 · `duelSlots` 두 팀 줄 맞춤 · `duelShowTotals` 영웅별 합계) · 스타일 `teamBuilder.css` `.tb-duel-*`. **화면 규칙 정본 = 시안 `dev/duel-mock.html`**(밍봉 2026-11-11 회의 확정 — 바꿀 땐 시안부터, features.md §10.10 「전력 비교 화면」) |
-| 칸 강조색(우리 팀이 받는 버프 파랑 · 상대가 받는 버프 빨강 · 디버프 칸 둘 보라 + 제목 옆 뱃지 글자, 칸 안 합계 · 「자세히 보기」 뱃지도 칸 색) · 상대 덱 목록 대상 글 뒤집기 | `TeamBuilderParts.jsx` `Block` `tone` · `tag` prop · `flipScope`(`perspective="enemy"`) — 색 변수 `teamBuilder.css` `.tb-page`(`--tb-gain` · `--tb-hurt` · `--tb-rival`), 상세 features.md §10.10 「분석 칸 색」 |
-| PvE 전용 줄(탑 전용 · 보스 대상) | `makeEntries` `allowTower` — 탑 줄은 `tower: true`(「탑 전용」 표시), 「보스」 줄은 `SKIP_RE`(결투장 · 길드전은 건너뜀) / `SKIP_PVE_RE`(PvE는 읽음) |
-| 편성 조건 문구(「스킬2 생명력 전환 발동 안 함」) | `formationRequirements().effectText` · `heroSummary().conditions[].effectText` — 둘 다 `skillEffectText` 공용 |
-| 덱 세팅 체크 항목 | `src/pages/teamBuilder/TeamBuilderPage.jsx` `buildChecks` |
-| 상대 덱에서 조심할 것 | 같은 파일 `buildThreats` (노림 문장 `targetingSentence` · 쿨타임 증가 · 물리/마법 면역·감쇄 `damageGuardLines` · 영웅별 팁) |
-| 영웅·효과별 직접 쓴 문구 | `src/data/teamBuilderTips.js` — `SIGNATURE_TIPS`(효과 이름) · `HERO_TIPS`(영웅, `enemy`는 객체 또는 배열) · `BUFF_NOTES`(버프 카드 아래 참고 문구) |
-| 화면 조각(덱 바 · 영웅 선택 창 · 효과 요약 칸 · 버프/디버프 목록 · 주의 카드) | `src/pages/teamBuilder/TeamBuilderParts.jsx` — 파일 안 `/* ───── 이름 ───── */` 구역 순서: 공통(FxIcon · GiverFace · MiniHero) → 모드 선택 → 덱 바 · VS → 영웅 선택 드롭다운 → 블록 → 덱 세팅 체크 → 전설 장신구 → 효과 목록 → 버프 · 디버프 칸 표 → 상대 덱 주의. **전력 비교 판은 따로 `DuelBoard.jsx`** |
-| 스타일(모바일은 파일 끝 `@media` 블록) | `src/styles/teamBuilder.css` |
-| 도감 「효과 요약」 탭 | `src/components/HeroEffectSummary.jsx` + `src/styles/heroEffectSummary.css` (엔진 `heroSummary`) |
-| 엔진이 스킬 문장을 어떻게 읽었는지 확인 | 로컬 전용 점검표 `http://127.0.0.1:5173/dev/tb-audit.html` (`dev/`, 배포본 미포함) |
-
-현재 화면 동작(밍봉 확정 — 바꾸지 말 것):
-- 영웅 효과 요약 칸 · 「필요한 효과로 찾기」는 **기본 닫힘**, 버튼을 눌러야 열림. 영웅 선택 창을 닫으면 찾기도 다시 닫힘.
-- 찾기 그룹 탭 색: 팀 버프 파랑 · 적 디버프 빨강 · 역할 노랑.
-- 버프/디버프 목록: 효과 이름은 **증가 · 감소까지 붙인 원래 이름**(「방어력 감소」 — 「방어력」만 쓰지 말 것, 밍봉 지시) · **칸 안 가운데 정렬**(칸 너비 = 목록에서 가장 긴 이름, `--fxl-name`) + 오른쪽 수치 뱃지(버프 **초록** · 디버프 **보라**, 높이 26px, 이름에 증가 · 감소가 있으면 부호 없이 「29%」).
-- 같은 효과 겹침: 높은 쪽 대상이 낮은 쪽 대상을 **전부 덮을 때만** 「○○는 반영 안 돼요」. 일부만 겹치면 「헤브니아 대상(…)과 겹치는 영웅은 헤브니아 +31%, 나머지는 선란 +25%가 적용돼요」(목록 · 덱 세팅 체크 같은 문장).
-- **화면 간 일관성(밍봉 지시):** 팀 빌더 목록 · 효과로 찾기 칩 · 효과 사전 · 도감 「효과 요약」은 이름(`listLabel`) · 수치 뱃지(`fmtFxValue`, 버프 초록 · 디버프 보라) · 스킬 효과 규칙(`isSkillCastEntry` = `skillCards`)을 **같은 함수로만** 만든다. 도감 「스킬 · 발동으로 거는 버프 / 디버프」 = `heroSummary().skillFx` = `skillCards` 결과, 스킬 하나에 상자 하나. 새 화면을 만들어도 이 셋을 다시 구현하지 말 것.
-- 칸 · 탭 숫자 = **팀 목록에 보이는 상자 수**(자기 버프는 안 셈). 스킬 · 발동은 **영웅 · 스킬 단위 상자 하나**(대상이 줄마다 다르면 줄에 「→ 대상」).
-- 「자기 자신만 받는 버프」 알약은 **한 줄 고정** — 좁으면 이름 숨기고 얼굴 + 숫자.
-- 수치는 항상 **스킬 강화 + 초월 기준**.
-- 모드 4개: 결투장 · 길드전 · **PvE**(5인 · 아군만 · 탑 전용 · 보스 대상 효과 포함, 상대 덱 없음 — 상단 설명은 「PvE는 아군만 봐요.」만, 탑 전용 문구 넣지 말 것) · 효과 사전.
-- 버프 · 디버프 칸 안 [패시브 | 스킬 · 발동] 탭(`FxTabs`, 기본 패시브). 스킬 · 발동 = `skillCards`(기본 공격 · 스킬 · 각성기 · 조건 발동, 겹침 판정 없음, 지속 · 중첩 · 조건 표시).
-- 「자기 자신만 받는 버프 · 패시브」(`isSelfPassiveEntry`)는 수치 버프만이 아니라 **반격 · 협공 같은 상시 메커니즘과 고유 기믹(고통 감내 · 무도의 경지 …)까지 전부** — 반격 · 협공은 뱃지에 발동 확률(`fxValue`). 아군 쪽 조건부 메커니즘(도발 · 반격 · 협공 · 관통 · 쿨타임 초기화, `MECHANIC_BUFFS`)은 스킬 · 발동 탭. 적에게 거는 상태 이상(행동 제어 기절 · 감전 · 공포 …, 지속 피해 극독 · 중독 · 화상 …, `STATUS_CATEGORIES`)과 버프 해제 · 버프 차단 · 턴제 버프 감소, 아군 디버프 해제도 스킬 · 발동 탭에 이름 · 턴 · 확률로 표시 + 효과로 찾기 칩. 고유 기믹(special)은 조건부 = 스킬 · 발동 탭(시노부 독 축적), 상시 = 패시브 탭(`isPassiveSpecialEntry`, 쥬다스 칠흑의 낙인) — 찾기 칩은 안 만듦. 적에게 거는 공격 성질(관통 · 방어 무시 · 처형 · 연속 발동 · 생명력 전환)만 「역할」에서. 「utility라서 목록에서 빠짐」을 메커니즘이니 괜찮다고 넘기지 말 것(밍봉 지적 — 쥬리 협공 · 제이브 반격 누락).
-- 화면 이름은 **「액티브 · 발동」**(밍봉 지시 — 탭 · 도감 소제목 · 빈 목록 문구). 이 문서 · 코드 주석의 「스킬 · 발동」 탭 = 같은 것.
-- 「자신」 대상 효과는 **팀 목록 · 팀 겹침 판정에 절대 안 넣음**. 버프 칸 안 아래 「자기 자신만 받는 버프」(`SelfBuffSection`) 영웅 알약 → 눌러야 펼침. 따로 칸 만들지 말 것(밍봉 지시).
-- `/team` 모드 카드: 평소 아이콘 + 이름만, 마우스 올리면 아이콘이 커지며 흐려지고 이름 · 「5 vs 5」 · 설명 표시(CTA 버튼 없음). 폰·터치는 처음부터 글자 표시. 폰(≤760)은 **2×2 작은 카드**(아이콘 48px · 설명 두 줄)로 한 화면에 — 세로로 길게 쌓지 말 것(밍봉 지시). 공용 허브 · 도구 · 도감 상단 메뉴는 같은 디자인의 작은 판 `HoverGateCard`(`styles/hoverGate.css`, 상세 features.md §10.5) — 아이콘 원본 해상도가 낮아 카드를 낮게 · 아이콘을 작게 둔 것은 밍봉 지시(크게 키우지 말 것).
-
-**새 영웅 추가 시 팀 빌더 체크** (엔진은 스킬 문장을 규칙으로 읽어서 영웅별 코드는 원래 필요 없음 — 아래만 확인):
-1. 도감 데이터(§13)만 넣으면 팀 빌더 · 효과 사전 · 도감 효과 요약에 자동 반영. 수치는 스킬 `tooltips`(강화 · 초월 포함)에서 읽으므로 tooltips가 비면 수치 없이 이름만 나옴.
-2. 처음 보는 효과 이름: `classify`가 이름의 키워드(증가 · 감소 · 면역 · 보호막 …)로 분류, 키워드가 없으면 `utility`로 **버프/디버프 목록에서 빠짐**(관통 · 처형 · 연속 발동 같은 메커니즘용). 새 버프가 목록에 안 보이면 여기 확인.
-3. 이름만 있는 버프(여포 「용이무모」처럼 실제 능력치를 이름에 안 쓰는 것) → `NAMED_STAT_BUFFS`에 「이름 → 능력치」 추가. 툴팁에 「단, ○○이 N% 감소합니다」 부작용이 있으면 전력 비교는 `namedDrawbacks`가 자동으로 읽음(문장 모양이 다르면 정규식 확인).
-4. 상대 덱 경고가 필요한 고유 기믹 → `teamBuilderTips.js` `SIGNATURE_TIPS` / `HERO_TIPS`.
-4-1. **전력 비교 줄:** 새 능력치 효과 이름(「○○ 증가 · 감소」, 예: 「기절 효과 적용 확률 증가」)은 `DUEL_STATS`에 줄을 넣어야 전력 비교에 나옴(정규식에 안 걸리면 조용히 빠짐 — 2026-11-11 겔리두스 · 로지 「효과 적용 확률」이 빠졌던 것). 확인: 영웅 · 펫 패시브 entry 중 수치가 있고 `DUEL_STATS`에 안 걸리는 이름을 뽑아 볼 것(features.md §10.10 「전력 비교 계산」의 「안 넣는 것」 목록과 비교). 게임에 아이콘이 없는 이름은 `effectIcons.js` `ALIASES`.
-5. `npm run check:content`로 새 영웅 줄이 다 읽혔는지 확인 — 전체 절차는 **§13.0 신규 영웅 · 신규 효과 런북**.
-
-검증 방법(에이전트):
-- 엔진 · 데이터 변경 후: **`npm run check:content`**(`scripts/check-content.mjs` — 영웅 전체 + 펫 + 무작위 덱 400판으로 `analyzeTeam` · `effectCards`(+`selfOnly`) · `skillCards` · `formationRequirements` · `heroSummary` · `duelSummary` 오류 0, 스킬 문장 못 읽음 · 아이콘 없음 · utility · 전력 비교 빠짐을 기준선과 비교). 임시 번들 스크립트를 새로 짜지 말 것. 엔진 리팩터링이면 바꾸기 전 파일을 `%TEMP%`에 복사해 두고 같은 무작위 덱으로 `duelSummary` 등 결과 JSON이 같은지 비교(2026-11-11 정리 때 3,000판 동일 확인 — 엔진은 import가 없는 순수 파일이라 복사본끼리 바로 비교 가능).
-- 개발 서버(Vite)가 저장 순간 파일을 **빈 내용으로 캐시**하는 일이 있음 → 「일시적인 오류」 + 모듈 export 없음이면, 디스크 파일이 정상인지 보고 파일 수정 시각만 갱신(`(Get-Item 파일).LastWriteTime = Get-Date`) 후 새로고침. 배포 빌드는 디스크를 읽어서 무관.
-- 확인용 탭은 `browser_navigate`에 `newTab: true`로 따로 열 것(`viewId` 없이 열면 밍봉 탭을 가로챔).
-- 브라우저 확인은 **밍봉 탭에서 클릭 금지**(읽기·스크린샷만). 팀 빌더는 store 변경마다 localStorage 전체를 저장해서, 오래된 탭에서 버튼을 누르면 밍봉 덱을 덮어씀. 확인용 탭에는 데모 DOM을 넣어 보고 다른 주소로 이동(탭 닫기 도구는 다른 탭을 닫은 적 있음 → 쓰지 말 것).
+엔진 `src/lib/teamBuilderAnalysis.js`(순수 함수 · Firebase 무관), 화면 `src/pages/teamBuilder/`, 덱 저장은 localStorage만. 「어디를 고칠지」 표 · 밍봉 확정 화면 규칙(바꾸지 말 것) · 검증 방법은 그 문서. 편성 조건(「공격형 3명 이상 편성 시」)을 못 채운 효과는 `analyzeTeam`이 `entries`에서 빼고 `allEntries`에만 둠(표 · 전력 비교 미반영, 덱 세팅 체크에만 「미충족」). 엔진 · 데이터를 바꾸면 `npm run check:content`. 브라우저 확인은 새 탭(`newTab: true`)에서만, **밍봉 탭 클릭 금지**(팀 빌더가 localStorage 덱을 덮어씀).
 
 ---
 
-## 11. 주요 `src/lib/` 맵
+## 11–12. 코드 지도 → [docs/agents/architecture.md](docs/agents/architecture.md)
 
-| 파일 | 역할 |
-|------|------|
-| `firebase.js` | 초기화·에뮬레이터·`hashPassword` |
-| `googleSignIn.js` | 구글 로그인 |
-| `siteMain.js` / `siteVisitStats.js` | 메인 CMS / 방문 |
-| `profileRecommend.js` | 프로필 추천 |
-| `communityGuides.js` / `communityTierLists.js` | 공용 공략·티어 |
-| `publicGuilds.js` | 공개 길드 보드 |
-| `hubOversee.js` / `userOversee.js` | Ops |
-| `hubEmblem.js` / `avatarUpload.js` | 이미지 업로드 |
-| `copyNodeImage.js` | 세팅 공유 PNG |
-| `deckEditScrollModal.js` | 결투장·공성·강림·방어 덱 수정 모달 PC 클래스·스타일·휠 전달 (§12.4–12.5) |
-| `uiTheme.js` | 화면 테마 유리/선명 · `localStorage` · `html[data-ui-theme]` (§10.8) |
-| `teamBuilderAnalysis.js` | 팀 빌더 · 도감 효과 요약 엔진 (스킬 문장 → 효과 목록, 순수 함수 · Firebase 무관, §10.10) |
-| `seo.js` / `sanitize.js` / `rateLimit.js` / `formatTime.js` | 부가 |
+`src/lib/`(Firebase · 도메인 헬퍼) · `src/components/` · `src/pages/` 지도는 위 문서. 덱/장비 UI 공통: `InGameDeckCard`(세팅 확인 · 진형 선택 창), `DeckEditHeader`(모든 덱 편성 창 상단), `HeroGearPanel`, `HeroGridPicker`.
 
----
+### 12.1 영웅 목록 정렬 (전역)
 
-## 12. 컴포넌트 연결 (자주 만지는 것)
-
-```
-App
-├── GlobalNavBar → ProfileDropdown → MyPageModal · UiThemeToggle (§10.8)
-├── page:
-│   ├── PublicMainDashboard (site/main + 방문수)
-│   ├── TeamBuilderPage (lazy · localStorage만) → TeamBuilderParts · EffectDictionary · HeroEffectSummary (§10.10)
-│   ├── GuildLounge (LoungeContext + builds + 길드전/결투장/…)
-│   ├── GuildWarDefensePanel (방어 덱 수정 · §12.4)
-│   ├── CommunityPage → GuideCard/Editor, TierPanel, TotalWar…
-│   ├── EncyclopediaPage → DbHub → HeroDB(스킬 / 효과 요약 전환) · EquipDB …
-│   ├── ToolsPage
-│   └── OpsPage → MainSiteEditor | HubOversee | UserOversee
-├── SiteEntranceBanner
-├── NicknameGate
-└── SiteFooter (버전)
-```
-
-덱/장비 UI 공통: `InGameDeckCard`(세팅 확인 창 내용은 `SettingOverviewModal` · 진형 그리기 `deckFormation.jsx` · **진형 선택 창**도 여기 하나 — 모든 덱 편성 공용, 모양은 index.css 「진형 선택 창」 `.formation-picker-*` 한 곳, 카드 누르면 바로 적용 · 닫힘), `HeroGearPanel`, `HeroGridPicker`, `HeroPortraitCard`, `equipments.js` 옵션. 길드전 공격 상대 덱 검색칸 `GwDeckSearch` + 판정 `lib/gwDeckSearch.js`(features.md §10.2).
-
-### 12.1 영웅 목록 정렬 (전역 공통 규칙)
-
-**모든** 영웅 고르기·목록 UI는 아래 순서를 따른다. 단일 소스: `src/data/heroes.js`.
-
-1. **각성 영웅** (`isAwakened`)
-2. **스페셜** — `HERO_FACTION_ORDER.special` 소속 순 (첫 줄 `(구)세븐나이츠`)
-3. **준 스페셜** — 아스가르드 → 아이샤 소속 순
-4. **일반** → **기타(콜라보 등)**
-
-API:
-- `compareHeroesForList(a, b)` / `sortHeroesForList(list)`
-- `export const heroes` 는 이미 정렬됨
-
-| 화면 | 적용 방식 |
-|------|-----------|
-| `HeroGridPicker` | 필터 후 `sortHeroesForList` (길드전·ops·공용 PvE 에디터 등) |
-| `CommunityGuideEditor` PvP(결투장/상급) | **자체 그리드** — 예전엔 export 순서만 의존 → 필터 후 재정렬로 고정 |
-| `GuildLounge` 덱 수정 | 필터 후 `sortHeroesForList` |
-| `GuildWarDefensePanel` 방어 덱 수정 | 인라인 그리드 + `deckEditScrollHeroGrid*` (결투장 kind) |
-| `HeroDB` / 티어리스트 풀 | `sort` / `compareHeroesForList` |
-
-**왜 공용 결투장이 어긋나 보였나:** PvP 편집 UI가 `HeroGridPicker`를 안 쓰고 인라인 목록을 복제해 두었고, 카테고리 순서도 예전엔 `special → normal → asgard → aisha`라 **일반이 준 스페셜보다 앞**이었다. 지금은 `special → asgard → aisha → normal → other` + 목록마다 재정렬.
-
-새 영웅 추가 시 `group`/`category`/`isAwakened`를 맞추고, 새 스페셜 소속이면 `HERO_FACTION_ORDER`에만 넣으면 된다.
+각성 → 스페셜(`HERO_FACTION_ORDER.special` 소속순, 첫 줄 `(구)세븐나이츠`) → 준스페셜(아스가르드 → 아이샤) → 일반 → 기타. 단일 소스 `src/data/heroes.js` `sortHeroesForList` / `compareHeroesForList`(`heroes` export는 이미 정렬). 새 영웅 목록은 필터 후 재정렬, 수동 정렬 금지. 화면별 적용 표는 architecture.md §12.1.
 
 ### 12.2–12.5 모바일 CSS · 아이콘 · 덱 수정 모달 → [docs/agents/ui-layout.md](docs/agents/ui-layout.md)
 
@@ -446,39 +224,15 @@ API:
 
 ---
 
-## 13. 도감 업데이트 (영웅 · 펫 · 장비 · 전용장비) → [docs/agents/encyclopedia.md](docs/agents/encyclopedia.md)
+## 13. 도감 업데이트 → [docs/agents/encyclopedia.md](docs/agents/encyclopedia.md) (§13.0 런북)
 
-신규 영웅·각성·스킬 변경·콜라보·펫·장비·장신구 작업 시 반드시 열 것. 핵심만:
+신규 영웅 · 각성 · 스킬 리메이크 (밍봉이 `asset/영웅 목록/…/이름(역할)(각성?)` 폴더를 채운 뒤):
+1. `npm run add:hero -- 이름` — asset `skills/*.json` → `src/data/scraped_heroes.json` + 초상화 · 카드 · 스킬 · 전용장비 이미지 + 메타 등록(`--dry` = 바뀔 내용만). 기존 영웅은 id · 소속 · 아이콘 경로 유지하고 스킬 내용만 교체. **큰 JSON을 직접 열어 고치지 말 것.**
+2. 새 효과가 있으면 `node scripts/sync-effect-icons.cjs` → 못 찾는 이름은 `lib/effectIcons.js` `ALIASES`.
+3. `npm run check:content` → 「새로 생김」만 고침(항목별 고칠 곳 표는 encyclopedia.md §13.0), 원래 그런 것이면 `-- --update`. 문장별 판정은 `-- --hero 이름`.
+4. 새 특수 효과는 도감 시스템 카드 `src/data/systemRules.js` `effects_registry`에도 추가. 화면 확인은 미리보기 허브 `/dex` · `/team`.
 
-### 13.0 신규 영웅 · 신규 효과 런북 (이 순서대로 — 도감 · 효과 사전 · 팀 빌더가 한 번에 맞춰짐)
-
-도감 · 효과 사전 · 도감 「효과 요약」 · 팀 빌더(버프 목록 · 액티브 · 전력 비교 · 상대 덱 주의)는 **전부 같은 데이터(`scraped_heroes.json`)를 같은 엔진(`lib/teamBuilderAnalysis.js`)으로 읽음** → 영웅마다 화면 코드를 따로 쓰지 않음. 데이터만 맞게 넣고 아래 점검만 통과하면 끝.
-
-1. **데이터 넣기** — 영웅 `src/data/scraped_heroes.json`(스킬 문장 정본 7katlas, `id` · `group` · `category` · `role` · `attackType` · `isAwakened` 필수) + `public/images/{id}/`(portrait · skills 아이콘) + 전용장비 아이콘(`exclusiveGearMeta.generated.json`), 펫은 `src/data/pets.js`. 상세 절차 encyclopedia.md §13. 새 스페셜 소속이면 `heroes.js` `HERO_FACTION_ORDER`만(정렬은 자동, §12.1).
-2. **효과 아이콘** — `node scripts/sync-effect-icons.cjs`(7katlas에서 다시 받음).
-3. **점검 한 번** — `npm run check:content`(라이브 무관, 15초). 기준선(`scripts/check-content.baseline.json`)에 없던 문제만 「새로 생김」으로 나옴 → 항목별로 고칠 곳:
-
-   | 새로 생김 | 고칠 곳 |
-   |------|------|
-   | 영웅 데이터(초상화 · 역할 · 공격 타입 · 소속 · 전용장비 · 스킬 아이콘) | 데이터 파일 · `public/images/{id}/` (§13 · encyclopedia.md) |
-   | 엔진 오류 | `teamBuilderAnalysis.js` — 오류 영웅 이름이 같이 나옴 |
-   | 스킬 문장 못 읽음 | `npm run check:content -- --hero 이름`으로 문장별 확인(점검표 `/dev/tb-audit.html`과 같은 판정) → 엔진 문장 규칙(`makeEntries` · `upgradeSegments` · `applyUpgradeRules`) |
-   | 효과 아이콘 없음 | `lib/effectIcons.js` `ALIASES`에 「새 이름 → 있는 아이콘 이름」 |
-   | 분류 안 됨(버프/디버프 목록에서 빠짐) | 메커니즘(관통 · 반격 …)이면 정상 → `--update`. 능력치 버프면 `classify` 키워드 또는 이름만 있는 버프 `NAMED_STAT_BUFFS` |
-   | 전력 비교 빠짐 | 새 능력치 이름이면 `DUEL_STATS`(+ 필요하면 `DUEL_FINALS`)에 줄 추가. 비례 · 고유 버프처럼 안 넣는 것이면 `--update` (features.md §10.10 「안 넣는 것」) |
-
-   다 고쳤거나 「원래 그런 것」으로 확인했으면 `npm run check:content -- --update`로 기준선 갱신(기준선 파일도 커밋).
-4. **영웅 팁(선택)** — 상대 덱 경고가 필요한 고유 기믹은 `src/data/teamBuilderTips.js` `SIGNATURE_TIPS` / `HERO_TIPS`.
-5. **화면 확인** — 미리보기 허브(§4.1)에서 `/dex` 새 영웅(스킬 · 효과 요약), `/team/effects` 효과 사전 칩, `/team` 덱에 넣고 버프 목록 · 전력 비교. 덱 편성 피커 정렬은 §12.1.
-6. 배포 — skill `senalink-deploy`.
-
-- 앱이 import하는 파일만 UI에 반영: 영웅 `src/data/scraped_heroes.json`(+`public/images/{id}/`), 펫 `src/data/pets.js`, 장비 `equipments.js` + `gearDex`. `asset/`은 원본·재생성 소스.
-- 신규 영웅이면 **전용장비 아이콘도 같이** (`exclusiveGearMeta.generated.json`).
-- 목록 정렬 수동 금지 — §12.1 `sortHeroesForList`.
-- 장신구 세공: `accessory2`는 optional. **기본값에 `accessory2`를 넣지 말 것**(구 문서 해석이 깨짐). 해석·표시는 `lib/accessoryCraft.js`.
-- **버프 · 디버프 · 특수 효과 아이콘:** 원본 `asset/특수효과, 버프, 디버프 아이콘/`(버프 · 디버프 · 특수효과 한글 이름 + 원본 ID + `목록.md`), 사이트용 `public/images/effects/{ID}.webp`, 이름 표 `src/data/effectIcons.json`, 찾기 `lib/effectIcons.js` `effectIconUrl(name)`(띄어쓰기 무시 · 「(중첩)」 · 별명 `ALIASES`). 쓰는 곳: 팀 빌더 표 · 특수 효과 알약 · 목록(`FxIcon`), 도감 시스템 「상태이상 & 특수 효과」 카드. 새 영웅 · 새 효과가 나오면 `node scripts/sync-effect-icons.cjs`(7katlas 도감에서 다시 받음, 라이브 무관) → 아이콘 못 찾는 이름은 `ALIASES`에 추가.
-- **스킬 텍스트 정본 = [7katlas](https://7katlas.com/codex.html)** (2026-11 전 영웅 동기화, §13.1.2). 각성 영웅은 강화 수치가 기본 수치에 합쳐져 있어 「스킬 강화」 줄이 비는 게 정상. 스킬 문장을 바꾸면 팀 빌더 분석도 같이 바뀌므로 점검표(`/dev/tb-audit.html`)로 확인.
-- 스킬 · UI 아이콘 교체: 이미지 먼저 넣고 코드 참조. UI 아이콘은 `src/data/uiIcons.js` 키(예: 도감 `dexSkill` · `dexEffectSummary` · 장신구 도감 탭 `dexAccessory` · 장비 부위 필터 `statPhysical` / `statMagic` / `statArmor` — `gearDex.js` `SLOT_META.icon`, 원본 `asset/장비, 장신구/능력치 아이콘/`). 흰 아이콘은 선택된 탭에서 `index.css` 규칙으로 자동 검정(`brightness(0)`)이라 따로 만들 필요 없음. 색 있는 원본을 흰색으로 바꿀 때는 **음영을 살려** 밝기 비율만 유지(밍봉 선호 — 고해상도 음영 아이콘이 크게 보일 때 품질이 좋음). 팀 빌더 모드 아이콘 `tbArena` · `tbGuildwar` · `tbPve`(가면, `tb-pve-mask.png` — 공용 `pve` 아이콘과 별개) · `tbEffects`(책, `tb-effects-book.png`), 도구 준비 중 카드 `toolGacha` · `toolRuby`가 그 예. **UI 아이콘 그림을 바꿀 땐 새 파일 이름으로** (같은 이름 덮어쓰기 → 브라우저 캐시로 밍봉·방문자 화면에 예전 그림이 남음).
+툴팁은 영웅 단위 `tooltips` 하나(스킬에 따로 있으면 그것 — `heroes.js`가 스킬마다 연결). 스킬 텍스트 정본 = 7katlas. 장신구 기본값에 `accessory2` 넣지 말 것. UI 아이콘 그림을 바꿀 땐 새 파일 이름으로(캐시).
 
 ---
 
@@ -501,43 +255,16 @@ API:
 15. 팀 빌더 · 효과 엔진 · 스킬 데이터 패치 시 `npm run check:content`(§13.0) + §10.10 요약의 검증 방법(점검표 · 밍봉 탭 클릭 금지)대로 확인. 신규 영웅 · 효과는 §13.0 런북 순서대로.
 16. 커밋 시 경로를 하나씩 지정(`git add .` 금지). 커밋하지 않는 것: `asset/`(원본 에셋 — 사이트 저장소에선 무시됨. 에셋을 추가 · 수정했으면 **`asset/` 안에서** 따로 `git add -A` → `git commit` → `git push` = senalink-assets 백업) · `scripts/tmp_*` · `tmp_missing_gear.json` · `scripts/sync_exclusive_gear_ui_assets.py` · 줄바꿈만 바뀐 파일(`ExclusiveGearPicker.jsx` · `exclusiveGearSlots.js` · `heroSearch.js` · `unsavedGuard.js` — `git diff -w`가 비면 제외) · 안 쓰는 `public/images/ui/tb-tab2-*.png` · `tb-guildwar.png`(성 아이콘 `tb-guildwar-castle.png`로 교체됨). `dev/`(로컬 점검표)는 커밋 O · 배포본 X.
 
-### 14.1 안전하게 고치는 법 · 자주 빠지는 함정 (실제로 겪은 것)
 
-**CSS**
-- 같은 우선순위면 **뒤에 쓴 규칙이 이김**. 미디어 블록을 기본 규칙보다 앞에 두면 조용히 무시됨(예: 메타 덱 캐러셀이 기본 `display:none`에 덮여 안 보였음). CSS를 옮기거나 새 블록을 넣을 땐 기본 규칙 **뒤**인지 확인.
-- 파일 순서도 같음: `main.jsx`에서 `index.css` → `styles/settingOverview.css` → `deckEditScrollModal.css` → `hoverGate.css` → `themeSolidDark.css`. 이 순서를 바꾸지 말 것.
-- 폰(≤980) `.glass-modal`에 `max-height · max-width !important`가 있음 → 모달 안 특정 상태(공유 PNG 등)를 바꾸려면 선택자를 더 구체적으로.
+→ CSS 순서 · 큰 정리(파일 나누기) · 브라우저 확인 함정은 [docs/agents/pitfalls.md](docs/agents/pitfalls.md) §14.1. ESLint 오류 수(2026-11-08 기준선 77)는 늘리지 말 것.
 
-**큰 정리(파일 나누기 · CSS 옮기기)**
-- 옮기기 전 `%TEMP%`에 백업 → 여러 폭(390 · 600 · 900 · 1440)에서 화면 요소 계산 스타일을 저장 → 옮긴 뒤 같은 방법으로 다시 저장해 **완전히 같은지 비교**(2026-11-08 세팅 확인 분리는 12화면 동일 확인 후 진행). 눈으로만 보지 말 것.
-- 비교하려고 작업 파일을 임시로 바꿔치기하지 말 것(자동 검토가 막음 · 작업 내용이 꼬일 수 있음). 백업은 `%TEMP%`에만.
-- `InGameDeckCard.jsx` 등 일부 파일은 줄바꿈이 CRLF. 스크립트로 줄을 자를 땐 `/\r?\n/`로 나누고 원래 줄바꿈으로 다시 붙일 것.
-- 편집 도구가 쓰기 오류(예: `ftruncate`)를 내면 바로 파일 끝 · 바꾼 줄을 확인하고 다시 적용.
-- ESLint 기준선: 2026-11-08 오류 77개(대부분 React hooks 규칙 — 일부러 안 건드림). **늘리지 말 것.** 안 쓰는 변수는 지우거나 `_` 접두사.
-
-**브라우저로 확인할 때**
-- 뒤로 가기 · 모달 닫기 확인은 **새 탭**에서(`newTab: true`). 오래 쓴 탭은 방문 기록이 50개 한도에 차서 브라우저가 중간 기록을 버림 → 모달을 닫았는데 메인으로 튕기는 것처럼 보임(앱 버그 아님, 2026-11-08 새 탭에서 정상 확인).
-- 화면 크기 바꾸기(`Emulation.setDeviceMetricsOverride`)와 다른 CDP 호출을 **동시에** 보내지 말 것(순서가 꼬임). 끝나면 `Emulation.clearDeviceMetricsOverride`.
-- 크기를 바꾼 상태의 `browser_take_screenshot`은 잘려 보일 수 있음 → `Page.captureScreenshot`(clip) 결과를 node로 `%TEMP%`에 png 저장해서 보기.
-- 스크립트 `el.click()`은 사람 클릭이 아님(사용자 동작 없음). 기록 · 팝업 관련 확인은 `browser_click`(실제 입력). 좌표 클릭(`browser_mouse_click_xy`)은 스크린샷 좌표 기준, 가로 · 세로 배율이 다를 수 있음.
-- 모달 바깥(스크림) 닫기는 pointer 이벤트(pointerdown/up) 기준 — mouse 이벤트만 보내면 안 닫힘.
-- 콘솔에서 `import('/src/…')`는 예전 모듈을 돌려줄 수 있음 → 주소 뒤에 `?v=숫자`.
-
----
-
-## 15. Ops에 아직 없는 유용한 후보 (구현 X, 참고)
-
-- 공용 공략 감독(최근 N / 삭제)
-- 추천수 상위·이상치
-- 허브 인원/최근활동 정렬 강화
-- 입장 배너 저장 전 미리보기
 ---
 
 ## 16. 연락 · 브랜치 관례
 
 - 운영 문의 메일: `src/config/siteContact.js` → `OPERATOR_EMAIL`
 - 최근 릴리즈 브랜치 예: `release/2026-08-20` (작업 전 `git status` / remote 확인)
-- 최근 호스팅 버전대: **v2026.11.12.228** (푸터 `APP_VERSION` 확인)
+- 최근 호스팅 버전대: **v2026.11.12.229** (푸터 `APP_VERSION` 확인)
 - 저장소 2개: 사이트 `appeal7712/senalink`(이 폴더) · 원본 에셋 `appeal7712/senalink-assets`(비공개, `asset/` 폴더 = 그 저장소, 브랜치 `main`). 새 컴퓨터 복구 = 사이트 clone → 그 안에 `git clone …/senalink-assets.git asset` → `.env.local`(Firebase 웹 설정 6줄, 콘솔 → 프로젝트 설정에서 복사) → `npm install` → `npx firebase login`.
 - 소유자: 밍봉(디자이너) — 배포·다른 Firebase 프로젝트 접근은 명시 요청 시에만
 
@@ -550,4 +277,3 @@ API:
 ## 17. 패치 내역 → [docs/agents/patch-history.md](docs/agents/patch-history.md)
 
 배포할 때마다 그 파일 **맨 위**에 새 항목 추가 (날짜 · `APP_VERSION` · 바뀐 점 · 배포 범위 Hosting/rules/functions).
-

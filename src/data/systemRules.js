@@ -94,7 +94,8 @@ export const systemRulesData = {
       { name: "불굴", category: "생존", description: "피격 횟수 기반 부활 버프 (버프 해제 불가, 적 사망 시 횟수 증가)" },
       { name: "방호", category: "생존", description: "받는 피해의 35%를 시전자가 대신 받고 해당 피해 50% 추가 감소" },
       { name: "우위", category: "생존", description: "지정 능력치가 공격자보다 높을 경우 확정 빗나감 및 피해 감소" },
-      { name: "부활", category: "생존", description: "사망한 영웅 지정 생명력으로 부활 (액티브 제외 효과는 전투당 1회)" }
+      { name: "부활", category: "생존", description: "사망한 영웅 지정 생명력으로 부활 (액티브 제외 효과는 전투당 1회)" },
+      { name: "생명력 고정", category: "생존", description: "생명력이 현재 수치에서 고정되어 피해와 회복 효과를 받지 않음" }
     ],
     special_utility: [
       { name: "협공", description: "아군 기본 공격 후 일정 확률로 발동 (개인 턴 미소모)" },
@@ -112,7 +113,9 @@ export const systemRulesData = {
       { name: "지연 버프", description: "2턴 후 버프 만료 시 모든 피해 무효화 [피격 3회]와 물리 공격력 증가 25% 2턴 획득 (2턴 전 해제 시 후속 효과 미발동, 턴제 버프 감소로 만료 시 발동)" },
       { name: "독 축적(중첩)", description: "중첩당 마법 공격력 5% 증가 (최대 6중첩)" },
       { name: "반점", description: "주는 피해량 30% 및 방어력 50% 증가" },
-      { name: "칠흑의 낙인", description: "쥬다스 공격 시 대상에게 추가 피해 (각 라운드 공격력이 가장 높은 적군 3명에게 고정)" }
+      { name: "칠흑의 낙인", description: "쥬다스 공격 시 대상에게 추가 피해 (각 라운드 공격력이 가장 높은 적군 3명에게 고정)" },
+      { name: "각성 게이지 감소", description: "대상의 각성 게이지를 지정 수치만큼 감소" },
+      { name: "각성 게이지 강탈", description: "대상의 각성 게이지를 지정 수치만큼 빼앗고, 강탈한 수치만큼 자신의 각성 게이지 증가" }
     ]
   }
 };

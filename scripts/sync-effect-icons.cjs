@@ -64,9 +64,19 @@ async function collect() {
     if (!typeByTerm.has(term)) typeByTerm.set(term, new Set());
     typeByTerm.get(term).add(type);
   };
+  /* 영웅 데이터는 7katlas 버전(HERO_DATA_V)별로 캐시 — 바뀐 영웅만 다시 받음 */
+  const dataDir = path.join(CACHE, 'hero-data');
+  fs.mkdirSync(dataDir, { recursive: true });
+  const cached = async (url, file) => {
+    const f = path.join(dataDir, file.replace(/[\\/:*?"<>|]/g, '_'));
+    if (fs.existsSync(f)) return fs.readFileSync(f, 'utf8');
+    const text = await get(url);
+    if (text) fs.writeFileSync(f, text);
+    return text;
+  };
   await pool(ids, 4, async (id) => {
-    const en = await get(`${BASE}COMBINE/hero-data/${encodeURIComponent(id)}.js?v=${ver[id]}`);
-    const kr = await get(`${BASE}lang/kr/hero-data/${encodeURIComponent(id)}.js?v=${ver[id]}`);
+    const en = await cached(`${BASE}COMBINE/hero-data/${encodeURIComponent(id)}.js?v=${ver[id]}`, `${id}.${ver[id]}.en.js`);
+    const kr = await cached(`${BASE}lang/kr/hero-data/${encodeURIComponent(id)}.js?v=${ver[id]}`, `${id}.${ver[id]}.kr.js`);
     if (!en) return;
     let data = null;
     let dict = {};

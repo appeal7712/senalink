@@ -1078,6 +1078,7 @@
   border: 1px solid color-mix(in srgb, var(--c) 50%, transparent);
   animation: tbFadeUp 0.35s ease both;
   animation-delay: calc(var(--i, 0) * 35ms);
+  position: relative;
 }
 
 .tb-check.is-wide { grid-column: 1 / -1; }
@@ -1101,8 +1102,64 @@
 
 .tb-check.is-info .tb-check-mark, .tb-check.is-purple .tb-check-mark { color: #fff; }
 .tb-check-body { min-width: 0; flex: 1; }
-.tb-check-body strong { display: block; font-size: 13.5px; font-weight: 900; line-height: 1.4; }
-.tb-check-body p { margin: 2px 0 0; font-size: 12px; font-weight: 600; line-height: 1.5; color: rgba(255, 255, 255, 0.8); }
+.tb-check-body strong { display: block; font-size: 13.5px; font-weight: 900; line-height: 1.4; word-break: keep-all; padding-right: calc(var(--faces, 0) * 29px); }
+.tb-check-body p { margin: 2px 0 0; font-size: 12px; font-weight: 600; line-height: 1.5; color: rgba(255, 255, 255, 0.8); word-break: keep-all; overflow-wrap: anywhere; }
+.tb-check-line { display: block; }
+.tb-check-line + .tb-check-line { margin-top: 1px; }
+
+/* 덱 세팅 체크 알약 — 중복(적용 · 미반영) · 편성 조건(역할 수 · 발동 · 효과) */
+.tb-ck-row { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 6px; }
+.tb-ck-row + .tb-ck-row { margin-top: 5px; }
+.tb-ck-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.9);
+}
+.tb-ck-chip i { font-style: normal; font-weight: 900; }
+.tb-ck-chip b { font-weight: 900; }
+.tb-ck-chip small { font-size: 11px; font-weight: 700; opacity: 0.75; }
+.tb-ck-chip em { font-style: normal; font-size: 11px; font-weight: 800; margin-left: 2px; }
+.tb-ck-chip.is-on { border-color: color-mix(in srgb, var(--tb-good) 55%, transparent); background: color-mix(in srgb, var(--tb-good) 16%, transparent); color: #bbf7d0; }
+.tb-ck-chip.is-on i { color: var(--tb-good); }
+.tb-ck-chip.is-lost { color: rgba(255, 255, 255, 0.42); text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.tb-ck-chip.is-short { border-color: rgba(248, 113, 113, 0.55); background: rgba(248, 113, 113, 0.14); color: #fecaca; }
+.tb-ck-chip.is-short i { color: #f87171; }
+.tb-ck-state {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 1px 8px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+.tb-ck-state.is-on { background: var(--tb-good); color: #052e16; }
+.tb-ck-state.is-off { background: rgba(255, 255, 255, 0.14); color: rgba(255, 255, 255, 0.7); }
+.tb-ck-group { display: contents; }
+.tb-ck-lead { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.tb-ck-skill { font-size: 11px; font-weight: 800; color: rgba(255, 255, 255, 0.55); white-space: nowrap; }
+.tb-ck-group + .tb-ck-group .tb-ck-skill { margin-left: 4px; }
+.tb-ck-fx {
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  color: #fff;
+}
+.tb-ck-fx.is-off { color: rgba(255, 255, 255, 0.45); }
 .tb-check-finders { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 
 .tb-check-finder {
@@ -1145,7 +1202,8 @@
 .tb-check-finder.is-ally .tb-check-finder-plus { background: var(--tb-ally); color: #fff; }
 .tb-check-finder.is-enemy .tb-check-finder-plus { background: var(--tb-enemy); color: #fff; }
 .tb-check-finder.is-full .tb-check-finder-plus { background: var(--tb-good); color: #052e16; }
-.tb-check-heroes { display: flex; gap: 3px; flex-shrink: 0; align-self: center; }
+/* 영웅 얼굴은 제목 줄 오른쪽 위 — 아래 알약 줄이 카드 폭을 다 쓰게(제목은 --faces만큼 오른쪽을 비움) */
+.tb-check-heroes { display: flex; gap: 3px; position: absolute; top: 9px; right: 10px; }
 
 /* ───────── 받는 버프 · 거는 디버프 카드 ───────── */
 
@@ -2285,6 +2343,7 @@ span.tb-fxl-name:hover { text-decoration: none; }
 
   .tb-check { padding: 9px 10px; gap: 8px; }
   .tb-check-heroes { display: none; }
+  .tb-check-body strong { padding-right: 0; }
 
   .tb-fxl-row { gap: 8px; padding: 8px 10px 8px 8px; }
   .tb-fxl-dir { width: 26px; height: 26px; border-radius: 8px; font-size: 11px; }

@@ -118,22 +118,27 @@ function useIsNarrow(query = '(max-width: 760px)') {
   return narrow;
 }
 
-/** 내 덱 — 세팅할 때 신경 쓸 것 */
+/** 「아일린 +25%」처럼 한 묶음인 말은 줄바꿈으로 안 끊기게 */
+const nbsp = (s) => String(s).replace(/ /g, '\u00A0');
+
+/**
+ * 내 덱 — 세팅할 때 신경 쓸 것. 문장 대신 구조로 넘겨 화면이 알약으로 그림:
+ * `givers`(중복 — 적용 · 미반영), `req`(편성 조건 — 역할 수 · 발동 여부 · 스킬별 효과). `detail` 배열 = 줄마다 한 줄.
+ */
 function buildChecks({ cards, reqs, missing }) {
   const items = [];
 
   const overlaps = cards.filter((c) => c.overlap);
   for (const c of overlaps) {
-    const best = c.sources.find((s) => s.applied);
     const lost = c.sources.filter((s) => !s.applied);
-    const lostText = lost.length ? `${lost.map((s) => `${s.heroName} ${fmtValue(s.value, c.dir)}`).join(' · ')}는 반영 안 돼요.` : '';
+    const giver = (s) => nbsp(`${s.heroName} ${fmtValue(s.value, c.dir)}`);
     items.push({
       id: `ov-${c.id}`,
       tone: 'warn',
       title: `${c.name}${c.timing === 'start' ? ` (시작 ${c.turns}턴)` : ' [상시]'} 중복`,
-      detail: c.overlapNote
-        ? [lostText, c.overlapNote].filter(Boolean).join(' ')
-        : `${c.sources.map((s) => `${s.heroName} ${fmtValue(s.value, c.dir)}`).join(' · ')} → ${best ? `${best.heroName} ${fmtValue(best.value, c.dir)}` : '높은 쪽'}만 적용돼요.`,
+      ...(c.overlapNote
+        ? { detail: [lost.length ? `${lost.map(giver).join(' · ')}는 반영 안 돼요.` : '', c.overlapNote].filter(Boolean) }
+        : { givers: c.sources.map((s) => ({ name: s.heroName, value: fmtValue(s.value, c.dir), applied: !!s.applied })) }),
       heroes: c.sources.map((s) => s.heroName),
     });
   }
@@ -153,12 +158,15 @@ function buildChecks({ cards, reqs, missing }) {
   }
 
   for (const r of reqs) {
-    const have = r.have.map((h) => `${h.role} ${h.n}명${h.boosted ? '(+1)' : ''}`).join(' · ');
     items.push({
       id: `rq-${r.id}`,
       tone: r.met ? 'good' : 'warn',
       title: `${r.heroName} · ${r.label}`,
-      detail: `지금 ${have} → ${r.effectText} ${r.met ? '발동해요' : '발동 안 함'}`,
+      req: {
+        met: r.met,
+        have: r.have.map((h) => ({ ...h, short: Math.max(0, r.req.n - h.n) })),
+        groups: r.effectGroups,
+      },
       heroes: [r.heroName],
     });
   }
@@ -257,7 +265,7 @@ function buildThreats(theirs, targeting, enemyReqs, enemyNames, myHeroes = []) {
   const condFor = (heroName, effects) => {
     const r = enemyReqs.find((x) => x.heroName === heroName && x.effects.some((n) => effects.includes(n)));
     if (!r) return null;
-    return { label: r.label, have: r.have.map((h) => `${h.role} ${h.n}명${h.boosted ? '(+1)' : ''}`).join(' · '), met: r.met, effectText: r.effectText };
+    return { label: r.label, have: r.have.map((h) => `${h.role} ${h.n}명${h.boosted ? `(${h.boostedBy ? `${h.boostedBy} ` : ''}+1)` : ''}`).join(' · '), met: r.met, effectText: r.effectText };
   };
   const raise = (c, level) => { if (LEVEL_ORDER[level] < LEVEL_ORDER[c.level]) c.level = level; };
 
@@ -400,8 +408,9 @@ export default function TeamBuilderPage() {
   const myHeroes = useMemo(() => (deck ? deck.mine.map(resolveHero).filter(Boolean) : []), [deck]);
   const enemyHeroes = useMemo(() => (deck && enemyOn ? deck.enemy.map(resolveHero).filter(Boolean) : []), [deck, enemyOn]);
 
-  const mine = useMemo(() => analyzeTeam(myHeroes, { rareSet, signatureKeys: ALLY_SIG, allowTower: isPve }), [myHeroes, rareSet, isPve]);
-  const theirs = useMemo(() => (enemyHeroes.length ? analyzeTeam(enemyHeroes, { rareSet, signatureKeys: ENEMY_SIG }) : null), [enemyHeroes, rareSet]);
+  const teamSize = meta?.size;
+  const mine = useMemo(() => analyzeTeam(myHeroes, { rareSet, signatureKeys: ALLY_SIG, allowTower: isPve, teamSize }), [myHeroes, rareSet, isPve, teamSize]);
+  const theirs = useMemo(() => (enemyHeroes.length ? analyzeTeam(enemyHeroes, { rareSet, signatureKeys: ENEMY_SIG, teamSize }) : null), [enemyHeroes, rareSet, teamSize]);
 
   const myCards = useMemo(() => effectCards(mine, myHeroes), [mine, myHeroes]);
   const withNote = useCallback((c) => {

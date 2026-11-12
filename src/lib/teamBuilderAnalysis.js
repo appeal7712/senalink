@@ -3,7 +3,7 @@
  * 동일 상시 효과 중복(높은 수치 하나만 적용)을 정리한다. 순수 함수 (React·Firebase 무관).
  *
  * 입력은 scraped_heroes.json 스키마의 영웅 객체:
- *   skills[].effects[] = { target, details[] }, skills[].skillEnhance[], skills[].transcendenceEffects{}, skills[].tooltips{}
+ *   skills[].effects[] = { target, details[] }, skills[].skillEnhance[], skills[].transcendenceEffects{}, tooltips{}(영웅 단위 · 스킬에 있으면 스킬 것)
  */
 const ROLE_BY_KR = {
   공격형: 'offensive',
@@ -43,7 +43,7 @@ export function skillSlotLabel(skill) {
 function heroTooltips(hero) {
   const map = {};
   for (const s of hero?.skills || []) {
-    for (const [k, v] of Object.entries(s.tooltips || {})) {
+    for (const [k, v] of Object.entries(s.tooltips || hero.tooltips || {})) {
       if (k && v && !map[normKey(k)]) map[normKey(k)] = String(v);
     }
   }
@@ -208,6 +208,7 @@ function splitAmount(head) {
     .replace(/^대상의\s+/, '')
     .replace(/^각 공격마다\s+/, '')
     .replace(/^해제한\s+(?:버프|디버프)\s*(?:\d+개당|개수만큼)\s*/, '')
+    .replace(/^사망한 대상을\s+/, '')
     .replace(/^.*?에게\s+/, '')
     .replace(/^.*?소모하여\s+/, '');
   const exec = h.match(/생명력\s*([\d.]+%)\s*이하의 적을 즉시 처형/);
@@ -245,8 +246,8 @@ function classify(name) {
   if (/디버프 해제/.test(n)) return 'cleanse';
   if (/버프 해제|턴제 버프 감소|버프 차단|턴제 디버프 증가/.test(n)) return 'dispel';
   if (/회복 불가|받는 회복량 감소|받는 보호막 감소/.test(n)) return 'antiheal';
-  if (/권능|부활|불사|불굴|축복|피해 면역|피해 무효화|보호막|생명력 회복|지속 회복|위장|링크|방호|수호령|감쇄|엄호|흡혈|행동 제어 면역|면역$/.test(n)) return 'survival';
-  if (/증가|감소|취약|반사/.test(n)) return 'stat';
+  if (/권능|부활|불사|불굴|축복|피해 면역|피해 무효화|보호막|생명력 회복|생명력 고정|지속 회복|위장|링크|방호|수호령|감쇄|엄호|흡혈|행동 제어 면역|면역$/.test(n)) return 'survival';
+  if (/증가|감소|강탈|취약|반사/.test(n)) return 'stat';
   return 'utility';
 }
 
@@ -549,7 +550,7 @@ export function buildRareEffectSet(allHeroes) {
   const owners = new Map();
   for (const h of allHeroes || []) {
     const keys = new Set();
-    for (const s of h.skills || []) for (const k of Object.keys(s.tooltips || {})) keys.add(normKey(k));
+    for (const s of h.skills || []) for (const k of Object.keys(s.tooltips || h.tooltips || {})) keys.add(normKey(k));
     keys.forEach((k) => owners.set(k, (owners.get(k) || 0) + 1));
   }
   const rare = new Set();
@@ -764,12 +765,15 @@ function triggerType(cond) {
 
 /**
  * @param {object[]} team 덱 영웅 객체
- * @param {{ includeEnhance?: boolean, includeTranscend?: boolean, rareSet?: Set<string> }} opts
+ * @param {{ includeEnhance?: boolean, includeTranscend?: boolean, rareSet?: Set<string>, teamSize?: number }} opts
+ * 편성 조건(「공격형 3명 이상 편성 시」)을 못 채운 효과는 `entries`에서 빠지고 `allEntries`에만 남음(덱 세팅 체크 · formationRequirements용).
  */
 export function analyzeTeam(team, opts = {}) {
   const includeEnhance = opts.includeEnhance !== false;
   const list = (team || []).filter(Boolean);
-  const entries = list.flatMap((h) => collectHeroEntries(h, { ...opts, includeEnhance }));
+  const allEntries = list.flatMap((h) => collectHeroEntries(h, { ...opts, includeEnhance }));
+  const { counts: roleCounts } = teamRoleCounts(list, opts.teamSize || list.length);
+  const entries = allEntries.filter((e) => roleRequirementMet(e, roleCounts));
   const effects = entries.filter((e) => e.kind === 'effect');
 
   const allyEffects = effects.filter((e) => e.side === 'ally');
@@ -818,6 +822,7 @@ export function analyzeTeam(team, opts = {}) {
 
   return {
     entries,
+    allEntries,
     allyGroups,
     enemyGroups,
     overlaps,
@@ -1477,13 +1482,26 @@ function parseRoleRequirement(text) {
   return null;
 }
 
+/** 효과의 편성 조건(조건 · 꼬리 문구)을 덱 역할 수가 채우는지 — 조건이 없으면 true */
+function roleRequirementMet(e, counts) {
+  if (e.kind !== 'effect') return true;
+  for (const src of [e.condition, ...(e.notes || [])]) {
+    const req = src && parseRoleRequirement(src);
+    if (req && !req.roles.every((r) => (counts[r] || 0) >= req.n)) return false;
+  }
+  return true;
+}
+
 /**
  * 덱 역할 수 (+ 「아군 역할 지원」: 5인 3명·3인 2명 이상인 역할은 1명 더)
  */
 export function teamRoleCounts(team, teamSize) {
   const counts = {};
   for (const h of team) counts[h.role] = (counts[h.role] || 0) + 1;
-  const support = team.some((h) => (h.skills || []).some((s) => skillEffects(s).some((e) => (e.details || []).some((d) => d.includes('아군 역할 지원')))));
+  const supporters = team
+    .filter((h) => (h.skills || []).some((s) => skillEffects(s).some((e) => (e.details || []).some((d) => d.includes('아군 역할 지원')))))
+    .map((h) => cleanHeroName(h.name));
+  const support = supporters.length > 0;
   const threshold = teamSize >= 5 ? 3 : 2;
   const boosted = {};
   if (support) {
@@ -1494,7 +1512,7 @@ export function teamRoleCounts(team, teamSize) {
       }
     }
   }
-  return { counts, boosted, support };
+  return { counts, boosted, support, supporters };
 }
 
 const SKILL_TEXT_ORDER = ['기본 공격', '스킬1', '스킬2', '패시브', '각성기'];
@@ -1504,20 +1522,24 @@ const skillTextRank = (s) => (SKILL_TEXT_ORDER.indexOf(s) === -1 ? SKILL_TEXT_OR
  * Map(스킬 라벨 → Set(효과 이름)) → 「스킬2 생명력 전환」.
  * 같은 효과는 스킬을 묶어 「기본 공격 · 스킬2 마력 역류, 패시브 생명력 회복」
  */
-function skillEffectText(bySkill) {
+function skillEffectGroups(bySkill) {
   const groups = new Map();
   for (const [skill, names] of [...bySkill.entries()].sort(([a], [b]) => skillTextRank(a) - skillTextRank(b))) {
     const k = [...names].join(' · ');
-    if (!groups.has(k)) groups.set(k, []);
-    if (skill) groups.get(k).push(skill);
+    if (!groups.has(k)) groups.set(k, { skills: [], names: [...names] });
+    if (skill) groups.get(k).skills.push(skill);
   }
-  return [...groups.entries()].map(([names, skills]) => `${skills.length ? `${skills.join(' · ')} ` : ''}${names}`).join(', ');
+  return [...groups.values()];
+}
+
+function skillEffectText(bySkill) {
+  return skillEffectGroups(bySkill).map((g) => `${g.skills.length ? `${g.skills.join(' · ')} ` : ''}${g.names.join(' · ')}`).join(', ');
 }
 
 export function formationRequirements(analysis, team, teamSize) {
-  const { counts, boosted } = teamRoleCounts(team, teamSize);
+  const { counts, boosted, supporters } = teamRoleCounts(team, teamSize);
   const seen = new Map();
-  for (const e of analysis.entries) {
+  for (const e of analysis.allEntries || analysis.entries) {
     if (e.kind !== 'effect') continue;
     const sources = [e.condition, ...(e.notes || [])].filter(Boolean);
     for (const src of sources) {
@@ -1532,7 +1554,7 @@ export function formationRequirements(analysis, team, teamSize) {
           heroId: e.heroId,
           req,
           label: `${req.roles.map((r) => ROLE_LABEL_KR[r]).join('·')} ${req.each && req.roles.length > 1 ? '각각 ' : ''}${req.n}명 이상`,
-          have: req.roles.map((r) => ({ role: ROLE_LABEL_KR[r], n: counts[r] || 0, boosted: !!boosted[r] })),
+          have: req.roles.map((r) => ({ role: ROLE_LABEL_KR[r], n: counts[r] || 0, boosted: !!boosted[r], boostedBy: boosted[r] ? supporters[0] : null })),
           met,
           effects: new Set(),
           bySkill: new Map(),
@@ -1545,7 +1567,7 @@ export function formationRequirements(analysis, team, teamSize) {
       row.bySkill.get(skill).add(e.name);
     }
   }
-  return [...seen.values()].map(({ bySkill, ...r }) => ({ ...r, effects: [...r.effects], effectText: skillEffectText(bySkill) }));
+  return [...seen.values()].map(({ bySkill, ...r }) => ({ ...r, effects: [...r.effects], effectText: skillEffectText(bySkill), effectGroups: skillEffectGroups(bySkill) }));
 }
 
 /* ───────────── 상대 덱 주의점 · 매치업 ───────────── */
@@ -1621,6 +1643,7 @@ const DUEL_STATS = [
   { id: 'guardMag', label: '마법 감쇄', re: /^마법 감쇄$/, buff: '마법 감쇄', debuff: null },
   { id: 'guard5', label: '5인 공격기 감쇄', re: /^5인 공격기 감쇄$/, buff: '5인 공격기 감쇄', debuff: null },
   { id: 'heal', label: '받는 회복량', re: /^받는 회복량$/ },
+  { id: 'barrier', label: '받는 보호막', re: /^받는 보호막$/ },
   { id: 'vulnPhys', label: '물리 취약', re: /^물리 취약$/, buff: null, debuff: '물리 취약' },
   { id: 'vulnMag', label: '마법 취약', re: /^마법 취약$/, buff: null, debuff: '마법 취약' },
 ];
@@ -1634,7 +1657,7 @@ const DUEL_FINALS = [
   { id: 'atkMag', label: '마법 공격력', icon: '마법 공격력 증가', only: 'magic', ids: ['atkMag', 'atk'] },
   { id: 'dmgPhys', label: '물리 피해량', icon: '물리 피해량 증가', only: 'physical', ids: ['dmgPhys', 'dmg'] },
   { id: 'dmgMag', label: '마법 피해량', icon: '마법 피해량 증가', only: 'magic', ids: ['dmgMag', 'dmg'] },
-  ...['dmg1', 'dmg3', 'dmg45', 'crit', 'critDmg', 'weak', 'weakDmg', 'ignoreDef', 'hit', 'res', 'apply', 'applyDeath', 'applyShock', 'def', 'hp', 'block', 'guard', 'guardPhys', 'guardMag', 'guard5', 'vulnPhys', 'vulnMag', 'heal'].map((id) => {
+  ...['dmg1', 'dmg3', 'dmg45', 'crit', 'critDmg', 'weak', 'weakDmg', 'ignoreDef', 'hit', 'res', 'apply', 'applyDeath', 'applyShock', 'def', 'hp', 'block', 'guard', 'guardPhys', 'guardMag', 'guard5', 'vulnPhys', 'vulnMag', 'heal', 'barrier'].map((id) => {
     const s = DUEL_STATS.find((x) => x.id === id);
     const icon = s.buff || s.debuff || `${s.label} 증가`;
     return { id, label: s.label, icon, ids: [id] };

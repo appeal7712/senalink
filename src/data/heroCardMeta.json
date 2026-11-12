@@ -845,5 +845,11 @@
     "name": "쥬다스",
     "cardUrl": "/images/쥬다스/card.webp",
     "source": "asset_portrait"
+  },
+  "이브": {
+    "id": "이브",
+    "name": "이브",
+    "cardUrl": "/images/이브/card.webp",
+    "source": "asset_portrait"
   }
 }
