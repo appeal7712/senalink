@@ -1959,6 +1959,7 @@ span.tb-fxl-name:hover { text-decoration: none; }
   --c: var(--tb-ally);
   --c-ink: var(--tb-ally-ink);
   --tot-cols: minmax(0, 1fr) 62px 62px 70px;
+  container: totcol / inline-size;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -2114,7 +2115,8 @@ span.tb-fxl-name:hover { text-decoration: none; }
 .tb-tot-row.is-open .tb-tot-line { background: color-mix(in srgb, var(--c) 14%, transparent); border-color: color-mix(in srgb, var(--c) 40%, transparent); }
 .tb-tot-name { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .tb-tot-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; font-weight: 800; color: #fff; }
-.tb-tot-faces { display: inline-flex; gap: 3px; margin-left: auto; flex-shrink: 0; }
+.tb-tot-faces { display: inline-flex; gap: 3px; margin-left: auto; flex-shrink: 0; min-width: var(--tot-faces-w, 0px); }
+.tb-tot-faces .tb-role-marks img { width: 16px; height: 16px; }
 .tb-tot-cell { position: relative; justify-self: center; font-size: 12.5px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .tb-tot-cell.is-passive,
 .tb-tot-cell.is-skill { display: inline-flex; align-items: center; justify-content: center; min-width: 50px; height: 22px; padding: 0 6px; box-sizing: border-box; border-radius: 6px; }
@@ -2222,27 +2224,36 @@ span.tb-fxl-name:hover { text-decoration: none; }
   .tb-deck-bar.has-enemy[data-vs="top"] > .tb-vs-stage { top: 2px; z-index: 4; transform: translate(-50%, 0) scale(var(--tb-vs-k, 0.3)); transform-origin: 50% 0; }
 }
 
-/* 받는 버프 | 받는 디버프 두 칸은 폰(≤760)에서만 위아래로 — 태블릿은 나란히(한 줄로 쌓으면 가운데가 휑함, 밍봉 2026-11-10) */
-@media (max-width: 760px) {
+/* 받는 버프 | 받는 디버프 두 칸은 폰(≤720)에서만 위아래로 — 태블릿 세로(744~)도 나란히(한 줄로 쌓으면 가운데가 휑함, 밍봉 2026-11-10 · 11-12) */
+@media (max-width: 720px) {
   .tb-fx-pair { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* 태블릿 · 작은 PC 두 칸 — 칸 폭이 좁아(약 350–510px) 표는 폰 모양(얼굴은 효과 이름 아래 줄, 수치 칸 좁게).
-   PC 표(얼굴이 이름 옆)는 칸 약 500px 미만이면 「감전 효과 적용 확률 증가」 같은 긴 이름이 잘려서 1150까지 이 모양 */
-@media (min-width: 761px) and (max-width: 1150px) {
+@media (min-width: 721px) and (max-width: 1150px) {
   .tb-fx-pair { gap: 12px; }
   .tb-fx-pair .tb-block-body { padding-left: 10px; padding-right: 10px; }
-  .tb-tot-col { --tot-cols: minmax(0, 1fr) 46px 46px 56px; }
-  .tb-tot-sheet { padding: 8px 6px 6px; }
+}
+
+/* 효과별 표는 화면 폭이 아니라 칸 폭 기준 — 칸이 500px 미만이면 촘촘한 모양(얼굴은 효과 이름 아래 줄, 수치 칸 좁게).
+   PC 모양(얼굴이 이름 옆)은 칸 약 500px 미만이면 「감전 효과 적용 확률 증가」 같은 긴 이름이 잘림. 폰에서 한 줄로 쌓여 칸이 넓으면 PC 모양 그대로 */
+@container totcol (max-width: 499px) {
+  .tb-tot-sheet { --tot-cols: minmax(0, 1fr) 46px 46px 56px; padding: 8px 5px 6px; }
   .tb-tot-uniq { padding: 8px 6px; }
-  .tb-tot-thead, .tb-tot-line { padding-left: 6px; padding-right: 6px; gap: 2px; }
+  .tb-tot-thead, .tb-tot-line { padding-left: 5px; padding-right: 5px; gap: 2px; }
   .tb-tot-th { padding: 2px 6px; }
   .tb-tot-th small { display: none; }
-  .tb-tot-name { flex-wrap: wrap; row-gap: 2px; }
+  .tb-tot-name { flex-wrap: wrap; row-gap: 3px; }
   .tb-tot-label { flex: 0 1 auto; font-size: 12px; letter-spacing: -0.2px; }
-  .tb-tot-faces { flex: 1 0 100%; margin-left: 0; padding-left: 26px; }
+  .tb-tot-faces { flex: 1 0 100%; margin-left: 0; padding-left: 28px; min-width: 0; }
+  .tb-tot-faces .tb-mini-hero { width: 22px !important; }
+  .tb-tot-faces .tb-giver-face { width: 22px; height: 22px; }
+  .tb-tot-faces .tb-role-marks img { width: 15px; height: 15px; }
+  .tb-tot-cell { font-size: 12px; }
   .tb-tot-cell.is-passive, .tb-tot-cell.is-skill { min-width: 46px; padding: 0 4px; }
-  .tb-tot-cell.is-sum b { min-width: 52px; }
+  .tb-tot-cell.is-sum b { min-width: 52px; font-size: 12px; }
+}
+@container totcol (max-width: 380px) {
+  .tb-tot-faces .tb-mini-hero:nth-child(n + 3) { display: none; }
 }
 
 @media (max-width: 1000px) {
@@ -2350,25 +2361,10 @@ span.tb-fxl-name:hover { text-decoration: none; }
   .tb-fxl-name { font-size: 13.5px; }
   .tb-fxl-to { white-space: normal; }
 
-  .tb-tot-col { --tot-cols: minmax(0, 1fr) 46px 46px 56px; }
-  .tb-tot-sheet { padding: 8px 4px 6px; }
-  .tb-tot-uniq { padding: 8px 6px; }
   .tb-tot-flags { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
   /* 폰 2열 — 얼굴은 빼고 이름이 한 줄에 다 들어가게 (눌러서 펼치면 누가 쓰는지 나옴) */
   .tb-tot-flag { grid-template-columns: auto minmax(0, 1fr); gap: 5px; font-size: 11.5px; }
   .tb-tot-flag-faces { display: none; }
-  .tb-tot-thead, .tb-tot-line { padding-left: 5px; padding-right: 5px; gap: 2px; }
-  .tb-tot-th { padding: 2px 6px; }
-  .tb-tot-th small { display: none; }
-  .tb-tot-faces .tb-mini-hero:nth-child(n + 3) { display: none; }
-  /* 폰 — 효과 이름은 한 줄 그대로, 얼굴은 이름 아래 작은 줄로 */
-  .tb-tot-name { flex-wrap: wrap; row-gap: 2px; }
-  .tb-tot-label { flex: 0 1 auto; font-size: 12px; letter-spacing: -0.2px; }
-  .tb-tot-faces { flex: 1 0 100%; margin-left: 0; padding-left: 26px; }
-  .tb-tot-faces .tb-mini-hero { width: 20px !important; }
-  .tb-tot-cell { font-size: 12px; }
-  .tb-tot-cell.is-passive, .tb-tot-cell.is-skill { min-width: 46px; padding: 0 4px; }
-  .tb-tot-cell.is-sum b { min-width: 52px; font-size: 12px; }
   .tb-tot-detail { margin: 4px 0 8px; padding: 7px; }
   .tb-tot-src-icon { width: 30px; height: 30px; }
   .tb-duel-line { grid-template-columns: 74px minmax(0, 1fr) 108px minmax(0, 1fr) 74px; gap: 6px; padding: 8px; }
@@ -2401,7 +2397,6 @@ span.tb-fxl-name:hover { text-decoration: none; }
   .tb-threat-aim { font-size: 12px; }
   .tb-threat-what { font-size: 12.5px; }
   .tb-threat-todo { font-size: 12px; padding: 6px 8px; }
-  .tb-tot-faces .tb-giver-face { width: 20px; height: 20px; }
 }
 
 /* 전력 비교 펼침 — 태블릿(561~760): 칸이 넉넉하니 PC와 같은 한 줄 [아이콘 · 이름 | 턴 | 준 영웅 | 수치] / [얼굴 …] 그대로(얼굴만 20px),

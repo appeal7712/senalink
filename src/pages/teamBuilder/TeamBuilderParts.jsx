@@ -982,6 +982,31 @@ function LedgerSource({ p, s, kind, fmt, scopeText, resolveHero }) {
   );
 }
 
+const ledgerParts = (r) => [
+  ...(r.passive?.parts || []).map((p) => ({ ...p, kind: 'passive' })),
+  ...(r.skill?.parts || []).map((p) => ({ ...p, kind: 'skill' })),
+  ...(r.pet?.parts || []).map((p) => ({ ...p, kind: 'passive' })),
+];
+
+/* 모든 출처가 유형 대상(「아군 방어형 · 만능형」)일 때만 역할 아이콘 — 한 곳이라도 전체 대상이면 안 붙임 */
+function ledgerRowRoles(parts) {
+  const srcs = parts.flatMap((p) => p.srcs);
+  return srcs.length && srcs.every((s) => s.scopeKind === 'roles' && s.scopeRoles?.length) ? [...new Set(srcs.flatMap((s) => s.scopeRoles))] : [];
+}
+
+/** PC 모양 얼굴 칸 너비(px) — 표에서 가장 넓은 줄 기준이라 줄마다 얼굴이 같은 열에서 시작(얼굴 24 · 간격 3 · 역할 아이콘 16 + 테두리 여백 10, teamBuilder.css .tb-tot-faces) */
+function ledgerFacesWidth(rows) {
+  let faces = 0;
+  let roles = 0;
+  for (const r of rows) {
+    faces = Math.max(faces, Math.min(r.heroes.length, 3));
+    roles = Math.max(roles, ledgerRowRoles(ledgerParts(r)).length);
+  }
+  const faceW = faces ? faces * 24 + (faces - 1) * 3 : 0;
+  const roleW = roles ? (faces ? 3 : 0) + roles * 16 + (roles - 1) * 2 + 10 : 0;
+  return faceW + roleW + 2;
+}
+
 function LedgerRow({ r, side, scopeText, resolveHero, index }) {
   const [open, setOpen] = useState(false);
   const fmt = (v) => fmtFxValue(v, r.label, r.dir);
@@ -991,20 +1016,14 @@ function LedgerRow({ r, side, scopeText, resolveHero, index }) {
   const passiveTurn = r.passive?.segs.some((s) => s.timing === 'start');
   const petInfo = r.pet ? petOfGiver(r.pet.heroes[0]) : null;
   const petTurn = r.pet?.segs.some((s) => s.timing === 'start');
-  const parts = [
-    ...(r.passive?.parts || []).map((p) => ({ ...p, kind: 'passive' })),
-    ...(r.skill?.parts || []).map((p) => ({ ...p, kind: 'skill' })),
-    ...(r.pet?.parts || []).map((p) => ({ ...p, kind: 'passive' })),
-  ];
+  const parts = ledgerParts(r);
   const notes = parts.flatMap((p) => [
     p.lost.length ? `같은 효과는 가장 높은 수치 하나만 적용돼요. ${p.lost.map((x) => `${x.heroName} ${fmtValue(x.value, r.dir)}`).join(' · ')}는 반영 안 돼요.` : null,
     p.overlapNote ? `같은 효과는 겹치는 대상만 높은 수치 하나를 받아요. ${p.overlapNote}` : null,
     p.wasted ? `${p.srcs[0]?.heroName || ''}의 효과 대상(${scopeText(p.scope)})이 덱에 없어요.` : null,
     p.note?.text || null,
   ]).filter(Boolean);
-  /* 모든 출처가 유형 대상(「아군 방어형 · 만능형」)일 때만 역할 아이콘 — 한 곳이라도 전체 대상이면 안 붙임 */
-  const srcs = parts.flatMap((p) => p.srcs);
-  const rowRoles = srcs.length && srcs.every((s) => s.scopeKind === 'roles' && s.scopeRoles?.length) ? [...new Set(srcs.flatMap((s) => s.scopeRoles))] : [];
+  const rowRoles = ledgerRowRoles(parts);
   return (
     <li className={`tb-tot-row${open ? ' is-open' : ''}${r.overlap || r.warn ? ' is-warn' : ''}`} style={{ '--i': Math.min(index, 20) }}>
       <button type="button" className="tb-tot-line" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
@@ -1059,7 +1078,7 @@ export function FxLedger({ data, side, tone, perspective, resolveHero, emptyText
   return (
     <div className={`tb-tot-col is-${side}${toneClass(tone)}`}>
       {rows.length ? (
-        <div className="tb-tot-sheet">
+        <div className="tb-tot-sheet" style={{ '--tot-faces-w': `${ledgerFacesWidth(rows)}px` }}>
           <div className="tb-tot-thead" aria-hidden="true">
             <span>효과</span>
             <span className="tb-tot-th is-passive">패시브 <small>{nPassive}</small></span>
